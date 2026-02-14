@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Czech Parliament Analyzer{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>Czech Parliament Voting Analyzer</h1>
+    <p>OSINT analysis of voting records from the Chamber of Deputies (Poslanecka snemovna)</p>
+</hgroup>
+
+<h2>Dataset: {{ stats.period }}. Electoral Period ({{ stats.label }})</h2>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <h3>{{ "{:,}".format(stats.total_votes) }}</h3>
+        <p>Total Votes</p>
+    </article>
+    <article class="stat-card">
+        <h3>{{ "{:,}".format(stats.total_mps) }}</h3>
+        <p>MPs</p>
+    </article>
+    <article class="stat-card">
+        <h3>{{ "{:,}".format(stats.total_mp_records) }}</h3>
+        <p>Individual Vote Records</p>
+    </article>
+    <article class="stat-card">
+        <h3>{{ "{:,}".format(stats.void_votes) }}</h3>
+        <p>Void Votes</p>
+    </article>
+</div>
+
+<article>
+    <header>Date Range</header>
+    <p>{{ stats.date_min }} — {{ stats.date_max }}</p>
+</article>
+
+<h2>Available Analyses</h2>
+<div class="grid">
+    <article>
+        <header>Party Loyalty</header>
+        <p>Which MPs rebel against their party line? Rebellion rates and patterns.</p>
+        <a href="/loyalty?period={{ period }}" role="button">Explore</a>
+    </article>
+    <article>
+        <header>Attendance</header>
+        <p>Participation rates — who shows up to vote and who doesn't.</p>
+        <a href="/attendance?period={{ period }}" role="button">Explore</a>
+    </article>
+    <article>
+        <header>Most Active MPs</header>
+        <p>Who participates the most? Total votes cast, broken down by YES/NO/ABSTAIN.</p>
+        <a href="/active?period={{ period }}" role="button">Explore</a>
+    </article>
+</div>
+<div class="grid">
+    <article>
+        <header>Voting Similarity</header>
+        <p>Cluster MPs by how they vote — reveals hidden alliances across party lines.</p>
+        <a href="/similarity?period={{ period }}" role="button">Explore</a>
+    </article>
+    <article>
+        <header>Votes Browser</header>
+        <p>Search all parliamentary votes. See which laws passed or failed and how each party and MP voted.</p>
+        <a href="/votes?period={{ period }}" role="button">Explore</a>
+    </article>
+</div>
+{% endblock %}

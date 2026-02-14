@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Most Active MPs — Czech Parliament Analyzer{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>Most Active MPs</h1>
+    <p>Who participates the most in parliamentary votes?</p>
+</hgroup>
+
+<details class="methodology">
+    <summary>How is activity measured?</summary>
+    <article>
+        <p>MPs are ranked by their <strong>total number of active votes</strong> — times they voted YES, NO, or ABSTAINED (excluding void votes).</p>
+        <p>This differs from the Attendance page, which ranks by <em>rate</em>. An MP with high attendance but fewer total votes (e.g., joined mid-term) will rank lower here than a long-serving MP who participates consistently.</p>
+        <p>The breakdown also shows how each MP splits their active votes between YES, NO, and ABSTAIN.</p>
+    </article>
+</details>
+
+<form hx-get="/api/active" hx-target="#results" hx-indicator="#loading">
+    <input type="hidden" name="period" value="{{ period }}">
+    <div class="grid">
+        <label>
+            Top N MPs
+            <input type="number" name="top" value="50" min="5" max="300" step="5">
+        </label>
+        <label>
+            Party filter
+            <input type="text" name="party" placeholder="All parties" value="">
+        </label>
+        <label>
+            &nbsp;
+            <button type="submit">Analyze</button>
+        </label>
+    </div>
+</form>
+
+<span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
+
+<div class="chart-container">
+    <img src="/charts/active.png?period={{ period }}" alt="Most active MPs chart" loading="lazy">
+</div>
+
+<div id="results" hx-get="/api/active?top=50&period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+</div>
+{% endblock %}
