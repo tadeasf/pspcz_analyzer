@@ -1,0 +1,17 @@
+[project]
+name = "pspcz-analyzer"
+version = "0.1.0"
+description = "Czech Parliamentary Voting Analyzer — OSINT tool for psp.cz open data"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115",
+    "uvicorn>=0.34",
+    "jinja2>=3.1",
+    "python-multipart",
+    "polars>=1.0",
+    "httpx>=0.27",
+    "seaborn>=0.13",
+    "matplotlib>=3.9",
+    "loguru>=0.7.3",
+]
