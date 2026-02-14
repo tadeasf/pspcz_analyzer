@@ -57,6 +57,39 @@
             cursor: pointer;
             font-weight: bold;
         }
+        /* Skeleton loading state */
+        .skeleton {
+            pointer-events: none;
+        }
+        .skeleton-pulse {
+            background: var(--pico-muted-border-color);
+            border-radius: var(--pico-border-radius);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        .skeleton-line {
+            height: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .skeleton-line-short { width: 40%; }
+        .skeleton-line-medium { width: 70%; }
+        .skeleton-line-long { width: 90%; }
+        .skeleton-heading {
+            height: 2rem;
+            width: 50%;
+            margin-bottom: 1rem;
+        }
+        .skeleton-table-row {
+            height: 2.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .skeleton-card {
+            height: 6rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -94,10 +127,42 @@
 
     <script>
         function switchPeriod(newPeriod) {
+            // Show skeleton immediately so stale data disappears
+            const main = document.querySelector('main');
+            main.classList.add('skeleton');
+            main.setAttribute('aria-busy', 'true');
+            main.innerHTML = `
+                <div class="skeleton-pulse skeleton-heading"></div>
+                <div class="skeleton-pulse skeleton-line skeleton-line-medium"></div>
+                <div class="stat-grid" style="margin: 2rem 0;">
+                    <div class="skeleton-pulse skeleton-card"></div>
+                    <div class="skeleton-pulse skeleton-card"></div>
+                    <div class="skeleton-pulse skeleton-card"></div>
+                    <div class="skeleton-pulse skeleton-card"></div>
+                </div>
+                <div class="skeleton-pulse skeleton-heading" style="width: 30%; margin-top: 2rem;"></div>
+                ${Array(8).fill('<div class="skeleton-pulse skeleton-table-row"></div>').join('')}
+            `;
             const url = new URL(window.location.href);
             url.searchParams.set('period', newPeriod);
             window.location.href = url.toString();
         }
+
+        // Also show skeleton when clicking nav links (page-to-page navigation)
+        document.querySelectorAll('nav a[href]').forEach(function(link) {
+            link.addEventListener('click', function() {
+                const main = document.querySelector('main');
+                main.classList.add('skeleton');
+                main.setAttribute('aria-busy', 'true');
+                main.innerHTML = `
+                    <div class="skeleton-pulse skeleton-heading"></div>
+                    <div class="skeleton-pulse skeleton-line skeleton-line-medium"></div>
+                    <div style="margin: 2rem 0;">
+                        ${Array(6).fill('<div class="skeleton-pulse skeleton-table-row"></div>').join('')}
+                    </div>
+                `;
+            });
+        });
     </script>
 </body>
 </html>
