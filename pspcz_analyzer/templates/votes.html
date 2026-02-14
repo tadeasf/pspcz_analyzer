@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Votes Browser — Czech Parliament Analyzer{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>Votes Browser</h1>
+    <p>Search parliamentary votes and see who voted for or against</p>
+</hgroup>
+
+<details class="methodology">
+    <summary>About this data</summary>
+    <article>
+        <p>Every vote (hlasovani) taken in the Chamber of Deputies is recorded with its description, date, and outcome. Each individual MP's vote is also recorded.</p>
+        <p><strong>Outcomes:</strong> Passed (A), Rejected (R), Void/invalid (Z).</p>
+        <p>Click on any vote to see the full party-by-party and MP-by-MP breakdown.</p>
+    </article>
+</details>
+
+<form hx-get="/api/votes" hx-target="#results" hx-indicator="#loading" hx-push-url="false">
+    <input type="hidden" name="period" value="{{ period }}">
+    <div class="grid">
+        <label>
+            Search votes
+            <input type="search" name="search" placeholder="e.g. rozpočet, důvěra, daň..." value="">
+        </label>
+        <label>
+            Outcome
+            <select name="outcome">
+                <option value="">All</option>
+                <option value="A">Passed</option>
+                <option value="R">Rejected</option>
+            </select>
+        </label>
+        <label>
+            &nbsp;
+            <button type="submit">Search</button>
+        </label>
+    </div>
+</form>
+
+<span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
+
+<div id="results" hx-get="/api/votes?period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+</div>
+{% endblock %}

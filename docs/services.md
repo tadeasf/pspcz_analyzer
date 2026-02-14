@@ -1,0 +1,120 @@
+# Services
+
+## Data Pipeline
+
+Data flows through three stages before it reaches the analysis services:
+
+```
+psp.cz ZIPs  →  UNL files (extracted)  →  Polars DataFrames  →  Parquet cache
+     ↓                  ↓                        ↓
+ downloader.py      parser.py               cache.py
+```
+
+### 1. Download (`data/downloader.py`)
+
+Downloads ZIP archives from `https://www.psp.cz/eknih/cdrom/opendata`:
+
+- `hl-{year}ps.zip` — voting data for a specific period
+- `poslanci.zip` — MP/person/organ/membership data (shared)
+- `schuze.zip` — session and agenda data
+- `tisky.zip` — parliamentary prints (bills, proposals)
+
+Files are cached in `~/.cache/pspcz-analyzer/psp/raw/`. Skips download if the file already exists.
+
+### 2. Parse (`data/parser.py`)
+
+UNL files are pipe-delimited with no header row, Windows-1250 encoded, and have a trailing pipe on each line (producing an extra empty column that gets dropped).
+
+- `parse_unl()` — parses a single file given column names and optional dtype casts
+- `parse_unl_multi()` — parses multiple files matching a glob pattern and concatenates them (used for per-session vote files like `hl2025h1.unl`, `hl2025h2.unl`, ...)
+
+The `disable_quoting=True` flag is needed for files containing unescaped double-quotes (e.g. `bod_schuze.unl`, `tisky.unl`).
+
+### 3. Cache (`data/cache.py`)
+
+`get_or_parse()` checks if a Parquet file exists and is newer than the source. If so, it loads from Parquet; otherwise it calls the parse function and caches the result. Cache lives at `~/.cache/pspcz-analyzer/psp/parquet/`.
+
+## DataService (`services/data_service.py`)
+
+Central orchestrator, initialized at app startup via FastAPI lifespan and stored on `app.state.data`.
+
+### Shared Tables
+
+Loaded once, used across all periods:
+
+- **osoby** — persons (id_osoba, name, etc.)
+- **poslanec** — MP records linking person to period
+- **organy** — organs/organizations (parties, committees, etc.)
+- **zarazeni** — memberships (which person belongs to which organ)
+- **schuze / bod_schuze / tisky** — sessions, agenda items, parliamentary prints
+
+### Per-Period Data (`PeriodData`)
+
+Loaded on demand when a period is first requested:
+
+- **votes** (`hl_hlasovani`) — vote summaries (date, result, counts)
+- **mp_votes** (`hl_poslanec`) — individual MP votes per vote event
+- **void_votes** (`zmatecne`) — IDs of void votes (always filtered out)
+- **mp_info** — derived table: id_poslanec → name + current party
+- **tisk_lookup** — `dict[(schuze_num, bod_num), TiskInfo]` linking votes to parliamentary prints
+
+### Tisk Lookup
+
+Two strategies for linking votes to parliamentary prints:
+
+1. **Primary**: schuze → bod_schuze → tisky (via session/agenda item IDs)
+2. **Fallback**: text-match vote descriptions against tisk names (for new periods where schuze.zip hasn't been updated yet)
+
+## Analysis Services
+
+All services take a `PeriodData` instance and return `list[dict]`. Void votes are always excluded.
+
+### Loyalty (`services/loyalty_service.py`)
+
+Computes rebellion rates — how often an MP votes against their party's majority.
+
+1. Filter to active votes only (YES or NO; abstentions excluded)
+2. For each (vote, party) pair, determine majority direction (YES or NO; ties excluded)
+3. An MP "rebels" when their vote differs from the party majority
+4. `rebellion_pct = rebellions / active_votes_with_clear_direction * 100`
+
+Supports filtering by party code.
+
+### Attendance (`services/attendance_service.py`)
+
+Computes participation rates with category breakdowns.
+
+Vote categories:
+- **Active**: YES (`A`), NO (`B`), ABSTAINED (`C`)
+- **Passive**: registered but no button press (`F`)
+- **Absent**: not registered (`@`)
+- **Excused**: formally excused (`M`)
+
+Formula: `attendance_pct = active / (total - excused) * 100`
+
+Excused absences are excluded from the denominator (legitimate absences don't penalize).
+
+### Activity (`services/activity_service.py`)
+
+Ranks MPs by raw volume of active votes (YES + NO + ABSTAINED). Unlike attendance (which shows rates), this rewards consistent long-term participation. Also includes attendance percentage for context.
+
+Supports filtering by party code.
+
+### Similarity (`services/similarity_service.py`)
+
+Two outputs from the same vote matrix (MPs x votes, values: +1 YES, -1 NO, 0 other):
+
+**PCA Projection** (`compute_pca_coords`):
+- Centers the matrix, runs SVD, projects to 2D
+- Returns (x, y) coordinates per MP for scatter plot visualization
+
+**Cross-Party Pairs** (`compute_cross_party_similarity`):
+- Computes cosine similarity between all MP pairs
+- Filters to cross-party pairs only
+- Returns top N most similar pairs
+
+### Votes (`services/votes_service.py`)
+
+**`list_votes()`** — paginated vote listing with text search and outcome filtering. Enriches each row with tisk links (to psp.cz source documents).
+
+**`vote_detail()`** — full breakdown of a single vote: metadata, per-party aggregates (YES/NO/ABSTAINED/etc. per party), and per-MP individual votes.

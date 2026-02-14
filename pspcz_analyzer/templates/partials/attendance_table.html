@@ -1,0 +1,31 @@
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>MP</th>
+            <th>Party</th>
+            <th>Active</th>
+            <th>Passive</th>
+            <th>Absent</th>
+            <th>Excused</th>
+            <th>Attendance %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ row.jmeno }} {{ row.prijmeni }}</td>
+            <td>{{ row.party or "N/A" }}</td>
+            <td>{{ "{:,}".format(row.active) }}</td>
+            <td>{{ "{:,}".format(row.passive) }}</td>
+            <td>{{ "{:,}".format(row.absent) }}</td>
+            <td>{{ "{:,}".format(row.excused) }}</td>
+            <td>{{ "%.1f"|format(row.attendance_pct) }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if not rows %}
+<p>No data found.</p>
+{% endif %}
