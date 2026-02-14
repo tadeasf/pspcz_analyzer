@@ -13,16 +13,11 @@ def parse_unl(
     file_path: Path,
     columns: list[str],
     dtypes: dict[str, Any] | None = None,
-    *,
-    disable_quoting: bool = False,
 ) -> pl.DataFrame:
     """Parse a single UNL file into a Polars DataFrame.
 
     UNL files are pipe-delimited, Windows-1250 encoded, with no header row
     and a trailing pipe on each line (producing an extra empty column).
-
-    Set disable_quoting=True for files that contain unescaped double-quote
-    characters in data fields (e.g. bod_schuze.unl).
     """
     raw_bytes = file_path.read_bytes()
     if not raw_bytes.strip():
@@ -42,9 +37,11 @@ def parse_unl(
         infer_schema_length=0,
         truncate_ragged_lines=True,
         encoding="utf8",
+        # UNL files never use CSV-style quoting — any double quotes in the
+        # data are literal characters.  Always disable to avoid misparses
+        # (e.g. period 2 / 1996 voting data contains stray quotes).
+        quote_char=None,
     )
-    if disable_quoting:
-        csv_kwargs["quote_char"] = None
 
     df = pl.read_csv(utf8_bytes, **csv_kwargs)
 

@@ -199,7 +199,6 @@ class DataService:
             lambda: parse_unl(
                 self._find_file(schuze_dir, "bod_schuze.unl"),
                 BOD_SCHUZE_COLUMNS, BOD_SCHUZE_DTYPES,
-                disable_quoting=True,
             ),
             self.cache_dir,
         )
@@ -209,7 +208,6 @@ class DataService:
             lambda: parse_unl(
                 self._find_file(tisky_dir, "tisky.unl"),
                 TISKY_COLUMNS, TISKY_DTYPES,
-                disable_quoting=True,
             ),
             self.cache_dir,
         )
