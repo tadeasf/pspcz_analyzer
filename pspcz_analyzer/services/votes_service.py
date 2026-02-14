@@ -4,6 +4,7 @@ import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.services.data_service import PeriodData
+from pspcz_analyzer.utils.text import normalize_czech
 
 # Outcome labels for display
 OUTCOME_LABELS = {
@@ -21,8 +22,9 @@ def list_votes(
     page: int = 1,
     per_page: int = 30,
     outcome_filter: str = "",
+    topic_filter: str = "",
 ) -> dict:
-    """List votes with optional text search and pagination.
+    """List votes with optional text search, topic filter, and pagination.
 
     Returns dict with keys: rows, total, page, per_page, total_pages.
     """
@@ -36,14 +38,32 @@ def list_votes(
     )
 
     if search.strip():
-        q = search.strip().lower()
+        q = normalize_czech(search.strip())
         votes = votes.filter(
-            pl.col("nazev_dlouhy").str.to_lowercase().str.contains(q, literal=True)
-            | pl.col("nazev_kratky").str.to_lowercase().str.contains(q, literal=True)
+            pl.col("nazev_dlouhy").map_elements(
+                lambda s: q in normalize_czech(s or ""), return_dtype=pl.Boolean,
+            )
+            | pl.col("nazev_kratky").map_elements(
+                lambda s: q in normalize_czech(s or ""), return_dtype=pl.Boolean,
+            )
         )
 
     if outcome_filter:
         votes = votes.filter(pl.col("vysledek") == outcome_filter)
+
+    # Topic filter: only keep votes whose linked tisk has the specified topic
+    if topic_filter:
+        allowed_keys = set()
+        for (schuze, bod), tisk in data.tisk_lookup.items():
+            if topic_filter in tisk.topics:
+                allowed_keys.add((schuze, bod))
+        if allowed_keys:
+            allowed_schuze = [k[0] for k in allowed_keys]
+            allowed_bod = [k[1] for k in allowed_keys]
+            key_df = pl.DataFrame({"schuze": allowed_schuze, "bod": allowed_bod})
+            votes = votes.join(key_df, on=["schuze", "bod"], how="inner")
+        else:
+            votes = votes.head(0)
 
     total = votes.height
     total_pages = max(1, (total + per_page - 1) // per_page)
@@ -68,6 +88,7 @@ def list_votes(
         r["tisk_url"] = tisk.url if tisk else None
         r["tisk_nazev"] = tisk.nazev if tisk else None
         r["tisk_ct"] = tisk.ct if tisk else None
+        r["tisk_topics"] = tisk.topics if tisk else []
 
     return {
         "rows": rows,
@@ -97,6 +118,8 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
     info["tisk_url"] = tisk.url if tisk else None
     info["tisk_nazev"] = tisk.nazev if tisk else None
     info["tisk_ct"] = tisk.ct if tisk else None
+    info["tisk_topics"] = tisk.topics if tisk else []
+    info["tisk_has_text"] = tisk.has_text if tisk else False
 
     # Individual MP votes for this vote
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)

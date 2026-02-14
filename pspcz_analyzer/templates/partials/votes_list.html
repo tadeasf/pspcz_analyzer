@@ -28,6 +28,9 @@
                     {% if row.tisk_url %}
                     <br><small><a href="{{ row.tisk_url }}" target="_blank">Tisk {{ row.tisk_ct }}</a></small>
                     {% endif %}
+                    {% if row.tisk_topics %}
+                    <br>{% for t in row.tisk_topics %}<small style="background: #e3f2fd; color: #1565c0; padding: 0.1rem 0.4rem; border-radius: 0.25rem; margin-right: 0.25rem;">{{ t }}</small>{% endfor %}
+                    {% endif %}
                 </td>
                 <td>
                     {% if row.vysledek == "A" %}
@@ -56,14 +59,14 @@
     <ul>
         {% if page > 1 %}
         <li>
-            <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&page={{ page - 1 }}"
+            <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
                hx-target="#results" hx-indicator="#loading">&larr; Previous</a>
         </li>
         {% endif %}
         <li><span>Page {{ page }} of {{ total_pages }}</span></li>
         {% if page < total_pages %}
         <li>
-            <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&page={{ page + 1 }}"
+            <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
                hx-target="#results" hx-indicator="#loading">Next &rarr;</a>
         </li>
         {% endif %}

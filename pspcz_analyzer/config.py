@@ -65,3 +65,11 @@ DEFAULT_PERIOD = 10
 # UNL format constants
 UNL_ENCODING = "windows-1250"
 UNL_SEPARATOR = "|"
+
+# Tisky PDF pipeline
+TISKY_PDF_DIR = "tisky_pdf"
+TISKY_TEXT_DIR = "tisky_text"
+TISKY_META_DIR = "tisky_meta"
+PSP_TISKT_URL_TEMPLATE = "https://www.psp.cz/sqw/text/tiskt.sqw?o={period}&ct={ct}&ct1=0"
+PSP_ORIG2_BASE_URL = "https://www.psp.cz/sqw/text/orig2.sqw"
+PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz

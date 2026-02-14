@@ -12,7 +12,10 @@ from pspcz_analyzer.config import (
     PERIOD_LABELS,
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
+    TISKY_META_DIR,
 )
+from pspcz_analyzer.services.tisk_pipeline_service import TiskPipelineService
+from pspcz_analyzer.services.tisk_text_service import TiskTextService
 from pspcz_analyzer.data.cache import get_or_parse
 from pspcz_analyzer.data.downloader import (
     download_poslanci_data,
@@ -53,6 +56,8 @@ class TiskInfo:
     ct: int  # tisk number
     nazev: str
     period: int
+    topics: list[str] = field(default_factory=list)
+    has_text: bool = False
 
     @property
     def url(self) -> str:
@@ -97,6 +102,8 @@ class DataService:
     def __init__(self, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
         self.cache_dir = cache_dir
         self._periods: dict[int, PeriodData] = {}
+        self.tisk_text = TiskTextService(cache_dir)
+        self.tisk_pipeline = TiskPipelineService(cache_dir)
 
         # Shared tables (not period-specific), populated by _load_shared_tables
         self._persons: pl.DataFrame | None = None
@@ -109,6 +116,9 @@ class DataService:
         self._schuze: pl.DataFrame | None = None
         self._bod_schuze: pl.DataFrame | None = None
         self._tisky: pl.DataFrame | None = None
+
+        # Topic classification cache: period -> {ct -> [topic_ids]}
+        self._topic_cache: dict[int, dict[int, list[str]]] = {}
 
     @property
     def available_periods(self) -> list[dict]:
@@ -126,6 +136,13 @@ class DataService:
         """Get data for a period, loading it on demand if needed."""
         if period not in self._periods:
             self._load_period(period)
+            # Kick off background tisk pipeline for newly loaded periods
+            try:
+                self.start_tisk_pipeline(period)
+            except Exception:
+                logger.opt(exception=True).warning(
+                    "Failed to start tisk pipeline for period {}", period,
+                )
         return self._periods[period]
 
     def initialize(self, period: int = DEFAULT_PERIOD) -> None:
@@ -275,6 +292,9 @@ class DataService:
         if bods.height == 0:
             return {}
 
+        # Load topic classifications and text availability
+        topic_map = self._load_topic_cache(period)
+
         tisk_ids = set(bods.get_column("id_tisk").to_list())
         relevant_tisky = self._tisky.filter(pl.col("id_tisk").is_in(tisk_ids))
         tisk_map = {}
@@ -286,6 +306,8 @@ class DataService:
                     ct=ct,
                     nazev=row.get("nazev_tisku") or "",
                     period=period,
+                    topics=topic_map.get(ct, []),
+                    has_text=self.tisk_text.has_text(period, ct),
                 )
 
         lookup: dict[tuple[int, int], TiskInfo] = {}
@@ -317,6 +339,9 @@ class DataService:
         if period_tisky.height == 0:
             return {}
 
+        # Load topic classifications and text availability
+        topic_map = self._load_topic_cache(period)
+
         # Build list of tisk names for matching (longest first for greedy match)
         tisk_entries = []
         for row in period_tisky.iter_rows(named=True):
@@ -328,6 +353,8 @@ class DataService:
                     ct=ct,
                     nazev=nazev,
                     period=period,
+                    topics=topic_map.get(ct, []),
+                    has_text=self.tisk_text.has_text(period, ct),
                 ))
         tisk_entries.sort(key=lambda t: len(t.nazev), reverse=True)
 
@@ -468,3 +495,62 @@ class DataService:
                 return f
         msg = f"File {filename} not found in {directory}"
         raise FileNotFoundError(msg)
+
+    def _load_topic_cache(self, period: int) -> dict[int, list[str]]:
+        """Load topic classifications from parquet cache, if available."""
+        if period in self._topic_cache:
+            return self._topic_cache[period]
+
+        meta_path = self.cache_dir / TISKY_META_DIR / str(period) / "topic_classifications.parquet"
+        if not meta_path.exists():
+            self._topic_cache[period] = {}
+            return {}
+
+        df = pl.read_parquet(meta_path)
+        topics: dict[int, list[str]] = {}
+        for row in df.iter_rows(named=True):
+            ct = row["ct"]
+            topic = row.get("topic", "")
+            if topic:
+                topics[ct] = [topic]
+        self._topic_cache[period] = topics
+        logger.info("Loaded topic classifications for period {}: {} tisky", period, len(topics))
+        return topics
+
+    def start_tisk_pipeline(self, period: int) -> None:
+        """Kick off background tisk processing for a period.
+
+        Extracts the list of ct numbers from the already-loaded tisky table
+        and starts the pipeline. On completion, updates in-memory tisk_lookup
+        entries with fresh topics and has_text flags.
+        """
+        if self._tisky is None:
+            return
+
+        organ_id = PERIOD_ORGAN_IDS[period]
+        period_tisky = self._tisky.filter(
+            (pl.col("id_obdobi") == organ_id) & pl.col("ct").is_not_null()
+        )
+        ct_numbers = sorted(period_tisky.get_column("ct").unique().to_list())
+        if not ct_numbers:
+            return
+
+        def _on_complete(p: int, text_paths: dict, topic_map: dict) -> None:
+            """Callback: refresh in-memory tisk data after pipeline finishes."""
+            # Invalidate topic cache so next lookup picks up new data
+            self._topic_cache.pop(p, None)
+
+            # Update existing tisk_lookup entries
+            pd = self._periods.get(p)
+            if pd is None:
+                return
+            for key, tisk in pd.tisk_lookup.items():
+                tisk.topics = topic_map.get(tisk.ct, [])
+                tisk.has_text = self.tisk_text.has_text(p, tisk.ct)
+
+            logger.info(
+                "[tisk pipeline] Updated in-memory tisk data for period {}",
+                p,
+            )
+
+        self.tisk_pipeline.start_period(period, ct_numbers, on_complete=_on_complete)

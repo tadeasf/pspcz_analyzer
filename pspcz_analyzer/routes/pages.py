@@ -6,6 +6,7 @@ from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.services.topic_service import all_topics
 from pspcz_analyzer.services.votes_service import vote_detail
 
 router = APIRouter()
@@ -69,7 +70,7 @@ async def active_page(request: Request, period: int = DEFAULT_PERIOD):
 async def votes_page(request: Request, period: int = DEFAULT_PERIOD):
     return templates.TemplateResponse(
         "votes.html",
-        _ctx(request, period, active_page="votes"),
+        _ctx(request, period, active_page="votes", topics=all_topics()),
     )
 
 

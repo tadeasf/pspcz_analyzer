@@ -18,12 +18,33 @@
     <p><small>{{ detail.info.nazev_kratky }}</small></p>
     {% endif %}
 
+    {% if detail.info.tisk_topics %}
+    <p>
+        <strong>Topics:</strong>
+        {% for t in detail.info.tisk_topics %}
+        <span style="background: #e3f2fd; color: #1565c0; padding: 0.15rem 0.5rem; border-radius: 0.25rem; margin-right: 0.25rem; font-size: 0.85rem;">{{ t }}</span>
+        {% endfor %}
+    </p>
+    {% endif %}
+
     <p>
         <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ detail.info.id_hlasovani }}" target="_blank" role="button" class="outline" style="font-size: 0.85rem;">View vote on psp.cz &nearr;</a>
         {% if detail.info.tisk_url %}
         <a href="{{ detail.info.tisk_url }}" target="_blank" role="button" style="font-size: 0.85rem;">Document: Tisk {{ detail.info.tisk_ct }} — {{ detail.info.tisk_nazev }} &nearr;</a>
         {% endif %}
     </p>
+
+    {% if detail.info.tisk_ct %}
+    <details id="tisk-details">
+        <summary>View tisk transcription (extracted PDF text)</summary>
+        <div id="tisk-text-content"
+             hx-get="/api/tisk-text?period={{ period }}&ct={{ detail.info.tisk_ct }}"
+             hx-trigger="intersect once"
+             hx-indicator="#tisk-loading">
+            <span id="tisk-loading" class="htmx-indicator" aria-busy="true">Loading transcription...</span>
+        </div>
+    </details>
+    {% endif %}
 
     <div class="stat-grid">
         <article class="stat-card" style="border-left: 4px solid #4caf50;">
