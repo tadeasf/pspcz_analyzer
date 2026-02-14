@@ -1,0 +1,27 @@
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>MP 1</th>
+            <th>Party</th>
+            <th>MP 2</th>
+            <th>Party</th>
+            <th>Similarity</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ row.mp1_name }}</td>
+            <td>{{ row.mp1_party }}</td>
+            <td>{{ row.mp2_name }}</td>
+            <td>{{ row.mp2_party }}</td>
+            <td>{{ "%.1f"|format(row.similarity * 100) }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if not rows %}
+<p>No data found.</p>
+{% endif %}

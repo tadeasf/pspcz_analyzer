@@ -1,0 +1,79 @@
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>MP</th>
+            <th>Party</th>
+            <th>Active Votes</th>
+            <th>Rebellions</th>
+            <th>Rebellion %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ row.jmeno }} {{ row.prijmeni }}</td>
+            <td>{{ row.party or "N/A" }}</td>
+            <td>{{ "{:,}".format(row.active_votes) }}</td>
+            <td>{{ "{:,}".format(row.rebellions) }}</td>
+            <td>{{ "%.1f"|format(row.rebellion_pct) }}%</td>
+        </tr>
+        {% if row.rebellion_votes %}
+        <tr>
+            <td colspan="6" style="padding: 0 0 0 2rem; border-top: none;">
+                <details>
+                    <summary style="font-size: 0.85rem; cursor: pointer;">
+                        Show {{ row.rebellion_votes | length }} rebellion vote{{ "s" if row.rebellion_votes | length != 1 else "" }}
+                    </summary>
+                    <div class="overflow-auto">
+                        <table style="font-size: 0.85rem; margin: 0.5rem 0;">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>MP Vote</th>
+                                    <th>Party Vote</th>
+                                    <th>Links</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in row.rebellion_votes %}
+                                <tr>
+                                    <td style="white-space: nowrap;">{{ v.datum }}</td>
+                                    <td>{{ v.nazev_dlouhy[:120] }}{% if v.nazev_dlouhy|length > 120 %}&hellip;{% endif %}</td>
+                                    <td>
+                                        {% if v.mp_vote == "A" %}
+                                        <span style="color: #4caf50;">YES</span>
+                                        {% elif v.mp_vote == "B" %}
+                                        <span style="color: #f44336;">NO</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if v.party_direction == "A" %}
+                                        <span style="color: #4caf50;">YES</span>
+                                        {% elif v.party_direction == "B" %}
+                                        <span style="color: #f44336;">NO</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ v.id_hlasovani }}" target="_blank">psp.cz</a>
+                                        {% if v.tisk_url %}
+                                        &middot; <a href="{{ v.tisk_url }}" target="_blank">tisk</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% if not rows %}
+<p>No data found for the given filters.</p>
+{% endif %}
