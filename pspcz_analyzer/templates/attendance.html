@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Attendance — Czech Parliament Analyzer{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>Attendance Analysis</h1>
+    <p>Who shows up to vote?</p>
+</hgroup>
+
+<details class="methodology">
+    <summary>How is attendance calculated?</summary>
+    <article>
+        <p>For each MP, every recorded vote is categorized as:</p>
+        <ul>
+            <li><strong>Active</strong> — voted YES (A), NO (B), or ABSTAINED (C)</li>
+            <li><strong>Passive</strong> — registered in the chamber but did not press any button (F)</li>
+            <li><strong>Absent</strong> — not registered at the time of the vote (@)</li>
+            <li><strong>Excused</strong> — formally excused absence (M)</li>
+        </ul>
+        <p><strong>Attendance %</strong> = Active / (Total - Excused) x 100</p>
+        <p>Excused absences are excluded from the denominator because they are legitimate (government duties, illness, etc.).</p>
+    </article>
+</details>
+
+<form hx-get="/api/attendance" hx-target="#results" hx-indicator="#loading">
+    <input type="hidden" name="period" value="{{ period }}">
+    <div class="grid">
+        <label>
+            Top N MPs
+            <input type="number" name="top" value="30" min="5" max="200" step="5">
+        </label>
+        <label>
+            Sort by
+            <select name="sort">
+                <option value="worst">Lowest attendance first</option>
+                <option value="best">Highest attendance first</option>
+            </select>
+        </label>
+        <label>
+            &nbsp;
+            <button type="submit">Analyze</button>
+        </label>
+    </div>
+</form>
+
+<span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
+
+<div class="chart-container">
+    <img src="/charts/attendance.png?period={{ period }}" alt="Attendance chart" loading="lazy">
+</div>
+
+<div id="results" hx-get="/api/attendance?top=30&sort=worst&period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+</div>
+{% endblock %}

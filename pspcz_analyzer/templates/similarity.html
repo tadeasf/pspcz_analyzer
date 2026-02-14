@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Voting Similarity — Czech Parliament Analyzer{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>Voting Similarity</h1>
+    <p>MPs clustered by how they actually vote — colors represent parties</p>
+</hgroup>
+
+<details class="methodology">
+    <summary>How is similarity calculated?</summary>
+    <article>
+        <ol>
+            <li><strong>Build a vote matrix</strong> — each row is an MP, each column is a vote. Values are +1 (YES), -1 (NO), or 0 (anything else: absent, abstained, excused).</li>
+            <li><strong>PCA projection</strong> — Principal Component Analysis reduces the high-dimensional vote matrix to 2 dimensions for visualization. MPs with similar voting records cluster together.</li>
+            <li><strong>Cosine similarity</strong> — for the pairwise table, we compute cosine similarity between each pair of MPs' voting vectors. A score of 100% means they voted identically on every vote.</li>
+        </ol>
+        <p>The cross-party pairs table shows the most similar MP pairs who belong to <em>different</em> parties — revealing hidden alliances.</p>
+    </article>
+</details>
+
+<div class="chart-container">
+    <img src="/charts/similarity.png?period={{ period }}" alt="Voting similarity scatter plot" loading="lazy"
+         style="max-height: 700px;">
+</div>
+
+<h2>Top Cross-Party Pairs</h2>
+<p>MPs from different parties who vote most similarly:</p>
+
+<div id="results" hx-get="/api/similarity?top=20&period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+</div>
+<span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
+{% endblock %}

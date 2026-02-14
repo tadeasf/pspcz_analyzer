@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Vote Detail — Czech Parliament Analyzer{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>Vote #{{ detail.info.id_hlasovani }}</h1>
+    <p>{{ detail.info.datum }} {{ detail.info.cas }} — Session {{ detail.info.schuze }}, Vote {{ detail.info.cislo }}</p>
+</hgroup>
+
+<article>
+    <header>
+        <strong>{{ detail.info.outcome_label }}</strong>
+    </header>
+    {% if detail.info.nazev_dlouhy %}
+    <p>{{ detail.info.nazev_dlouhy }}</p>
+    {% endif %}
+    {% if detail.info.nazev_kratky and detail.info.nazev_kratky != detail.info.nazev_dlouhy %}
+    <p><small>{{ detail.info.nazev_kratky }}</small></p>
+    {% endif %}
+
+    <p>
+        <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ detail.info.id_hlasovani }}" target="_blank" role="button" class="outline" style="font-size: 0.85rem;">View vote on psp.cz &nearr;</a>
+        {% if detail.info.tisk_url %}
+        <a href="{{ detail.info.tisk_url }}" target="_blank" role="button" style="font-size: 0.85rem;">Document: Tisk {{ detail.info.tisk_ct }} — {{ detail.info.tisk_nazev }} &nearr;</a>
+        {% endif %}
+    </p>
+
+    <div class="stat-grid">
+        <article class="stat-card" style="border-left: 4px solid #4caf50;">
+            <h3>{{ detail.info.pro }}</h3>
+            <p>For</p>
+        </article>
+        <article class="stat-card" style="border-left: 4px solid #f44336;">
+            <h3>{{ detail.info.proti }}</h3>
+            <p>Against</p>
+        </article>
+        <article class="stat-card" style="border-left: 4px solid #ff9800;">
+            <h3>{{ detail.info.zdrzel }}</h3>
+            <p>Abstained</p>
+        </article>
+        <article class="stat-card" style="border-left: 4px solid #9e9e9e;">
+            <h3>{{ detail.info.nehlasoval }}</h3>
+            <p>Did not vote</p>
+        </article>
+    </div>
+</article>
+
+<h2>Party Breakdown</h2>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>Party</th>
+                <th>YES</th>
+                <th>NO</th>
+                <th>Abstained</th>
+                <th>Passive</th>
+                <th>Absent</th>
+                <th>Excused</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in detail.party_breakdown %}
+            <tr>
+                <td><strong>{{ row.party or "?" }}</strong></td>
+                <td style="color: #4caf50;">{{ row.yes }}</td>
+                <td style="color: #f44336;">{{ row.no }}</td>
+                <td style="color: #ff9800;">{{ row.abstained }}</td>
+                <td>{{ row.passive }}</td>
+                <td>{{ row.absent }}</td>
+                <td>{{ row.excused }}</td>
+                <td>{{ row.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2>Individual MPs</h2>
+
+<details>
+    <summary>Show all {{ detail.mp_votes | length }} MP votes</summary>
+    <div class="overflow-auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>MP</th>
+                    <th>Party</th>
+                    <th>Vote</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mp in detail.mp_votes %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ mp.jmeno }} {{ mp.prijmeni }}</td>
+                    <td>{{ mp.party or "?" }}</td>
+                    <td>
+                        {% if mp.vote_label == "YES" %}
+                        <span style="color: #4caf50;">{{ mp.vote_label }}</span>
+                        {% elif mp.vote_label == "NO" %}
+                        <span style="color: #f44336;">{{ mp.vote_label }}</span>
+                        {% elif mp.vote_label == "ABSTAINED" %}
+                        <span style="color: #ff9800;">{{ mp.vote_label }}</span>
+                        {% else %}
+                        <span style="color: #9e9e9e;">{{ mp.vote_label }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<p><a href="/votes?period={{ period }}">&larr; Back to Votes Browser</a></p>
+{% endblock %}
