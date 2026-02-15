@@ -1,0 +1,306 @@
+"""Ollama integration for AI topic classification and tisk summarization.
+
+When Ollama is running locally with the configured model, provides:
+- Free-form topic classification (1-3 Czech topic labels per tisk)
+- Czech-language summaries explaining what each proposed law changes
+
+Falls back gracefully to keyword classification when Ollama is unavailable.
+"""
+
+import json
+import re
+
+import httpx
+from loguru import logger
+
+from pspcz_analyzer.config import (
+    OLLAMA_BASE_URL,
+    OLLAMA_HEALTH_TIMEOUT,
+    OLLAMA_MAX_TEXT_CHARS,
+    OLLAMA_MODEL,
+    OLLAMA_TIMEOUT,
+    OLLAMA_VERBATIM_CHARS,
+)
+
+_CLASSIFICATION_SYSTEM = (
+    "Jsi analytik ceskeho parlamentu. Analyzujes parlamentni tisky a priradujes jim tematicke stitky. "
+    "Odpovez POUZE ve formatu 'TOPICS: tema1, tema2, tema3' kde temata jsou 1-3 kratke ceske nazvy "
+    "tematickych oblasti (napr. 'Dane a poplatky', 'Socialni pojisteni', 'Trestni pravo'). "
+    "Pouzivej strucne a konkretni nazvy temat. Zadny dalsi text."
+)
+
+_CLASSIFICATION_PROMPT_TEMPLATE = (
+    "Urc 1-3 hlavni temata nasledujiciho parlamentniho tisku. "
+    "Pouzij kratke ceske nazvy temat (2-4 slova). "
+    "Bud konkretni - napr. misto 'Pravo' napis 'Trestni pravo' nebo 'Obcanske pravo'.\n\n"
+    "Nazev tisku: {title}\n\n"
+    "Text tisku:\n{text}\n\n"
+    "Odpovez POUZE: TOPICS: tema1, tema2, tema3 /no_think"
+)
+
+_SUMMARY_SYSTEM = (
+    "Jsi kriticko-analyticky komentator ceskeho parlamentu. Pises ostre, vecne a bez prikraslovani. "
+    "Odhalujes skryte dopady zakonu, rizika zneuziti, a kdo z novely skutecne profituje. "
+    "Neboj se pojmenovat problemy primo — napr. oslabeni nezavislosti uredniku, rozsireni pravomoci "
+    "bez kontroly, skryte privatizace, nebo omeze obcanskych prav. 3-4 vety."
+)
+
+_SUMMARY_PROMPT_TEMPLATE = (
+    "Analyzuj nasledujici parlamentni tisk KRITICKY. Nestaci rict 'co meni' — vysvetli:\n"
+    "1. Co KONKRETNE se meni (zadne vague formulace)\n"
+    "2. Komu to prospiva a komu skodi\n"
+    "3. Jake je RIZIKO zneuziti nebo nezamysleny dusledek\n"
+    "Bud primy a kriticko-analyticky. Pokud zakon oslabuje kontrolu, nezavislost nebo prava, rekni to jasne.\n"
+    "3-4 vety v cestine.\n\n"
+    "Nazev: {title}\n\n"
+    "Text:\n{text} /no_think"
+)
+
+_CONSOLIDATION_SYSTEM = (
+    "Jsi analytik ceskeho parlamentu. Dostanes seznam tematickych stitku. "
+    "Sjednot podobna/prekryvajici se temata pod jeden kanonicky nazev."
+)
+
+_CONSOLIDATION_PROMPT_TEMPLATE = (
+    "Zde je seznam {n} temat z parlamentnich tisku. Sjednot podobna a prekryvajici se temata.\n"
+    "Pro kazde tema napis mapovani ve formatu: stare_tema -> kanonicky_nazev\n"
+    "Pokud je tema uz dobre, mapuj ho samo na sebe.\n\n"
+    "Temata:\n{topics_list}\n\n"
+    "Odpovez POUZE mapovanim, jeden radek na tema. /no_think"
+)
+
+# Strip <think>...</think> blocks from Qwen3 responses (defensive)
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+# Pattern for heading lines in Czech legislative texts
+_HEADING_RE = re.compile(
+    r"^(?:"
+    r"[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ\s]{10,}"  # ALL CAPS lines (10+ chars)
+    r"|(?:Část|ČÁST|Hlava|HLAVA|Článek|ČLÁNEK|Díl|DÍL)\s"  # Section markers
+    r"|(?:I{1,3}V?|VI{0,3}|IX|X{1,3})\.\s"  # Roman numerals
+    r"|DŮVODOVÁ ZPRÁVA"
+    r"|ZVLÁŠTNÍ ČÁST"
+    r"|OBECNÁ ČÁST"
+    r")",
+    re.MULTILINE,
+)
+
+
+def truncate_legislative_text(
+    text: str,
+    verbatim_chars: int = OLLAMA_VERBATIM_CHARS,
+    max_chars: int = OLLAMA_MAX_TEXT_CHARS,
+) -> str:
+    """Truncate Czech legislative text intelligently for LLM processing.
+
+    Strategy:
+    1. First `verbatim_chars` characters verbatim (captures explanatory report)
+    2. From remainder: extract heading lines + first 200 chars after each heading
+    3. Hard cap at `max_chars` total
+    """
+    if len(text) <= max_chars:
+        return text
+
+    result = text[:verbatim_chars]
+    remainder = text[verbatim_chars:]
+
+    # Extract structural highlights from the remainder
+    highlights: list[str] = []
+    for match in _HEADING_RE.finditer(remainder):
+        start = match.start()
+        # Grab heading + 200 chars after it
+        snippet = remainder[start : start + 200 + len(match.group())]
+        highlights.append(snippet.strip())
+
+    if highlights:
+        result += "\n\n[...]\n\n" + "\n\n".join(highlights)
+
+    return result[:max_chars]
+
+
+class OllamaClient:
+    """Client for local Ollama LLM integration."""
+
+    def __init__(
+        self,
+        base_url: str = OLLAMA_BASE_URL,
+        model: str = OLLAMA_MODEL,
+        timeout: float = OLLAMA_TIMEOUT,
+    ) -> None:
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+        self.timeout = timeout
+        self._available: bool | None = None
+
+    def is_available(self) -> bool:
+        """Check if Ollama is running and the model is available.
+
+        Caches result after first call.
+        """
+        if self._available is not None:
+            return self._available
+
+        try:
+            resp = httpx.get(
+                f"{self.base_url}/api/tags",
+                timeout=OLLAMA_HEALTH_TIMEOUT,
+            )
+            resp.raise_for_status()
+            models = [m.get("name", "") for m in resp.json().get("models", [])]
+            # Match model name with or without tag suffix
+            self._available = any(
+                m == self.model or m.startswith(f"{self.model}:")
+                or self.model.startswith(f"{m}:")
+                or m == self.model.split(":")[0]
+                for m in models
+            )
+            if self._available:
+                logger.info("[ollama] Available with model {}", self.model)
+            else:
+                logger.info(
+                    "[ollama] Running but model {} not found (available: {})",
+                    self.model, ", ".join(models),
+                )
+        except Exception:
+            self._available = False
+            logger.info("[ollama] Not available (connection failed)")
+
+        return self._available
+
+    def classify_topics(self, text: str, title: str) -> list[str]:
+        """Classify a tisk into 1-3 free-form topic labels using the LLM.
+
+        Returns list of Czech topic labels, or empty list on failure.
+        """
+        truncated = truncate_legislative_text(text)
+        prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(
+            title=title or "(bez názvu)",
+            text=truncated,
+        )
+        response = self._generate(prompt, _CLASSIFICATION_SYSTEM)
+        if response is None:
+            return []
+        return self._parse_topics_response(response)
+
+    def summarize(self, text: str, title: str) -> str:
+        """Generate a Czech-language summary of what a proposed law changes.
+
+        Returns summary text or empty string on failure.
+        """
+        truncated = truncate_legislative_text(text)
+        prompt = _SUMMARY_PROMPT_TEMPLATE.format(
+            title=title or "(bez názvu)",
+            text=truncated,
+        )
+        response = self._generate(prompt, _SUMMARY_SYSTEM)
+        if not response:
+            return ""
+        return self._strip_think(response)
+
+    def consolidate_topics(self, all_topics: list[str]) -> dict[str, str]:
+        """Consolidate/deduplicate topic labels via the LLM.
+
+        Sends all unique topics to the model and asks it to merge
+        similar/overlapping ones under canonical names.
+
+        Returns dict mapping old_name -> canonical_name.
+        Topics not in the response keep their original name.
+        """
+        topics_list = "\n".join(f"- {t}" for t in all_topics)
+        prompt = _CONSOLIDATION_PROMPT_TEMPLATE.format(
+            n=len(all_topics),
+            topics_list=topics_list,
+        )
+        response = self._generate(prompt, _CONSOLIDATION_SYSTEM)
+        if not response:
+            return {t: t for t in all_topics}
+
+        response = self._strip_think(response)
+        mapping: dict[str, str] = {}
+        for line in response.splitlines():
+            line = line.strip()
+            if " -> " not in line:
+                continue
+            parts = line.split(" -> ", 1)
+            old = parts[0].strip().strip("- ")
+            new = parts[1].strip()
+            if old and new:
+                mapping[old] = new
+
+        # Any topics not in the mapping keep their original name
+        for t in all_topics:
+            if t not in mapping:
+                mapping[t] = t
+
+        return mapping
+
+    def _generate(self, prompt: str, system: str) -> str | None:
+        """Send a generation request to Ollama. Returns response text or None."""
+        try:
+            resp = httpx.post(
+                f"{self.base_url}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "system": system,
+                    "stream": False,
+                },
+                timeout=self.timeout,
+            )
+            resp.raise_for_status()
+            return resp.json().get("response")
+        except Exception:
+            logger.opt(exception=True).debug("[ollama] Generation request failed")
+            return None
+
+    @staticmethod
+    def _strip_think(text: str) -> str:
+        """Remove <think>...</think> blocks from Qwen3 responses."""
+        return _THINK_RE.sub("", text).strip()
+
+    def _parse_topics_response(self, response: str) -> list[str]:
+        """Extract topic labels from LLM response.
+
+        Expects format: TOPICS: topic1, topic2, topic3
+        """
+        response = self._strip_think(response)
+        match = re.search(r"TOPICS?:\s*(.+)", response, re.IGNORECASE)
+        if not match:
+            logger.debug("[ollama] Could not parse topics from response: {}", response[:200])
+            return []
+
+        raw = match.group(1).strip()
+        # Split on comma, clean up each topic
+        topics = [t.strip().strip(".,;:-–") for t in raw.split(",")]
+        # Filter empty strings and "none"
+        topics = [t for t in topics if t and t.lower() != "none"]
+
+        if not topics:
+            logger.debug("[ollama] No valid topics parsed from: {}", raw[:200])
+            return []
+
+        # Cap at 3 topics
+        return topics[:3]
+
+
+def serialize_topics(topics: list[str]) -> str:
+    """Serialize topic list for parquet storage."""
+    return json.dumps(topics, ensure_ascii=False)
+
+
+def deserialize_topics(raw: str) -> list[str]:
+    """Deserialize topic list from parquet storage.
+
+    Handles both new JSON format and old single-topic-ID format.
+    """
+    if not raw:
+        return []
+    # Try JSON first (new format: '["topic1", "topic2"]')
+    if raw.startswith("["):
+        try:
+            topics = json.loads(raw)
+            return [t for t in topics if isinstance(t, str) and t]
+        except (json.JSONDecodeError, TypeError):
+            pass
+    # Old format: single topic ID like "finance" or "justice"
+    return [raw]

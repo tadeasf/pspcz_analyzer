@@ -27,6 +27,10 @@ async def lifespan(app: FastAPI):
     svc.initialize(period=DEFAULT_PERIOD)
     app.state.data = svc
     logger.info("Data service initialized, server ready.")
+
+    # Start background tisk pipeline for all periods (newest first)
+    svc.start_all_tisk_pipelines()
+
     yield
 
 

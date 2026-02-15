@@ -1,9 +1,14 @@
 """Votes / laws browser — search, list, and detail views of parliamentary votes."""
 
+from __future__ import annotations
+
+import re
+
 import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.services.data_service import PeriodData
+from pspcz_analyzer.utils.text import normalize_czech
 
 # Outcome labels for display
 OUTCOME_LABELS = {
@@ -14,6 +19,57 @@ OUTCOME_LABELS = {
     "N": "Not decided",
 }
 
+_DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
+
+
+def _normalize_date(d: str | None) -> str | None:
+    """Normalize a Czech date string to 'D. M. YYYY' form for comparison."""
+    if not d:
+        return None
+    m = _DATE_RE.search(str(d))
+    if m:
+        return f"{int(m.group(1))}. {int(m.group(2))}. {m.group(3)}"
+    return None
+
+
+def _match_vote_to_stage(
+    vote_session: int | None,
+    vote_number: int | None,
+    vote_date: str | None,
+    history,
+) -> object | None:
+    """Try to match a vote to a specific legislative stage in the tisk history.
+
+    Priority cascade:
+    1. Exact vote number + session match (stage.vote_number == cislo AND stage.session_number == schuze)
+    2. Session + date match
+    3. Date-only match
+    """
+    if history is None or not hasattr(history, "stages"):
+        return None
+
+    norm_vote_date = _normalize_date(vote_date)
+
+    # Priority 1: exact vote number + session
+    if vote_number is not None and vote_session is not None:
+        for stage in history.stages:
+            if stage.vote_number == vote_number and stage.session_number == vote_session:
+                return stage
+
+    # Priority 2: session + date
+    if vote_session is not None and norm_vote_date:
+        for stage in history.stages:
+            if stage.session_number == vote_session and _normalize_date(stage.date) == norm_vote_date:
+                return stage
+
+    # Priority 3: date only
+    if norm_vote_date:
+        for stage in history.stages:
+            if _normalize_date(stage.date) == norm_vote_date:
+                return stage
+
+    return None
+
 
 def list_votes(
     data: PeriodData,
@@ -21,8 +77,9 @@ def list_votes(
     page: int = 1,
     per_page: int = 30,
     outcome_filter: str = "",
+    topic_filter: str = "",
 ) -> dict:
-    """List votes with optional text search and pagination.
+    """List votes with optional text search, topic filter, and pagination.
 
     Returns dict with keys: rows, total, page, per_page, total_pages.
     """
@@ -36,14 +93,32 @@ def list_votes(
     )
 
     if search.strip():
-        q = search.strip().lower()
+        q = normalize_czech(search.strip())
         votes = votes.filter(
-            pl.col("nazev_dlouhy").str.to_lowercase().str.contains(q, literal=True)
-            | pl.col("nazev_kratky").str.to_lowercase().str.contains(q, literal=True)
+            pl.col("nazev_dlouhy").map_elements(
+                lambda s: q in normalize_czech(s or ""), return_dtype=pl.Boolean,
+            )
+            | pl.col("nazev_kratky").map_elements(
+                lambda s: q in normalize_czech(s or ""), return_dtype=pl.Boolean,
+            )
         )
 
     if outcome_filter:
         votes = votes.filter(pl.col("vysledek") == outcome_filter)
+
+    # Topic filter: only keep votes whose linked tisk has the specified topic
+    if topic_filter:
+        allowed_keys = set()
+        for (schuze, bod), tisk in data.tisk_lookup.items():
+            if topic_filter in tisk.topics:
+                allowed_keys.add((schuze, bod))
+        if allowed_keys:
+            allowed_schuze = [k[0] for k in allowed_keys]
+            allowed_bod = [k[1] for k in allowed_keys]
+            key_df = pl.DataFrame({"schuze": allowed_schuze, "bod": allowed_bod})
+            votes = votes.join(key_df, on=["schuze", "bod"], how="inner")
+        else:
+            votes = votes.head(0)
 
     total = votes.height
     total_pages = max(1, (total + per_page - 1) // per_page)
@@ -68,6 +143,7 @@ def list_votes(
         r["tisk_url"] = tisk.url if tisk else None
         r["tisk_nazev"] = tisk.nazev if tisk else None
         r["tisk_ct"] = tisk.ct if tisk else None
+        r["tisk_topics"] = tisk.topics if tisk else []
 
     return {
         "rows": rows,
@@ -97,6 +173,23 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
     info["tisk_url"] = tisk.url if tisk else None
     info["tisk_nazev"] = tisk.nazev if tisk else None
     info["tisk_ct"] = tisk.ct if tisk else None
+    info["tisk_topics"] = tisk.topics if tisk else []
+    info["tisk_has_text"] = tisk.has_text if tisk else False
+    info["tisk_summary"] = tisk.summary if tisk else ""
+
+    # Legislative history and vote-to-stage matching
+    info["tisk_history"] = (tisk.history if tisk else None)
+    info["tisk_current_stage"] = None
+    info["tisk_submitter"] = ""
+    info["tisk_law_number"] = None
+    info["tisk_current_status"] = None
+    if tisk and tisk.history:
+        info["tisk_current_stage"] = _match_vote_to_stage(
+            info.get("schuze"), info.get("cislo"), info.get("datum"), tisk.history,
+        )
+        info["tisk_submitter"] = tisk.history.submitter
+        info["tisk_law_number"] = tisk.history.law_number
+        info["tisk_current_status"] = tisk.history.current_status
 
     # Individual MP votes for this vote
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)

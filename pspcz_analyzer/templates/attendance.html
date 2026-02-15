@@ -50,5 +50,8 @@
 </div>
 
 <div id="results" hx-get="/api/attendance?top=30&sort=worst&period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+    <div class="skeleton">{% for _ in range(8) %}
+    <div class="skeleton-pulse skeleton-table-row"></div>
+    {% endfor %}</div>
 </div>
 {% endblock %}

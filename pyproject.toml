@@ -14,4 +14,6 @@ dependencies = [
     "seaborn>=0.13",
     "matplotlib>=3.9",
     "loguru>=0.7.3",
+    "beautifulsoup4>=4.12",
+    "pymupdf>=1.25",
 ]

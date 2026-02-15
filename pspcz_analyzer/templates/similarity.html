@@ -28,6 +28,9 @@
 <p>MPs from different parties who vote most similarly:</p>
 
 <div id="results" hx-get="/api/similarity?top=20&period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+    <div class="skeleton">{% for _ in range(8) %}
+    <div class="skeleton-pulse skeleton-table-row"></div>
+    {% endfor %}</div>
 </div>
 <span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
 {% endblock %}

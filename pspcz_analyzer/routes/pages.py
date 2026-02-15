@@ -67,9 +67,11 @@ async def active_page(request: Request, period: int = DEFAULT_PERIOD):
 
 @router.get("/votes")
 async def votes_page(request: Request, period: int = DEFAULT_PERIOD):
+    data_svc = request.app.state.data
+    pd = data_svc.get_period(period)
     return templates.TemplateResponse(
         "votes.html",
-        _ctx(request, period, active_page="votes"),
+        _ctx(request, period, active_page="votes", topics=pd.get_all_topic_labels()),
     )
 
 

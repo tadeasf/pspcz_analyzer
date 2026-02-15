@@ -21,7 +21,7 @@
     <div class="grid">
         <label>
             Search votes
-            <input type="search" name="search" placeholder="e.g. rozpočet, důvěra, daň..." value="">
+            <input type="search" name="search" placeholder="e.g. rozpocet, duvera, dan (diacritics optional)..." value="">
         </label>
         <label>
             Outcome
@@ -29,6 +29,15 @@
                 <option value="">All</option>
                 <option value="A">Passed</option>
                 <option value="R">Rejected</option>
+            </select>
+        </label>
+        <label>
+            Topic
+            <select name="topic">
+                <option value="">All topics</option>
+                {% for t in topics %}
+                <option value="{{ t }}">{{ t }}</option>
+                {% endfor %}
             </select>
         </label>
         <label>
@@ -41,5 +50,8 @@
 <span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
 
 <div id="results" hx-get="/api/votes?period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+    <div class="skeleton">{% for _ in range(8) %}
+    <div class="skeleton-pulse skeleton-table-row"></div>
+    {% endfor %}</div>
 </div>
 {% endblock %}

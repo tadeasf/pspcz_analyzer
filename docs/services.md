@@ -28,7 +28,7 @@ UNL files are pipe-delimited with no header row, Windows-1250 encoded, and have 
 - `parse_unl()` — parses a single file given column names and optional dtype casts
 - `parse_unl_multi()` — parses multiple files matching a glob pattern and concatenates them (used for per-session vote files like `hl2025h1.unl`, `hl2025h2.unl`, ...)
 
-The `disable_quoting=True` flag is needed for files containing unescaped double-quotes (e.g. `bod_schuze.unl`, `tisky.unl`).
+CSV quoting is always disabled (`quote_char=None`) because UNL files never use CSV-style quoting — any double quotes in the data are literal characters.
 
 ### 3. Cache (`data/cache.py`)
 

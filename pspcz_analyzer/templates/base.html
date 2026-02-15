@@ -57,6 +57,100 @@
             cursor: pointer;
             font-weight: bold;
         }
+        /* Skeleton loading state */
+        .skeleton {
+            pointer-events: none;
+        }
+        .skeleton-pulse {
+            background: var(--pico-muted-border-color);
+            border-radius: var(--pico-border-radius);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        .skeleton-line {
+            height: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .skeleton-line-short { width: 40%; }
+        .skeleton-line-medium { width: 70%; }
+        .skeleton-line-long { width: 90%; }
+        .skeleton-heading {
+            height: 2rem;
+            width: 50%;
+            margin-bottom: 1rem;
+        }
+        .skeleton-table-row {
+            height: 2.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .skeleton-card {
+            height: 6rem;
+            margin-bottom: 1rem;
+        }
+        /* Legislative timeline */
+        .legislative-timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin: 1.5rem 0;
+        }
+        .legislative-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.55rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #2a3a4e;
+        }
+        .timeline-stage {
+            position: relative;
+            padding: 0.5rem 0 0.5rem 1rem;
+            margin-bottom: 0.25rem;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -1.55rem;
+            top: 0.7rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4a5a6e;
+            border: 2px solid #2a3a4e;
+        }
+        .timeline-stage-active .timeline-dot {
+            background: #42a5f5;
+            border-color: #1565c0;
+            box-shadow: 0 0 8px rgba(66, 165, 245, 0.6);
+        }
+        .timeline-stage-active {
+            background: rgba(21, 101, 192, 0.1);
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem 0.5rem 1rem;
+        }
+        .timeline-label {
+            font-weight: 600;
+            color: #e0e6ed;
+            font-size: 0.9rem;
+        }
+        .timeline-date {
+            color: #7a8a9e;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        .timeline-outcome {
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+            color: #9aa6b4;
+        }
+        .timeline-approved {
+            color: #66bb6a;
+        }
+        .timeline-rejected {
+            color: #ef5350;
+        }
     </style>
 </head>
 <body>
@@ -94,10 +188,42 @@
 
     <script>
         function switchPeriod(newPeriod) {
+            // Show skeleton immediately so stale data disappears
+            const main = document.querySelector('main');
+            main.classList.add('skeleton');
+            main.setAttribute('aria-busy', 'true');
+            main.innerHTML = `
+                <div class="skeleton-pulse skeleton-heading"></div>
+                <div class="skeleton-pulse skeleton-line skeleton-line-medium"></div>
+                <div class="stat-grid" style="margin: 2rem 0;">
+                    <div class="skeleton-pulse skeleton-card"></div>
+                    <div class="skeleton-pulse skeleton-card"></div>
+                    <div class="skeleton-pulse skeleton-card"></div>
+                    <div class="skeleton-pulse skeleton-card"></div>
+                </div>
+                <div class="skeleton-pulse skeleton-heading" style="width: 30%; margin-top: 2rem;"></div>
+                ${Array(8).fill('<div class="skeleton-pulse skeleton-table-row"></div>').join('')}
+            `;
             const url = new URL(window.location.href);
             url.searchParams.set('period', newPeriod);
             window.location.href = url.toString();
         }
+
+        // Also show skeleton when clicking nav links (page-to-page navigation)
+        document.querySelectorAll('nav a[href]').forEach(function(link) {
+            link.addEventListener('click', function() {
+                const main = document.querySelector('main');
+                main.classList.add('skeleton');
+                main.setAttribute('aria-busy', 'true');
+                main.innerHTML = `
+                    <div class="skeleton-pulse skeleton-heading"></div>
+                    <div class="skeleton-pulse skeleton-line skeleton-line-medium"></div>
+                    <div style="margin: 2rem 0;">
+                        ${Array(6).fill('<div class="skeleton-pulse skeleton-table-row"></div>').join('')}
+                    </div>
+                `;
+            });
+        });
     </script>
 </body>
 </html>
