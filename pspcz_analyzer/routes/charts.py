@@ -6,11 +6,15 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import seaborn as sns
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import StreamingResponse
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.middleware import run_with_timeout
+from pspcz_analyzer.rate_limit import limiter
+from pspcz_analyzer.routes.api import validate_period
 from pspcz_analyzer.services.activity_service import compute_activity
+from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
 from pspcz_analyzer.services.loyalty_service import compute_loyalty
 from pspcz_analyzer.services.similarity_service import compute_pca_coords
@@ -33,10 +37,23 @@ def _fig_to_png(fig: Figure) -> io.BytesIO:
 
 
 @router.get("/loyalty.png")
-async def loyalty_chart(request: Request, period: int = DEFAULT_PERIOD, top: int = 20):
+@limiter.limit("10/minute")
+async def loyalty_chart(
+    request: Request,
+    period: int = DEFAULT_PERIOD,
+    top: int = Query(default=20, ge=1, le=200),
+):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    rows = compute_loyalty(pd, top=top)
+    key = f"loyalty:{period}:{top}"
+    rows = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_loyalty(pd, top=top)
+        ),
+        timeout=20.0,
+        label="loyalty chart",
+    )
 
     fig, ax = plt.subplots(figsize=(12, max(6, len(rows) * 0.35)))
     fig.patch.set_facecolor("#FFFFFF")
@@ -57,10 +74,23 @@ async def loyalty_chart(request: Request, period: int = DEFAULT_PERIOD, top: int
 
 
 @router.get("/attendance.png")
-async def attendance_chart(request: Request, period: int = DEFAULT_PERIOD, top: int = 20):
+@limiter.limit("10/minute")
+async def attendance_chart(
+    request: Request,
+    period: int = DEFAULT_PERIOD,
+    top: int = Query(default=20, ge=1, le=200),
+):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    rows = compute_attendance(pd, top=top, sort="worst")
+    key = f"attendance:{period}:{top}:worst"
+    rows = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_attendance(pd, top=top, sort="worst")
+        ),
+        timeout=20.0,
+        label="attendance chart",
+    )
 
     fig, ax = plt.subplots(figsize=(12, max(6, len(rows) * 0.35)))
     fig.patch.set_facecolor("#FFFFFF")
@@ -81,10 +111,23 @@ async def attendance_chart(request: Request, period: int = DEFAULT_PERIOD, top: 
 
 
 @router.get("/active.png")
-async def active_chart(request: Request, period: int = DEFAULT_PERIOD, top: int = 25):
+@limiter.limit("10/minute")
+async def active_chart(
+    request: Request,
+    period: int = DEFAULT_PERIOD,
+    top: int = Query(default=25, ge=1, le=200),
+):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    rows = compute_activity(pd, top=top)
+    key = f"active:{period}:{top}:"
+    rows = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_activity(pd, top=top)
+        ),
+        timeout=20.0,
+        label="activity chart",
+    )
 
     fig, ax = plt.subplots(figsize=(12, max(6, len(rows) * 0.35)))
     fig.patch.set_facecolor("#FFFFFF")
@@ -105,10 +148,19 @@ async def active_chart(request: Request, period: int = DEFAULT_PERIOD, top: int 
 
 
 @router.get("/similarity.png")
+@limiter.limit("10/minute")
 async def similarity_chart(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    coords = compute_pca_coords(pd)
+    key = f"similarity_pca:{period}"
+    coords = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_pca_coords(pd)
+        ),
+        timeout=30.0,
+        label="similarity chart",
+    )
 
     # Assign colors per party
     parties = sorted({c["party"] for c in coords})

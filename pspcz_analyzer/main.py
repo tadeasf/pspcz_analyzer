@@ -7,9 +7,13 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from loguru import logger
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.logging_config import setup_logging
+from pspcz_analyzer.middleware import SecurityHeadersMiddleware
+from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.api import router as api_router
 from pspcz_analyzer.routes.charts import router as charts_router
 from pspcz_analyzer.routes.pages import router as pages_router
@@ -42,6 +46,13 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
+
+# Security: rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Security: response headers
+app.add_middleware(SecurityHeadersMiddleware)
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
