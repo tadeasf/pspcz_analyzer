@@ -141,26 +141,49 @@ def _classify_and_save(
     """Run topic classification on extracted texts, save parquet, return maps.
 
     Uses Ollama AI when available (free-form topics), falls back to keyword matching.
+    Saves incrementally after each tisk and resumes from where it left off.
     Returns (topic_map, summary_map).
     """
-    from pspcz_analyzer.services.ollama_service import OllamaClient, serialize_topics
+    from pspcz_analyzer.services.ollama_service import (
+        OllamaClient,
+        deserialize_topics,
+        serialize_topics,
+    )
 
     meta_dir = cache_dir / TISKY_META_DIR / str(period)
     meta_dir.mkdir(parents=True, exist_ok=True)
+    parquet_path = meta_dir / "topic_classifications.parquet"
+
+    # Load existing records to resume from (if any)
+    existing: dict[int, dict] = {}
+    if parquet_path.exists():
+        df = pl.read_parquet(parquet_path)
+        for row in df.iter_rows(named=True):
+            existing[row["ct"]] = row
+
+    # Figure out which tisky still need processing
+    remaining = {ct: p for ct, p in text_paths.items() if ct not in existing}
 
     ollama = OllamaClient()
     use_ai = ollama.is_available()
     total = len(text_paths)
+    already = len(existing)
+
+    if already:
+        logger.info(
+            "[tisk pipeline] Resuming: {} already done, {} remaining out of {} total",
+            already, len(remaining), total,
+        )
+
     if use_ai:
-        logger.info("[tisk pipeline] Ollama available, using AI classification + summarization ({} tisky)", total)
+        logger.info("[tisk pipeline] Ollama available, using AI classification + summarization ({} to process)", len(remaining))
     else:
-        logger.info("[tisk pipeline] Ollama not available, using keyword classification ({} tisky)", total)
+        logger.info("[tisk pipeline] Ollama not available, using keyword classification ({} to process)", len(remaining))
 
-    topic_map: dict[int, list[str]] = {}
-    summary_map: dict[int, str] = {}
-    records = []
+    # Start from existing records
+    records = list(existing.values())
 
-    for i, (ct, text_path) in enumerate(sorted(text_paths.items()), 1):
+    for i, (ct, text_path) in enumerate(sorted(remaining.items()), already + 1):
         text = text_path.read_text(encoding="utf-8")
         topics: list[str] = []
         summary = ""
@@ -192,26 +215,34 @@ def _classify_and_save(
                 source = "keyword"
                 logger.debug("[tisk pipeline] tisk ct={} AI returned no topics, keyword fallback -> {}", ct, kw_topic)
 
-        records.append({
+        record = {
             "ct": ct,
             "topic": serialize_topics(topics),
             "summary": summary,
             "source": source,
-        })
-        if topics:
-            topic_map[ct] = topics
-        if summary:
-            summary_map[ct] = summary
+        }
+        records.append(record)
 
-    if records:
+        # Save after every tisk so progress is never lost
         df = pl.DataFrame(records)
-        df.write_parquet(meta_dir / "topic_classifications.parquet")
-        classified = sum(1 for r in records if r["topic"] != "[]")
-        ai_count = sum(1 for r in records if r["source"].startswith("ollama"))
-        logger.info(
-            "[tisk pipeline] Classified {}/{} tisky for period {} (AI: {}, keyword: {})",
-            classified, len(records), period, ai_count, classified - ai_count,
-        )
+        df.write_parquet(parquet_path)
+
+    # Build return maps from all records (existing + new)
+    topic_map: dict[int, list[str]] = {}
+    summary_map: dict[int, str] = {}
+    for r in records:
+        parsed = deserialize_topics(r["topic"])
+        if parsed:
+            topic_map[r["ct"]] = parsed
+        if r.get("summary"):
+            summary_map[r["ct"]] = r["summary"]
+
+    classified = len(topic_map)
+    ai_count = sum(1 for r in records if r.get("source", "").startswith("ollama"))
+    logger.info(
+        "[tisk pipeline] Classified {}/{} tisky for period {} (AI: {}, keyword: {})",
+        classified, len(records), period, ai_count, classified - ai_count,
+    )
 
     return topic_map, summary_map
 
