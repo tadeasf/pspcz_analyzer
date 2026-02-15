@@ -19,7 +19,7 @@ from pspcz_analyzer.config import (
     TISKY_TEXT_DIR,
 )
 from pspcz_analyzer.data.tisk_scraper import get_best_pdf
-from pspcz_analyzer.services.topic_service import classify_tisk_primary
+from pspcz_analyzer.services.topic_service import classify_tisk_primary_label
 
 
 def _download_one(period: int, ct: int, idd: int, cache_dir: Path, force: bool) -> Path | None:
@@ -135,30 +135,85 @@ def _process_period_sync(
     return pdf_paths, text_paths
 
 
-def _classify_and_save(period: int, text_paths: dict[int, Path], cache_dir: Path) -> dict[int, list[str]]:
-    """Run keyword classification on extracted texts, save parquet, return topic map."""
+def _classify_and_save(
+    period: int, text_paths: dict[int, Path], cache_dir: Path,
+) -> tuple[dict[int, list[str]], dict[int, str]]:
+    """Run topic classification on extracted texts, save parquet, return maps.
+
+    Uses Ollama AI when available (free-form topics), falls back to keyword matching.
+    Returns (topic_map, summary_map).
+    """
+    from pspcz_analyzer.services.ollama_service import OllamaClient, serialize_topics
+
     meta_dir = cache_dir / TISKY_META_DIR / str(period)
     meta_dir.mkdir(parents=True, exist_ok=True)
 
+    ollama = OllamaClient()
+    use_ai = ollama.is_available()
+    total = len(text_paths)
+    if use_ai:
+        logger.info("[tisk pipeline] Ollama available, using AI classification + summarization ({} tisky)", total)
+    else:
+        logger.info("[tisk pipeline] Ollama not available, using keyword classification ({} tisky)", total)
+
     topic_map: dict[int, list[str]] = {}
+    summary_map: dict[int, str] = {}
     records = []
-    for ct, text_path in sorted(text_paths.items()):
+
+    for i, (ct, text_path) in enumerate(sorted(text_paths.items()), 1):
         text = text_path.read_text(encoding="utf-8")
-        topic = classify_tisk_primary(text, "")
-        records.append({"ct": ct, "topic": topic or ""})
-        if topic:
-            topic_map[ct] = [topic]
+        topics: list[str] = []
+        summary = ""
+        source = "keyword"
+
+        if use_ai:
+            logger.info("[tisk pipeline] [{}/{}] AI classifying tisk ct={} ...", i, total, ct)
+            topics = ollama.classify_topics(text, "")
+            if topics:
+                source = f"ollama:{ollama.model}"
+            logger.info("[tisk pipeline] [{}/{}] AI summarizing tisk ct={} ...", i, total, ct)
+            summary = ollama.summarize(text, "")
+            logger.info(
+                "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} summary={}chars ({})",
+                i, total, ct, topics or "(none)", len(summary), source,
+            )
+        else:
+            kw_topic = classify_tisk_primary_label(text, "")
+            if kw_topic:
+                topics = [kw_topic]
+            if i % 20 == 0 or i == total:
+                logger.info("[tisk pipeline] [{}/{}] keyword classification progress", i, total)
+
+        # Fall back to keyword classification if AI didn't produce topics
+        if use_ai and not topics:
+            kw_topic = classify_tisk_primary_label(text, "")
+            if kw_topic:
+                topics = [kw_topic]
+                source = "keyword"
+                logger.debug("[tisk pipeline] tisk ct={} AI returned no topics, keyword fallback -> {}", ct, kw_topic)
+
+        records.append({
+            "ct": ct,
+            "topic": serialize_topics(topics),
+            "summary": summary,
+            "source": source,
+        })
+        if topics:
+            topic_map[ct] = topics
+        if summary:
+            summary_map[ct] = summary
 
     if records:
         df = pl.DataFrame(records)
         df.write_parquet(meta_dir / "topic_classifications.parquet")
-        classified = sum(1 for r in records if r["topic"])
+        classified = sum(1 for r in records if r["topic"] != "[]")
+        ai_count = sum(1 for r in records if r["source"].startswith("ollama"))
         logger.info(
-            "[tisk pipeline] Classified {}/{} tisky for period {}",
-            classified, len(records), period,
+            "[tisk pipeline] Classified {}/{} tisky for period {} (AI: {}, keyword: {})",
+            classified, len(records), period, ai_count, classified - ai_count,
         )
 
-    return topic_map
+    return topic_map, summary_map
 
 
 class TiskPipelineService:
@@ -167,6 +222,7 @@ class TiskPipelineService:
     def __init__(self, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
         self.cache_dir = cache_dir
         self._tasks: dict[int, asyncio.Task] = {}
+        self._all_task: asyncio.Task | None = None
 
     def start_period(
         self,
@@ -189,21 +245,76 @@ class TiskPipelineService:
             period, len(ct_numbers),
         )
 
+    def start_all_periods(
+        self,
+        period_ct_numbers: list[tuple[int, list[int]]],
+        on_complete=None,
+    ) -> None:
+        """Process all periods sequentially in one background task (newest first).
+
+        period_ct_numbers: list of (period, ct_numbers) tuples, ordered by priority.
+        """
+        if self._all_task is not None and not self._all_task.done():
+            logger.debug("All-periods pipeline already running")
+            return
+
+        self._all_task = asyncio.create_task(
+            self._run_all_periods(period_ct_numbers, on_complete),
+            name="tisk-pipeline-all",
+        )
+        total_tisky = sum(len(cts) for _, cts in period_ct_numbers)
+        logger.info(
+            "[tisk pipeline] Started sequential processing of {} periods ({} tisky total)",
+            len(period_ct_numbers), total_tisky,
+        )
+
+    async def _run_all_periods(
+        self,
+        period_ct_numbers: list[tuple[int, list[int]]],
+        on_complete,
+    ) -> None:
+        """Process periods one by one, sequentially."""
+        for period, ct_numbers in period_ct_numbers:
+            if not ct_numbers:
+                continue
+            logger.info(
+                "[tisk pipeline] === Starting period {} ({} tisky) ===",
+                period, len(ct_numbers),
+            )
+            try:
+                pdf_paths, text_paths = await asyncio.to_thread(
+                    _process_period_sync, period, ct_numbers, self.cache_dir,
+                )
+                topic_map, summary_map = await asyncio.to_thread(
+                    _classify_and_save, period, text_paths, self.cache_dir,
+                )
+                logger.info(
+                    "[tisk pipeline] Period {} complete: {} PDFs, {} texts, {} topics, {} summaries",
+                    period, len(pdf_paths), len(text_paths), len(topic_map), len(summary_map),
+                )
+                if on_complete:
+                    on_complete(period, text_paths, topic_map, summary_map)
+            except Exception:
+                logger.opt(exception=True).error(
+                    "[tisk pipeline] Failed for period {}, continuing to next", period,
+                )
+        logger.info("[tisk pipeline] === All periods processed ===")
+
     async def _run_period(self, period: int, ct_numbers: list[int], on_complete) -> None:
         """Run the full pipeline in a thread to avoid blocking the event loop."""
         try:
             pdf_paths, text_paths = await asyncio.to_thread(
                 _process_period_sync, period, ct_numbers, self.cache_dir,
             )
-            topic_map = await asyncio.to_thread(
+            topic_map, summary_map = await asyncio.to_thread(
                 _classify_and_save, period, text_paths, self.cache_dir,
             )
             logger.info(
-                "[tisk pipeline] Period {} complete: {} PDFs, {} texts, {} topics",
-                period, len(pdf_paths), len(text_paths), len(topic_map),
+                "[tisk pipeline] Period {} complete: {} PDFs, {} texts, {} topics, {} summaries",
+                period, len(pdf_paths), len(text_paths), len(topic_map), len(summary_map),
             )
             if on_complete:
-                on_complete(period, text_paths, topic_map)
+                on_complete(period, text_paths, topic_map, summary_map)
         except Exception:
             logger.opt(exception=True).error("[tisk pipeline] Failed for period {}", period)
 

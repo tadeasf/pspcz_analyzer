@@ -120,6 +120,7 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
     info["tisk_ct"] = tisk.ct if tisk else None
     info["tisk_topics"] = tisk.topics if tisk else []
     info["tisk_has_text"] = tisk.has_text if tisk else False
+    info["tisk_summary"] = tisk.summary if tisk else ""
 
     # Individual MP votes for this vote
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)

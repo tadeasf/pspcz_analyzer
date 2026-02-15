@@ -117,9 +117,8 @@ async def tisk_text_api(
     if text is None:
         return HTMLResponse(
             '<article style="background: #fff3cd; padding: 1rem;">'
-            "<p>No extracted text available for this tisk. "
-            "Run the CLI to download and extract tisk PDFs:</p>"
-            f"<pre><code>uv run python -m pspcz_analyzer.cli.fetch_tisky --period {period}</code></pre>"
+            "<p>No extracted text available for this tisk yet. "
+            "The background pipeline will download and extract it automatically.</p>"
             "</article>"
         )
     # Escape HTML and preserve whitespace

@@ -73,3 +73,11 @@ TISKY_META_DIR = "tisky_meta"
 PSP_TISKT_URL_TEMPLATE = "https://www.psp.cz/sqw/text/tiskt.sqw?o={period}&ct={ct}&ct1=0"
 PSP_ORIG2_BASE_URL = "https://www.psp.cz/sqw/text/orig2.sqw"
 PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
+
+# Ollama (local LLM) integration — optional, falls back to keyword classification
+OLLAMA_BASE_URL = "http://localhost:11434"
+OLLAMA_MODEL = "llama3.1:8b"
+OLLAMA_TIMEOUT = 300.0  # per-request (generous for CPU inference)
+OLLAMA_HEALTH_TIMEOUT = 5.0  # connectivity check
+OLLAMA_MAX_TEXT_CHARS = 50000
+OLLAMA_VERBATIM_CHARS = 40000

@@ -167,15 +167,11 @@ def classify_tisk(text: str, title: str) -> list[tuple[str, int]]:
     return results
 
 
-def classify_tisk_primary(text: str, title: str) -> str | None:
-    """Return the single best topic for a tisk, or None if no match."""
+def classify_tisk_primary_label(text: str, title: str) -> str | None:
+    """Return the Czech label of the best-matching topic, or None."""
     results = classify_tisk(text, title)
-    return results[0][0] if results else None
-
-
-def all_topics() -> list[dict[str, str]]:
-    """Return all topics for UI dropdowns."""
-    return [
-        {"id": tid, "label_cs": label_cs, "label_en": label_en}
-        for tid, (label_cs, label_en, _) in TOPIC_TAXONOMY.items()
-    ]
+    if not results:
+        return None
+    topic_id = results[0][0]
+    label_cs, _, _ = TOPIC_TAXONOMY[topic_id]
+    return label_cs
