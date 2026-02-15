@@ -45,7 +45,7 @@ Pure logic tests with synthetic data — no network, no disk I/O beyond `tmp_pat
 | `test_loyalty.py` | 10 | Rebellion rate computation, party filter (case-insensitive), empty data edge case, result sorting, rebellion vote details |
 | `test_attendance.py` | 6 | Attendance formula (`active / (total - excused) * 100`), sort modes (`best` vs `worst`), field validation |
 | `test_similarity.py` | 9 | PCA produces 2D coords per MP, cross-party pairs exclude same-party, cosine similarity in [-1, 1] range |
-| `test_activity.py` | 7 | Active vote ranking, party filter, vote breakdown fields |
+| `test_activity.py` | 5 | Vote breakdown fields, party filter, `most_active` sort mode, active count verification |
 | `test_votes.py` | 11 | Vote search by description text, pagination (page size, page navigation), vote detail with party breakdown, nonexistent vote returns None |
 
 ### API Tests (`tests/api/`)
@@ -54,9 +54,9 @@ Use FastAPI's `TestClient` with a mocked `DataService` — no real downloads.
 
 | File | Tests | What it covers |
 |------|-------|----------------|
-| `test_pages.py` | 6 | All page routes (`/`, `/loyalty`, `/attendance`, `/similarity`, `/active`, `/votes`) return 200 + HTML |
-| `test_api_endpoints.py` | 7 | HTMX partials (`/api/loyalty`, `/api/attendance`, etc.) return 200 + HTML, `/api/health` returns JSON `{"status": "ok"}`, invalid period returns 404 |
-| `test_charts.py` | 4 | Chart endpoints (`/charts/loyalty.png`, etc.) return `image/png` with valid PNG magic bytes |
+| `test_pages.py` | 5 | All page routes (`/`, `/loyalty`, `/attendance`, `/similarity`, `/votes`) return 200 + HTML |
+| `test_api_endpoints.py` | 6 | HTMX partials (`/api/loyalty`, `/api/attendance`, etc.) return 200 + HTML, `/api/health` returns JSON `{"status": "ok"}`, invalid period returns 404 |
+| `test_charts.py` | 3 | Chart endpoints (`/charts/loyalty.png`, etc.) return `image/png` with valid PNG magic bytes |
 
 ### Integration Tests (`tests/integration/`)
 

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-header">
     <h1>Attendance Analysis</h1>
-    <p>Who shows up to vote?</p>
+    <p>Who shows up to vote — and how do they vote?</p>
 </div>
 
 <details class="methodology">
@@ -19,6 +19,7 @@
         </ul>
         <p><strong>Attendance %</strong> = Active / (Total - Excused) x 100</p>
         <p>Excused absences are excluded from the denominator because they are legitimate (government duties, illness, etc.).</p>
+        <p>The vote breakdown shows how each MP splits their active votes between YES, NO, and ABSTAIN.</p>
     </article>
 </details>
 
@@ -34,7 +35,12 @@
             <select name="sort">
                 <option value="worst">Lowest attendance first</option>
                 <option value="best">Highest attendance first</option>
+                <option value="most_active">Most active (by volume)</option>
             </select>
+        </label>
+        <label>
+            Party filter
+            <input type="text" name="party" placeholder="All parties" value="">
         </label>
         <div class="form-submit">
             <label>&nbsp;</label>

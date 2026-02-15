@@ -42,9 +42,8 @@ Central orchestrator. Initialized at startup via FastAPI lifespan, stored on `ap
 
 Each in `services/`, each takes a `PeriodData` and returns `list[dict]`:
 - **`loyalty_service`** — Rebellion rates (MP votes against party majority direction)
-- **`attendance_service`** — Attendance % = active / (total - excused)
+- **`attendance_service`** — Attendance %, vote breakdown (YES/NO/ABSTAINED), activity ranking
 - **`similarity_service`** — Cosine similarity + SVD-based PCA on vote matrix (MPs × votes, +1/-1/0)
-- **`activity_service`** — Raw vote participation volume
 - **`votes_service`** — Vote search/list with pagination, vote detail with per-party breakdown
 
 ### Web Layer

@@ -13,7 +13,6 @@ from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.middleware import run_with_timeout
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.api import validate_period
-from pspcz_analyzer.services.activity_service import compute_activity
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
 from pspcz_analyzer.services.loyalty_service import compute_loyalty
@@ -101,41 +100,6 @@ async def attendance_chart(
     ax.barh(names[::-1], values[::-1], color=colors)
     ax.set_xlabel("Attendance Rate (%)", color="#333333")
     ax.set_title("Lowest Attendance — MPs Who Skip Votes", color="#333333", fontsize=14)
-    ax.tick_params(colors="#333333")
-    for spine in ax.spines.values():
-        spine.set_color("#D9D9D9")
-
-    return StreamingResponse(_fig_to_png(fig), media_type="image/png")
-
-
-@router.get("/active.png")
-@limiter.limit("10/minute")
-async def active_chart(
-    request: Request,
-    period: int = DEFAULT_PERIOD,
-    top: int = Query(default=25, ge=1, le=200),
-):
-    validate_period(period)
-    data_svc = request.app.state.data
-    pd = data_svc.get_period(period)
-    key = f"active:{period}:{top}:"
-    rows = await run_with_timeout(
-        lambda: analysis_cache.get_or_compute(key, lambda: compute_activity(pd, top=top)),
-        timeout=20.0,
-        label="activity chart",
-    )
-
-    fig, ax = plt.subplots(figsize=(12, max(6, len(rows) * 0.35)))
-    fig.patch.set_facecolor("#FFFFFF")
-    ax.set_facecolor("#F7F7F7")
-
-    names = [f"{r['jmeno']} {r['prijmeni']} ({r['party'] or '?'})" for r in rows]
-    values = [r["active"] for r in rows]
-
-    colors = sns.color_palette("viridis", len(rows))
-    ax.barh(names[::-1], values[::-1], color=colors)
-    ax.set_xlabel("Active Votes (YES + NO + ABSTAINED)", color="#333333")
-    ax.set_title("Most Active MPs — Total Votes Cast", color="#333333", fontsize=14)
     ax.tick_params(colors="#333333")
     for spine in ax.spines.values():
         spine.set_color("#D9D9D9")

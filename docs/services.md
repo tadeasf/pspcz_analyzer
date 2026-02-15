@@ -82,7 +82,7 @@ Supports filtering by party code.
 
 ### Attendance (`services/attendance_service.py`)
 
-Computes participation rates with category breakdowns.
+Computes participation rates with category breakdowns and vote type breakdown (YES/NO/ABSTAINED).
 
 Vote categories:
 - **Active**: YES (`A`), NO (`B`), ABSTAINED (`C`)
@@ -94,9 +94,10 @@ Formula: `attendance_pct = active / (total - excused) * 100`
 
 Excused absences are excluded from the denominator (legitimate absences don't penalize).
 
-### Activity (`services/activity_service.py`)
-
-Ranks MPs by raw volume of active votes (YES + NO + ABSTAINED). Unlike attendance (which shows rates), this rewards consistent long-term participation. Also includes attendance percentage for context.
+Sort modes:
+- `worst` — lowest attendance first (default)
+- `best` — highest attendance first
+- `most_active` — ranked by raw volume of active votes (YES + NO + ABSTAINED), rewarding consistent long-term participation
 
 Supports filtering by party code.
 

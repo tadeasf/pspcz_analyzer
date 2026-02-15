@@ -23,8 +23,7 @@ Each page template renders a full page with controls and a `#results` div that H
 |----------|------|----------|
 | `index.html` | Dashboard | None (static stats + feature cards) |
 | `loyalty.html` | Party Loyalty | Top N slider, party filter dropdown |
-| `attendance.html` | Attendance | Top N slider, sort toggle (worst/best) |
-| `active.html` | Most Active | Top N slider, party filter dropdown |
+| `attendance.html` | Attendance | Top N slider, sort toggle (worst/best/most active), party filter |
 | `similarity.html` | Similarity | Top N slider |
 | `votes.html` | Votes Browser | Search input, outcome filter, topic filter, pagination |
 | `vote_detail.html` | Vote Detail | None (static detail view) |
@@ -51,8 +50,7 @@ HTML fragments returned by `/api/*` endpoints for HTMX swaps:
 | Partial | Endpoint | Content |
 |---------|----------|---------|
 | `loyalty_table.html` | `/api/loyalty` | Ranked table of MPs by rebellion rate |
-| `attendance_table.html` | `/api/attendance` | Ranked table of MPs by attendance % |
-| `active_table.html` | `/api/active` | Ranked table of MPs by active vote count |
+| `attendance_table.html` | `/api/attendance` | Ranked table of MPs by attendance % (with vote breakdown) |
 | `similarity_table.html` | `/api/similarity` | Table of cross-party MP pairs by similarity |
 | `votes_list.html` | `/api/votes` | Paginated vote rows with tisk links |
 

@@ -22,11 +22,6 @@ class TestPageRoutes:
         assert resp.status_code == 200
         assert "text/html" in resp.headers["content-type"]
 
-    def test_active_page(self, client):
-        resp = client.get("/active")
-        assert resp.status_code == 200
-        assert "text/html" in resp.headers["content-type"]
-
     def test_votes_page(self, client):
         resp = client.get("/votes")
         assert resp.status_code == 200
