@@ -174,10 +174,11 @@ def scrape_all_subtisk_documents(
             best_doc = complete[0] if complete else docs[0]
             desc = best_doc.description
 
-        if ct1 == 0:
-            desc = desc or "Původní znění (original)"
-        elif ct1 == 1:
-            desc = desc or "Stanovisko vlády (government opinion)"
+        match ct1:
+            case 0:
+                desc = desc or "Původní znění (original)"
+            case 1:
+                desc = desc or "Stanovisko vlády (government opinion)"
 
         version = SubTiskVersion(
             period=period,

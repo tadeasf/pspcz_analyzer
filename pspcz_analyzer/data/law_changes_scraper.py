@@ -11,7 +11,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import httpx
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from loguru import logger
 
 from pspcz_analyzer.config import (
@@ -52,6 +52,65 @@ class RelatedBill:
     url: str = ""  # full URL to the bill's history page
 
 
+def _parse_law_changes_table(table: Tag) -> list[ProposedLawChange]:
+    """Parse a single table for law change rows."""
+    changes: list[ProposedLawChange] = []
+    rows = table.find_all("tr")
+    if len(rows) < 2:
+        return changes
+
+    header = rows[0].get_text(strip=True).lower()
+    if "předpis" not in header and "citace" not in header and "zákon" not in header:
+        return changes
+
+    for row in rows[1:]:
+        cells = row.find_all("td")
+        if len(cells) < 2:
+            continue
+
+        change = ProposedLawChange()
+        texts = [c.get_text(strip=True) for c in cells]
+        if len(texts) >= 1:
+            change.citace = texts[0]
+        if len(texts) >= 2:
+            change.zmena = texts[1]
+        if len(texts) >= 3:
+            change.predpis = texts[2]
+
+        # Look for idsb link in any cell
+        for cell in cells:
+            link = cell.find("a", href=_IDSB_RE)
+            if link:
+                m = _IDSB_RE.search(str(link["href"]))
+                if m:
+                    change.idsb = int(m.group(1))
+                break
+
+        if not change.citace and not change.predpis:
+            continue
+
+        changes.append(change)
+
+    return changes
+
+
+def _fallback_extract_law_changes(soup: BeautifulSoup) -> list[ProposedLawChange]:
+    """Fallback: extract law changes from any links with idsb parameter."""
+    changes: list[ProposedLawChange] = []
+    for link in soup.find_all("a", href=_IDSB_RE):
+        m = _IDSB_RE.search(str(link["href"]))
+        if m:
+            text = link.get_text(strip=True)
+            parent_text = link.parent.get_text(strip=True) if link.parent else text
+            changes.append(
+                ProposedLawChange(
+                    citace=text or parent_text,
+                    idsb=int(m.group(1)),
+                )
+            )
+    return changes
+
+
 def scrape_proposed_law_changes(
     period: int,
     ct: int,
@@ -78,66 +137,57 @@ def scrape_proposed_law_changes(
     soup = BeautifulSoup(resp.text, "html.parser")
     changes: list[ProposedLawChange] = []
 
-    # The page contains a table with law change info
-    # Look for tables with relevant content
     for table in soup.find_all("table"):
-        rows = table.find_all("tr")
-        if len(rows) < 2:
-            continue
-
-        # Check if this looks like a law changes table
-        header = rows[0].get_text(strip=True).lower()
-        if "předpis" not in header and "citace" not in header and "zákon" not in header:
-            continue
-
-        for row in rows[1:]:
-            cells = row.find_all("td")
-            if len(cells) < 2:
-                continue
-
-            change = ProposedLawChange()
-
-            # Extract text from cells — layout varies, so be flexible
-            texts = [c.get_text(strip=True) for c in cells]
-            if len(texts) >= 1:
-                change.citace = texts[0]
-            if len(texts) >= 2:
-                change.zmena = texts[1]
-            if len(texts) >= 3:
-                change.predpis = texts[2]
-
-            # Look for idsb link in any cell
-            for cell in cells:
-                link = cell.find("a", href=_IDSB_RE)
-                if link:
-                    m = _IDSB_RE.search(str(link["href"]))
-                    if m:
-                        change.idsb = int(m.group(1))
-                    break
-
-            # Skip empty rows
-            if not change.citace and not change.predpis:
-                continue
-
-            changes.append(change)
+        changes.extend(_parse_law_changes_table(table))
 
     if not changes:
-        # Fallback: try to extract from any links with idsb parameter
-        for link in soup.find_all("a", href=_IDSB_RE):
-            m = _IDSB_RE.search(str(link["href"]))
-            if m:
-                text = link.get_text(strip=True)
-                # Get surrounding text for context
-                parent_text = link.parent.get_text(strip=True) if link.parent else text
-                changes.append(
-                    ProposedLawChange(
-                        citace=text or parent_text,
-                        idsb=int(m.group(1)),
-                    )
-                )
+        changes = _fallback_extract_law_changes(soup)
 
     logger.debug("Tisk {}/{}: found {} law changes", period, ct, len(changes))
     return changes
+
+
+def _parse_related_bills_table(table: Tag) -> list[RelatedBill]:
+    """Parse a single table for related bill rows."""
+    bills: list[RelatedBill] = []
+    rows = table.find_all("tr")
+    if len(rows) < 2:
+        return bills
+
+    for row in rows[1:]:
+        cells = row.find_all("td")
+        if not cells:
+            continue
+
+        bill = RelatedBill()
+        texts = [c.get_text(strip=True) for c in cells]
+
+        if len(texts) >= 1:
+            bill.cislo = texts[0]
+        if len(texts) >= 2:
+            bill.kratky_nazev = texts[1]
+        if len(texts) >= 3:
+            bill.typ_tisku = texts[2]
+        if len(texts) >= 4:
+            bill.stav = texts[3]
+
+        # Extract period and ct from any historie.sqw link in the row
+        for cell in cells:
+            link = cell.find("a", href=_HISTORIE_LINK_RE)
+            if link:
+                m = _HISTORIE_LINK_RE.search(str(link["href"]))
+                if m:
+                    bill.period = int(m.group(1))
+                    bill.ct = int(m.group(2))
+                    bill.url = f"https://www.psp.cz/sqw/{str(link['href'])}"
+                break
+
+        if not bill.cislo and not bill.kratky_nazev:
+            continue
+
+        bills.append(bill)
+
+    return bills
 
 
 def scrape_related_bills(idsb: int) -> list[RelatedBill]:
@@ -163,42 +213,7 @@ def scrape_related_bills(idsb: int) -> list[RelatedBill]:
     bills: list[RelatedBill] = []
 
     for table in soup.find_all("table"):
-        rows = table.find_all("tr")
-        if len(rows) < 2:
-            continue
-
-        for row in rows[1:]:
-            cells = row.find_all("td")
-            if not cells:
-                continue
-
-            bill = RelatedBill()
-            texts = [c.get_text(strip=True) for c in cells]
-
-            if len(texts) >= 1:
-                bill.cislo = texts[0]
-            if len(texts) >= 2:
-                bill.kratky_nazev = texts[1]
-            if len(texts) >= 3:
-                bill.typ_tisku = texts[2]
-            if len(texts) >= 4:
-                bill.stav = texts[3]
-
-            # Extract period and ct from any historie.sqw link in the row
-            for cell in cells:
-                link = cell.find("a", href=_HISTORIE_LINK_RE)
-                if link:
-                    m = _HISTORIE_LINK_RE.search(str(link["href"]))
-                    if m:
-                        bill.period = int(m.group(1))
-                        bill.ct = int(m.group(2))
-                        bill.url = f"https://www.psp.cz/sqw/{str(link['href'])}"
-                    break
-
-            if not bill.cislo and not bill.kratky_nazev:
-                continue
-
-            bills.append(bill)
+        bills.extend(_parse_related_bills_table(table))
 
     logger.debug("idsb={}: found {} related bills", idsb, len(bills))
     return bills

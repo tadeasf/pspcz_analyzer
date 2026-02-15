@@ -4,7 +4,7 @@ import numpy as np
 import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
-from pspcz_analyzer.services.data_service import PeriodData
+from pspcz_analyzer.models.tisk_models import PeriodData
 
 
 def _build_vote_matrix(data: PeriodData) -> tuple[np.ndarray, pl.DataFrame]:

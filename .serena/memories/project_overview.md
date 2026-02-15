@@ -65,7 +65,64 @@ pspcz_analyzer/
 - No type annotations on route handlers (FastAPI convention)
 - loguru for logging
 - Analysis services: `function(PeriodData) -> list[dict]`
-- No docstrings on most functions (lean codebase)
-- Test suite: pytest (71 unit/API tests, 26 integration tests)
+- Test suite: pytest (66 unit/API tests, 26 integration tests)
 - Pre-commit hooks: ruff lint + format, pyright, trailing whitespace, etc.
 - CI/CD: GitHub Actions (ci.yml for lint+unit, integration.yml for psp.cz tests)
+
+## Coding Style Rules (MANDATORY)
+1. **Imports always at top of the file** — no lazy imports, never, no exceptions
+2. **No `except: pass`** — always handle or log exceptions explicitly
+3. **Pattern matching** (`match/case`) over multiple `if/elif/else` when comparing a variable against literal values
+4. **Function decomposition** — long complex functions must be split into a main function with `_helper()` private functions defined above it; helpers are called from the main function
+5. **Type annotations** — use types on all function signatures (params + return)
+6. **Google docstring format** — use Google-style docstrings
+7. **After finishing each task**: run `uv run ruff format .` and `uv run ruff check --fix .`
+8. **After finishing each task**: run `uv run pytest -m "not integration" --cov -q`
+9. **After implementing a new feature**: update docs and README
+
+## Project Structure (post-refactoring)
+```
+pspcz_analyzer/
+├── main.py
+├── config.py
+├── logging_config.py
+├── models/
+│   ├── schemas.py        — UNL column definitions
+│   ├── enums.py          — Vote result codes
+│   └── tisk_models.py    — TiskInfo + PeriodData dataclasses
+├── data/
+│   ├── downloader.py
+│   ├── parser.py
+│   ├── cache.py
+│   ├── tisk_downloader.py
+│   ├── tisk_extractor.py
+│   ├── tisk_scraper.py
+│   ├── history_scraper.py
+│   └── law_changes_scraper.py
+├── services/
+│   ├── data_service.py              — Central orchestrator (~420 lines)
+│   ├── mp_builder.py                — MP info builder
+│   ├── tisk_lookup_builder.py       — Tisk lookup table builder
+│   ├── tisk_cache_manager.py        — TiskCacheManager class
+│   ├── tisk_pipeline_service.py     — Pipeline orchestrator (~170 lines)
+│   ├── tisk_downloader_pipeline.py  — PDF download + text extraction
+│   ├── tisk_classifier.py           — Topic classification + consolidation
+│   ├── tisk_metadata_scraper.py     — History + law changes scraping
+│   ├── tisk_version_service.py      — Sub-tisk versions + diffs
+│   ├── loyalty_service.py
+│   ├── attendance_service.py
+│   ├── similarity_service.py
+│   ├── votes_service.py
+│   ├── ollama_service.py
+│   ├── topic_service.py
+│   └── tisk_text_service.py
+├── routes/
+│   ├── pages.py
+│   ├── api.py
+│   └── charts.py
+├── templates/
+│   └── partials/
+├── static/
+└── utils/
+    └── text.py
+```
