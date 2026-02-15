@@ -2,12 +2,15 @@
 
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.config import DEFAULT_PERIOD, PERIOD_YEARS
+from pspcz_analyzer.middleware import run_with_timeout
+from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.activity_service import compute_activity
+from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
 from pspcz_analyzer.services.loyalty_service import compute_loyalty
 from pspcz_analyzer.services.similarity_service import compute_cross_party_similarity
@@ -17,16 +20,31 @@ router = APIRouter(tags=["API - HTMX Partials"])
 templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
 
 
+def validate_period(period: int) -> int:
+    if period not in PERIOD_YEARS:
+        raise HTTPException(404, detail=f"Unknown period {period}")
+    return period
+
+
 @router.get("/loyalty", response_class=HTMLResponse)
+@limiter.limit("10/minute")
 async def loyalty_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    top: int = 30,
-    party: str = "",
+    top: int = Query(default=30, ge=1, le=200),
+    party: str = Query(default="", max_length=200),
 ):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    rows = compute_loyalty(pd, top=top, party_filter=party or None)
+    key = f"loyalty:{period}:{top}:{party}"
+    rows = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_loyalty(pd, top=top, party_filter=party or None)
+        ),
+        timeout=15.0,
+        label="loyalty analysis",
+    )
     return templates.TemplateResponse(
         "partials/loyalty_table.html",
         {"request": request, "rows": rows},
@@ -34,15 +52,24 @@ async def loyalty_api(
 
 
 @router.get("/attendance", response_class=HTMLResponse)
+@limiter.limit("10/minute")
 async def attendance_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    top: int = 30,
-    sort: str = "worst",
+    top: int = Query(default=30, ge=1, le=200),
+    sort: str = Query(default="worst", max_length=20),
 ):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    rows = compute_attendance(pd, top=top, sort=sort)
+    key = f"attendance:{period}:{top}:{sort}"
+    rows = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_attendance(pd, top=top, sort=sort)
+        ),
+        timeout=15.0,
+        label="attendance analysis",
+    )
     return templates.TemplateResponse(
         "partials/attendance_table.html",
         {"request": request, "rows": rows},
@@ -50,14 +77,23 @@ async def attendance_api(
 
 
 @router.get("/similarity", response_class=HTMLResponse)
+@limiter.limit("10/minute")
 async def similarity_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    top: int = 20,
+    top: int = Query(default=20, ge=1, le=200),
 ):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    rows = compute_cross_party_similarity(pd, top=top)
+    key = f"similarity:{period}:{top}"
+    rows = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_cross_party_similarity(pd, top=top)
+        ),
+        timeout=30.0,
+        label="similarity analysis",
+    )
     return templates.TemplateResponse(
         "partials/similarity_table.html",
         {"request": request, "rows": rows},
@@ -65,15 +101,24 @@ async def similarity_api(
 
 
 @router.get("/active", response_class=HTMLResponse)
+@limiter.limit("10/minute")
 async def active_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    top: int = 50,
-    party: str = "",
+    top: int = Query(default=50, ge=1, le=200),
+    party: str = Query(default="", max_length=200),
 ):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    rows = compute_activity(pd, top=top, party_filter=party or None)
+    key = f"active:{period}:{top}:{party}"
+    rows = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key, lambda: compute_activity(pd, top=top, party_filter=party or None)
+        ),
+        timeout=15.0,
+        label="activity analysis",
+    )
     return templates.TemplateResponse(
         "partials/active_table.html",
         {"request": request, "rows": rows},
@@ -81,17 +126,22 @@ async def active_api(
 
 
 @router.get("/votes", response_class=HTMLResponse)
+@limiter.limit("15/minute")
 async def votes_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    search: str = "",
-    outcome: str = "",
-    topic: str = "",
-    page: int = 1,
+    search: str = Query(default="", max_length=200),
+    outcome: str = Query(default="", max_length=20),
+    topic: str = Query(default="", max_length=200),
+    page: int = Query(default=1, ge=1, le=1000),
 ):
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    result = list_votes(pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic)
+    key = f"votes:{period}:{search}:{outcome}:{topic}:{page}"
+    result = analysis_cache.get_or_compute(
+        key, lambda: list_votes(pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic)
+    )
     return templates.TemplateResponse(
         "partials/votes_list.html",
         {
@@ -106,19 +156,20 @@ async def votes_api(
 
 
 @router.get("/tisk-text", response_class=HTMLResponse)
+@limiter.limit("15/minute")
 async def tisk_text_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    ct: int = 0,
-    ct1: int = -1,
+    ct: int = Query(default=0, ge=0, le=999999),
+    ct1: int = Query(default=-1, ge=-1, le=999999),
 ):
     """Return extracted tisk text as an HTML fragment for HTMX loading.
 
     When ct1 >= 0, loads sub-tisk text ({ct}_{ct1}.txt) instead of main text.
     """
+    validate_period(period)
     data_svc = request.app.state.data
     if ct1 >= 0:
-        # Sub-tisk text: {ct}_{ct1}.txt
         from pspcz_analyzer.config import TISKY_TEXT_DIR
         text_path = data_svc.cache_dir / TISKY_TEXT_DIR / str(period) / f"{ct}_{ct1}.txt"
         text = text_path.read_text(encoding="utf-8") if text_path.exists() else None
@@ -131,7 +182,6 @@ async def tisk_text_api(
             "The background pipeline will download and extract it automatically.</p>"
             "</article>"
         )
-    # Escape HTML and preserve whitespace
     import html as html_mod
     escaped = html_mod.escape(text)
     return HTMLResponse(
@@ -143,17 +193,18 @@ async def tisk_text_api(
 
 
 @router.get("/tisk-evolution", response_class=HTMLResponse)
+@limiter.limit("15/minute")
 async def tisk_evolution_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    ct: int = 0,
+    ct: int = Query(default=0, ge=0, le=999999),
 ):
     """Return the legislative evolution partial (law changes + sub-tisk versions)."""
+    validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
     tisk = None
     if pd:
-        # Search tisk_lookup for this ct
         for t in pd.tisk_lookup.values():
             if t.ct == ct:
                 tisk = t
@@ -175,13 +226,16 @@ async def tisk_evolution_api(
 
 
 @router.get("/related-bills", response_class=HTMLResponse)
+@limiter.limit("5/minute")
 async def related_bills_api(
     request: Request,
-    idsb: int = 0,
+    idsb: int = Query(default=0, ge=0, le=999999),
 ):
     """Lazy-load related bills for a specific law (scrapes on demand, caches)."""
     if idsb <= 0:
         return HTMLResponse("<p>Invalid law reference.</p>")
+
+    from dataclasses import asdict
 
     from pspcz_analyzer.config import DEFAULT_CACHE_DIR
     from pspcz_analyzer.data.law_changes_scraper import (
@@ -189,14 +243,17 @@ async def related_bills_api(
         save_related_bills_json,
         scrape_related_bills,
     )
-    from dataclasses import asdict
 
     cache_dir = DEFAULT_CACHE_DIR
     cached = load_related_bills_json(idsb, cache_dir)
     if cached is not None:
         bills = [asdict(b) for b in cached]
     else:
-        raw_bills = scrape_related_bills(idsb)
+        raw_bills = await run_with_timeout(
+            scrape_related_bills, idsb,
+            timeout=15.0,
+            label="related bills scrape",
+        )
         save_related_bills_json(raw_bills, idsb, cache_dir)
         bills = [asdict(b) for b in raw_bills]
 
@@ -206,7 +263,6 @@ async def related_bills_api(
             "No related bills found for this law.</p>"
         )
 
-    # Build HTML table inline (small enough to avoid a separate template)
     rows_html = ""
     for b in bills:
         url = b.get("url", "")
@@ -232,6 +288,7 @@ async def related_bills_api(
 
 
 @router.get("/health", response_class=JSONResponse, tags=["Health"])
+@limiter.limit("120/minute")
 async def health(request: Request):
     """Health check endpoint."""
     data_svc = request.app.state.data
