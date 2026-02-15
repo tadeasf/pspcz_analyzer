@@ -1,5 +1,9 @@
 """Votes / laws browser — search, list, and detail views of parliamentary votes."""
 
+from __future__ import annotations
+
+import re
+
 import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
@@ -14,6 +18,57 @@ OUTCOME_LABELS = {
     "P": "Procedural",
     "N": "Not decided",
 }
+
+_DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
+
+
+def _normalize_date(d: str | None) -> str | None:
+    """Normalize a Czech date string to 'D. M. YYYY' form for comparison."""
+    if not d:
+        return None
+    m = _DATE_RE.search(str(d))
+    if m:
+        return f"{int(m.group(1))}. {int(m.group(2))}. {m.group(3)}"
+    return None
+
+
+def _match_vote_to_stage(
+    vote_session: int | None,
+    vote_number: int | None,
+    vote_date: str | None,
+    history,
+) -> object | None:
+    """Try to match a vote to a specific legislative stage in the tisk history.
+
+    Priority cascade:
+    1. Exact vote number + session match (stage.vote_number == cislo AND stage.session_number == schuze)
+    2. Session + date match
+    3. Date-only match
+    """
+    if history is None or not hasattr(history, "stages"):
+        return None
+
+    norm_vote_date = _normalize_date(vote_date)
+
+    # Priority 1: exact vote number + session
+    if vote_number is not None and vote_session is not None:
+        for stage in history.stages:
+            if stage.vote_number == vote_number and stage.session_number == vote_session:
+                return stage
+
+    # Priority 2: session + date
+    if vote_session is not None and norm_vote_date:
+        for stage in history.stages:
+            if stage.session_number == vote_session and _normalize_date(stage.date) == norm_vote_date:
+                return stage
+
+    # Priority 3: date only
+    if norm_vote_date:
+        for stage in history.stages:
+            if _normalize_date(stage.date) == norm_vote_date:
+                return stage
+
+    return None
 
 
 def list_votes(
@@ -121,6 +176,20 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
     info["tisk_topics"] = tisk.topics if tisk else []
     info["tisk_has_text"] = tisk.has_text if tisk else False
     info["tisk_summary"] = tisk.summary if tisk else ""
+
+    # Legislative history and vote-to-stage matching
+    info["tisk_history"] = (tisk.history if tisk else None)
+    info["tisk_current_stage"] = None
+    info["tisk_submitter"] = ""
+    info["tisk_law_number"] = None
+    info["tisk_current_status"] = None
+    if tisk and tisk.history:
+        info["tisk_current_stage"] = _match_vote_to_stage(
+            info.get("schuze"), info.get("cislo"), info.get("datum"), tisk.history,
+        )
+        info["tisk_submitter"] = tisk.history.submitter
+        info["tisk_law_number"] = tisk.history.law_number
+        info["tisk_current_status"] = tisk.history.current_status
 
     # Individual MP votes for this vote
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)

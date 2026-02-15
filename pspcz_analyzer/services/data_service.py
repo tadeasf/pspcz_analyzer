@@ -12,6 +12,7 @@ from pspcz_analyzer.config import (
     PERIOD_LABELS,
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
+    TISKY_HISTORIE_DIR,
     TISKY_META_DIR,
 )
 from pspcz_analyzer.services.tisk_pipeline_service import TiskPipelineService
@@ -59,6 +60,7 @@ class TiskInfo:
     topics: list[str] = field(default_factory=list)
     has_text: bool = False
     summary: str = ""
+    history: object | None = None  # TiskHistory from data.history_scraper
 
     @property
     def url(self) -> str:
@@ -125,10 +127,14 @@ class DataService:
         self._bod_schuze: pl.DataFrame | None = None
         self._tisky: pl.DataFrame | None = None
 
-        # Topic classification cache: period -> {ct -> [topic_ids]}
+        # Topic classification cache: period -> {ct -> [topic_labels]}
         self._topic_cache: dict[int, dict[int, list[str]]] = {}
         # Summary cache: period -> {ct -> summary_text}
         self._summary_cache: dict[int, dict[int, str]] = {}
+        # Track parquet mtime to detect incremental updates
+        self._topic_cache_mtime: dict[int, float] = {}
+        # Legislative history cache: period -> {ct -> TiskHistory}
+        self._history_cache: dict[int, dict] = {}
 
     @property
     def available_periods(self) -> list[dict]:
@@ -143,10 +149,32 @@ class DataService:
         return sorted(self._periods.keys(), reverse=True)
 
     def get_period(self, period: int) -> PeriodData:
-        """Get data for a period, loading it on demand if needed."""
+        """Get data for a period, loading it on demand if needed.
+
+        Also refreshes topic/summary data from the parquet cache if the
+        pipeline has written new data since last access.
+        """
         if period not in self._periods:
             self._load_period(period)
+        self._refresh_tisk_data(period)
         return self._periods[period]
+
+    def _refresh_tisk_data(self, period: int) -> None:
+        """Update in-memory tisk_lookup from the latest parquet cache.
+
+        Called on every get_period — only re-reads if the parquet mtime changed.
+        """
+        pd = self._periods.get(period)
+        if pd is None:
+            return
+        topic_map = self._load_topic_cache(period)
+        summary_map = self._summary_cache.get(period, {})
+        history_map = self._load_history_cache(period)
+        for tisk in pd.tisk_lookup.values():
+            tisk.topics = topic_map.get(tisk.ct, [])
+            tisk.summary = summary_map.get(tisk.ct, "")
+            tisk.has_text = self.tisk_text.has_text(period, tisk.ct)
+            tisk.history = history_map.get(tisk.ct)
 
     def initialize(self, period: int = DEFAULT_PERIOD) -> None:
         """Pre-load shared data and the default period."""
@@ -504,17 +532,25 @@ class DataService:
         raise FileNotFoundError(msg)
 
     def _load_topic_cache(self, period: int) -> dict[int, list[str]]:
-        """Load topic classifications (and summaries) from parquet cache, if available."""
-        from pspcz_analyzer.services.ollama_service import deserialize_topics
+        """Load topic classifications (and summaries) from parquet cache.
 
-        if period in self._topic_cache:
-            return self._topic_cache[period]
+        Re-reads the parquet if it's been modified since last load (picks up
+        incremental pipeline updates).
+        """
+        from pspcz_analyzer.services.ollama_service import deserialize_topics
 
         meta_path = self.cache_dir / TISKY_META_DIR / str(period) / "topic_classifications.parquet"
         if not meta_path.exists():
             self._topic_cache[period] = {}
             self._summary_cache[period] = {}
+            self._topic_cache_mtime[period] = 0
             return {}
+
+        # Check if we need to re-read (new file or modified since last load)
+        current_mtime = meta_path.stat().st_mtime
+        cached_mtime = self._topic_cache_mtime.get(period, 0)
+        if period in self._topic_cache and current_mtime == cached_mtime:
+            return self._topic_cache[period]
 
         df = pl.read_parquet(meta_path)
         topics: dict[int, list[str]] = {}
@@ -530,11 +566,44 @@ class DataService:
                 summaries[ct] = summary
         self._topic_cache[period] = topics
         self._summary_cache[period] = summaries
-        logger.info(
+        self._topic_cache_mtime[period] = current_mtime
+        logger.debug(
             "Loaded topic classifications for period {}: {} tisky, {} summaries",
             period, len(topics), len(summaries),
         )
         return topics
+
+    def _load_history_cache(self, period: int) -> dict:
+        """Load legislative history JSON files for a period.
+
+        Returns {ct: TiskHistory} dict. Caches in memory.
+        """
+        if period in self._history_cache:
+            return self._history_cache[period]
+
+        from pspcz_analyzer.data.history_scraper import load_history_json
+
+        hist_dir = self.cache_dir / TISKY_META_DIR / str(period) / TISKY_HISTORIE_DIR
+        histories: dict = {}
+        if not hist_dir.exists():
+            self._history_cache[period] = histories
+            return histories
+
+        for json_path in hist_dir.glob("*.json"):
+            try:
+                ct = int(json_path.stem)
+            except ValueError:
+                continue
+            h = load_history_json(json_path)
+            if h:
+                histories[ct] = h
+
+        self._history_cache[period] = histories
+        if histories:
+            logger.debug(
+                "Loaded {} tisk histories for period {}", len(histories), period,
+            )
+        return histories
 
     def start_tisk_pipeline(self, period: int) -> None:
         """Kick off background tisk processing for a period.
@@ -556,20 +625,24 @@ class DataService:
 
         def _on_complete(
             p: int, text_paths: dict, topic_map: dict, summary_map: dict,
+            histories: dict | None = None,
         ) -> None:
             """Callback: refresh in-memory tisk data after pipeline finishes."""
             # Invalidate caches so next lookup picks up new data
             self._topic_cache.pop(p, None)
             self._summary_cache.pop(p, None)
+            self._history_cache.pop(p, None)
 
             # Update existing tisk_lookup entries
             pd = self._periods.get(p)
             if pd is None:
                 return
+            history_map = histories or self._load_history_cache(p)
             for key, tisk in pd.tisk_lookup.items():
                 tisk.topics = topic_map.get(tisk.ct, [])
                 tisk.has_text = self.tisk_text.has_text(p, tisk.ct)
                 tisk.summary = summary_map.get(tisk.ct, "")
+                tisk.history = history_map.get(tisk.ct)
 
             logger.info(
                 "[tisk pipeline] Updated in-memory tisk data for period {}",
@@ -603,16 +676,20 @@ class DataService:
 
         def _on_complete(
             p: int, text_paths: dict, topic_map: dict, summary_map: dict,
+            histories: dict | None = None,
         ) -> None:
             self._topic_cache.pop(p, None)
             self._summary_cache.pop(p, None)
+            self._history_cache.pop(p, None)
             pd = self._periods.get(p)
             if pd is None:
                 return
+            history_map = histories or self._load_history_cache(p)
             for key, tisk in pd.tisk_lookup.items():
                 tisk.topics = topic_map.get(tisk.ct, [])
                 tisk.has_text = self.tisk_text.has_text(p, tisk.ct)
                 tisk.summary = summary_map.get(tisk.ct, "")
+                tisk.history = history_map.get(tisk.ct)
             logger.info("[tisk pipeline] Updated in-memory tisk data for period {}", p)
 
         self.tisk_pipeline.start_all_periods(period_ct, on_complete=_on_complete)

@@ -14,6 +14,7 @@ from pspcz_analyzer.config import (
     DEFAULT_CACHE_DIR,
     PERIOD_ORGAN_IDS,
     PSP_REQUEST_DELAY,
+    TISKY_HISTORIE_DIR,
     TISKY_META_DIR,
     TISKY_PDF_DIR,
     TISKY_TEXT_DIR,
@@ -247,6 +248,169 @@ def _classify_and_save(
     return topic_map, summary_map
 
 
+def _consolidate_topics(
+    period: int, cache_dir: Path,
+) -> tuple[dict[int, list[str]], dict[int, str]]:
+    """Run LLM-powered topic deduplication after classification.
+
+    Reads the parquet, collects all unique topic labels, asks the LLM to
+    consolidate similar ones, applies the mapping, and re-writes the parquet.
+
+    Returns updated (topic_map, summary_map).
+    """
+    from pspcz_analyzer.services.ollama_service import (
+        OllamaClient,
+        deserialize_topics,
+        serialize_topics,
+    )
+
+    meta_dir = cache_dir / TISKY_META_DIR / str(period)
+    parquet_path = meta_dir / "topic_classifications.parquet"
+
+    if not parquet_path.exists():
+        logger.warning("[tisk pipeline] No parquet to consolidate for period {}", period)
+        return {}, {}
+
+    df = pl.read_parquet(parquet_path)
+    records = df.to_dicts()
+
+    # Collect all unique topic labels
+    all_topics: set[str] = set()
+    for r in records:
+        for t in deserialize_topics(r.get("topic", "")):
+            all_topics.add(t)
+
+    unique_topics = sorted(all_topics)
+
+    if len(unique_topics) <= 10:
+        logger.info(
+            "[tisk pipeline] Only {} unique topics for period {}, skipping consolidation",
+            len(unique_topics), period,
+        )
+        # Still build and return the maps
+        topic_map: dict[int, list[str]] = {}
+        summary_map: dict[int, str] = {}
+        for r in records:
+            parsed = deserialize_topics(r["topic"])
+            if parsed:
+                topic_map[r["ct"]] = parsed
+            if r.get("summary"):
+                summary_map[r["ct"]] = r["summary"]
+        return topic_map, summary_map
+
+    ollama = OllamaClient()
+    if not ollama.is_available():
+        logger.info("[tisk pipeline] Ollama not available, skipping topic consolidation")
+        topic_map = {}
+        summary_map = {}
+        for r in records:
+            parsed = deserialize_topics(r["topic"])
+            if parsed:
+                topic_map[r["ct"]] = parsed
+            if r.get("summary"):
+                summary_map[r["ct"]] = r["summary"]
+        return topic_map, summary_map
+
+    logger.info(
+        "[tisk pipeline] Consolidating topics for period {}: {} unique topics",
+        period, len(unique_topics),
+    )
+    mapping = ollama.consolidate_topics(unique_topics)
+
+    # Count how many actually changed
+    changed = sum(1 for old, new in mapping.items() if old != new)
+    canonical = len(set(mapping.values()))
+    logger.info(
+        "[tisk pipeline] Consolidating topics for period {}: {} unique -> {} canonical ({} remapped)",
+        period, len(unique_topics), canonical, changed,
+    )
+
+    # Apply mapping to all records
+    for r in records:
+        old_topics = deserialize_topics(r.get("topic", ""))
+        new_topics = [mapping.get(t, t) for t in old_topics]
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for t in new_topics:
+            if t not in seen:
+                seen.add(t)
+                deduped.append(t)
+        r["topic"] = serialize_topics(deduped)
+
+    # Re-write parquet
+    df = pl.DataFrame(records)
+    df.write_parquet(parquet_path)
+
+    # Build return maps
+    topic_map = {}
+    summary_map = {}
+    for r in records:
+        parsed = deserialize_topics(r["topic"])
+        if parsed:
+            topic_map[r["ct"]] = parsed
+        if r.get("summary"):
+            summary_map[r["ct"]] = r["summary"]
+
+    return topic_map, summary_map
+
+
+def _scrape_histories_sync(
+    period: int,
+    ct_numbers: list[int],
+    cache_dir: Path,
+) -> dict:
+    """Scrape legislative history pages for all tisky in a period.
+
+    Caches results as JSON files. Skips already-cached tisky.
+    Returns {ct: TiskHistory} dict.
+    """
+    from pspcz_analyzer.data.history_scraper import (
+        TiskHistory,
+        load_history_json,
+        save_history_json,
+        scrape_tisk_history,
+    )
+
+    hist_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_HISTORIE_DIR
+    hist_dir.mkdir(parents=True, exist_ok=True)
+
+    histories: dict[int, TiskHistory] = {}
+    total = len(ct_numbers)
+    scraped = 0
+
+    for i, ct in enumerate(ct_numbers, 1):
+        json_path = hist_dir / f"{ct}.json"
+
+        # Load from cache if available
+        if json_path.exists():
+            h = load_history_json(json_path)
+            if h:
+                histories[ct] = h
+            continue
+
+        # Scrape from psp.cz
+        if i % 50 == 0 or i == 1:
+            logger.info(
+                "[tisk pipeline] Scraping history for period {}: {}/{}",
+                period, i, total,
+            )
+
+        h = scrape_tisk_history(period, ct)
+        if h:
+            save_history_json(h, json_path)
+            histories[ct] = h
+            scraped += 1
+
+        time.sleep(PSP_REQUEST_DELAY)
+
+    logger.info(
+        "[tisk pipeline] History scraping for period {}: {} cached, {} new, {} total",
+        period, len(histories) - scraped, scraped, len(histories),
+    )
+    return histories
+
+
 class TiskPipelineService:
     """Manages background tisk processing for loaded periods."""
 
@@ -313,18 +477,26 @@ class TiskPipelineService:
                 period, len(ct_numbers),
             )
             try:
+                # Scrape legislative history pages (fast, cached)
+                histories = await asyncio.to_thread(
+                    _scrape_histories_sync, period, ct_numbers, self.cache_dir,
+                )
                 pdf_paths, text_paths = await asyncio.to_thread(
                     _process_period_sync, period, ct_numbers, self.cache_dir,
                 )
                 topic_map, summary_map = await asyncio.to_thread(
                     _classify_and_save, period, text_paths, self.cache_dir,
                 )
+                # Consolidate similar/duplicate topics
+                topic_map, summary_map = await asyncio.to_thread(
+                    _consolidate_topics, period, self.cache_dir,
+                )
                 logger.info(
-                    "[tisk pipeline] Period {} complete: {} PDFs, {} texts, {} topics, {} summaries",
-                    period, len(pdf_paths), len(text_paths), len(topic_map), len(summary_map),
+                    "[tisk pipeline] Period {} complete: {} histories, {} PDFs, {} texts, {} topics",
+                    period, len(histories), len(pdf_paths), len(text_paths), len(topic_map),
                 )
                 if on_complete:
-                    on_complete(period, text_paths, topic_map, summary_map)
+                    on_complete(period, text_paths, topic_map, summary_map, histories)
             except Exception:
                 logger.opt(exception=True).error(
                     "[tisk pipeline] Failed for period {}, continuing to next", period,
@@ -334,18 +506,26 @@ class TiskPipelineService:
     async def _run_period(self, period: int, ct_numbers: list[int], on_complete) -> None:
         """Run the full pipeline in a thread to avoid blocking the event loop."""
         try:
+            # Scrape legislative history pages (fast, cached)
+            histories = await asyncio.to_thread(
+                _scrape_histories_sync, period, ct_numbers, self.cache_dir,
+            )
             pdf_paths, text_paths = await asyncio.to_thread(
                 _process_period_sync, period, ct_numbers, self.cache_dir,
             )
             topic_map, summary_map = await asyncio.to_thread(
                 _classify_and_save, period, text_paths, self.cache_dir,
             )
+            # Consolidate similar/duplicate topics
+            topic_map, summary_map = await asyncio.to_thread(
+                _consolidate_topics, period, self.cache_dir,
+            )
             logger.info(
-                "[tisk pipeline] Period {} complete: {} PDFs, {} texts, {} topics, {} summaries",
-                period, len(pdf_paths), len(text_paths), len(topic_map), len(summary_map),
+                "[tisk pipeline] Period {} complete: {} histories, {} PDFs, {} texts, {} topics",
+                period, len(histories), len(pdf_paths), len(text_paths), len(topic_map),
             )
             if on_complete:
-                on_complete(period, text_paths, topic_map, summary_map)
+                on_complete(period, text_paths, topic_map, summary_map, histories)
         except Exception:
             logger.opt(exception=True).error("[tisk pipeline] Failed for period {}", period)
 

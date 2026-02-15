@@ -35,20 +35,42 @@ _CLASSIFICATION_PROMPT_TEMPLATE = (
     "Bud konkretni - napr. misto 'Pravo' napis 'Trestni pravo' nebo 'Obcanske pravo'.\n\n"
     "Nazev tisku: {title}\n\n"
     "Text tisku:\n{text}\n\n"
-    "Odpovez POUZE: TOPICS: tema1, tema2, tema3"
+    "Odpovez POUZE: TOPICS: tema1, tema2, tema3 /no_think"
 )
 
 _SUMMARY_SYSTEM = (
-    "Jsi analytik ceskeho parlamentu. Pises strucne a srozumitelne shrnutí navrhu zakonu v cestine. "
-    "Zamer se na prakticke dopady - co zakon meni a proc. 2-3 vety."
+    "Jsi kriticko-analyticky komentator ceskeho parlamentu. Pises ostre, vecne a bez prikraslovani. "
+    "Odhalujes skryte dopady zakonu, rizika zneuziti, a kdo z novely skutecne profituje. "
+    "Neboj se pojmenovat problemy primo — napr. oslabeni nezavislosti uredniku, rozsireni pravomoci "
+    "bez kontroly, skryte privatizace, nebo omeze obcanskych prav. 3-4 vety."
 )
 
 _SUMMARY_PROMPT_TEMPLATE = (
-    "Shrn co nasledujici parlamentni tisk navrhuje, co meni a proc. "
-    "2-3 vety v cestine. Zamer se na prakticke dopady pro obcany.\n\n"
+    "Analyzuj nasledujici parlamentni tisk KRITICKY. Nestaci rict 'co meni' — vysvetli:\n"
+    "1. Co KONKRETNE se meni (zadne vague formulace)\n"
+    "2. Komu to prospiva a komu skodi\n"
+    "3. Jake je RIZIKO zneuziti nebo nezamysleny dusledek\n"
+    "Bud primy a kriticko-analyticky. Pokud zakon oslabuje kontrolu, nezavislost nebo prava, rekni to jasne.\n"
+    "3-4 vety v cestine.\n\n"
     "Nazev: {title}\n\n"
-    "Text:\n{text}"
+    "Text:\n{text} /no_think"
 )
+
+_CONSOLIDATION_SYSTEM = (
+    "Jsi analytik ceskeho parlamentu. Dostanes seznam tematickych stitku. "
+    "Sjednot podobna/prekryvajici se temata pod jeden kanonicky nazev."
+)
+
+_CONSOLIDATION_PROMPT_TEMPLATE = (
+    "Zde je seznam {n} temat z parlamentnich tisku. Sjednot podobna a prekryvajici se temata.\n"
+    "Pro kazde tema napis mapovani ve formatu: stare_tema -> kanonicky_nazev\n"
+    "Pokud je tema uz dobre, mapuj ho samo na sebe.\n\n"
+    "Temata:\n{topics_list}\n\n"
+    "Odpovez POUZE mapovanim, jeden radek na tema. /no_think"
+)
+
+# Strip <think>...</think> blocks from Qwen3 responses (defensive)
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
 # Pattern for heading lines in Czech legislative texts
 _HEADING_RE = re.compile(
@@ -171,7 +193,46 @@ class OllamaClient:
             text=truncated,
         )
         response = self._generate(prompt, _SUMMARY_SYSTEM)
-        return response.strip() if response else ""
+        if not response:
+            return ""
+        return self._strip_think(response)
+
+    def consolidate_topics(self, all_topics: list[str]) -> dict[str, str]:
+        """Consolidate/deduplicate topic labels via the LLM.
+
+        Sends all unique topics to the model and asks it to merge
+        similar/overlapping ones under canonical names.
+
+        Returns dict mapping old_name -> canonical_name.
+        Topics not in the response keep their original name.
+        """
+        topics_list = "\n".join(f"- {t}" for t in all_topics)
+        prompt = _CONSOLIDATION_PROMPT_TEMPLATE.format(
+            n=len(all_topics),
+            topics_list=topics_list,
+        )
+        response = self._generate(prompt, _CONSOLIDATION_SYSTEM)
+        if not response:
+            return {t: t for t in all_topics}
+
+        response = self._strip_think(response)
+        mapping: dict[str, str] = {}
+        for line in response.splitlines():
+            line = line.strip()
+            if " -> " not in line:
+                continue
+            parts = line.split(" -> ", 1)
+            old = parts[0].strip().strip("- ")
+            new = parts[1].strip()
+            if old and new:
+                mapping[old] = new
+
+        # Any topics not in the mapping keep their original name
+        for t in all_topics:
+            if t not in mapping:
+                mapping[t] = t
+
+        return mapping
 
     def _generate(self, prompt: str, system: str) -> str | None:
         """Send a generation request to Ollama. Returns response text or None."""
@@ -192,11 +253,17 @@ class OllamaClient:
             logger.opt(exception=True).debug("[ollama] Generation request failed")
             return None
 
+    @staticmethod
+    def _strip_think(text: str) -> str:
+        """Remove <think>...</think> blocks from Qwen3 responses."""
+        return _THINK_RE.sub("", text).strip()
+
     def _parse_topics_response(self, response: str) -> list[str]:
         """Extract topic labels from LLM response.
 
         Expects format: TOPICS: topic1, topic2, topic3
         """
+        response = self._strip_think(response)
         match = re.search(r"TOPICS?:\s*(.+)", response, re.IGNORECASE)
         if not match:
             logger.debug("[ollama] Could not parse topics from response: {}", response[:200])
