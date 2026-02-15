@@ -4,10 +4,10 @@ import io
 
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 import seaborn as sns
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import StreamingResponse
+from matplotlib.figure import Figure
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.middleware import run_with_timeout
@@ -48,9 +48,7 @@ async def loyalty_chart(
     pd = data_svc.get_period(period)
     key = f"loyalty:{period}:{top}"
     rows = await run_with_timeout(
-        lambda: analysis_cache.get_or_compute(
-            key, lambda: compute_loyalty(pd, top=top)
-        ),
+        lambda: analysis_cache.get_or_compute(key, lambda: compute_loyalty(pd, top=top)),
         timeout=20.0,
         label="loyalty chart",
     )
@@ -122,9 +120,7 @@ async def active_chart(
     pd = data_svc.get_period(period)
     key = f"active:{period}:{top}:"
     rows = await run_with_timeout(
-        lambda: analysis_cache.get_or_compute(
-            key, lambda: compute_activity(pd, top=top)
-        ),
+        lambda: analysis_cache.get_or_compute(key, lambda: compute_activity(pd, top=top)),
         timeout=20.0,
         label="activity chart",
     )
@@ -155,16 +151,14 @@ async def similarity_chart(request: Request, period: int = DEFAULT_PERIOD):
     pd = data_svc.get_period(period)
     key = f"similarity_pca:{period}"
     coords = await run_with_timeout(
-        lambda: analysis_cache.get_or_compute(
-            key, lambda: compute_pca_coords(pd)
-        ),
+        lambda: analysis_cache.get_or_compute(key, lambda: compute_pca_coords(pd)),
         timeout=30.0,
         label="similarity chart",
     )
 
     # Assign colors per party
     parties = sorted({c["party"] for c in coords})
-    palette = dict(zip(parties, sns.color_palette("husl", len(parties))))
+    palette = dict(zip(parties, sns.color_palette("husl", len(parties)), strict=False))
 
     fig, ax = plt.subplots(figsize=(14, 10))
     fig.patch.set_facecolor("#FFFFFF")

@@ -59,7 +59,10 @@ def _match_vote_to_stage(
     # Priority 2: session + date
     if vote_session is not None and norm_vote_date:
         for stage in history.stages:
-            if stage.session_number == vote_session and _normalize_date(stage.date) == norm_vote_date:
+            if (
+                stage.session_number == vote_session
+                and _normalize_date(stage.date) == norm_vote_date
+            ):
                 return stage
 
     # Priority 3: date only
@@ -96,10 +99,12 @@ def list_votes(
         q = normalize_czech(search.strip())
         votes = votes.filter(
             pl.col("nazev_dlouhy").map_elements(
-                lambda s: q in normalize_czech(s or ""), return_dtype=pl.Boolean,
+                lambda s: q in normalize_czech(s or ""),
+                return_dtype=pl.Boolean,
             )
             | pl.col("nazev_kratky").map_elements(
-                lambda s: q in normalize_czech(s or ""), return_dtype=pl.Boolean,
+                lambda s: q in normalize_czech(s or ""),
+                return_dtype=pl.Boolean,
             )
         )
 
@@ -129,9 +134,20 @@ def list_votes(
     page_rows = votes.slice(offset, per_page)
 
     rows = page_rows.select(
-        "id_hlasovani", "datum", "cas", "schuze", "cislo", "bod",
-        "nazev_dlouhy", "nazev_kratky",
-        "vysledek", "pro", "proti", "zdrzel", "nehlasoval", "prihlaseno",
+        "id_hlasovani",
+        "datum",
+        "cas",
+        "schuze",
+        "cislo",
+        "bod",
+        "nazev_dlouhy",
+        "nazev_kratky",
+        "vysledek",
+        "pro",
+        "proti",
+        "zdrzel",
+        "nehlasoval",
+        "prihlaseno",
     ).to_dicts()
 
     for r in rows:
@@ -180,14 +196,17 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
     info["tisk_sub_versions"] = tisk.sub_versions if tisk else []
 
     # Legislative history and vote-to-stage matching
-    info["tisk_history"] = (tisk.history if tisk else None)
+    info["tisk_history"] = tisk.history if tisk else None
     info["tisk_current_stage"] = None
     info["tisk_submitter"] = ""
     info["tisk_law_number"] = None
     info["tisk_current_status"] = None
     if tisk and tisk.history:
         info["tisk_current_stage"] = _match_vote_to_stage(
-            info.get("schuze"), info.get("cislo"), info.get("datum"), tisk.history,
+            info.get("schuze"),
+            info.get("cislo"),
+            info.get("datum"),
+            tisk.history,
         )
         info["tisk_submitter"] = tisk.history.submitter
         info["tisk_law_number"] = tisk.history.law_number
@@ -199,7 +218,8 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
 
     # Per-party breakdown
     party_stats = (
-        mp_detail.group_by("party").agg(
+        mp_detail.group_by("party")
+        .agg(
             (pl.col("vysledek") == VoteResult.YES).sum().alias("yes"),
             (pl.col("vysledek") == VoteResult.NO).sum().alias("no"),
             (pl.col("vysledek") == VoteResult.ABSTAINED).sum().alias("abstained"),
@@ -214,9 +234,8 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
     party_rows = party_stats.to_dicts()
 
     # Per-MP breakdown sorted by party then name
-    mp_list = (
-        mp_detail.select("jmeno", "prijmeni", "party", "vysledek")
-        .sort("party", "prijmeni", "jmeno")
+    mp_list = mp_detail.select("jmeno", "prijmeni", "party", "vysledek").sort(
+        "party", "prijmeni", "jmeno"
     )
 
     vote_labels = {

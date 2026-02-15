@@ -36,9 +36,9 @@ def compute_attendance(
     )
 
     per_mp = per_mp.with_columns(
-        (
-            pl.col("active") / (pl.col("total") - pl.col("excused")).cast(pl.Float64) * 100
-        ).alias("attendance_pct")
+        (pl.col("active") / (pl.col("total") - pl.col("excused")).cast(pl.Float64) * 100).alias(
+            "attendance_pct"
+        )
     )
 
     # Join with MP info
@@ -48,6 +48,12 @@ def compute_attendance(
     result = result.sort("attendance_pct", descending=descending).head(top)
 
     return result.select(
-        "jmeno", "prijmeni", "party", "active", "passive", "absent", "excused",
+        "jmeno",
+        "prijmeni",
+        "party",
+        "active",
+        "passive",
+        "absent",
+        "excused",
         "attendance_pct",
     ).to_dicts()

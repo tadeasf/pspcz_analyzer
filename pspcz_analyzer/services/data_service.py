@@ -15,12 +15,8 @@ from pspcz_analyzer.config import (
     TISKY_HISTORIE_DIR,
     TISKY_LAW_CHANGES_DIR,
     TISKY_META_DIR,
-    TISKY_PDF_DIR,
-    TISKY_TEXT_DIR,
     TISKY_VERSION_DIFFS_DIR,
 )
-from pspcz_analyzer.services.tisk_pipeline_service import TiskPipelineService
-from pspcz_analyzer.services.tisk_text_service import TiskTextService
 from pspcz_analyzer.data.cache import get_or_parse
 from pspcz_analyzer.data.downloader import (
     download_poslanci_data,
@@ -28,6 +24,7 @@ from pspcz_analyzer.data.downloader import (
     download_tisky_data,
     download_voting_data,
 )
+from pspcz_analyzer.data.history_scraper import TiskHistory
 from pspcz_analyzer.data.parser import parse_unl, parse_unl_multi
 from pspcz_analyzer.models.schemas import (
     BOD_SCHUZE_COLUMNS,
@@ -51,6 +48,8 @@ from pspcz_analyzer.models.schemas import (
     ZMATECNE_COLUMNS,
     ZMATECNE_DTYPES,
 )
+from pspcz_analyzer.services.tisk_pipeline_service import TiskPipelineService
+from pspcz_analyzer.services.tisk_text_service import TiskTextService
 
 
 @dataclass
@@ -64,7 +63,7 @@ class TiskInfo:
     topics: list[str] = field(default_factory=list)
     has_text: bool = False
     summary: str = ""
-    history: object | None = None  # TiskHistory from data.history_scraper
+    history: TiskHistory | None = None
     law_changes: list[dict] = field(default_factory=list)
     sub_versions: list[dict] = field(default_factory=list)
 
@@ -208,37 +207,45 @@ class DataService:
         self._poslanci_dir = poslanci_dir
 
         self._persons = get_or_parse(
-            "osoby", poslanci_dir,
+            "osoby",
+            poslanci_dir,
             lambda: parse_unl(
                 self._find_file(poslanci_dir, "osoby.unl"),
-                OSOBY_COLUMNS, OSOBY_DTYPES,
+                OSOBY_COLUMNS,
+                OSOBY_DTYPES,
             ),
             self.cache_dir,
         )
 
         self._mps = get_or_parse(
-            "poslanec", poslanci_dir,
+            "poslanec",
+            poslanci_dir,
             lambda: parse_unl(
                 self._find_file(poslanci_dir, "poslanec.unl"),
-                POSLANEC_COLUMNS, POSLANEC_DTYPES,
+                POSLANEC_COLUMNS,
+                POSLANEC_DTYPES,
             ),
             self.cache_dir,
         )
 
         self._organs = get_or_parse(
-            "organy", poslanci_dir,
+            "organy",
+            poslanci_dir,
             lambda: parse_unl(
                 self._find_file(poslanci_dir, "organy.unl"),
-                ORGANY_COLUMNS, ORGANY_DTYPES,
+                ORGANY_COLUMNS,
+                ORGANY_DTYPES,
             ),
             self.cache_dir,
         )
 
         self._memberships = get_or_parse(
-            "zarazeni", poslanci_dir,
+            "zarazeni",
+            poslanci_dir,
             lambda: parse_unl(
                 self._find_file(poslanci_dir, "zarazeni.unl"),
-                ZARAZENI_COLUMNS, ZARAZENI_DTYPES,
+                ZARAZENI_COLUMNS,
+                ZARAZENI_DTYPES,
             ),
             self.cache_dir,
         )
@@ -252,35 +259,43 @@ class DataService:
         tisky_dir = download_tisky_data(self.cache_dir)
 
         self._schuze = get_or_parse(
-            "schuze", schuze_dir,
+            "schuze",
+            schuze_dir,
             lambda: parse_unl(
                 self._find_file(schuze_dir, "schuze.unl"),
-                SCHUZE_COLUMNS, SCHUZE_DTYPES,
+                SCHUZE_COLUMNS,
+                SCHUZE_DTYPES,
             ),
             self.cache_dir,
         )
 
         self._bod_schuze = get_or_parse(
-            "bod_schuze", schuze_dir,
+            "bod_schuze",
+            schuze_dir,
             lambda: parse_unl(
                 self._find_file(schuze_dir, "bod_schuze.unl"),
-                BOD_SCHUZE_COLUMNS, BOD_SCHUZE_DTYPES,
+                BOD_SCHUZE_COLUMNS,
+                BOD_SCHUZE_DTYPES,
             ),
             self.cache_dir,
         )
 
         self._tisky = get_or_parse(
-            "tisky", tisky_dir,
+            "tisky",
+            tisky_dir,
             lambda: parse_unl(
                 self._find_file(tisky_dir, "tisky.unl"),
-                TISKY_COLUMNS, TISKY_DTYPES,
+                TISKY_COLUMNS,
+                TISKY_DTYPES,
             ),
             self.cache_dir,
         )
 
         logger.info(
             "Loaded schuze ({}), bod_schuze ({}), tisky ({})",
-            self._schuze.height, self._bod_schuze.height, self._tisky.height,
+            self._schuze.height,
+            self._bod_schuze.height,
+            self._tisky.height,
         )
 
     def _ensure_shared_loaded(self) -> None:
@@ -294,7 +309,9 @@ class DataService:
         assert self._memberships is not None
 
     def _build_tisk_lookup(
-        self, period: int, votes: pl.DataFrame,
+        self,
+        period: int,
+        votes: pl.DataFrame,
     ) -> dict[tuple[int, int], TiskInfo]:
         """Build a mapping from (schuze_num, bod_num) -> TiskInfo for a given period.
 
@@ -315,21 +332,27 @@ class DataService:
         # Fallback: text matching for periods without schuze data
         logger.info(
             "No session data for period {} (organ {}), using text-match fallback",
-            period, organ_id,
+            period,
+            organ_id,
         )
         return self._build_tisk_lookup_via_text(period, votes)
 
     def _build_tisk_lookup_via_schuze(
-        self, period: int, sessions: pl.DataFrame,
+        self,
+        period: int,
+        sessions: pl.DataFrame,
     ) -> dict[tuple[int, int], TiskInfo]:
         """Build lookup using the schuze -> bod_schuze -> tisky chain."""
         assert self._bod_schuze is not None
         assert self._tisky is not None
 
-        session_map = dict(zip(
-            sessions.get_column("id_schuze").to_list(),
-            sessions.get_column("schuze").to_list(),
-        ))
+        session_map = dict(
+            zip(
+                sessions.get_column("id_schuze").to_list(),
+                sessions.get_column("schuze").to_list(),
+                strict=False,
+            )
+        )
         session_ids = set(session_map.keys())
 
         bods = self._bod_schuze.filter(
@@ -372,12 +395,15 @@ class DataService:
 
         logger.info(
             "Period {}: built tisk lookup with {} entries (via schuze)",
-            period, len(lookup),
+            period,
+            len(lookup),
         )
         return lookup
 
     def _build_tisk_lookup_via_text(
-        self, period: int, votes: pl.DataFrame,
+        self,
+        period: int,
+        votes: pl.DataFrame,
     ) -> dict[tuple[int, int], TiskInfo]:
         """Fallback: match vote descriptions to tisk names for this period.
 
@@ -400,21 +426,25 @@ class DataService:
             ct = row.get("ct")
             nazev = (row.get("nazev_tisku") or "").strip()
             if ct and nazev:
-                tisk_entries.append(TiskInfo(
-                    id_tisk=row["id_tisk"],
-                    ct=ct,
-                    nazev=nazev,
-                    period=period,
-                    topics=topic_map.get(ct, []),
-                    has_text=self.tisk_text.has_text(period, ct),
-                    summary=summary_map.get(ct, ""),
-                ))
+                tisk_entries.append(
+                    TiskInfo(
+                        id_tisk=row["id_tisk"],
+                        ct=ct,
+                        nazev=nazev,
+                        period=period,
+                        topics=topic_map.get(ct, []),
+                        has_text=self.tisk_text.has_text(period, ct),
+                        summary=summary_map.get(ct, ""),
+                    )
+                )
         tisk_entries.sort(key=lambda t: len(t.nazev), reverse=True)
 
         # Get unique (schuze, bod) combinations with descriptions
-        vote_bods = votes.filter(
-            pl.col("nazev_dlouhy").is_not_null() & (pl.col("bod") > 0)
-        ).select("schuze", "bod", "nazev_dlouhy").unique(subset=["schuze", "bod"])
+        vote_bods = (
+            votes.filter(pl.col("nazev_dlouhy").is_not_null() & (pl.col("bod") > 0))
+            .select("schuze", "bod", "nazev_dlouhy")
+            .unique(subset=["schuze", "bod"])
+        )
 
         lookup: dict[tuple[int, int], TiskInfo] = {}
         for row in vote_bods.iter_rows(named=True):
@@ -428,7 +458,9 @@ class DataService:
 
         logger.info(
             "Period {}: built tisk lookup with {} entries (via text match, {} tisky available)",
-            period, len(lookup), len(tisk_entries),
+            period,
+            len(lookup),
+            len(tisk_entries),
         )
         return lookup
 
@@ -446,19 +478,24 @@ class DataService:
         voting_dir = download_voting_data(period, self.cache_dir)
 
         votes = get_or_parse(
-            f"hl_hlasovani_{period}", voting_dir,
+            f"hl_hlasovani_{period}",
+            voting_dir,
             lambda: parse_unl(
                 self._find_file(voting_dir, f"hl{year}s.unl"),
-                HL_HLASOVANI_COLUMNS, HL_HLASOVANI_DTYPES,
+                HL_HLASOVANI_COLUMNS,
+                HL_HLASOVANI_DTYPES,
             ),
             self.cache_dir,
         )
 
         mp_votes = get_or_parse(
-            f"hl_poslanec_{period}", voting_dir,
+            f"hl_poslanec_{period}",
+            voting_dir,
             lambda: parse_unl_multi(
-                voting_dir, f"hl{year}h*.unl",
-                HL_POSLANEC_COLUMNS, HL_POSLANEC_DTYPES,
+                voting_dir,
+                f"hl{year}h*.unl",
+                HL_POSLANEC_COLUMNS,
+                HL_POSLANEC_DTYPES,
             ),
             self.cache_dir,
         )
@@ -466,7 +503,8 @@ class DataService:
         try:
             zmatecne_file = self._find_file(voting_dir, f"hl{year}z.unl")
             void_votes = get_or_parse(
-                f"zmatecne_{period}", voting_dir,
+                f"zmatecne_{period}",
+                voting_dir,
                 lambda: parse_unl(zmatecne_file, ZMATECNE_COLUMNS, ZMATECNE_DTYPES),
                 self.cache_dir,
             )
@@ -489,7 +527,11 @@ class DataService:
 
         logger.info(
             "Period {} ready: {} votes, {} vote records, {} MPs, {} tisk links",
-            period, votes.height, mp_votes.height, mp_info.height, len(tisk_lookup),
+            period,
+            votes.height,
+            mp_votes.height,
+            mp_info.height,
+            len(tisk_lookup),
         )
 
     def _build_mp_info(self, period: int) -> pl.DataFrame:
@@ -508,15 +550,11 @@ class DataService:
             how="left",
         )
 
-        clubs = self._organs.filter(pl.col("id_typ_organu") == 1).select(
-            "id_organ", "zkratka"
-        )
+        clubs = self._organs.filter(pl.col("id_typ_organu") == 1).select("id_organ", "zkratka")
 
-        club_memberships = (
-            self._memberships
-            .join(clubs, left_on="id_of", right_on="id_organ", how="inner")
-            .select("id_osoba", "zkratka", "od_o", "do_o")
-        )
+        club_memberships = self._memberships.join(
+            clubs, left_on="id_of", right_on="id_organ", how="inner"
+        ).select("id_osoba", "zkratka", "od_o", "do_o")
 
         club_memberships = club_memberships.sort("od_o", descending=True).unique(
             subset=["id_osoba"], keep="first"
@@ -535,9 +573,7 @@ class DataService:
             "ANO2011": "ANO",
             "Nezařaz": "Nezařazení",
         }
-        return mp_info.with_columns(
-            pl.col("party").replace(party_aliases).alias("party")
-        )
+        return mp_info.with_columns(pl.col("party").replace(party_aliases).alias("party"))
 
     def _find_file(self, directory: Path, filename: str) -> Path:
         """Find a file in directory tree (case-insensitive search)."""
@@ -587,7 +623,9 @@ class DataService:
         self._topic_cache_mtime[period] = current_mtime
         logger.debug(
             "Loaded topic classifications for period {}: {} tisky, {} summaries",
-            period, len(topics), len(summaries),
+            period,
+            len(topics),
+            len(summaries),
         )
         return topics
 
@@ -619,7 +657,9 @@ class DataService:
         self._history_cache[period] = histories
         if histories:
             logger.debug(
-                "Loaded {} tisk histories for period {}", len(histories), period,
+                "Loaded {} tisk histories for period {}",
+                len(histories),
+                period,
             )
         return histories
 
@@ -648,7 +688,8 @@ class DataService:
                     changes[ct] = data
             except Exception:
                 logger.opt(exception=True).warning(
-                    "Failed to load law changes from {}", json_path,
+                    "Failed to load law changes from {}",
+                    json_path,
                 )
 
         return changes
@@ -679,7 +720,8 @@ class DataService:
                     versions[ct] = data
             except Exception:
                 logger.opt(exception=True).warning(
-                    "Failed to load subtisk cache from {}", json_path,
+                    "Failed to load subtisk cache from {}",
+                    json_path,
                 )
 
         return versions
@@ -691,9 +733,7 @@ class DataService:
         results are visible immediately in the UI.
         Returns {"{ct}_{ct1}": summary_text}.
         """
-        diff_dir = (
-            self.cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
-        )
+        diff_dir = self.cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
         diffs: dict[str, str] = {}
         if not diff_dir.exists():
             return diffs
@@ -704,7 +744,8 @@ class DataService:
                 diffs[key] = txt_path.read_text(encoding="utf-8")
             except Exception:
                 logger.opt(exception=True).warning(
-                    "Failed to load version diff from {}", txt_path,
+                    "Failed to load version diff from {}",
+                    txt_path,
                 )
 
         return diffs
@@ -728,7 +769,10 @@ class DataService:
             return
 
         def _on_complete(
-            p: int, text_paths: dict, topic_map: dict, summary_map: dict,
+            p: int,
+            text_paths: dict,
+            topic_map: dict,
+            summary_map: dict,
             histories: dict | None = None,
             law_changes_map: dict | None = None,
             subtisk_map: dict | None = None,
@@ -777,7 +821,10 @@ class DataService:
             return
 
         def _on_complete(
-            p: int, text_paths: dict, topic_map: dict, summary_map: dict,
+            p: int,
+            text_paths: dict,
+            topic_map: dict,
+            summary_map: dict,
             histories: dict | None = None,
             law_changes_map: dict | None = None,
             subtisk_map: dict | None = None,

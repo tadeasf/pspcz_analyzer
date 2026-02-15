@@ -12,7 +12,7 @@ def extract_text_from_pdf(pdf_path: Path) -> str:
     """Extract all text from a PDF file using PyMuPDF."""
     try:
         doc = pymupdf.open(pdf_path)
-        pages = [page.get_text() for page in doc]
+        pages = [str(page.get_text()) for page in doc]
         doc.close()
         return "\n\n".join(pages)
     except Exception:

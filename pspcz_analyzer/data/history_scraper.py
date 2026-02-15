@@ -12,7 +12,7 @@ items. Each item has span.mark (PS, O, 1, V, 2, G, 3, S, P, VL) and <p> content.
 import json
 import re
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from bs4 import BeautifulSoup
@@ -196,7 +196,9 @@ def _extract_submitter(soup: BeautifulSoup) -> tuple[str, str | None]:
                 text = content.get_text(" ", strip=True)
                 date = _extract_first_date(text)
                 # Extract submitter name — typically "Vláda" or a person name
-                submitter = text.split("předlož")[0].strip() if "předlož" in text.lower() else text[:80]
+                submitter = (
+                    text.split("předlož")[0].strip() if "předlož" in text.lower() else text[:80]
+                )
                 return submitter, date
 
     # Fallback: search full text
@@ -273,7 +275,9 @@ def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
             resp.raise_for_status()
     except Exception:
         logger.opt(exception=True).warning(
-            "Failed to fetch history for tisk {}/{}", period, ct,
+            "Failed to fetch history for tisk {}/{}",
+            period,
+            ct,
         )
         return None
 
@@ -295,7 +299,7 @@ def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
         stages=stages,
         current_status=status,
         law_number=law_number,
-        scraped_at=datetime.now(timezone.utc).isoformat(),
+        scraped_at=datetime.now(UTC).isoformat(),
     )
 
 

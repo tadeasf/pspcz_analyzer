@@ -140,7 +140,10 @@ async def votes_api(
     pd = data_svc.get_period(period)
     key = f"votes:{period}:{search}:{outcome}:{topic}:{page}"
     result = analysis_cache.get_or_compute(
-        key, lambda: list_votes(pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic)
+        key,
+        lambda: list_votes(
+            pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic
+        ),
     )
     return templates.TemplateResponse(
         "partials/votes_list.html",
@@ -171,6 +174,7 @@ async def tisk_text_api(
     data_svc = request.app.state.data
     if ct1 >= 0:
         from pspcz_analyzer.config import TISKY_TEXT_DIR
+
         text_path = data_svc.cache_dir / TISKY_TEXT_DIR / str(period) / f"{ct}_{ct1}.txt"
         text = text_path.read_text(encoding="utf-8") if text_path.exists() else None
     else:
@@ -183,6 +187,7 @@ async def tisk_text_api(
             "</article>"
         )
     import html as html_mod
+
     escaped = html_mod.escape(text)
     return HTMLResponse(
         '<article style="max-height: 60vh; overflow-y: auto; background: #f8f9fa; '
@@ -250,7 +255,8 @@ async def related_bills_api(
         bills = [asdict(b) for b in cached]
     else:
         raw_bills = await run_with_timeout(
-            scrape_related_bills, idsb,
+            scrape_related_bills,
+            idsb,
             timeout=15.0,
             label="related bills scrape",
         )

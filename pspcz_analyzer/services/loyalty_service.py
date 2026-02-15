@@ -90,16 +90,18 @@ def compute_loyalty(
         schuze = row["schuze"]
         bod = row["bod"]
         tisk = data.get_tisk(schuze, bod) if schuze and bod else None
-        rebellion_map.setdefault(mp_id, []).append({
-            "id_hlasovani": row["id_hlasovani"],
-            "datum": row["datum"] or "",
-            "nazev_dlouhy": row["nazev_dlouhy"] or "",
-            "mp_vote": row["mp_vote"],
-            "party_direction": row["party_direction"],
-            "schuze": schuze,
-            "bod": bod,
-            "tisk_url": tisk.url if tisk else None,
-        })
+        rebellion_map.setdefault(mp_id, []).append(
+            {
+                "id_hlasovani": row["id_hlasovani"],
+                "datum": row["datum"] or "",
+                "nazev_dlouhy": row["nazev_dlouhy"] or "",
+                "mp_vote": row["mp_vote"],
+                "party_direction": row["party_direction"],
+                "schuze": schuze,
+                "bod": bod,
+                "tisk_url": tisk.url if tisk else None,
+            }
+        )
 
     # Aggregate per MP
     per_mp = with_direction.group_by("id_poslanec").agg(
@@ -115,15 +117,18 @@ def compute_loyalty(
     result = per_mp.join(data.mp_info, on="id_poslanec", how="left")
 
     if party_filter:
-        result = result.filter(
-            pl.col("party").str.to_uppercase() == party_filter.upper()
-        )
+        result = result.filter(pl.col("party").str.to_uppercase() == party_filter.upper())
 
     result = result.sort("rebellion_pct", descending=True).head(top)
 
     rows = result.select(
-        "id_poslanec", "jmeno", "prijmeni", "party",
-        "active_votes", "rebellions", "rebellion_pct",
+        "id_poslanec",
+        "jmeno",
+        "prijmeni",
+        "party",
+        "active_votes",
+        "rebellions",
+        "rebellion_pct",
     ).to_dicts()
 
     # Attach rebellion vote details to each row

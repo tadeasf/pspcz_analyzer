@@ -15,7 +15,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **AI Summaries** — optional LLM-based summarization and topic classification via local Ollama
 - **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
 
-See detailed docs: [Routes](docs/routes.md) | [Services](docs/services.md) | [Templates](docs/templates.md) | [Data Model](docs/data-model.md)
+See detailed docs: [Routes](docs/routes.md) | [Services](docs/services.md) | [Templates](docs/templates.md) | [Data Model](docs/data-model.md) | [Testing & CI/CD](docs/testing.md)
 
 ## Quick Start
 
@@ -92,6 +92,27 @@ server {
 }
 ```
 
+## Development
+
+```bash
+# Install with dev tools (pytest, ruff, pyright, pre-commit)
+uv sync --extra dev
+
+# Run unit + API tests
+uv run pytest -m "not integration" --cov
+
+# Run integration tests (downloads from real psp.cz)
+uv run pytest -m integration -v
+
+# Lint and format
+uv run ruff check . && uv run ruff format .
+
+# Install pre-commit hooks
+uv run pre-commit install
+```
+
+See [Testing & CI/CD](docs/testing.md) for full details on the test suite, CI pipelines, and contributing guidelines.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -107,6 +128,10 @@ server {
 | LLM integration | Ollama (optional) |
 | API documentation | Scalar |
 | HTTP client | httpx |
+| Testing | pytest + pytest-cov |
+| Linting & formatting | Ruff |
+| Type checking | Pyright |
+| CI/CD | GitHub Actions |
 | Package manager | uv |
 
 ## Data Source
@@ -134,6 +159,7 @@ This data powers the vote detail pages (topic tags, AI summaries, legislative ti
 | [Services](docs/services.md) | Data pipeline, analysis services, tisk pipeline, Ollama integration |
 | [Templates](docs/templates.md) | Frontend structure, HTMX patterns, vote detail, skeleton loading, styling |
 | [Data Model](docs/data-model.md) | Electoral periods, UNL format, table schemas, vote codes, tisk data, Ollama config |
+| [Testing & CI/CD](docs/testing.md) | Test suite structure, fixtures, linting config, GitHub Actions workflows, contributing |
 
 ## License
 

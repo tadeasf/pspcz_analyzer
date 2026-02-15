@@ -1,0 +1,40 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Monday 2AM UTC — weekly canary for upstream psp.cz changes
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: Integration Tests (psp.cz)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run integration tests
+        run: uv run pytest -m integration --timeout=300 -v
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-failure
+          path: |
+            ~/.cache/pspcz-analyzer/
+          retention-days: 3

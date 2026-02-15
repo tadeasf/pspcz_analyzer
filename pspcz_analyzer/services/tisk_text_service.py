@@ -30,6 +30,4 @@ class TiskTextService:
         text_dir = self._text_dir(period)
         if not text_dir.exists():
             return []
-        return sorted(
-            int(p.stem) for p in text_dir.glob("*.txt") if p.stem.isdigit()
-        )
+        return sorted(int(p.stem) for p in text_dir.glob("*.txt") if p.stem.isdigit())
