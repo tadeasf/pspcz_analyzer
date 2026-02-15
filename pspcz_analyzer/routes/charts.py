@@ -76,14 +76,19 @@ async def attendance_chart(
     request: Request,
     period: int = DEFAULT_PERIOD,
     top: int = Query(default=20, ge=1, le=200),
+    sort: str = Query(default="worst", max_length=20),
+    party: str = Query(default="", max_length=200),
 ):
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    key = f"attendance:{period}:{top}:worst"
+    key = f"attendance:{period}:{top}:{sort}:{party}"
     rows = await run_with_timeout(
         lambda: analysis_cache.get_or_compute(
-            key, lambda: compute_attendance(pd, top=top, sort="worst")
+            key,
+            lambda: compute_attendance(
+                pd, top=top, sort=sort, party_filter=party or None
+            ),
         ),
         timeout=20.0,
         label="attendance chart",
@@ -94,12 +99,23 @@ async def attendance_chart(
     ax.set_facecolor("#F7F7F7")
 
     names = [f"{r['jmeno']} {r['prijmeni']} ({r['party'] or '?'})" for r in rows]
-    values = [r["attendance_pct"] for r in rows]
 
-    colors = sns.color_palette("RdYlGn", len(rows))
-    ax.barh(names[::-1], values[::-1], color=colors)
-    ax.set_xlabel("Attendance Rate (%)", color="#333333")
-    ax.set_title("Lowest Attendance — MPs Who Skip Votes", color="#333333", fontsize=14)
+    if sort == "most_active":
+        values = [r["active"] for r in rows]
+        colors = sns.color_palette("viridis", len(rows))
+        ax.barh(names[::-1], values[::-1], color=colors)
+        ax.set_xlabel("Active Votes (YES + NO + ABSTAINED)", color="#333333")
+        ax.set_title("Most Active MPs — Total Votes Cast", color="#333333", fontsize=14)
+    else:
+        values = [r["attendance_pct"] for r in rows]
+        colors = sns.color_palette("RdYlGn", len(rows))
+        ax.barh(names[::-1], values[::-1], color=colors)
+        ax.set_xlabel("Attendance Rate (%)", color="#333333")
+        if sort == "best":
+            ax.set_title("Highest Attendance — Most Reliable MPs", color="#333333", fontsize=14)
+        else:
+            ax.set_title("Lowest Attendance — MPs Who Skip Votes", color="#333333", fontsize=14)
+
     ax.tick_params(colors="#333333")
     for spine in ax.spines.values():
         spine.set_color("#D9D9D9")
