@@ -42,8 +42,7 @@ pspcz_analyzer/
 ├── services/
 │   ├── data_service.py        — Central orchestrator (PeriodData)
 │   ├── loyalty_service.py     — Rebellion rates
-│   ├── attendance_service.py  — Participation rates
-│   ├── activity_service.py    — Vote volume ranking
+│   ├── attendance_service.py  — Participation rates + vote breakdown + activity ranking
 │   ├── similarity_service.py  — Cosine similarity + PCA
 │   ├── votes_service.py       — Vote search/detail
 │   ├── ollama_service.py      — LLM integration

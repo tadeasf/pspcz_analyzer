@@ -26,11 +26,6 @@ class TestHTMXPartials:
         assert resp.status_code == 200
         assert "text/html" in resp.headers["content-type"]
 
-    def test_active_api(self, client):
-        resp = client.get("/api/active?period=1")
-        assert resp.status_code == 200
-        assert "text/html" in resp.headers["content-type"]
-
     def test_votes_api(self, client):
         resp = client.get("/api/votes?period=1")
         assert resp.status_code == 200

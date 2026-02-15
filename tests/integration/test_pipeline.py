@@ -70,10 +70,10 @@ class TestAnalysisOnRealData:
         result = compute_pca_coords(period_data)
         assert len(result) > 0
 
-    def test_activity_produces_results(self, period_data):
-        from pspcz_analyzer.services.activity_service import compute_activity
+    def test_attendance_most_active_sort(self, period_data):
+        from pspcz_analyzer.services.attendance_service import compute_attendance
 
-        result = compute_activity(period_data, top=10)
+        result = compute_attendance(period_data, top=10, sort="most_active")
         assert len(result) > 0
 
     def test_votes_list_produces_results(self, period_data):

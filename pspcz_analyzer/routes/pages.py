@@ -68,16 +68,6 @@ async def similarity_page(request: Request, period: int = DEFAULT_PERIOD):
     )
 
 
-@router.get("/active")
-@limiter.limit("60/minute")
-async def active_page(request: Request, period: int = DEFAULT_PERIOD):
-    validate_period(period)
-    return templates.TemplateResponse(
-        "active.html",
-        _ctx(request, period, active_page="active"),
-    )
-
-
 @router.get("/votes")
 @limiter.limit("60/minute")
 async def votes_page(request: Request, period: int = DEFAULT_PERIOD):
