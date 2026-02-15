@@ -13,9 +13,10 @@ import json
 import re
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 
 import httpx
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from loguru import logger
 
 from pspcz_analyzer.config import PSP_HISTORIE_URL_TEMPLATE
@@ -125,6 +126,47 @@ def _build_stage(mark_text: str, content_text: str) -> TiskHistoryStage | None:
     )
 
 
+def _parse_document_log_items(items: list[Tag]) -> list[TiskHistoryStage]:
+    """Parse document-log-item elements into legislative stages."""
+    stages: list[TiskHistoryStage] = []
+    for item in items:
+        try:
+            mark = item.find("span", class_="mark")
+            if not mark:
+                continue
+            mark_text = mark.get_text(strip=True)
+
+            # Get content from <p> tag, or from sub-list for V/G stages
+            p = item.find("p")
+            if p:
+                text = p.get_text(" ", strip=True)
+            else:
+                # V and G stages may have nested <ul> instead of <p>
+                text = item.get_text(" ", strip=True)
+
+            stage = _build_stage(mark_text, text)
+            if stage:
+                stages.append(stage)
+        except Exception:
+            logger.opt(exception=True).debug(
+                "Failed to parse document-log-item",
+            )
+    return stages
+
+
+def _parse_simple_section(content_div: Tag) -> TiskHistoryStage | None:
+    """Try to parse a section without document-log items (e.g. simple content)."""
+    mark = content_div.find("span", class_="mark")
+    if not mark:
+        return None
+    mark_text = mark.get_text(strip=True)
+    text = content_div.get_text(" ", strip=True)
+    try:
+        return _build_stage(mark_text, text)
+    except Exception:
+        return None
+
+
 def _parse_stages(soup: BeautifulSoup) -> list[TiskHistoryStage]:
     """Extract legislative stages from the page.
 
@@ -143,44 +185,13 @@ def _parse_stages(soup: BeautifulSoup) -> list[TiskHistoryStage]:
         if not content_div:
             continue
 
-        # Process document-log-items (main stage entries)
         items = content_div.find_all("li", class_="document-log-item")
         if items:
-            for item in items:
-                try:
-                    mark = item.find("span", class_="mark")
-                    if not mark:
-                        continue
-                    mark_text = mark.get_text(strip=True)
-
-                    # Get content from <p> tag, or from sub-list for V/G stages
-                    p = item.find("p")
-                    if p:
-                        text = p.get_text(" ", strip=True)
-                    else:
-                        # V and G stages may have nested <ul> instead of <p>
-                        text = item.get_text(" ", strip=True)
-
-                    stage = _build_stage(mark_text, text)
-                    if stage:
-                        stages.append(stage)
-                except Exception:
-                    logger.opt(exception=True).debug(
-                        "Failed to parse document-log-item",
-                    )
+            stages.extend(_parse_document_log_items(items))
         else:
-            # Section without document-log (e.g. simple content)
-            # Try to find a mark span in the content
-            mark = content_div.find("span", class_="mark")
-            if mark:
-                mark_text = mark.get_text(strip=True)
-                text = content_div.get_text(" ", strip=True)
-                try:
-                    stage = _build_stage(mark_text, text)
-                    if stage:
-                        stages.append(stage)
-                except Exception:
-                    pass
+            stage = _parse_simple_section(content_div)
+            if stage:
+                stages.append(stage)
 
     return stages
 
@@ -325,19 +336,15 @@ def history_from_dict(d: dict) -> TiskHistory:
     )
 
 
-def save_history_json(h: TiskHistory, path) -> None:
+def save_history_json(h: TiskHistory, path: Path) -> None:
     """Save a TiskHistory as JSON."""
-    from pathlib import Path
-
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(history_to_dict(h), ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def load_history_json(path) -> TiskHistory | None:
+def load_history_json(path: Path) -> TiskHistory | None:
     """Load a TiskHistory from JSON file."""
-    from pathlib import Path
-
     path = Path(path)
     if not path.exists():
         return None

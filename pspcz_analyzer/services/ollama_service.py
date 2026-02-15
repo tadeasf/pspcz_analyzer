@@ -346,6 +346,6 @@ def deserialize_topics(raw: str) -> list[str]:
             topics = json.loads(raw)
             return [t for t in topics if isinstance(t, str) and t]
         except (json.JSONDecodeError, TypeError):
-            pass
+            logger.debug("Failed to parse topics JSON: {}", raw)
     # Old format: single topic ID like "finance" or "justice"
     return [raw]

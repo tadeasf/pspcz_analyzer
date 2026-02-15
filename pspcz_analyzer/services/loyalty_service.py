@@ -3,7 +3,7 @@
 import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
-from pspcz_analyzer.services.data_service import PeriodData
+from pspcz_analyzer.models.tisk_models import PeriodData
 
 
 def compute_loyalty(

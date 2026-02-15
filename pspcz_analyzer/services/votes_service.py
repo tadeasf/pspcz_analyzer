@@ -7,7 +7,7 @@ import re
 import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
-from pspcz_analyzer.services.data_service import PeriodData
+from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.utils.text import normalize_czech
 
 # Outcome labels for display
@@ -74,21 +74,14 @@ def _match_vote_to_stage(
     return None
 
 
-def list_votes(
+def _apply_vote_filters(
+    votes: pl.DataFrame,
     data: PeriodData,
-    search: str = "",
-    page: int = 1,
-    per_page: int = 30,
-    outcome_filter: str = "",
-    topic_filter: str = "",
-) -> dict:
-    """List votes with optional text search, topic filter, and pagination.
-
-    Returns dict with keys: rows, total, page, per_page, total_pages.
-    """
-    void_ids = data.void_votes.get_column("id_hlasovani")
-    votes = data.votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
-
+    search: str,
+    outcome_filter: str,
+    topic_filter: str,
+) -> pl.DataFrame:
+    """Apply text search, outcome, and topic filters to the votes DataFrame."""
     # Fill nulls in description columns for display and searching
     votes = votes.with_columns(
         pl.col("nazev_dlouhy").fill_null("").alias("nazev_dlouhy"),
@@ -125,6 +118,39 @@ def list_votes(
         else:
             votes = votes.head(0)
 
+    return votes
+
+
+def _enrich_vote_rows(rows: list[dict], data: PeriodData) -> None:
+    """Add outcome labels and tisk info to vote row dicts (in-place)."""
+    for r in rows:
+        r["outcome_label"] = OUTCOME_LABELS.get(r["vysledek"], r["vysledek"] or "?")
+        schuze = r.get("schuze")
+        bod = r.get("bod")
+        tisk = data.get_tisk(schuze, bod) if schuze and bod and bod > 0 else None
+        r["tisk_url"] = tisk.url if tisk else None
+        r["tisk_nazev"] = tisk.nazev if tisk else None
+        r["tisk_ct"] = tisk.ct if tisk else None
+        r["tisk_topics"] = tisk.topics if tisk else []
+
+
+def list_votes(
+    data: PeriodData,
+    search: str = "",
+    page: int = 1,
+    per_page: int = 30,
+    outcome_filter: str = "",
+    topic_filter: str = "",
+) -> dict:
+    """List votes with optional text search, topic filter, and pagination.
+
+    Returns dict with keys: rows, total, page, per_page, total_pages.
+    """
+    void_ids = data.void_votes.get_column("id_hlasovani")
+    votes = data.votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
+
+    votes = _apply_vote_filters(votes, data, search, outcome_filter, topic_filter)
+
     total = votes.height
     total_pages = max(1, (total + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
@@ -150,16 +176,7 @@ def list_votes(
         "prihlaseno",
     ).to_dicts()
 
-    for r in rows:
-        r["outcome_label"] = OUTCOME_LABELS.get(r["vysledek"], r["vysledek"] or "?")
-        # Look up linked tisk (parliamentary print)
-        schuze = r.get("schuze")
-        bod = r.get("bod")
-        tisk = data.get_tisk(schuze, bod) if schuze and bod and bod > 0 else None
-        r["tisk_url"] = tisk.url if tisk else None
-        r["tisk_nazev"] = tisk.nazev if tisk else None
-        r["tisk_ct"] = tisk.ct if tisk else None
-        r["tisk_topics"] = tisk.topics if tisk else []
+    _enrich_vote_rows(rows, data)
 
     return {
         "rows": rows,
@@ -170,12 +187,8 @@ def list_votes(
     }
 
 
-def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
-    """Get full detail for a single vote: metadata + per-party + per-MP breakdown."""
-    vote_row = data.votes.filter(pl.col("id_hlasovani") == vote_id)
-    if vote_row.height == 0:
-        return None
-
+def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData) -> dict:
+    """Build vote metadata dict with tisk enrichment and history matching."""
     info = vote_row.with_columns(
         pl.col("nazev_dlouhy").fill_null(""),
         pl.col("nazev_kratky").fill_null(""),
@@ -212,11 +225,11 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
         info["tisk_law_number"] = tisk.history.law_number
         info["tisk_current_status"] = tisk.history.current_status
 
-    # Individual MP votes for this vote
-    mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)
-    mp_detail = mp_rows.join(data.mp_info, on="id_poslanec", how="left")
+    return info
 
-    # Per-party breakdown
+
+def _build_party_breakdown(mp_detail: pl.DataFrame) -> list[dict]:
+    """Compute per-party vote statistics."""
     party_stats = (
         mp_detail.group_by("party")
         .agg(
@@ -230,14 +243,11 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
         )
         .sort("party")
     )
+    return party_stats.to_dicts()
 
-    party_rows = party_stats.to_dicts()
 
-    # Per-MP breakdown sorted by party then name
-    mp_list = mp_detail.select("jmeno", "prijmeni", "party", "vysledek").sort(
-        "party", "prijmeni", "jmeno"
-    )
-
+def _build_mp_breakdown(mp_detail: pl.DataFrame) -> list[dict]:
+    """Build per-MP vote list with human-readable labels."""
     vote_labels = {
         VoteResult.YES: "YES",
         VoteResult.NO: "NO",
@@ -247,12 +257,29 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
         VoteResult.EXCUSED: "Excused",
     }
 
+    mp_list = mp_detail.select("jmeno", "prijmeni", "party", "vysledek").sort(
+        "party", "prijmeni", "jmeno"
+    )
     mp_dicts = mp_list.to_dicts()
     for m in mp_dicts:
         m["vote_label"] = vote_labels.get(m["vysledek"], m["vysledek"] or "?")
+    return mp_dicts
+
+
+def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
+    """Get full detail for a single vote: metadata + per-party + per-MP breakdown."""
+    vote_row = data.votes.filter(pl.col("id_hlasovani") == vote_id)
+    if vote_row.height == 0:
+        return None
+
+    info = _build_vote_info(vote_row, data)
+
+    # Individual MP votes for this vote
+    mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)
+    mp_detail = mp_rows.join(data.mp_info, on="id_poslanec", how="left")
 
     return {
         "info": info,
-        "party_breakdown": party_rows,
-        "mp_votes": mp_dicts,
+        "party_breakdown": _build_party_breakdown(mp_detail),
+        "mp_votes": _build_mp_breakdown(mp_detail),
     }

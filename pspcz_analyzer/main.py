@@ -5,6 +5,7 @@ from pathlib import Path
 
 import markdown as _md
 import markupsafe
+import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -83,8 +84,6 @@ for t in (templates, api_templates, pages_templates):
 
 
 def main() -> None:
-    import uvicorn
-
     uvicorn.run(
         "pspcz_analyzer.main:app",
         host="0.0.0.0",

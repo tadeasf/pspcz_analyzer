@@ -1,12 +1,19 @@
 """HTMX partial endpoints — return HTML fragments."""
 
+import html as html_mod
+from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, PERIOD_YEARS
+from pspcz_analyzer.config import DEFAULT_CACHE_DIR, DEFAULT_PERIOD, PERIOD_YEARS, TISKY_TEXT_DIR
+from pspcz_analyzer.data.law_changes_scraper import (
+    load_related_bills_json,
+    save_related_bills_json,
+    scrape_related_bills,
+)
 from pspcz_analyzer.middleware import run_with_timeout
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.analysis_cache import analysis_cache
@@ -148,8 +155,6 @@ async def tisk_text_api(
     validate_period(period)
     data_svc = request.app.state.data
     if ct1 >= 0:
-        from pspcz_analyzer.config import TISKY_TEXT_DIR
-
         text_path = data_svc.cache_dir / TISKY_TEXT_DIR / str(period) / f"{ct}_{ct1}.txt"
         text = text_path.read_text(encoding="utf-8") if text_path.exists() else None
     else:
@@ -161,8 +166,6 @@ async def tisk_text_api(
             "The background pipeline will download and extract it automatically.</p>"
             "</article>"
         )
-    import html as html_mod
-
     escaped = html_mod.escape(text)
     return HTMLResponse(
         '<article style="max-height: 60vh; overflow-y: auto; background: #f8f9fa; '
@@ -214,15 +217,6 @@ async def related_bills_api(
     """Lazy-load related bills for a specific law (scrapes on demand, caches)."""
     if idsb <= 0:
         return HTMLResponse("<p>Invalid law reference.</p>")
-
-    from dataclasses import asdict
-
-    from pspcz_analyzer.config import DEFAULT_CACHE_DIR
-    from pspcz_analyzer.data.law_changes_scraper import (
-        load_related_bills_json,
-        save_related_bills_json,
-        scrape_related_bills,
-    )
 
     cache_dir = DEFAULT_CACHE_DIR
     cached = load_related_bills_json(idsb, cache_dir)

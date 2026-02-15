@@ -1,6 +1,5 @@
 """Data service: orchestrates download, parsing, caching, and holds DataFrames."""
 
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import polars as pl
@@ -12,10 +11,6 @@ from pspcz_analyzer.config import (
     PERIOD_LABELS,
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
-    TISKY_HISTORIE_DIR,
-    TISKY_LAW_CHANGES_DIR,
-    TISKY_META_DIR,
-    TISKY_VERSION_DIFFS_DIR,
 )
 from pspcz_analyzer.data.cache import get_or_parse
 from pspcz_analyzer.data.downloader import (
@@ -24,7 +19,6 @@ from pspcz_analyzer.data.downloader import (
     download_tisky_data,
     download_voting_data,
 )
-from pspcz_analyzer.data.history_scraper import TiskHistory
 from pspcz_analyzer.data.parser import parse_unl, parse_unl_multi
 from pspcz_analyzer.models.schemas import (
     BOD_SCHUZE_COLUMNS,
@@ -48,67 +42,12 @@ from pspcz_analyzer.models.schemas import (
     ZMATECNE_COLUMNS,
     ZMATECNE_DTYPES,
 )
+from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.mp_builder import build_mp_info
+from pspcz_analyzer.services.tisk_cache_manager import TiskCacheManager
+from pspcz_analyzer.services.tisk_lookup_builder import build_tisk_lookup
 from pspcz_analyzer.services.tisk_pipeline_service import TiskPipelineService
 from pspcz_analyzer.services.tisk_text_service import TiskTextService
-
-
-@dataclass
-class TiskInfo:
-    """Info about a parliamentary print linked to a vote."""
-
-    id_tisk: int
-    ct: int  # tisk number
-    nazev: str
-    period: int
-    topics: list[str] = field(default_factory=list)
-    has_text: bool = False
-    summary: str = ""
-    history: TiskHistory | None = None
-    law_changes: list[dict] = field(default_factory=list)
-    sub_versions: list[dict] = field(default_factory=list)
-
-    @property
-    def url(self) -> str:
-        return f"https://www.psp.cz/sqw/historie.sqw?o={self.period}&t={self.ct}"
-
-
-@dataclass
-class PeriodData:
-    """All DataFrames for a single electoral period."""
-
-    period: int
-    votes: pl.DataFrame
-    mp_votes: pl.DataFrame
-    void_votes: pl.DataFrame
-    mp_info: pl.DataFrame
-    # Lookup: (schuze_num, bod_num) -> TiskInfo
-    tisk_lookup: dict[tuple[int, int], TiskInfo] = field(default_factory=dict)
-
-    @property
-    def stats(self) -> dict:
-        date_col = self.votes.get_column("datum")
-        dates = date_col.drop_nulls().str.strip_chars()
-        return {
-            "period": self.period,
-            "label": PERIOD_LABELS.get(self.period, PERIOD_YEARS.get(self.period, "?")),
-            "total_votes": self.votes.height,
-            "total_mp_records": self.mp_votes.height,
-            "total_mps": self.mp_info.height,
-            "date_min": dates.sort().head(1).to_list()[0] if dates.len() > 0 else "N/A",
-            "date_max": dates.sort().tail(1).to_list()[0] if dates.len() > 0 else "N/A",
-            "void_votes": self.void_votes.height,
-        }
-
-    def get_tisk(self, schuze: int, bod: int) -> TiskInfo | None:
-        """Get tisk info for a vote given its session and agenda item numbers."""
-        return self.tisk_lookup.get((schuze, bod))
-
-    def get_all_topic_labels(self) -> list[str]:
-        """Collect all unique topic labels across all tisky, sorted."""
-        labels: set[str] = set()
-        for tisk in self.tisk_lookup.values():
-            labels.update(tisk.topics)
-        return sorted(labels)
 
 
 class DataService:
@@ -119,6 +58,7 @@ class DataService:
         self._periods: dict[int, PeriodData] = {}
         self.tisk_text = TiskTextService(cache_dir)
         self.tisk_pipeline = TiskPipelineService(cache_dir)
+        self._cache_mgr = TiskCacheManager(cache_dir)
 
         # Shared tables (not period-specific), populated by _load_shared_tables
         self._persons: pl.DataFrame | None = None
@@ -131,17 +71,6 @@ class DataService:
         self._schuze: pl.DataFrame | None = None
         self._bod_schuze: pl.DataFrame | None = None
         self._tisky: pl.DataFrame | None = None
-
-        # Topic classification cache: period -> {ct -> [topic_labels]}
-        self._topic_cache: dict[int, dict[int, list[str]]] = {}
-        # Summary cache: period -> {ct -> summary_text}
-        self._summary_cache: dict[int, dict[int, str]] = {}
-        # Track parquet mtime to detect incremental updates
-        self._topic_cache_mtime: dict[int, float] = {}
-        # Legislative history cache: period -> {ct -> TiskHistory}
-        self._history_cache: dict[int, dict] = {}
-        # Note: law_changes, subtisk_versions, and version_diffs are always
-        # read from disk (no in-memory cache) for incremental UI updates.
 
     @property
     def available_periods(self) -> list[dict]:
@@ -174,12 +103,12 @@ class DataService:
         pd = self._periods.get(period)
         if pd is None:
             return
-        topic_map = self._load_topic_cache(period)
-        summary_map = self._summary_cache.get(period, {})
-        history_map = self._load_history_cache(period)
-        law_changes_map = self._load_law_changes_cache(period)
-        subtisk_map = self._load_subtisk_versions_cache(period)
-        diffs_map = self._load_version_diffs_cache(period)
+        topic_map = self._cache_mgr.load_topic_cache(period)
+        summary_map = self._cache_mgr.summary_cache.get(period, {})
+        history_map = self._cache_mgr.load_history_cache(period)
+        law_changes_map = self._cache_mgr.load_law_changes_cache(period)
+        subtisk_map = self._cache_mgr.load_subtisk_versions_cache(period)
+        diffs_map = self._cache_mgr.load_version_diffs_cache(period)
         for tisk in pd.tisk_lookup.values():
             tisk.topics = topic_map.get(tisk.ct, [])
             tisk.summary = summary_map.get(tisk.ct, "")
@@ -308,162 +237,6 @@ class DataService:
         assert self._organs is not None
         assert self._memberships is not None
 
-    def _build_tisk_lookup(
-        self,
-        period: int,
-        votes: pl.DataFrame,
-    ) -> dict[tuple[int, int], TiskInfo]:
-        """Build a mapping from (schuze_num, bod_num) -> TiskInfo for a given period.
-
-        Primary path: schuze -> bod_schuze -> tisky (reliable, full coverage).
-        Fallback: if schuze data is missing for this period, match vote
-        descriptions directly to tisk names (covers new periods where
-        schuze.zip hasn't been updated yet).
-        """
-        self._ensure_shared_loaded()
-        assert self._schuze is not None  # for type narrowing
-        organ_id = PERIOD_ORGAN_IDS[period]
-
-        # Try primary path via schuze -> bod_schuze
-        sessions = self._schuze.filter(pl.col("id_org") == organ_id)
-        if sessions.height > 0:
-            return self._build_tisk_lookup_via_schuze(period, sessions)
-
-        # Fallback: text matching for periods without schuze data
-        logger.info(
-            "No session data for period {} (organ {}), using text-match fallback",
-            period,
-            organ_id,
-        )
-        return self._build_tisk_lookup_via_text(period, votes)
-
-    def _build_tisk_lookup_via_schuze(
-        self,
-        period: int,
-        sessions: pl.DataFrame,
-    ) -> dict[tuple[int, int], TiskInfo]:
-        """Build lookup using the schuze -> bod_schuze -> tisky chain."""
-        assert self._bod_schuze is not None
-        assert self._tisky is not None
-
-        session_map = dict(
-            zip(
-                sessions.get_column("id_schuze").to_list(),
-                sessions.get_column("schuze").to_list(),
-                strict=False,
-            )
-        )
-        session_ids = set(session_map.keys())
-
-        bods = self._bod_schuze.filter(
-            pl.col("id_schuze").is_in(session_ids)
-            & pl.col("id_tisk").is_not_null()
-            & (pl.col("id_tisk") != 0)
-        )
-
-        if bods.height == 0:
-            return {}
-
-        # Load topic classifications, summaries, and text availability
-        topic_map = self._load_topic_cache(period)
-        summary_map = self._summary_cache.get(period, {})
-
-        tisk_ids = set(bods.get_column("id_tisk").to_list())
-        relevant_tisky = self._tisky.filter(pl.col("id_tisk").is_in(tisk_ids))
-        tisk_map = {}
-        for row in relevant_tisky.iter_rows(named=True):
-            ct = row.get("ct")
-            if ct:
-                tisk_map[row["id_tisk"]] = TiskInfo(
-                    id_tisk=row["id_tisk"],
-                    ct=ct,
-                    nazev=row.get("nazev_tisku") or "",
-                    period=period,
-                    topics=topic_map.get(ct, []),
-                    has_text=self.tisk_text.has_text(period, ct),
-                    summary=summary_map.get(ct, ""),
-                )
-
-        lookup: dict[tuple[int, int], TiskInfo] = {}
-        for row in bods.iter_rows(named=True):
-            id_schuze = row["id_schuze"]
-            schuze_num = session_map.get(id_schuze)
-            bod_num = row.get("bod")
-            id_tisk = row["id_tisk"]
-            if schuze_num is not None and bod_num is not None and id_tisk in tisk_map:
-                lookup[(schuze_num, bod_num)] = tisk_map[id_tisk]
-
-        logger.info(
-            "Period {}: built tisk lookup with {} entries (via schuze)",
-            period,
-            len(lookup),
-        )
-        return lookup
-
-    def _build_tisk_lookup_via_text(
-        self,
-        period: int,
-        votes: pl.DataFrame,
-    ) -> dict[tuple[int, int], TiskInfo]:
-        """Fallback: match vote descriptions to tisk names for this period.
-
-        Used when schuze.zip hasn't been updated for a new period yet.
-        """
-        assert self._tisky is not None
-
-        organ_id = PERIOD_ORGAN_IDS[period]
-        period_tisky = self._tisky.filter(pl.col("id_obdobi") == organ_id)
-        if period_tisky.height == 0:
-            return {}
-
-        # Load topic classifications, summaries, and text availability
-        topic_map = self._load_topic_cache(period)
-        summary_map = self._summary_cache.get(period, {})
-
-        # Build list of tisk names for matching (longest first for greedy match)
-        tisk_entries = []
-        for row in period_tisky.iter_rows(named=True):
-            ct = row.get("ct")
-            nazev = (row.get("nazev_tisku") or "").strip()
-            if ct and nazev:
-                tisk_entries.append(
-                    TiskInfo(
-                        id_tisk=row["id_tisk"],
-                        ct=ct,
-                        nazev=nazev,
-                        period=period,
-                        topics=topic_map.get(ct, []),
-                        has_text=self.tisk_text.has_text(period, ct),
-                        summary=summary_map.get(ct, ""),
-                    )
-                )
-        tisk_entries.sort(key=lambda t: len(t.nazev), reverse=True)
-
-        # Get unique (schuze, bod) combinations with descriptions
-        vote_bods = (
-            votes.filter(pl.col("nazev_dlouhy").is_not_null() & (pl.col("bod") > 0))
-            .select("schuze", "bod", "nazev_dlouhy")
-            .unique(subset=["schuze", "bod"])
-        )
-
-        lookup: dict[tuple[int, int], TiskInfo] = {}
-        for row in vote_bods.iter_rows(named=True):
-            desc = (row["nazev_dlouhy"] or "").strip()
-            if not desc:
-                continue
-            for tisk in tisk_entries:
-                if desc.startswith(tisk.nazev) or tisk.nazev.startswith(desc):
-                    lookup[(row["schuze"], row["bod"])] = tisk
-                    break
-
-        logger.info(
-            "Period {}: built tisk lookup with {} entries (via text match, {} tisky available)",
-            period,
-            len(lookup),
-            len(tisk_entries),
-        )
-        return lookup
-
     def _load_period(self, period: int) -> None:
         """Load voting data for a specific period."""
         if period not in PERIOD_YEARS:
@@ -512,8 +285,29 @@ class DataService:
             logger.info("No void votes file for period {}", period)
             void_votes = pl.DataFrame({"id_hlasovani": pl.Series([], dtype=pl.Int64)})
 
-        mp_info = self._build_mp_info(period)
-        tisk_lookup = self._build_tisk_lookup(period, votes)
+        self._ensure_shared_loaded()
+        assert self._mps is not None
+        assert self._persons is not None
+        assert self._organs is not None
+        assert self._memberships is not None
+        assert self._schuze is not None
+        assert self._bod_schuze is not None
+        assert self._tisky is not None
+
+        mp_info = build_mp_info(period, self._mps, self._persons, self._organs, self._memberships)
+
+        # Pre-load topic cache for tisk lookup builder
+        self._cache_mgr.load_topic_cache(period)
+        tisk_lookup = build_tisk_lookup(
+            period,
+            votes,
+            self._schuze,
+            self._bod_schuze,
+            self._tisky,
+            self.tisk_text,
+            self._cache_mgr.topic_cache,
+            self._cache_mgr.summary_cache,
+        )
 
         pd = PeriodData(
             period=period,
@@ -534,47 +328,6 @@ class DataService:
             len(tisk_lookup),
         )
 
-    def _build_mp_info(self, period: int) -> pl.DataFrame:
-        """Build MP lookup table: id_poslanec -> name, party for a given period."""
-        assert self._mps is not None
-        assert self._persons is not None
-        assert self._organs is not None
-        assert self._memberships is not None
-
-        organ_id = PERIOD_ORGAN_IDS[period]
-        period_mps = self._mps.filter(pl.col("id_obdobi") == organ_id)
-
-        mp_persons = period_mps.join(
-            self._persons.select("id_osoba", "jmeno", "prijmeni"),
-            on="id_osoba",
-            how="left",
-        )
-
-        clubs = self._organs.filter(pl.col("id_typ_organu") == 1).select("id_organ", "zkratka")
-
-        club_memberships = self._memberships.join(
-            clubs, left_on="id_of", right_on="id_organ", how="inner"
-        ).select("id_osoba", "zkratka", "od_o", "do_o")
-
-        club_memberships = club_memberships.sort("od_o", descending=True).unique(
-            subset=["id_osoba"], keep="first"
-        )
-
-        mp_info = mp_persons.join(
-            club_memberships.select("id_osoba", pl.col("zkratka").alias("party")),
-            on="id_osoba",
-            how="left",
-        ).select("id_poslanec", "id_osoba", "jmeno", "prijmeni", "party")
-
-        # Normalize party abbreviations from psp.cz to commonly used names.
-        # "ANO2011" is the official registration name but everyone calls it "ANO".
-        # "Nezařaz" is the truncated abbreviation for independent MPs ("Nezařazení").
-        party_aliases = {
-            "ANO2011": "ANO",
-            "Nezařaz": "Nezařazení",
-        }
-        return mp_info.with_columns(pl.col("party").replace(party_aliases).alias("party"))
-
     def _find_file(self, directory: Path, filename: str) -> Path:
         """Find a file in directory tree (case-insensitive search)."""
         for f in directory.rglob(filename):
@@ -584,171 +337,6 @@ class DataService:
                 return f
         msg = f"File {filename} not found in {directory}"
         raise FileNotFoundError(msg)
-
-    def _load_topic_cache(self, period: int) -> dict[int, list[str]]:
-        """Load topic classifications (and summaries) from parquet cache.
-
-        Re-reads the parquet if it's been modified since last load (picks up
-        incremental pipeline updates).
-        """
-        from pspcz_analyzer.services.ollama_service import deserialize_topics
-
-        meta_path = self.cache_dir / TISKY_META_DIR / str(period) / "topic_classifications.parquet"
-        if not meta_path.exists():
-            self._topic_cache[period] = {}
-            self._summary_cache[period] = {}
-            self._topic_cache_mtime[period] = 0
-            return {}
-
-        # Check if we need to re-read (new file or modified since last load)
-        current_mtime = meta_path.stat().st_mtime
-        cached_mtime = self._topic_cache_mtime.get(period, 0)
-        if period in self._topic_cache and current_mtime == cached_mtime:
-            return self._topic_cache[period]
-
-        df = pl.read_parquet(meta_path)
-        topics: dict[int, list[str]] = {}
-        summaries: dict[int, str] = {}
-        for row in df.iter_rows(named=True):
-            ct = row["ct"]
-            raw_topic = row.get("topic", "")
-            parsed = deserialize_topics(raw_topic)
-            if parsed:
-                topics[ct] = parsed
-            summary = row.get("summary", "")
-            if summary:
-                summaries[ct] = summary
-        self._topic_cache[period] = topics
-        self._summary_cache[period] = summaries
-        self._topic_cache_mtime[period] = current_mtime
-        logger.debug(
-            "Loaded topic classifications for period {}: {} tisky, {} summaries",
-            period,
-            len(topics),
-            len(summaries),
-        )
-        return topics
-
-    def _load_history_cache(self, period: int) -> dict:
-        """Load legislative history JSON files for a period.
-
-        Returns {ct: TiskHistory} dict. Caches in memory.
-        """
-        if period in self._history_cache:
-            return self._history_cache[period]
-
-        from pspcz_analyzer.data.history_scraper import load_history_json
-
-        hist_dir = self.cache_dir / TISKY_META_DIR / str(period) / TISKY_HISTORIE_DIR
-        histories: dict = {}
-        if not hist_dir.exists():
-            self._history_cache[period] = histories
-            return histories
-
-        for json_path in hist_dir.glob("*.json"):
-            try:
-                ct = int(json_path.stem)
-            except ValueError:
-                continue
-            h = load_history_json(json_path)
-            if h:
-                histories[ct] = h
-
-        self._history_cache[period] = histories
-        if histories:
-            logger.debug(
-                "Loaded {} tisk histories for period {}",
-                len(histories),
-                period,
-            )
-        return histories
-
-    def _load_law_changes_cache(self, period: int) -> dict[int, list[dict]]:
-        """Load law changes JSON files for a period.
-
-        Always reads from disk (no in-memory cache) so incremental pipeline
-        results are visible immediately in the UI.
-        Returns {ct: [law_change_dicts]}.
-        """
-        lc_dir = self.cache_dir / TISKY_META_DIR / str(period) / TISKY_LAW_CHANGES_DIR
-        changes: dict[int, list[dict]] = {}
-        if not lc_dir.exists():
-            return changes
-
-        import json
-
-        for json_path in lc_dir.glob("*.json"):
-            try:
-                ct = int(json_path.stem)
-            except ValueError:
-                continue
-            try:
-                data = json.loads(json_path.read_text(encoding="utf-8"))
-                if data:  # only store non-empty
-                    changes[ct] = data
-            except Exception:
-                logger.opt(exception=True).warning(
-                    "Failed to load law changes from {}",
-                    json_path,
-                )
-
-        return changes
-
-    def _load_subtisk_versions_cache(self, period: int) -> dict[int, list[dict]]:
-        """Load sub-tisk version info from JSON cache.
-
-        Always reads from disk (no in-memory cache) so incremental pipeline
-        results are visible immediately in the UI.
-        Returns {ct: [version_dicts]}.
-        """
-        import json
-
-        scan_dir = self.cache_dir / TISKY_META_DIR / str(period) / "subtisk_versions"
-        versions: dict[int, list[dict]] = {}
-
-        if not scan_dir.exists():
-            return versions
-
-        for json_path in scan_dir.glob("*.json"):
-            try:
-                ct = int(json_path.stem)
-            except ValueError:
-                continue
-            try:
-                data = json.loads(json_path.read_text(encoding="utf-8"))
-                if data:  # skip empty (means no sub-versions)
-                    versions[ct] = data
-            except Exception:
-                logger.opt(exception=True).warning(
-                    "Failed to load subtisk cache from {}",
-                    json_path,
-                )
-
-        return versions
-
-    def _load_version_diffs_cache(self, period: int) -> dict[str, str]:
-        """Load LLM version diff summaries for a period.
-
-        Always reads from disk (no in-memory cache) so incremental pipeline
-        results are visible immediately in the UI.
-        Returns {"{ct}_{ct1}": summary_text}.
-        """
-        diff_dir = self.cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
-        diffs: dict[str, str] = {}
-        if not diff_dir.exists():
-            return diffs
-
-        for txt_path in diff_dir.glob("*.txt"):
-            key = txt_path.stem  # "{ct}_{ct1}"
-            try:
-                diffs[key] = txt_path.read_text(encoding="utf-8")
-            except Exception:
-                logger.opt(exception=True).warning(
-                    "Failed to load version diff from {}",
-                    txt_path,
-                )
-
-        return diffs
 
     def start_tisk_pipeline(self, period: int) -> None:
         """Kick off background tisk processing for a period.
@@ -779,17 +367,11 @@ class DataService:
             version_diffs: dict | None = None,
         ) -> None:
             """Callback: refresh in-memory tisk data after pipeline finishes."""
-            # Invalidate caches so next lookup picks up new data
-            self._topic_cache.pop(p, None)
-            self._summary_cache.pop(p, None)
-            self._history_cache.pop(p, None)
-
-            # Update existing tisk_lookup entries
+            self._cache_mgr.invalidate(p)
             pd = self._periods.get(p)
             if pd is None:
                 return
             self._refresh_tisk_data(p)
-
             logger.info(
                 "[tisk pipeline] Updated in-memory tisk data for period {}",
                 p,
@@ -830,9 +412,7 @@ class DataService:
             subtisk_map: dict | None = None,
             version_diffs: dict | None = None,
         ) -> None:
-            self._topic_cache.pop(p, None)
-            self._summary_cache.pop(p, None)
-            self._history_cache.pop(p, None)
+            self._cache_mgr.invalidate(p)
             pd = self._periods.get(p)
             if pd is None:
                 return
