@@ -86,9 +86,7 @@ async def attendance_chart(
     rows = await run_with_timeout(
         lambda: analysis_cache.get_or_compute(
             key,
-            lambda: compute_attendance(
-                pd, top=top, sort=sort, party_filter=party or None
-            ),
+            lambda: compute_attendance(pd, top=top, sort=sort, party_filter=party or None),
         ),
         timeout=20.0,
         label="attendance chart",
@@ -102,13 +100,48 @@ async def attendance_chart(
 
     chart_meta: dict[str, tuple[str, str, str, str]] = {
         # sort_key: (data_field, xlabel, title, palette)
-        "worst": ("attendance_pct", "Attendance Rate (%)", "Lowest Attendance — MPs Who Skip Votes", "RdYlGn"),
-        "best": ("attendance_pct", "Attendance Rate (%)", "Highest Attendance — Most Reliable MPs", "RdYlGn"),
-        "most_active": ("active", "Active Votes (YES + NO + ABSTAINED)", "Most Active MPs — Total Votes Cast", "viridis"),
-        "least_active": ("active", "Active Votes (YES + NO + ABSTAINED)", "Least Active MPs — Fewest Votes Cast", "viridis"),
-        "most_abstained": ("abstained", "Abstentions", "Most Abstentions — MPs Who Abstain Most", "YlOrRd"),
-        "most_excused": ("excused", "Excused Absences", "Most Excused — MPs With Most Excused Absences", "PuBuGn"),
-        "most_passive": ("passive", "Passive Votes", "Most Passive — Registered but Didn't Vote", "OrRd"),
+        "worst": (
+            "attendance_pct",
+            "Attendance Rate (%)",
+            "Lowest Attendance — MPs Who Skip Votes",
+            "RdYlGn",
+        ),
+        "best": (
+            "attendance_pct",
+            "Attendance Rate (%)",
+            "Highest Attendance — Most Reliable MPs",
+            "RdYlGn",
+        ),
+        "most_active": (
+            "active",
+            "Active Votes (YES + NO + ABSTAINED)",
+            "Most Active MPs — Total Votes Cast",
+            "viridis",
+        ),
+        "least_active": (
+            "active",
+            "Active Votes (YES + NO + ABSTAINED)",
+            "Least Active MPs — Fewest Votes Cast",
+            "viridis",
+        ),
+        "most_abstained": (
+            "abstained",
+            "Abstentions",
+            "Most Abstentions — MPs Who Abstain Most",
+            "YlOrRd",
+        ),
+        "most_excused": (
+            "excused",
+            "Excused Absences",
+            "Most Excused — MPs With Most Excused Absences",
+            "PuBuGn",
+        ),
+        "most_passive": (
+            "passive",
+            "Passive Votes",
+            "Most Passive — Registered but Didn't Vote",
+            "OrRd",
+        ),
         "most_absent": ("absent", "Absences", "Most Absent — MPs Not Present for Votes", "Reds"),
         "most_yes": ("yes_votes", "YES Votes", "Most YES Votes — MPs Who Vote Yes Most", "Greens"),
         "most_no": ("no_votes", "NO Votes", "Most NO Votes — MPs Who Vote No Most", "Blues"),
