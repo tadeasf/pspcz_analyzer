@@ -94,13 +94,15 @@ def compute_cross_party_similarity(data: PeriodData, top: int = 20) -> list[dict
     for i in range(n):
         for j in range(i + 1, n):
             if parties[i] and parties[j] and parties[i] != parties[j]:
-                pairs.append({
-                    "mp1_name": names[i],
-                    "mp1_party": parties[i],
-                    "mp2_name": names[j],
-                    "mp2_party": parties[j],
-                    "similarity": float(similarity[i, j]),
-                })
+                pairs.append(
+                    {
+                        "mp1_name": names[i],
+                        "mp1_party": parties[i],
+                        "mp2_name": names[j],
+                        "mp2_party": parties[j],
+                        "similarity": float(similarity[i, j]),
+                    }
+                )
 
     pairs.sort(key=lambda p: p["similarity"], reverse=True)
     return pairs[:top]

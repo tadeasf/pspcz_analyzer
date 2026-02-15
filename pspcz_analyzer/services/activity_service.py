@@ -33,23 +33,29 @@ def compute_activity(
     )
 
     per_mp = per_mp.with_columns(
-        (
-            pl.col("active") / (pl.col("total") - pl.col("excused")).cast(pl.Float64) * 100
-        ).alias("attendance_pct")
+        (pl.col("active") / (pl.col("total") - pl.col("excused")).cast(pl.Float64) * 100).alias(
+            "attendance_pct"
+        )
     )
 
     result = per_mp.join(data.mp_info, on="id_poslanec", how="left")
 
     if party_filter:
-        result = result.filter(
-            pl.col("party").str.to_uppercase() == party_filter.upper()
-        )
+        result = result.filter(pl.col("party").str.to_uppercase() == party_filter.upper())
 
     result = result.sort("active", descending=True).head(top)
 
     return result.select(
-        "jmeno", "prijmeni", "party",
-        "active", "yes_votes", "no_votes", "abstained",
-        "passive", "absent", "excused", "total",
+        "jmeno",
+        "prijmeni",
+        "party",
+        "active",
+        "yes_votes",
+        "no_votes",
+        "abstained",
+        "passive",
+        "absent",
+        "excused",
+        "total",
         "attendance_pct",
     ).to_dicts()

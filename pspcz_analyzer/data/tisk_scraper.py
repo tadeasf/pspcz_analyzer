@@ -7,7 +7,10 @@ import httpx
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from pspcz_analyzer.config import PSP_ORIG2_BASE_URL, PSP_SUBTISKT_URL_TEMPLATE, PSP_TISKT_URL_TEMPLATE
+from pspcz_analyzer.config import (
+    PSP_SUBTISKT_URL_TEMPLATE,
+    PSP_TISKT_URL_TEMPLATE,
+)
 
 
 @dataclass
@@ -40,7 +43,7 @@ def scrape_tisk_documents(period: int, ct: int) -> list[TiskDocument]:
     documents: list[TiskDocument] = []
 
     for link in soup.find_all("a", href=_IDD_RE):
-        href = link["href"]
+        href = str(link["href"])
         match = _IDD_RE.search(href)
         if not match:
             continue
@@ -53,9 +56,14 @@ def scrape_tisk_documents(period: int, ct: int) -> list[TiskDocument]:
         fmt = "PDF" if "PDF" in parent_text.upper() or href.endswith(".pdf") else "unknown"
         is_complete = "cel" in desc.lower() or "úplné znění" in desc.lower()
 
-        documents.append(TiskDocument(
-            idd=idd, description=desc, format=fmt, is_complete=is_complete,
-        ))
+        documents.append(
+            TiskDocument(
+                idd=idd,
+                description=desc,
+                format=fmt,
+                is_complete=is_complete,
+            )
+        )
 
     logger.debug("Tisk {}/{}: found {} documents", period, ct, len(documents))
     return documents
@@ -99,12 +107,18 @@ def _scrape_subtisk_page(period: int, ct: int, ct1: int) -> list[TiskDocument] |
         if e.response.status_code == 404:
             return None
         logger.opt(exception=True).warning(
-            "Failed to fetch sub-tisk {}/{}/{}", period, ct, ct1,
+            "Failed to fetch sub-tisk {}/{}/{}",
+            period,
+            ct,
+            ct1,
         )
         return None
     except Exception:
         logger.opt(exception=True).warning(
-            "Failed to fetch sub-tisk {}/{}/{}", period, ct, ct1,
+            "Failed to fetch sub-tisk {}/{}/{}",
+            period,
+            ct,
+            ct1,
         )
         return None
 
@@ -117,7 +131,7 @@ def _scrape_subtisk_page(period: int, ct: int, ct1: int) -> list[TiskDocument] |
 
     documents: list[TiskDocument] = []
     for link in soup.find_all("a", href=_IDD_RE):
-        href = link["href"]
+        href = str(link["href"])
         match = _IDD_RE.search(href)
         if not match:
             continue
@@ -126,13 +140,17 @@ def _scrape_subtisk_page(period: int, ct: int, ct1: int) -> list[TiskDocument] |
         parent_text = link.parent.get_text(strip=True) if link.parent else desc
         fmt = "PDF" if "PDF" in parent_text.upper() or href.endswith(".pdf") else "unknown"
         is_complete = "cel" in desc.lower() or "úplné znění" in desc.lower()
-        documents.append(TiskDocument(idd=idd, description=desc, format=fmt, is_complete=is_complete))
+        documents.append(
+            TiskDocument(idd=idd, description=desc, format=fmt, is_complete=is_complete)
+        )
 
     return documents
 
 
 def scrape_all_subtisk_documents(
-    period: int, ct: int, max_ct1: int = 20,
+    period: int,
+    ct: int,
+    max_ct1: int = 20,
 ) -> list[SubTiskVersion]:
     """Iterate CT1=0..N for a tisk, collecting sub-tisk versions.
 

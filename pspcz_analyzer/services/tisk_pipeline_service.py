@@ -12,7 +12,6 @@ from loguru import logger
 
 from pspcz_analyzer.config import (
     DEFAULT_CACHE_DIR,
-    PERIOD_ORGAN_IDS,
     PSP_REQUEST_DELAY,
     TISKY_HISTORIE_DIR,
     TISKY_LAW_CHANGES_DIR,
@@ -66,7 +65,7 @@ def _extract_one(pdf_path: Path, period: int, ct: int, cache_dir: Path, force: b
 
     try:
         doc = pymupdf.open(pdf_path)
-        pages = [page.get_text() for page in doc]
+        pages = [str(page.get_text()) for page in doc]
         doc.close()
         text = "\n\n".join(pages)
     except Exception:
@@ -139,7 +138,9 @@ def _process_period_sync(
 
 
 def _classify_and_save(
-    period: int, text_paths: dict[int, Path], cache_dir: Path,
+    period: int,
+    text_paths: dict[int, Path],
+    cache_dir: Path,
 ) -> tuple[dict[int, list[str]], dict[int, str]]:
     """Run topic classification on extracted texts, save parquet, return maps.
 
@@ -175,13 +176,21 @@ def _classify_and_save(
     if already:
         logger.info(
             "[tisk pipeline] Resuming: {} already done, {} remaining out of {} total",
-            already, len(remaining), total,
+            already,
+            len(remaining),
+            total,
         )
 
     if use_ai:
-        logger.info("[tisk pipeline] Ollama available, using AI classification + summarization ({} to process)", len(remaining))
+        logger.info(
+            "[tisk pipeline] Ollama available, using AI classification + summarization ({} to process)",
+            len(remaining),
+        )
     else:
-        logger.info("[tisk pipeline] Ollama not available, using keyword classification ({} to process)", len(remaining))
+        logger.info(
+            "[tisk pipeline] Ollama not available, using keyword classification ({} to process)",
+            len(remaining),
+        )
 
     # Start from existing records
     records = list(existing.values())
@@ -201,7 +210,12 @@ def _classify_and_save(
             summary = ollama.summarize(text, "")
             logger.info(
                 "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} summary={}chars ({})",
-                i, total, ct, topics or "(none)", len(summary), source,
+                i,
+                total,
+                ct,
+                topics or "(none)",
+                len(summary),
+                source,
             )
         else:
             kw_topic = classify_tisk_primary_label(text, "")
@@ -216,7 +230,11 @@ def _classify_and_save(
             if kw_topic:
                 topics = [kw_topic]
                 source = "keyword"
-                logger.debug("[tisk pipeline] tisk ct={} AI returned no topics, keyword fallback -> {}", ct, kw_topic)
+                logger.debug(
+                    "[tisk pipeline] tisk ct={} AI returned no topics, keyword fallback -> {}",
+                    ct,
+                    kw_topic,
+                )
 
         record = {
             "ct": ct,
@@ -244,14 +262,19 @@ def _classify_and_save(
     ai_count = sum(1 for r in records if r.get("source", "").startswith("ollama"))
     logger.info(
         "[tisk pipeline] Classified {}/{} tisky for period {} (AI: {}, keyword: {})",
-        classified, len(records), period, ai_count, classified - ai_count,
+        classified,
+        len(records),
+        period,
+        ai_count,
+        classified - ai_count,
     )
 
     return topic_map, summary_map
 
 
 def _consolidate_topics(
-    period: int, cache_dir: Path,
+    period: int,
+    cache_dir: Path,
 ) -> tuple[dict[int, list[str]], dict[int, str]]:
     """Run LLM-powered topic deduplication after classification.
 
@@ -304,7 +327,8 @@ def _consolidate_topics(
     if len(unique_topics) <= 10:
         logger.info(
             "[tisk pipeline] Only {} unique topics for period {}, skipping consolidation",
-            len(unique_topics), period,
+            len(unique_topics),
+            period,
         )
         # Still build and return the maps
         topic_map = {}
@@ -334,7 +358,8 @@ def _consolidate_topics(
 
     logger.info(
         "[tisk pipeline] Consolidating topics for period {}: {} unique topics",
-        period, len(unique_topics),
+        period,
+        len(unique_topics),
     )
     mapping = ollama.consolidate_topics(unique_topics)
 
@@ -343,7 +368,10 @@ def _consolidate_topics(
     canonical = len(set(mapping.values()))
     logger.info(
         "[tisk pipeline] Consolidating topics for period {}: {} unique -> {} canonical ({} remapped)",
-        period, len(unique_topics), canonical, changed,
+        period,
+        len(unique_topics),
+        canonical,
+        changed,
     )
 
     # Apply mapping to all records
@@ -417,7 +445,9 @@ def _scrape_histories_sync(
         if i % 50 == 0 or i == 1:
             logger.info(
                 "[tisk pipeline] Scraping history for period {}: {}/{}",
-                period, i, total,
+                period,
+                i,
+                total,
             )
 
         h = scrape_tisk_history(period, ct)
@@ -430,7 +460,10 @@ def _scrape_histories_sync(
 
     logger.info(
         "[tisk pipeline] History scraping for period {}: {} cached, {} new, {} total",
-        period, len(histories) - scraped, scraped, len(histories),
+        period,
+        len(histories) - scraped,
+        scraped,
+        len(histories),
     )
     return histories
 
@@ -469,7 +502,9 @@ def _scrape_law_changes_sync(
         if i % 50 == 0 or i == 1:
             logger.info(
                 "[tisk pipeline] Scraping law changes for period {}: {}/{}",
-                period, i, total,
+                period,
+                i,
+                total,
             )
 
         changes = scrape_proposed_law_changes(period, ct)
@@ -482,7 +517,10 @@ def _scrape_law_changes_sync(
 
     logger.info(
         "[tisk pipeline] Law changes for period {}: {} cached, {} new, {} with changes",
-        period, len(result) - scraped, scraped, len(result),
+        period,
+        len(result) - scraped,
+        scraped,
+        len(result),
     )
     return result
 
@@ -498,8 +536,9 @@ def _download_subtisk_versions_sync(
     Returns {ct: [SubTiskVersion dicts]}.
     """
     import json
-    import pymupdf
     from dataclasses import asdict
+
+    import pymupdf
 
     from pspcz_analyzer.data.tisk_downloader import download_subtisk_pdf
     from pspcz_analyzer.data.tisk_scraper import scrape_all_subtisk_documents
@@ -528,7 +567,9 @@ def _download_subtisk_versions_sync(
         if i % 50 == 0 or i == 1:
             logger.info(
                 "[tisk pipeline] Scraping sub-tisk versions for period {}: {}/{}",
-                period, i, total,
+                period,
+                i,
+                total,
             )
 
         # Scrape sub-tisk pages to find versions
@@ -541,7 +582,6 @@ def _download_subtisk_versions_sync(
             time.sleep(PSP_REQUEST_DELAY)
             continue
 
-        pdf_dir = cache_dir / TISKY_PDF_DIR / str(period)
         text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
         version_dicts = []
 
@@ -557,7 +597,7 @@ def _download_subtisk_versions_sync(
                     if not txt_dest.exists():
                         try:
                             doc = pymupdf.open(pdf)
-                            pages = [page.get_text() for page in doc]
+                            pages = [str(page.get_text()) for page in doc]
                             doc.close()
                             text = "\n\n".join(pages)
                             if text.strip():
@@ -565,7 +605,8 @@ def _download_subtisk_versions_sync(
                                 v.has_text = True
                         except Exception:
                             logger.opt(exception=True).warning(
-                                "Failed to extract text from {}", pdf.name,
+                                "Failed to extract text from {}",
+                                pdf.name,
                             )
                     else:
                         v.has_text = True
@@ -576,14 +617,18 @@ def _download_subtisk_versions_sync(
 
         # Save scan result to cache (even if version_dicts is just CT1=0)
         scan_cache.write_text(
-            json.dumps(version_dicts, ensure_ascii=False, indent=2), encoding="utf-8",
+            json.dumps(version_dicts, ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
         if version_dicts:
             result[ct] = version_dicts
 
     logger.info(
         "[tisk pipeline] Sub-tisk versions for period {}: {} cached, {} new, {} with multiple versions",
-        period, total - scraped, scraped, len(result),
+        period,
+        total - scraped,
+        scraped,
+        len(result),
     )
     return result
 
@@ -651,10 +696,16 @@ def _analyze_version_diffs_sync(
 
             logger.info(
                 "[tisk pipeline] Comparing versions CT1={} vs CT1={} for tisk {}/{}",
-                ct1_old, ct1_new, period, ct,
+                ct1_old,
+                ct1_new,
+                period,
+                ct,
             )
             summary = ollama.compare_versions(
-                text_old, text_new, ct1_old, ct1_new,
+                text_old,
+                text_new,
+                ct1_old,
+                ct1_new,
             )
             if summary:
                 diff_file.write_text(summary, encoding="utf-8")
@@ -662,7 +713,8 @@ def _analyze_version_diffs_sync(
 
     logger.info(
         "[tisk pipeline] Version diffs for period {}: {} comparisons",
-        period, len(result),
+        period,
+        len(result),
     )
     return result
 
@@ -693,7 +745,8 @@ class TiskPipelineService:
         self._tasks[period] = task
         logger.info(
             "[tisk pipeline] Started background processing for period {} ({} tisky)",
-            period, len(ct_numbers),
+            period,
+            len(ct_numbers),
         )
 
     def start_all_periods(
@@ -716,7 +769,8 @@ class TiskPipelineService:
         total_tisky = sum(len(cts) for _, cts in period_ct_numbers)
         logger.info(
             "[tisk pipeline] Started sequential processing of {} periods ({} tisky total)",
-            len(period_ct_numbers), total_tisky,
+            len(period_ct_numbers),
+            total_tisky,
         )
 
     async def _run_all_periods(
@@ -733,7 +787,8 @@ class TiskPipelineService:
                 continue
             logger.info(
                 "[tisk pipeline] === Starting period {} ({} tisky) ===",
-                period, len(ct_numbers),
+                period,
+                len(ct_numbers),
             )
             await self._run_period(period, ct_numbers, on_complete)
         logger.info("[tisk pipeline] === All periods processed ===")
@@ -743,40 +798,72 @@ class TiskPipelineService:
         try:
             # Scrape legislative history pages (fast, cached)
             histories = await asyncio.to_thread(
-                _scrape_histories_sync, period, ct_numbers, self.cache_dir,
+                _scrape_histories_sync,
+                period,
+                ct_numbers,
+                self.cache_dir,
             )
             pdf_paths, text_paths = await asyncio.to_thread(
-                _process_period_sync, period, ct_numbers, self.cache_dir,
+                _process_period_sync,
+                period,
+                ct_numbers,
+                self.cache_dir,
             )
             topic_map, summary_map = await asyncio.to_thread(
-                _classify_and_save, period, text_paths, self.cache_dir,
+                _classify_and_save,
+                period,
+                text_paths,
+                self.cache_dir,
             )
             # Consolidate similar/duplicate topics
             topic_map, summary_map = await asyncio.to_thread(
-                _consolidate_topics, period, self.cache_dir,
+                _consolidate_topics,
+                period,
+                self.cache_dir,
             )
             # Scrape proposed law changes for each tisk
             law_changes_map = await asyncio.to_thread(
-                _scrape_law_changes_sync, period, ct_numbers, self.cache_dir,
+                _scrape_law_changes_sync,
+                period,
+                ct_numbers,
+                self.cache_dir,
             )
             # Download sub-tisk versions (CT1>0) and extract text
             subtisk_map = await asyncio.to_thread(
-                _download_subtisk_versions_sync, period, ct_numbers, self.cache_dir,
+                _download_subtisk_versions_sync,
+                period,
+                ct_numbers,
+                self.cache_dir,
             )
             # LLM comparison of consecutive versions
             version_diffs = await asyncio.to_thread(
-                _analyze_version_diffs_sync, period, ct_numbers, self.cache_dir,
+                _analyze_version_diffs_sync,
+                period,
+                ct_numbers,
+                self.cache_dir,
             )
             logger.info(
                 "[tisk pipeline] Period {} complete: {} histories, {} PDFs, {} texts, "
                 "{} topics, {} law changes, {} sub-tisk, {} diffs",
-                period, len(histories), len(pdf_paths), len(text_paths),
-                len(topic_map), len(law_changes_map), len(subtisk_map), len(version_diffs),
+                period,
+                len(histories),
+                len(pdf_paths),
+                len(text_paths),
+                len(topic_map),
+                len(law_changes_map),
+                len(subtisk_map),
+                len(version_diffs),
             )
             if on_complete:
                 on_complete(
-                    period, text_paths, topic_map, summary_map, histories,
-                    law_changes_map, subtisk_map, version_diffs,
+                    period,
+                    text_paths,
+                    topic_map,
+                    summary_map,
+                    histories,
+                    law_changes_map,
+                    subtisk_map,
+                    version_diffs,
                 )
         except Exception:
             logger.opt(exception=True).error("[tisk pipeline] Failed for period {}", period)

@@ -164,7 +164,8 @@ class OllamaClient:
             models = [m.get("name", "") for m in resp.json().get("models", [])]
             # Match model name with or without tag suffix
             self._available = any(
-                m == self.model or m.startswith(f"{self.model}:")
+                m == self.model
+                or m.startswith(f"{self.model}:")
                 or self.model.startswith(f"{m}:")
                 or m == self.model.split(":")[0]
                 for m in models
@@ -174,7 +175,8 @@ class OllamaClient:
             else:
                 logger.info(
                     "[ollama] Running but model {} not found (available: {})",
-                    self.model, ", ".join(models),
+                    self.model,
+                    ", ".join(models),
                 )
         except Exception:
             self._available = False

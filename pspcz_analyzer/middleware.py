@@ -1,9 +1,10 @@
 """Security headers middleware and computation timeout helper."""
 
 import asyncio
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
 from fastapi import HTTPException
 from loguru import logger
@@ -39,6 +40,6 @@ async def run_with_timeout(
             loop.run_in_executor(_compute_pool, partial(fn, *args)),
             timeout=timeout,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError as err:
         logger.warning("Timeout after {}s for {}", timeout, label)
-        raise HTTPException(503, detail=f"{label} timed out after {timeout}s")
+        raise HTTPException(503, detail=f"{label} timed out after {timeout}s") from err

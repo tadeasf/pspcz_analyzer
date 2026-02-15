@@ -7,8 +7,7 @@ Parses:
 
 import json
 import re
-import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import httpx
@@ -18,7 +17,6 @@ from loguru import logger
 from pspcz_analyzer.config import (
     PSP_LAW_CHANGES_URL_TEMPLATE,
     PSP_RELATED_BILLS_URL_TEMPLATE,
-    PSP_REQUEST_DELAY,
     TISKY_LAW_CHANGES_DIR,
     TISKY_META_DIR,
     TISKY_RELATED_BILLS_DIR,
@@ -55,7 +53,8 @@ class RelatedBill:
 
 
 def scrape_proposed_law_changes(
-    period: int, ct: int,
+    period: int,
+    ct: int,
 ) -> list[ProposedLawChange]:
     """Parse the law changes table at ``historie.sqw?snzp=1``.
 
@@ -70,7 +69,9 @@ def scrape_proposed_law_changes(
             resp.raise_for_status()
     except Exception:
         logger.opt(exception=True).warning(
-            "Failed to fetch law changes for tisk {}/{}", period, ct,
+            "Failed to fetch law changes for tisk {}/{}",
+            period,
+            ct,
         )
         return []
 
@@ -109,7 +110,7 @@ def scrape_proposed_law_changes(
             for cell in cells:
                 link = cell.find("a", href=_IDSB_RE)
                 if link:
-                    m = _IDSB_RE.search(link["href"])
+                    m = _IDSB_RE.search(str(link["href"]))
                     if m:
                         change.idsb = int(m.group(1))
                     break
@@ -123,15 +124,17 @@ def scrape_proposed_law_changes(
     if not changes:
         # Fallback: try to extract from any links with idsb parameter
         for link in soup.find_all("a", href=_IDSB_RE):
-            m = _IDSB_RE.search(link["href"])
+            m = _IDSB_RE.search(str(link["href"]))
             if m:
                 text = link.get_text(strip=True)
                 # Get surrounding text for context
                 parent_text = link.parent.get_text(strip=True) if link.parent else text
-                changes.append(ProposedLawChange(
-                    citace=text or parent_text,
-                    idsb=int(m.group(1)),
-                ))
+                changes.append(
+                    ProposedLawChange(
+                        citace=text or parent_text,
+                        idsb=int(m.group(1)),
+                    )
+                )
 
     logger.debug("Tisk {}/{}: found {} law changes", period, ct, len(changes))
     return changes
@@ -151,7 +154,8 @@ def scrape_related_bills(idsb: int) -> list[RelatedBill]:
             resp.raise_for_status()
     except Exception:
         logger.opt(exception=True).warning(
-            "Failed to fetch related bills for idsb={}", idsb,
+            "Failed to fetch related bills for idsb={}",
+            idsb,
         )
         return []
 
@@ -184,11 +188,11 @@ def scrape_related_bills(idsb: int) -> list[RelatedBill]:
             for cell in cells:
                 link = cell.find("a", href=_HISTORIE_LINK_RE)
                 if link:
-                    m = _HISTORIE_LINK_RE.search(link["href"])
+                    m = _HISTORIE_LINK_RE.search(str(link["href"]))
                     if m:
                         bill.period = int(m.group(1))
                         bill.ct = int(m.group(2))
-                        bill.url = f"https://www.psp.cz/sqw/{link['href']}"
+                        bill.url = f"https://www.psp.cz/sqw/{str(link['href'])}"
                     break
 
             if not bill.cislo and not bill.kratky_nazev:

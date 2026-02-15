@@ -3,6 +3,8 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import markdown as _md
+import markupsafe
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -15,8 +17,10 @@ from pspcz_analyzer.logging_config import setup_logging
 from pspcz_analyzer.middleware import SecurityHeadersMiddleware
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.api import router as api_router
+from pspcz_analyzer.routes.api import templates as api_templates
 from pspcz_analyzer.routes.charts import router as charts_router
 from pspcz_analyzer.routes.pages import router as pages_router
+from pspcz_analyzer.routes.pages import templates as pages_templates
 from pspcz_analyzer.services.data_service import DataService
 
 setup_logging()
@@ -49,7 +53,7 @@ app = FastAPI(
 
 # Security: rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Security: response headers
 app.add_middleware(SecurityHeadersMiddleware)
@@ -64,10 +68,8 @@ app.include_router(pages_router)
 app.include_router(api_router, prefix="/api")
 app.include_router(charts_router, prefix="/charts")
 
-# Register shared Jinja2 filters on all template instances
-import markupsafe
-import markdown as _md
 
+# Register shared Jinja2 filters on all template instances
 def _md_filter(text: str) -> markupsafe.Markup:
     """Convert markdown to HTML, safe for Jinja2 rendering."""
     if not text:
@@ -75,8 +77,6 @@ def _md_filter(text: str) -> markupsafe.Markup:
     html = _md.markdown(text, extensions=["nl2br"])
     return markupsafe.Markup(html)
 
-from pspcz_analyzer.routes.api import templates as api_templates
-from pspcz_analyzer.routes.pages import templates as pages_templates
 
 for t in (templates, api_templates, pages_templates):
     t.env.filters["markdown"] = _md_filter

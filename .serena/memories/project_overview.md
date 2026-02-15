@@ -67,4 +67,6 @@ pspcz_analyzer/
 - loguru for logging
 - Analysis services: `function(PeriodData) -> list[dict]`
 - No docstrings on most functions (lean codebase)
-- No test suite
+- Test suite: pytest (71 unit/API tests, 26 integration tests)
+- Pre-commit hooks: ruff lint + format, pyright, trailing whitespace, etc.
+- CI/CD: GitHub Actions (ci.yml for lint+unit, integration.yml for psp.cz tests)

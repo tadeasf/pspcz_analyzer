@@ -52,9 +52,7 @@ def parse_unl(
         cast_exprs = []
         for col_name, dtype in dtypes.items():
             if col_name in df.columns:
-                cast_exprs.append(
-                    pl.col(col_name).str.strip_chars().cast(dtype, strict=False)
-                )
+                cast_exprs.append(pl.col(col_name).str.strip_chars().cast(dtype, strict=False))
         if cast_exprs:
             df = df.with_columns(cast_exprs)
 

@@ -8,11 +8,18 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 
 ## Commands
 
-- **Install dependencies:** `uv sync`
+- **Install dependencies:** `uv sync` (add `--extra dev` for test/lint tools)
 - **Run the dev server:** `uv run python -m pspcz_analyzer.main` (starts on `0.0.0.0:8000` with reload)
 - **Add a dependency:** `uv add <package>`
+- **Run unit + API tests:** `uv run pytest -m "not integration" --cov`
+- **Run integration tests:** `uv run pytest -m integration -v` (requires network — hits real psp.cz)
+- **Lint:** `uv run ruff check .`
+- **Format:** `uv run ruff format .`
+- **Type check:** `uv run pyright`
+- **Pre-commit:** `uv run pre-commit run --all-files`
+- **Version bump:** `uv run bump-my-version bump patch|minor|major`
 
-Python >= 3.12 required (pinned to 3.14 in `.python-version`). No test suite yet.
+Python >= 3.12 required (pinned to 3.14 in `.python-version`).
 
 ## Architecture
 
