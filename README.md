@@ -11,6 +11,9 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Votes Browser** — searchable, paginated list of all parliamentary votes with detail views
 - **Chart Endpoints** — server-rendered PNG charts (seaborn/matplotlib)
 - **Multi-period Support** — covers all 10 electoral periods (1993 to present)
+- **Tisk Pipeline** — background processing that downloads parliamentary print PDFs, extracts text, and classifies topics
+- **AI Summaries** — optional LLM-based summarization and topic classification via local Ollama
+- **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
 
 See detailed docs: [Routes](docs/routes.md) | [Services](docs/services.md) | [Templates](docs/templates.md) | [Data Model](docs/data-model.md)
 
@@ -99,6 +102,10 @@ server {
 | CSS | Pico CSS (dark theme) |
 | Data processing | Polars |
 | Charts | Seaborn + Matplotlib |
+| PDF extraction | PyMuPDF |
+| HTML scraping | BeautifulSoup4 |
+| LLM integration | Ollama (optional) |
+| API documentation | Scalar |
 | HTTP client | httpx |
 | Package manager | uv |
 
@@ -106,16 +113,27 @@ server {
 
 All data comes from the [psp.cz open data portal](https://www.psp.cz/eknih/cdrom/opendata). Files are pipe-delimited UNL format, Windows-1250 encoded. The app downloads and caches them automatically on first access.
 
-Cached data is stored at `~/.cache/pspcz-analyzer/psp/` (raw ZIPs, extracted UNL files, and Parquet caches).
+Cached data is stored at `~/.cache/pspcz-analyzer/psp/` (raw ZIPs, extracted UNL files, Parquet caches, PDF texts, and topic classifications).
+
+## Tisk Pipeline
+
+On startup, the app launches a background pipeline that enriches parliamentary prints (tisky):
+
+1. **Download** PDFs from psp.cz for each print
+2. **Extract** plain text using PyMuPDF
+3. **Classify** topics using Ollama LLM (falls back to keyword matching if Ollama is unavailable)
+4. **Scrape** legislative process histories from psp.cz HTML pages
+
+This data powers the vote detail pages (topic tags, AI summaries, legislative timelines, and tisk transcriptions).
 
 ## Documentation
 
 | Document | Contents |
 |----------|----------|
-| [Routes](docs/routes.md) | All HTTP endpoints — pages, API partials, chart images |
-| [Services](docs/services.md) | Data pipeline, analysis services, methodology |
-| [Templates](docs/templates.md) | Frontend structure, HTMX patterns, base layout |
-| [Data Model](docs/data-model.md) | Electoral periods, UNL format, table schemas, vote codes |
+| [Routes](docs/routes.md) | All HTTP endpoints — pages, API partials, chart images, health check, OpenAPI |
+| [Services](docs/services.md) | Data pipeline, analysis services, tisk pipeline, Ollama integration |
+| [Templates](docs/templates.md) | Frontend structure, HTMX patterns, vote detail, skeleton loading, styling |
+| [Data Model](docs/data-model.md) | Electoral periods, UNL format, table schemas, vote codes, tisk data, Ollama config |
 
 ## License
 

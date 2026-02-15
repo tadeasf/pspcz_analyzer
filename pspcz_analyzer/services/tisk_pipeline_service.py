@@ -266,6 +266,7 @@ def _consolidate_topics(
 
     meta_dir = cache_dir / TISKY_META_DIR / str(period)
     parquet_path = meta_dir / "topic_classifications.parquet"
+    consolidated_marker = meta_dir / "topics_consolidated.done"
 
     if not parquet_path.exists():
         logger.warning("[tisk pipeline] No parquet to consolidate for period {}", period)
@@ -273,6 +274,22 @@ def _consolidate_topics(
 
     df = pl.read_parquet(parquet_path)
     records = df.to_dicts()
+
+    # If consolidation was already done, just return the maps from the parquet
+    if consolidated_marker.exists():
+        logger.info(
+            "[tisk pipeline] Topics already consolidated for period {}, skipping",
+            period,
+        )
+        topic_map: dict[int, list[str]] = {}
+        summary_map: dict[int, str] = {}
+        for r in records:
+            parsed = deserialize_topics(r.get("topic", ""))
+            if parsed:
+                topic_map[r["ct"]] = parsed
+            if r.get("summary"):
+                summary_map[r["ct"]] = r["summary"]
+        return topic_map, summary_map
 
     # Collect all unique topic labels
     all_topics: set[str] = set()
@@ -288,14 +305,16 @@ def _consolidate_topics(
             len(unique_topics), period,
         )
         # Still build and return the maps
-        topic_map: dict[int, list[str]] = {}
-        summary_map: dict[int, str] = {}
+        topic_map = {}
+        summary_map = {}
         for r in records:
             parsed = deserialize_topics(r["topic"])
             if parsed:
                 topic_map[r["ct"]] = parsed
             if r.get("summary"):
                 summary_map[r["ct"]] = r["summary"]
+        # Mark as done even if skipped (few topics)
+        consolidated_marker.touch()
         return topic_map, summary_map
 
     ollama = OllamaClient()
@@ -304,7 +323,7 @@ def _consolidate_topics(
         topic_map = {}
         summary_map = {}
         for r in records:
-            parsed = deserialize_topics(r["topic"])
+            parsed = deserialize_topics(r.get("topic", ""))
             if parsed:
                 topic_map[r["ct"]] = parsed
             if r.get("summary"):
@@ -341,6 +360,9 @@ def _consolidate_topics(
     # Re-write parquet
     df = pl.DataFrame(records)
     df.write_parquet(parquet_path)
+
+    # Write marker so we don't re-consolidate on next startup
+    consolidated_marker.touch()
 
     # Build return maps
     topic_map = {}

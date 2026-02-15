@@ -1,0 +1,821 @@
+/* PSP.cz Analyzer — Institutional Light Theme
+   Inspired by psp.cz (Czech Parliament) visual language */
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 13px;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+    background: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: Georgia, "Times New Roman", serif;
+    color: #1A4677;
+    line-height: 1.3;
+    margin-bottom: 0.5em;
+}
+
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.4rem; border-bottom: 2px solid #3C71AC; padding-bottom: 0.3rem; margin-top: 1.5rem; }
+h3 { font-size: 1.15rem; }
+
+p { margin-bottom: 0.75rem; color: #3c3c3c; }
+
+a { color: #426c95; text-decoration: none; }
+a:hover { color: #bd292f; text-decoration: underline; }
+
+small { font-size: 0.85em; color: #666; }
+
+strong { font-weight: 700; }
+
+ul, ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+li { margin-bottom: 0.25rem; }
+
+img { max-width: 100%; height: auto; }
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+main.container {
+    flex: 1;
+    padding-top: 1.25rem;
+    padding-bottom: 2rem;
+}
+
+/* ============================================================
+   Header / Top Bar
+   ============================================================ */
+.site-header {
+    background: #fff;
+    border-bottom: 1px solid #D9D9D9;
+    padding: 0.5rem 0;
+}
+
+.header-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.site-logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.site-logo:hover { text-decoration: none; }
+
+.site-logo img { height: 40px; width: auto; }
+
+/* Right side of header: title + period picker */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.header-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1A4677;
+    white-space: nowrap;
+}
+
+/* Period selector in header */
+.period-select {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #D9D9D9;
+    border-radius: 3px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    width: auto;
+    max-width: 220px;
+}
+
+.period-select:focus {
+    border-color: #3C71AC;
+    box-shadow: 0 0 0 2px rgba(60, 113, 172, 0.15);
+}
+
+/* ============================================================
+   Navigation Bar
+   ============================================================ */
+.site-nav {
+    background: linear-gradient(180deg, #4a83ba 0%, #3C71AC 50%, #345f91 100%);
+    min-height: 40px;
+    display: flex;
+    align-items: stretch;
+}
+
+.nav-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.nav-inner a {
+    display: flex;
+    align-items: center;
+    padding: 0 0.9rem;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 400;
+    white-space: nowrap;
+    min-height: 40px;
+    transition: background 0.15s;
+}
+
+.nav-inner a:hover {
+    background: #1A4677;
+    color: #fff;
+    text-decoration: none;
+}
+
+.nav-inner a[aria-current="page"] {
+    background: #1A4677;
+    font-weight: 700;
+}
+
+/* ============================================================
+   Breadcrumb (subtitle line under nav)
+   ============================================================ */
+.page-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dotted #CCC;
+}
+
+/* ============================================================
+   Tables
+   ============================================================ */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin-bottom: 1rem;
+}
+
+thead th {
+    background: #3C6FA8;
+    color: #fff;
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85em;
+    border: 1px solid #3565a0;
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid #D9D9D9;
+    vertical-align: top;
+}
+
+tbody tr:nth-child(even) {
+    background: #F7F7F7;
+}
+
+tbody tr:hover {
+    background: #EBF1F8;
+}
+
+.overflow-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+/* ============================================================
+   Cards / Articles
+   ============================================================ */
+article {
+    background: #fff;
+    border: 1px solid #E7E7E7;
+    border-radius: 3px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+article header {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    color: #1A4677;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px dotted #CCC;
+    font-size: 1rem;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+button, .btn {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    font-family: Arial, Helvetica, sans-serif;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.5;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+
+button[type="submit"], .btn-primary {
+    background: #B00007;
+    color: #fff;
+}
+
+button[type="submit"]:hover, .btn-primary:hover {
+    background: #8c0006;
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #426c95;
+    border: 1px solid #426c95;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.btn-outline:hover {
+    background: #426c95;
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-small {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* ============================================================
+   Forms
+   ============================================================ */
+label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="search"],
+select {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.9rem;
+    font-family: Arial, Helvetica, sans-serif;
+    border: 1px solid #D9D9D9;
+    border-radius: 3px;
+    background: #fff;
+    color: #333;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+input:focus, select:focus {
+    border-color: #3C71AC;
+    background: #FAFBFD;
+    box-shadow: 0 0 0 2px rgba(60, 113, 172, 0.12);
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.form-row > * {
+    flex: 1;
+    min-width: 140px;
+}
+
+.form-row .form-submit {
+    flex: 0 0 auto;
+}
+
+/* ============================================================
+   Grid Layouts
+   ============================================================ */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Dashboard stat grid */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1.25rem 1rem;
+    background: #fff;
+    border: 1px solid #E7E7E7;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.stat-card h3 {
+    margin-bottom: 0.15rem;
+    font-size: 2rem;
+    color: #1A4677;
+    border: none;
+    padding: 0;
+}
+
+.stat-card p {
+    margin: 0;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+/* Colored top-border variants for stat cards */
+.stat-card-green  { border-top: 3px solid #2e7d32; }
+.stat-card-red    { border-top: 3px solid #c62828; }
+.stat-card-orange { border-top: 3px solid #e65100; }
+.stat-card-gray   { border-top: 3px solid #757575; }
+.stat-card-blue   { border-top: 3px solid #3C71AC; }
+
+/* ============================================================
+   Chart Containers
+   ============================================================ */
+.chart-container {
+    text-align: center;
+    margin: 1.5rem 0;
+    background: #fff;
+    border: 1px solid #E7E7E7;
+    border-radius: 3px;
+    padding: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.chart-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 2px;
+}
+
+/* ============================================================
+   HTMX Indicators
+   ============================================================ */
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: inline;
+}
+
+[aria-busy="true"] {
+    color: #426c95;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   Skeleton Loading
+   ============================================================ */
+.skeleton {
+    pointer-events: none;
+}
+
+.skeleton-pulse {
+    background: #E7E7E7;
+    border-radius: 3px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.skeleton-line {
+    height: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-line-short  { width: 40%; }
+.skeleton-line-medium { width: 70%; }
+.skeleton-line-long   { width: 90%; }
+
+.skeleton-heading {
+    height: 2rem;
+    width: 50%;
+    margin-bottom: 1rem;
+}
+
+.skeleton-table-row {
+    height: 2.25rem;
+    margin-bottom: 0.2rem;
+}
+
+.skeleton-card {
+    height: 5.5rem;
+    margin-bottom: 1rem;
+}
+
+/* ============================================================
+   Legislative Timeline
+   ============================================================ */
+.legislative-timeline {
+    position: relative;
+    padding-left: 2rem;
+    margin: 1rem 0;
+}
+
+.legislative-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.55rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #D9D9D9;
+}
+
+.timeline-stage {
+    position: relative;
+    padding: 0.4rem 0 0.4rem 1rem;
+    margin-bottom: 0.15rem;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -1.55rem;
+    top: 0.65rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #B0BEC5;
+    border: 2px solid #D9D9D9;
+}
+
+.timeline-stage-active .timeline-dot {
+    background: #3C71AC;
+    border-color: #1A4677;
+    box-shadow: 0 0 6px rgba(60, 113, 172, 0.4);
+}
+
+.timeline-stage-active {
+    background: #EBF1F8;
+    border-radius: 3px;
+    padding: 0.5rem 0.75rem 0.5rem 1rem;
+}
+
+.timeline-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.timeline-date {
+    color: #888;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+.timeline-outcome {
+    font-size: 0.8rem;
+    margin-top: 0.1rem;
+    color: #666;
+}
+
+.timeline-approved { color: #2e7d32; }
+.timeline-rejected { color: #c62828; }
+
+/* ============================================================
+   Methodology / Collapsible Details
+   ============================================================ */
+details {
+    margin-bottom: 1rem;
+}
+
+details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #426c95;
+    padding: 0.4rem 0;
+}
+
+details summary:hover {
+    color: #bd292f;
+}
+
+details.methodology {
+    background: #F5F8FC;
+    border: 1px solid #D0DCE8;
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+}
+
+details.methodology summary {
+    color: #1A4677;
+    font-size: 0.95rem;
+}
+
+details.methodology article {
+    border: none;
+    box-shadow: none;
+    padding: 0.5rem 0 0 0;
+    margin: 0;
+    background: transparent;
+}
+
+/* ============================================================
+   Vote Colors (semantic, readable on white)
+   ============================================================ */
+.vote-yes       { color: #2e7d32; font-weight: 600; }
+.vote-no        { color: #c62828; font-weight: 600; }
+.vote-abstained { color: #e65100; font-weight: 600; }
+.vote-passive   { color: #757575; }
+.vote-absent    { color: #757575; }
+.vote-excused   { color: #9e9e9e; }
+
+.result-passed  { color: #2e7d32; font-weight: 600; }
+.result-rejected { color: #c62828; font-weight: 600; }
+
+/* ============================================================
+   Topic Badges
+   ============================================================ */
+.topic-badge {
+    display: inline-block;
+    background: #EBF1F8;
+    color: #1A4677;
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    margin-right: 0.2rem;
+    margin-bottom: 0.15rem;
+    border: 1px solid #D0DCE8;
+}
+
+/* ============================================================
+   Info Box (AI summary, etc.)
+   ============================================================ */
+.info-box {
+    background: #F5F5F5;
+    border: 1px solid #D9D9D9;
+    border-radius: 3px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.info-box-header {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.4rem;
+}
+
+.info-box-header small {
+    font-weight: 400;
+    color: #888;
+    margin-left: 0.5rem;
+}
+
+.info-box p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #3c3c3c;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* ============================================================
+   Status Badge (legislative stages, current vote)
+   ============================================================ */
+.stage-badge {
+    display: inline-block;
+    background: #3C71AC;
+    color: #fff;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+}
+
+.status-badge {
+    display: inline-block;
+    background: #F0F0F0;
+    color: #555;
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+.law-number {
+    color: #2e7d32;
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
+}
+
+/* ============================================================
+   Pagination
+   ============================================================ */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem 0;
+}
+
+.pagination a {
+    color: #426c95;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.pagination a:hover {
+    color: #bd292f;
+}
+
+.pagination span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.site-footer {
+    background: #EFEFEF;
+    border-top: 1px solid #D9D9D9;
+    margin-top: 2rem;
+    padding: 1rem 0;
+}
+
+.site-footer p {
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.site-footer a {
+    color: #426c95;
+}
+
+.site-footer a:hover {
+    color: #bd292f;
+}
+
+/* ============================================================
+   Analysis page header (replaces hgroup)
+   ============================================================ */
+.page-header {
+    margin-bottom: 1rem;
+}
+
+.page-header h1 {
+    margin-bottom: 0.15rem;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* ============================================================
+   Explore link (replaces role="button" anchors)
+   ============================================================ */
+.btn-explore {
+    display: inline-block;
+    background: #B00007;
+    color: #fff;
+    padding: 0.35rem 0.9rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.btn-explore:hover {
+    background: #8c0006;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ============================================================
+   Legislative history box
+   ============================================================ */
+.legis-box {
+    background: #FAFBFD;
+    border: 1px solid #D0DCE8;
+    border-radius: 3px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.legis-box-header {
+    font-weight: 700;
+    color: #1A4677;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px dotted #CCC;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 768px) {
+    html { font-size: 12px; }
+
+    .header-inner {
+        flex-wrap: wrap;
+    }
+
+    .nav-inner {
+        flex-wrap: wrap;
+    }
+
+    .nav-inner a {
+        padding: 0 0.6rem;
+        font-size: 0.85rem;
+        min-height: 36px;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    h1 { font-size: 1.4rem; }
+    h2 { font-size: 1.2rem; }
+}
+
+@media (max-width: 480px) {
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -36,7 +36,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Czech Parliamentary Voting Analyzer",
+    description="OSINT tool for analyzing open voting data from the Czech Chamber of Deputies (psp.cz)",
+    version="0.1.0",
     lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
 )
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
