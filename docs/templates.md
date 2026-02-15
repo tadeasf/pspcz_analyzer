@@ -6,11 +6,11 @@ Frontend is server-rendered HTML with HTMX for dynamic updates. No JavaScript fr
 
 All pages extend `base.html`, which provides:
 
-- **Head**: Pico CSS v2 (CDN), HTMX v2.0.4 (CDN), custom inline styles
-- **Header**: "PSP.cz Analyzer" title
-- **Navigation**: Dashboard, Party Loyalty, Attendance, Most Active, Similarity, Votes
-- **Period selector**: dropdown that reloads the current page with `?period={n}`
-- **Footer**: data source attribution + educational project disclaimer
+- **Head**: Pico CSS v2 (CDN), HTMX v2.0.4 (CDN), external stylesheet (`/static/style.css`)
+- **Favicon**: SVG favicon (`/static/favicon.svg`) — Czech lion motif in institutional blue
+- **Meta tags**: description, theme-color for mobile browsers
+- **Navigation**: Logo + "PSP.cz Analyzer" branding, page links, API Docs link, period selector
+- **Footer**: data source attribution + educational project disclaimer (separated by CSS border)
 - **Theme**: Pico CSS dark mode (`data-theme="dark"`)
 
 Active navigation item is highlighted via `aria-current="page"`, controlled by the `active_page` template variable.
@@ -26,8 +26,23 @@ Each page template renders a full page with controls and a `#results` div that H
 | `attendance.html` | Attendance | Top N slider, sort toggle (worst/best) |
 | `active.html` | Most Active | Top N slider, party filter dropdown |
 | `similarity.html` | Similarity | Top N slider |
-| `votes.html` | Votes Browser | Search input, outcome filter, pagination |
+| `votes.html` | Votes Browser | Search input, outcome filter, topic filter, pagination |
 | `vote_detail.html` | Vote Detail | None (static detail view) |
+
+### Vote Detail Template (`vote_detail.html`)
+
+The most complex template. Displays:
+
+1. **Vote metadata** — ID, date/time, session/vote numbers, outcome badge
+2. **Topic tags** — colored badges from keyword or LLM classification
+3. **AI summary** — LLM-generated summary card (if available, from local Ollama)
+4. **Current stage** — badge showing which legislative stage this vote belongs to
+5. **Legislative timeline** — visual timeline of the bill's progress through parliament (CSS timeline with dots, active stage highlighted with glow effect)
+6. **External links** — to psp.cz vote page and source document
+7. **Tisk transcription** — lazy-loaded via HTMX (`hx-trigger="intersect once"`) from `/api/tisk-text`
+8. **Vote counts** — stat cards (For/Against/Abstained/Did not vote)
+9. **Party breakdown** — table with per-party vote counts
+10. **Individual MPs** — collapsible table of all MP votes with color-coded results
 
 ## Partials (`templates/partials/`)
 
@@ -66,9 +81,32 @@ Each analysis page follows the same pattern:
 - `hx-indicator` shows a spinner during requests
 - The API returns an HTML partial that replaces `#results`
 
+## Skeleton Loading States
+
+When switching periods or navigating between pages, JavaScript replaces `<main>` content with animated skeleton placeholders:
+
+- `skeleton-pulse` — base class with pulsing animation (0.4→0.8 opacity)
+- `skeleton-heading` — placeholder for headings (2rem height, 50% width)
+- `skeleton-line` — placeholder for text lines (variants: short/medium/long)
+- `skeleton-table-row` — placeholder for table rows
+- `skeleton-card` — placeholder for stat cards
+
+The skeleton is shown immediately on period change (`switchPeriod()`) and on nav link clicks, before the full page reload completes. This prevents stale data from being visible during loading.
+
 ## Charts
 
 Chart images are embedded as `<img>` tags pointing to `/charts/*.png` endpoints. They render server-side via matplotlib/seaborn with a dark theme matching the UI (`#1a1a2e` background).
+
+## Styling
+
+All custom CSS lives in `/static/style.css` (external file). Pico CSS v2 dark theme is the base. Key customizations:
+
+- `--pico-border-radius: 0.25rem` — sharper corners for a more formal/institutional feel
+- Legislative timeline styles (dots, lines, active glow)
+- Skeleton loading animation
+- Stat grid layout
+- Navigation period selector styling
+- Footer with CSS border separator (no `<hr>`)
 
 ## Methodology Sections
 

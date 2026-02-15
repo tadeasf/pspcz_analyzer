@@ -23,7 +23,7 @@
         <tr>
             <td colspan="6" style="padding: 0 0 0 2rem; border-top: none;">
                 <details>
-                    <summary style="font-size: 0.85rem; cursor: pointer;">
+                    <summary>
                         Show {{ row.rebellion_votes | length }} rebellion vote{{ "s" if row.rebellion_votes | length != 1 else "" }}
                     </summary>
                     <div class="overflow-auto">
@@ -44,16 +44,16 @@
                                     <td>{{ v.nazev_dlouhy[:120] }}{% if v.nazev_dlouhy|length > 120 %}&hellip;{% endif %}</td>
                                     <td>
                                         {% if v.mp_vote == "A" %}
-                                        <span style="color: #4caf50;">YES</span>
+                                        <span class="vote-yes">YES</span>
                                         {% elif v.mp_vote == "B" %}
-                                        <span style="color: #f44336;">NO</span>
+                                        <span class="vote-no">NO</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if v.party_direction == "A" %}
-                                        <span style="color: #4caf50;">YES</span>
+                                        <span class="vote-yes">YES</span>
                                         {% elif v.party_direction == "B" %}
-                                        <span style="color: #f44336;">NO</span>
+                                        <span class="vote-no">NO</span>
                                         {% endif %}
                                     </td>
                                     <td style="white-space: nowrap;">

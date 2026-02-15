@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
@@ -13,11 +13,11 @@ from pspcz_analyzer.services.loyalty_service import compute_loyalty
 from pspcz_analyzer.services.similarity_service import compute_cross_party_similarity
 from pspcz_analyzer.services.votes_service import list_votes
 
-router = APIRouter()
+router = APIRouter(tags=["API - HTMX Partials"])
 templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
 
 
-@router.get("/loyalty")
+@router.get("/loyalty", response_class=HTMLResponse)
 async def loyalty_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -33,7 +33,7 @@ async def loyalty_api(
     )
 
 
-@router.get("/attendance")
+@router.get("/attendance", response_class=HTMLResponse)
 async def attendance_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -49,7 +49,7 @@ async def attendance_api(
     )
 
 
-@router.get("/similarity")
+@router.get("/similarity", response_class=HTMLResponse)
 async def similarity_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -64,7 +64,7 @@ async def similarity_api(
     )
 
 
-@router.get("/active")
+@router.get("/active", response_class=HTMLResponse)
 async def active_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -80,7 +80,7 @@ async def active_api(
     )
 
 
-@router.get("/votes")
+@router.get("/votes", response_class=HTMLResponse)
 async def votes_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -105,7 +105,7 @@ async def votes_api(
     )
 
 
-@router.get("/tisk-text")
+@router.get("/tisk-text", response_class=HTMLResponse)
 async def tisk_text_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -130,3 +130,10 @@ async def tisk_text_api(
         f'<pre style="white-space: pre-wrap; word-wrap: break-word; font-size: 0.85rem;">{escaped}</pre>'
         "</article>"
     )
+
+
+@router.get("/health", response_class=JSONResponse, tags=["Health"])
+async def health(request: Request):
+    """Health check endpoint."""
+    data_svc = request.app.state.data
+    return {"status": "ok", "periods_loaded": list(data_svc.loaded_periods)}

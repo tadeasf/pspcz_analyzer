@@ -29,14 +29,14 @@
                     <br><small><a href="{{ row.tisk_url }}" target="_blank">Tisk {{ row.tisk_ct }}</a></small>
                     {% endif %}
                     {% if row.tisk_topics %}
-                    <br>{% for t in row.tisk_topics %}<small style="background: #e3f2fd; color: #1565c0; padding: 0.1rem 0.4rem; border-radius: 0.25rem; margin-right: 0.25rem;">{{ t }}</small>{% endfor %}
+                    <br>{% for t in row.tisk_topics %}<span class="topic-badge">{{ t }}</span>{% endfor %}
                     {% endif %}
                 </td>
                 <td>
                     {% if row.vysledek == "A" %}
-                    <span style="color: #4caf50;">{{ row.outcome_label }}</span>
+                    <span class="result-passed">{{ row.outcome_label }}</span>
                     {% elif row.vysledek == "R" %}
-                    <span style="color: #f44336;">{{ row.outcome_label }}</span>
+                    <span class="result-rejected">{{ row.outcome_label }}</span>
                     {% else %}
                     {{ row.outcome_label }}
                     {% endif %}
@@ -45,8 +45,8 @@
                 <td>{{ row.proti }}</td>
                 <td>{{ row.zdrzel }}</td>
                 <td>
-                    <a href="/votes/{{ row.id_hlasovani }}?period={{ period }}" role="button" class="outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Detail</a>
-                    <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ row.id_hlasovani }}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">psp.cz</a>
+                    <a href="/votes/{{ row.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">Detail</a>
+                    <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ row.id_hlasovani }}" target="_blank" class="btn-small" style="font-size: 0.8rem;">psp.cz</a>
                 </td>
             </tr>
             {% endfor %}
@@ -55,21 +55,15 @@
 </div>
 
 {% if total_pages > 1 %}
-<nav>
-    <ul>
-        {% if page > 1 %}
-        <li>
-            <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
-               hx-target="#results" hx-indicator="#loading">&larr; Previous</a>
-        </li>
-        {% endif %}
-        <li><span>Page {{ page }} of {{ total_pages }}</span></li>
-        {% if page < total_pages %}
-        <li>
-            <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
-               hx-target="#results" hx-indicator="#loading">Next &rarr;</a>
-        </li>
-        {% endif %}
-    </ul>
-</nav>
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
+       hx-target="#results" hx-indicator="#loading">&larr; Previous</a>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
+       hx-target="#results" hx-indicator="#loading">Next &rarr;</a>
+    {% endif %}
+</div>
 {% endif %}

@@ -2,10 +2,10 @@
 {% block title %}Attendance — Czech Parliament Analyzer{% endblock %}
 
 {% block content %}
-<hgroup>
+<div class="page-header">
     <h1>Attendance Analysis</h1>
     <p>Who shows up to vote?</p>
-</hgroup>
+</div>
 
 <details class="methodology">
     <summary>How is attendance calculated?</summary>
@@ -24,7 +24,7 @@
 
 <form hx-get="/api/attendance" hx-target="#results" hx-indicator="#loading">
     <input type="hidden" name="period" value="{{ period }}">
-    <div class="grid">
+    <div class="form-row">
         <label>
             Top N MPs
             <input type="number" name="top" value="30" min="5" max="200" step="5">
@@ -36,10 +36,10 @@
                 <option value="best">Highest attendance first</option>
             </select>
         </label>
-        <label>
-            &nbsp;
+        <div class="form-submit">
+            <label>&nbsp;</label>
             <button type="submit">Analyze</button>
-        </label>
+        </div>
     </div>
 </form>
 

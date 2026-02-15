@@ -115,6 +115,103 @@ Two outputs from the same vote matrix (MPs x votes, values: +1 YES, -1 NO, 0 oth
 
 ### Votes (`services/votes_service.py`)
 
-**`list_votes()`** — paginated vote listing with text search and outcome filtering. Enriches each row with tisk links (to psp.cz source documents).
+**`list_votes()`** — paginated vote listing with text search, outcome filtering, and topic filtering. Enriches each row with tisk links (to psp.cz source documents).
 
-**`vote_detail()`** — full breakdown of a single vote: metadata, per-party aggregates (YES/NO/ABSTAINED/etc. per party), and per-MP individual votes.
+**`vote_detail()`** — full breakdown of a single vote: metadata, per-party aggregates (YES/NO/ABSTAINED/etc. per party), per-MP individual votes, legislative history timeline, AI summary, and topic labels.
+
+## Tisk Pipeline Services
+
+The tisk (parliamentary print) pipeline runs as a background process, downloading PDFs, extracting text, classifying topics, and scraping legislative histories.
+
+### Tisk Pipeline Service (`services/tisk_pipeline_service.py`)
+
+Background processing orchestrator that coordinates the full tisk data enrichment pipeline. Started automatically at app startup for all periods (newest first).
+
+Pipeline stages per period:
+1. **Download** — fetch PDF documents from psp.cz for each print
+2. **Extract** — convert PDFs to plain text using PyMuPDF
+3. **Classify** — assign topic labels via Ollama LLM (or keyword fallback)
+4. **Consolidate** — merge per-tisk topic classifications into a single Parquet cache
+5. **Scrape histories** — fetch legislative process timelines from psp.cz HTML pages
+
+Key class: `TiskPipelineService`
+- `start_period(period)` — launch background pipeline for a single period
+- `start_all_periods()` — launch pipeline for all configured periods sequentially
+- `is_running(period)` — check if a period's pipeline is still running
+
+### Tisk Text Service (`services/tisk_text_service.py`)
+
+Cache and retrieval layer for extracted tisk PDF text. Used by the `/api/tisk-text` endpoint for lazy-loading on vote detail pages.
+
+Key class: `TiskTextService`
+- `get_text(period, ct)` — retrieve cached plain text for a print, or `None` if not yet extracted
+- `has_text(period, ct)` — check if text exists in cache
+- `available_tisky(period)` — list all print numbers with cached text
+
+Text files are stored at `~/.cache/pspcz-analyzer/psp/tisky_text/{period}/{ct}.txt`.
+
+### Topic Service (`services/topic_service.py`)
+
+Keyword-based topic classifier — the fast, offline fallback when Ollama is unavailable.
+
+Uses a `TOPIC_TAXONOMY` dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords.
+
+Functions:
+- `classify_tisk(name, text)` — returns all matching topic labels
+- `classify_tisk_primary_label(name, text)` — returns the single best-matching topic
+
+### Ollama Service (`services/ollama_service.py`)
+
+LLM-based topic classification and summarization using a local Ollama instance. This is optional — if Ollama is not running, the system falls back to keyword classification.
+
+Key class: `OllamaClient`
+- `is_available()` — health check against the Ollama API
+- `classify_topics(name, text)` — LLM-based multi-label topic classification
+- `summarize(name, text)` — generate a concise summary of the legislative text
+- `consolidate_topics(topics_by_ct)` — ask the LLM to merge/deduplicate topic labels across a period
+
+Configuration (in `config.py`):
+- `OLLAMA_BASE_URL` — default `http://localhost:11434`
+- `OLLAMA_MODEL` — default `qwen3:8b`
+- `OLLAMA_TIMEOUT` — per-request timeout (300s, generous for CPU inference)
+- `OLLAMA_MAX_TEXT_CHARS` — maximum text length sent to the LLM (50,000 chars)
+
+## Data Enrichment Modules
+
+### Tisk Downloader (`data/tisk_downloader.py`)
+
+Downloads PDF documents for parliamentary prints from psp.cz.
+
+- `download_tisk_pdf(period, ct)` — download a single print's PDF
+- `download_period_tisky(period, ct_list)` — batch download for a period
+
+PDFs are cached at `~/.cache/pspcz-analyzer/psp/tisky_pdf/{period}/{ct}.pdf`.
+
+### Tisk Extractor (`data/tisk_extractor.py`)
+
+Extracts plain text from downloaded PDF files using PyMuPDF (fitz).
+
+- `extract_text_from_pdf(pdf_path)` — extract text from a single PDF
+- `extract_and_cache(period, ct)` — extract and save to the text cache
+- `extract_period_texts(period)` — batch extract all PDFs for a period
+
+### Tisk Scraper (`data/tisk_scraper.py`)
+
+Scrapes psp.cz HTML pages to discover available PDF documents for a given print.
+
+- `scrape_tisk_documents(period, ct)` — returns list of `TiskDocument` objects (URLs, types)
+- `get_best_pdf(documents)` — selects the most relevant PDF from available documents
+
+### History Scraper (`data/history_scraper.py`)
+
+Scrapes legislative process history from psp.cz HTML pages for each parliamentary print.
+
+- `scrape_tisk_history(period, ct)` — returns a `TiskHistory` object with a list of `TiskHistoryStage` entries
+- `save_history_json(period, ct, history)` / `load_history_json(period, ct)` — JSON cache persistence
+
+Each `TiskHistoryStage` contains:
+- `stage_type` — e.g. "1. čtení", "2. čtení", "3. čtení", "Senát", "Prezident"
+- `label` — human-readable label
+- `date` — when the stage occurred
+- `outcome` — result text (approved, rejected, etc.)
+- `vote_number` — link to the specific vote, if applicable
