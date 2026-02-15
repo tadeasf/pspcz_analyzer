@@ -176,6 +176,8 @@ def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
     info["tisk_topics"] = tisk.topics if tisk else []
     info["tisk_has_text"] = tisk.has_text if tisk else False
     info["tisk_summary"] = tisk.summary if tisk else ""
+    info["tisk_law_changes"] = tisk.law_changes if tisk else []
+    info["tisk_sub_versions"] = tisk.sub_versions if tisk else []
 
     # Legislative history and vote-to-stage matching
     info["tisk_history"] = (tisk.history if tisk else None)

@@ -73,6 +73,16 @@ TISKY_META_DIR = "tisky_meta"
 PSP_TISKT_URL_TEMPLATE = "https://www.psp.cz/sqw/text/tiskt.sqw?o={period}&ct={ct}&ct1=0"
 PSP_HISTORIE_URL_TEMPLATE = "https://www.psp.cz/sqw/historie.sqw?o={period}&t={ct}"
 TISKY_HISTORIE_DIR = "tisky_historie"
+
+# Legislative evolution: law changes, related bills, sub-tisk versions
+PSP_LAW_CHANGES_URL_TEMPLATE = "https://www.psp.cz/sqw/historie.sqw?o={period}&t={ct}&snzp=1"
+PSP_RELATED_BILLS_URL_TEMPLATE = "https://www.psp.cz/sqw/tisky.sqw?idsb={idsb}"
+PSP_SUBTISKT_URL_TEMPLATE = (
+    "https://www.psp.cz/sqw/text/tiskt.sqw?O={period}&CT={ct}&CT1={ct1}"
+)
+TISKY_LAW_CHANGES_DIR = "tisky_law_changes"
+TISKY_RELATED_BILLS_DIR = "related_bills"
+TISKY_VERSION_DIFFS_DIR = "tisky_version_diffs"
 PSP_ORIG2_BASE_URL = "https://www.psp.cz/sqw/text/orig2.sqw"
 PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
 

@@ -17,4 +17,5 @@ dependencies = [
     "beautifulsoup4>=4.12",
     "pymupdf>=1.25",
     "scalar-fastapi>=1.6.2",
+    "markdown>=3.10.2",
 ]

@@ -82,6 +82,7 @@ class TiskHistory:
     current_status: str = "projednáváno"
     law_number: str | None = None
     scraped_at: str = ""
+    law_changes: list[dict] = field(default_factory=list)
 
 
 def _extract_first_date(text: str) -> str | None:
@@ -316,6 +317,7 @@ def history_from_dict(d: dict) -> TiskHistory:
         current_status=d.get("current_status", "projednáváno"),
         law_number=d.get("law_number"),
         scraped_at=d.get("scraped_at", ""),
+        law_changes=d.get("law_changes", []),
     )
 
 

@@ -13,7 +13,11 @@ from pspcz_analyzer.config import (
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
     TISKY_HISTORIE_DIR,
+    TISKY_LAW_CHANGES_DIR,
     TISKY_META_DIR,
+    TISKY_PDF_DIR,
+    TISKY_TEXT_DIR,
+    TISKY_VERSION_DIFFS_DIR,
 )
 from pspcz_analyzer.services.tisk_pipeline_service import TiskPipelineService
 from pspcz_analyzer.services.tisk_text_service import TiskTextService
@@ -61,6 +65,8 @@ class TiskInfo:
     has_text: bool = False
     summary: str = ""
     history: object | None = None  # TiskHistory from data.history_scraper
+    law_changes: list[dict] = field(default_factory=list)
+    sub_versions: list[dict] = field(default_factory=list)
 
     @property
     def url(self) -> str:
@@ -135,6 +141,8 @@ class DataService:
         self._topic_cache_mtime: dict[int, float] = {}
         # Legislative history cache: period -> {ct -> TiskHistory}
         self._history_cache: dict[int, dict] = {}
+        # Note: law_changes, subtisk_versions, and version_diffs are always
+        # read from disk (no in-memory cache) for incremental UI updates.
 
     @property
     def available_periods(self) -> list[dict]:
@@ -170,11 +178,21 @@ class DataService:
         topic_map = self._load_topic_cache(period)
         summary_map = self._summary_cache.get(period, {})
         history_map = self._load_history_cache(period)
+        law_changes_map = self._load_law_changes_cache(period)
+        subtisk_map = self._load_subtisk_versions_cache(period)
+        diffs_map = self._load_version_diffs_cache(period)
         for tisk in pd.tisk_lookup.values():
             tisk.topics = topic_map.get(tisk.ct, [])
             tisk.summary = summary_map.get(tisk.ct, "")
             tisk.has_text = self.tisk_text.has_text(period, tisk.ct)
             tisk.history = history_map.get(tisk.ct)
+            tisk.law_changes = law_changes_map.get(tisk.ct, [])
+            # Populate sub_versions with diff summaries
+            versions = subtisk_map.get(tisk.ct, [])
+            for v in versions:
+                diff_key = f"{tisk.ct}_{v.get('ct1', '')}"
+                v["llm_diff_summary"] = diffs_map.get(diff_key, "")
+            tisk.sub_versions = versions
 
     def initialize(self, period: int = DEFAULT_PERIOD) -> None:
         """Pre-load shared data and the default period."""
@@ -605,6 +623,92 @@ class DataService:
             )
         return histories
 
+    def _load_law_changes_cache(self, period: int) -> dict[int, list[dict]]:
+        """Load law changes JSON files for a period.
+
+        Always reads from disk (no in-memory cache) so incremental pipeline
+        results are visible immediately in the UI.
+        Returns {ct: [law_change_dicts]}.
+        """
+        lc_dir = self.cache_dir / TISKY_META_DIR / str(period) / TISKY_LAW_CHANGES_DIR
+        changes: dict[int, list[dict]] = {}
+        if not lc_dir.exists():
+            return changes
+
+        import json
+
+        for json_path in lc_dir.glob("*.json"):
+            try:
+                ct = int(json_path.stem)
+            except ValueError:
+                continue
+            try:
+                data = json.loads(json_path.read_text(encoding="utf-8"))
+                if data:  # only store non-empty
+                    changes[ct] = data
+            except Exception:
+                logger.opt(exception=True).warning(
+                    "Failed to load law changes from {}", json_path,
+                )
+
+        return changes
+
+    def _load_subtisk_versions_cache(self, period: int) -> dict[int, list[dict]]:
+        """Load sub-tisk version info from JSON cache.
+
+        Always reads from disk (no in-memory cache) so incremental pipeline
+        results are visible immediately in the UI.
+        Returns {ct: [version_dicts]}.
+        """
+        import json
+
+        scan_dir = self.cache_dir / TISKY_META_DIR / str(period) / "subtisk_versions"
+        versions: dict[int, list[dict]] = {}
+
+        if not scan_dir.exists():
+            return versions
+
+        for json_path in scan_dir.glob("*.json"):
+            try:
+                ct = int(json_path.stem)
+            except ValueError:
+                continue
+            try:
+                data = json.loads(json_path.read_text(encoding="utf-8"))
+                if data:  # skip empty (means no sub-versions)
+                    versions[ct] = data
+            except Exception:
+                logger.opt(exception=True).warning(
+                    "Failed to load subtisk cache from {}", json_path,
+                )
+
+        return versions
+
+    def _load_version_diffs_cache(self, period: int) -> dict[str, str]:
+        """Load LLM version diff summaries for a period.
+
+        Always reads from disk (no in-memory cache) so incremental pipeline
+        results are visible immediately in the UI.
+        Returns {"{ct}_{ct1}": summary_text}.
+        """
+        diff_dir = (
+            self.cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
+        )
+        diffs: dict[str, str] = {}
+        if not diff_dir.exists():
+            return diffs
+
+        for txt_path in diff_dir.glob("*.txt"):
+            key = txt_path.stem  # "{ct}_{ct1}"
+            try:
+                diffs[key] = txt_path.read_text(encoding="utf-8")
+            except Exception:
+                logger.opt(exception=True).warning(
+                    "Failed to load version diff from {}", txt_path,
+                )
+
+        return diffs
+
     def start_tisk_pipeline(self, period: int) -> None:
         """Kick off background tisk processing for a period.
 
@@ -626,6 +730,9 @@ class DataService:
         def _on_complete(
             p: int, text_paths: dict, topic_map: dict, summary_map: dict,
             histories: dict | None = None,
+            law_changes_map: dict | None = None,
+            subtisk_map: dict | None = None,
+            version_diffs: dict | None = None,
         ) -> None:
             """Callback: refresh in-memory tisk data after pipeline finishes."""
             # Invalidate caches so next lookup picks up new data
@@ -637,12 +744,7 @@ class DataService:
             pd = self._periods.get(p)
             if pd is None:
                 return
-            history_map = histories or self._load_history_cache(p)
-            for key, tisk in pd.tisk_lookup.items():
-                tisk.topics = topic_map.get(tisk.ct, [])
-                tisk.has_text = self.tisk_text.has_text(p, tisk.ct)
-                tisk.summary = summary_map.get(tisk.ct, "")
-                tisk.history = history_map.get(tisk.ct)
+            self._refresh_tisk_data(p)
 
             logger.info(
                 "[tisk pipeline] Updated in-memory tisk data for period {}",
@@ -677,6 +779,9 @@ class DataService:
         def _on_complete(
             p: int, text_paths: dict, topic_map: dict, summary_map: dict,
             histories: dict | None = None,
+            law_changes_map: dict | None = None,
+            subtisk_map: dict | None = None,
+            version_diffs: dict | None = None,
         ) -> None:
             self._topic_cache.pop(p, None)
             self._summary_cache.pop(p, None)
@@ -684,12 +789,7 @@ class DataService:
             pd = self._periods.get(p)
             if pd is None:
                 return
-            history_map = histories or self._load_history_cache(p)
-            for key, tisk in pd.tisk_lookup.items():
-                tisk.topics = topic_map.get(tisk.ct, [])
-                tisk.has_text = self.tisk_text.has_text(p, tisk.ct)
-                tisk.summary = summary_map.get(tisk.ct, "")
-                tisk.history = history_map.get(tisk.ct)
+            self._refresh_tisk_data(p)
             logger.info("[tisk pipeline] Updated in-memory tisk data for period {}", p)
 
         self.tisk_pipeline.start_all_periods(period_ct, on_complete=_on_complete)

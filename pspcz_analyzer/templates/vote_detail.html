@@ -105,6 +105,13 @@
             <span id="tisk-loading" class="htmx-indicator" aria-busy="true">Loading transcription...</span>
         </div>
     </details>
+
+    <div id="tisk-evolution-content"
+         hx-get="/api/tisk-evolution?period={{ period }}&ct={{ detail.info.tisk_ct }}"
+         hx-trigger="intersect once"
+         hx-indicator="#evolution-loading">
+        <span id="evolution-loading" class="htmx-indicator" aria-busy="true">Loading legislative evolution...</span>
+    </div>
     {% endif %}
 
     <div class="stat-grid">
