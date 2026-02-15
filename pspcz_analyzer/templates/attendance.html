@@ -33,9 +33,24 @@
         <label>
             Sort by
             <select name="sort">
-                <option value="worst">Lowest attendance first</option>
-                <option value="best">Highest attendance first</option>
-                <option value="most_active">Most active (by volume)</option>
+                <optgroup label="Attendance">
+                    <option value="worst">Lowest attendance first</option>
+                    <option value="best">Highest attendance first</option>
+                </optgroup>
+                <optgroup label="Activity">
+                    <option value="most_active">Most active (by volume)</option>
+                    <option value="least_active">Least active (by volume)</option>
+                </optgroup>
+                <optgroup label="Vote breakdown">
+                    <option value="most_yes">Most YES votes</option>
+                    <option value="most_no">Most NO votes</option>
+                    <option value="most_abstained">Most abstentions</option>
+                </optgroup>
+                <optgroup label="Absence">
+                    <option value="most_passive">Most passive (didn't press button)</option>
+                    <option value="most_absent">Most absent</option>
+                    <option value="most_excused">Most excused</option>
+                </optgroup>
             </select>
         </label>
         <label>

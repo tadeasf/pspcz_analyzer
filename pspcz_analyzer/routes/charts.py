@@ -100,21 +100,28 @@ async def attendance_chart(
 
     names = [f"{r['jmeno']} {r['prijmeni']} ({r['party'] or '?'})" for r in rows]
 
-    if sort == "most_active":
-        values = [r["active"] for r in rows]
-        colors = sns.color_palette("viridis", len(rows))
-        ax.barh(names[::-1], values[::-1], color=colors)
-        ax.set_xlabel("Active Votes (YES + NO + ABSTAINED)", color="#333333")
-        ax.set_title("Most Active MPs — Total Votes Cast", color="#333333", fontsize=14)
-    else:
-        values = [r["attendance_pct"] for r in rows]
-        colors = sns.color_palette("RdYlGn", len(rows))
-        ax.barh(names[::-1], values[::-1], color=colors)
-        ax.set_xlabel("Attendance Rate (%)", color="#333333")
-        if sort == "best":
-            ax.set_title("Highest Attendance — Most Reliable MPs", color="#333333", fontsize=14)
-        else:
-            ax.set_title("Lowest Attendance — MPs Who Skip Votes", color="#333333", fontsize=14)
+    chart_meta: dict[str, tuple[str, str, str, str]] = {
+        # sort_key: (data_field, xlabel, title, palette)
+        "worst": ("attendance_pct", "Attendance Rate (%)", "Lowest Attendance — MPs Who Skip Votes", "RdYlGn"),
+        "best": ("attendance_pct", "Attendance Rate (%)", "Highest Attendance — Most Reliable MPs", "RdYlGn"),
+        "most_active": ("active", "Active Votes (YES + NO + ABSTAINED)", "Most Active MPs — Total Votes Cast", "viridis"),
+        "least_active": ("active", "Active Votes (YES + NO + ABSTAINED)", "Least Active MPs — Fewest Votes Cast", "viridis"),
+        "most_abstained": ("abstained", "Abstentions", "Most Abstentions — MPs Who Abstain Most", "YlOrRd"),
+        "most_excused": ("excused", "Excused Absences", "Most Excused — MPs With Most Excused Absences", "PuBuGn"),
+        "most_passive": ("passive", "Passive Votes", "Most Passive — Registered but Didn't Vote", "OrRd"),
+        "most_absent": ("absent", "Absences", "Most Absent — MPs Not Present for Votes", "Reds"),
+        "most_yes": ("yes_votes", "YES Votes", "Most YES Votes — MPs Who Vote Yes Most", "Greens"),
+        "most_no": ("no_votes", "NO Votes", "Most NO Votes — MPs Who Vote No Most", "Blues"),
+    }
+    field, xlabel, title, palette = chart_meta.get(
+        sort, ("attendance_pct", "Attendance Rate (%)", "Attendance", "RdYlGn")
+    )
+
+    values = [r[field] for r in rows]
+    colors = sns.color_palette(palette, len(rows))
+    ax.barh(names[::-1], values[::-1], color=colors)
+    ax.set_xlabel(xlabel, color="#333333")
+    ax.set_title(title, color="#333333", fontsize=14)
 
     ax.tick_params(colors="#333333")
     for spine in ax.spines.values():

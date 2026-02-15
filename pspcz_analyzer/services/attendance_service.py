@@ -51,11 +51,21 @@ def compute_attendance(
     if party_filter:
         result = result.filter(pl.col("party").str.to_uppercase() == party_filter.upper())
 
-    if sort == "most_active":
-        result = result.sort("active", descending=True).head(top)
-    else:
-        descending = sort == "best"
-        result = result.sort("attendance_pct", descending=descending).head(top)
+    # Sort by the requested metric
+    sort_config: dict[str, tuple[str, bool]] = {
+        "worst": ("attendance_pct", False),
+        "best": ("attendance_pct", True),
+        "most_active": ("active", True),
+        "least_active": ("active", False),
+        "most_abstained": ("abstained", True),
+        "most_excused": ("excused", True),
+        "most_passive": ("passive", True),
+        "most_absent": ("absent", True),
+        "most_yes": ("yes_votes", True),
+        "most_no": ("no_votes", True),
+    }
+    col, desc = sort_config.get(sort, ("attendance_pct", False))
+    result = result.sort(col, descending=desc).head(top)
 
     return result.select(
         "jmeno",
