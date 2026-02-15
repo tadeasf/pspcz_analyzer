@@ -110,10 +110,20 @@ async def tisk_text_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
     ct: int = 0,
+    ct1: int = -1,
 ):
-    """Return extracted tisk text as an HTML fragment for HTMX loading."""
+    """Return extracted tisk text as an HTML fragment for HTMX loading.
+
+    When ct1 >= 0, loads sub-tisk text ({ct}_{ct1}.txt) instead of main text.
+    """
     data_svc = request.app.state.data
-    text = data_svc.tisk_text.get_text(period, ct)
+    if ct1 >= 0:
+        # Sub-tisk text: {ct}_{ct1}.txt
+        from pspcz_analyzer.config import TISKY_TEXT_DIR
+        text_path = data_svc.cache_dir / TISKY_TEXT_DIR / str(period) / f"{ct}_{ct1}.txt"
+        text = text_path.read_text(encoding="utf-8") if text_path.exists() else None
+    else:
+        text = data_svc.tisk_text.get_text(period, ct)
     if text is None:
         return HTMLResponse(
             '<article style="background: #fff3cd; padding: 1rem;">'
@@ -129,6 +139,95 @@ async def tisk_text_api(
         'padding: 1rem; border: 1px solid #dee2e6; border-radius: 0.5rem;">'
         f'<pre style="white-space: pre-wrap; word-wrap: break-word; font-size: 0.85rem;">{escaped}</pre>'
         "</article>"
+    )
+
+
+@router.get("/tisk-evolution", response_class=HTMLResponse)
+async def tisk_evolution_api(
+    request: Request,
+    period: int = DEFAULT_PERIOD,
+    ct: int = 0,
+):
+    """Return the legislative evolution partial (law changes + sub-tisk versions)."""
+    data_svc = request.app.state.data
+    pd = data_svc.get_period(period)
+    tisk = None
+    if pd:
+        # Search tisk_lookup for this ct
+        for t in pd.tisk_lookup.values():
+            if t.ct == ct:
+                tisk = t
+                break
+
+    law_changes = tisk.law_changes if tisk else []
+    sub_versions = tisk.sub_versions if tisk else []
+
+    return templates.TemplateResponse(
+        "partials/tisk_evolution.html",
+        {
+            "request": request,
+            "period": period,
+            "ct": ct,
+            "law_changes": law_changes,
+            "sub_versions": sub_versions,
+        },
+    )
+
+
+@router.get("/related-bills", response_class=HTMLResponse)
+async def related_bills_api(
+    request: Request,
+    idsb: int = 0,
+):
+    """Lazy-load related bills for a specific law (scrapes on demand, caches)."""
+    if idsb <= 0:
+        return HTMLResponse("<p>Invalid law reference.</p>")
+
+    from pspcz_analyzer.config import DEFAULT_CACHE_DIR
+    from pspcz_analyzer.data.law_changes_scraper import (
+        load_related_bills_json,
+        save_related_bills_json,
+        scrape_related_bills,
+    )
+    from dataclasses import asdict
+
+    cache_dir = DEFAULT_CACHE_DIR
+    cached = load_related_bills_json(idsb, cache_dir)
+    if cached is not None:
+        bills = [asdict(b) for b in cached]
+    else:
+        raw_bills = scrape_related_bills(idsb)
+        save_related_bills_json(raw_bills, idsb, cache_dir)
+        bills = [asdict(b) for b in raw_bills]
+
+    if not bills:
+        return HTMLResponse(
+            '<p style="color: #6c757d; font-size: 0.85rem;">'
+            "No related bills found for this law.</p>"
+        )
+
+    # Build HTML table inline (small enough to avoid a separate template)
+    rows_html = ""
+    for b in bills:
+        url = b.get("url", "")
+        cislo = b.get("cislo", "?")
+        link = f'<a href="{url}" target="_blank">{cislo}</a>' if url else cislo
+        rows_html += (
+            f"<tr>"
+            f"<td>{link}</td>"
+            f"<td>{b.get('kratky_nazev', '')}</td>"
+            f"<td>{b.get('typ_tisku', '')}</td>"
+            f"<td>{b.get('stav', '')}</td>"
+            f"</tr>"
+        )
+
+    return HTMLResponse(
+        '<table style="font-size: 0.85rem; margin: 0.5rem 0;">'
+        "<thead><tr>"
+        "<th>Tisk</th><th>Title</th><th>Type</th><th>Status</th>"
+        "</tr></thead>"
+        f"<tbody>{rows_html}</tbody>"
+        "</table>"
     )
 
 

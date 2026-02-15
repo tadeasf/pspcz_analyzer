@@ -1,0 +1,101 @@
+{% if law_changes or sub_versions %}
+<div class="legis-box" style="margin-top: 1rem;">
+    <div class="legis-box-header">
+        Legislative Evolution
+        <small>Law changes &amp; version history</small>
+    </div>
+
+    {% if law_changes %}
+    <div style="margin-bottom: 1rem;">
+        <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">Proposed Law Changes</h4>
+        <div class="overflow-auto">
+            <table style="font-size: 0.85rem;">
+                <thead>
+                    <tr>
+                        <th>Citation</th>
+                        <th>Change Type</th>
+                        <th>Law</th>
+                        <th>Related Bills</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lc in law_changes %}
+                    <tr>
+                        <td>{{ lc.citace or "—" }}</td>
+                        <td>{{ lc.zmena or "—" }}</td>
+                        <td>{{ lc.predpis or "—" }}</td>
+                        <td>
+                            {% if lc.idsb %}
+                            <button class="btn-outline btn-small"
+                                    hx-get="/api/related-bills?idsb={{ lc.idsb }}"
+                                    hx-target="#related-bills-{{ lc.idsb }}"
+                                    hx-swap="innerHTML"
+                                    hx-indicator="#rb-loading-{{ lc.idsb }}">
+                                Show related bills
+                            </button>
+                            <span id="rb-loading-{{ lc.idsb }}" class="htmx-indicator" aria-busy="true" style="font-size: 0.8rem;">Loading...</span>
+                            <div id="related-bills-{{ lc.idsb }}"></div>
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if sub_versions %}
+    <div>
+        <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">Version History</h4>
+        <div class="legislative-timeline" style="margin-left: 0.5rem;">
+            {% for v in sub_versions %}
+            <div class="timeline-stage">
+                <div class="timeline-dot" {% if v.ct1 == 0 %}style="background: #1565c0;"{% endif %}></div>
+                <span class="timeline-label">
+                    <strong>CT1={{ v.ct1 }}
+                    {% if v.ct1 == 0 %}
+                    (Original)
+                    {% elif v.ct1 == 1 %}
+                    (Government opinion)
+                    {% else %}
+                    (Amendment {{ v.ct1 }})
+                    {% endif %}</strong>
+                </span>
+                {% if v.description %}
+                <span class="timeline-date">{{ v.description }}</span>
+                {% endif %}
+
+                {% if v.llm_diff_summary %}
+                <div class="version-diff-summary">
+                    {{ v.llm_diff_summary | markdown }}
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 0.25rem; font-size: 0.8rem;">
+                    {% if v.has_pdf %}
+                    <span style="color: #2e7d32;">PDF available</span>
+                    {% endif %}
+                    {% if v.has_text %}
+                    <details style="margin-top: 0.25rem;">
+                        <summary style="cursor: pointer; font-size: 0.8rem;">View extracted text</summary>
+                        <div hx-get="/api/tisk-text?period={{ period }}&ct={{ ct }}&ct1={{ v.ct1 }}"
+                             hx-trigger="intersect once">
+                            <span class="htmx-indicator" aria-busy="true" style="font-size: 0.8rem;">Loading text...</span>
+                        </div>
+                    </details>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<p style="color: #6c757d; font-size: 0.85rem; margin-top: 0.5rem;">
+    No legislative evolution data available yet. The background pipeline will process this data automatically.
+</p>
+{% endif %}

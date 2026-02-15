@@ -54,6 +54,42 @@ def download_tisk_pdf(
     return dest
 
 
+def download_subtisk_pdf(
+    period: int,
+    ct: int,
+    ct1: int,
+    idd: int,
+    cache_dir: Path = DEFAULT_CACHE_DIR,
+    force: bool = False,
+) -> Path | None:
+    """Download a sub-tisk PDF by idd. File naming: ``{ct}_{ct1}.pdf``."""
+    pdf_dir = cache_dir / TISKY_PDF_DIR / str(period)
+    pdf_dir.mkdir(parents=True, exist_ok=True)
+    dest = pdf_dir / f"{ct}_{ct1}.pdf"
+
+    if dest.exists() and not force:
+        logger.debug("Cached sub-tisk PDF: {}", dest)
+        return dest
+
+    url = f"{PSP_ORIG2_BASE_URL}?idd={idd}"
+    logger.info("Downloading sub-tisk PDF {}/{}/{} (idd={}) ...", period, ct, ct1, idd)
+
+    try:
+        with httpx.Client(timeout=60, follow_redirects=True) as client:
+            with client.stream("GET", url) as response:
+                response.raise_for_status()
+                with open(dest, "wb") as f:
+                    for chunk in response.iter_bytes(chunk_size=65536):
+                        f.write(chunk)
+    except httpx.HTTPError:
+        logger.exception("Failed to download sub-tisk {}/{}/{}", period, ct, ct1)
+        dest.unlink(missing_ok=True)
+        return None
+
+    logger.info("Downloaded {} ({:.1f} KB)", dest.name, dest.stat().st_size / 1e3)
+    return dest
+
+
 def download_period_tisky(
     period: int,
     tisk_numbers: list[int],

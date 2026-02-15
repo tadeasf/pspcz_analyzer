@@ -542,6 +542,51 @@ input:focus, select:focus {
 .timeline-approved { color: #2e7d32; }
 .timeline-rejected { color: #c62828; }
 
+/* Version diff summary (AI-generated markdown) */
+.version-diff-summary {
+    margin-top: 0.35rem;
+    padding: 0.5rem 0.75rem;
+    background: #f0f4f8;
+    border-left: 3px solid #1565c0;
+    border-radius: 0 0.25rem 0.25rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #333;
+}
+
+.version-diff-summary p {
+    margin: 0.3rem 0;
+}
+
+.version-diff-summary p:first-child {
+    margin-top: 0;
+}
+
+.version-diff-summary p:last-child {
+    margin-bottom: 0;
+}
+
+.version-diff-summary h3,
+.version-diff-summary h4 {
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0.2rem;
+    color: #1a237e;
+}
+
+.version-diff-summary strong {
+    color: #1a237e;
+}
+
+.version-diff-summary ul,
+.version-diff-summary ol {
+    margin: 0.2rem 0;
+    padding-left: 1.2rem;
+}
+
+.version-diff-summary li {
+    margin: 0.15rem 0;
+}
+
 /* ============================================================
    Methodology / Collapsible Details
    ============================================================ */

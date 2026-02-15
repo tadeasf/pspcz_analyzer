@@ -15,9 +15,11 @@ from pspcz_analyzer.config import (
     PERIOD_ORGAN_IDS,
     PSP_REQUEST_DELAY,
     TISKY_HISTORIE_DIR,
+    TISKY_LAW_CHANGES_DIR,
     TISKY_META_DIR,
     TISKY_PDF_DIR,
     TISKY_TEXT_DIR,
+    TISKY_VERSION_DIFFS_DIR,
 )
 from pspcz_analyzer.data.tisk_scraper import get_best_pdf
 from pspcz_analyzer.services.topic_service import classify_tisk_primary_label
@@ -433,6 +435,238 @@ def _scrape_histories_sync(
     return histories
 
 
+def _scrape_law_changes_sync(
+    period: int,
+    ct_numbers: list[int],
+    cache_dir: Path,
+) -> dict[int, list[dict]]:
+    """Scrape law change pages (snzp=1) for all tisky in a period.
+
+    Caches results as JSON. Returns {ct: [law_change_dicts]}.
+    """
+    from dataclasses import asdict
+
+    from pspcz_analyzer.data.law_changes_scraper import (
+        load_law_changes_json,
+        save_law_changes_json,
+        scrape_proposed_law_changes,
+    )
+
+    law_changes_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_LAW_CHANGES_DIR
+    law_changes_dir.mkdir(parents=True, exist_ok=True)
+
+    result: dict[int, list[dict]] = {}
+    total = len(ct_numbers)
+    scraped = 0
+
+    for i, ct in enumerate(ct_numbers, 1):
+        # Load from cache
+        cached = load_law_changes_json(period, ct, cache_dir)
+        if cached is not None:
+            result[ct] = [asdict(c) for c in cached]
+            continue
+
+        if i % 50 == 0 or i == 1:
+            logger.info(
+                "[tisk pipeline] Scraping law changes for period {}: {}/{}",
+                period, i, total,
+            )
+
+        changes = scrape_proposed_law_changes(period, ct)
+        save_law_changes_json(changes, period, ct, cache_dir)
+        if changes:
+            result[ct] = [asdict(c) for c in changes]
+        scraped += 1
+
+        time.sleep(PSP_REQUEST_DELAY)
+
+    logger.info(
+        "[tisk pipeline] Law changes for period {}: {} cached, {} new, {} with changes",
+        period, len(result) - scraped, scraped, len(result),
+    )
+    return result
+
+
+def _download_subtisk_versions_sync(
+    period: int,
+    ct_numbers: list[int],
+    cache_dir: Path,
+) -> dict[int, list[dict]]:
+    """Download all sub-tisk versions (CT1=0..N) for tisky in a period.
+
+    Caches scan results as JSON per-ct so restarts skip already-processed tisky.
+    Returns {ct: [SubTiskVersion dicts]}.
+    """
+    import json
+    import pymupdf
+    from dataclasses import asdict
+
+    from pspcz_analyzer.data.tisk_downloader import download_subtisk_pdf
+    from pspcz_analyzer.data.tisk_scraper import scrape_all_subtisk_documents
+
+    # JSON cache dir for sub-tisk scan results
+    scan_dir = cache_dir / TISKY_META_DIR / str(period) / "subtisk_versions"
+    scan_dir.mkdir(parents=True, exist_ok=True)
+
+    result: dict[int, list[dict]] = {}
+    total = len(ct_numbers)
+    scraped = 0
+
+    for i, ct in enumerate(ct_numbers, 1):
+        scan_cache = scan_dir / f"{ct}.json"
+
+        # Load from JSON cache if available
+        if scan_cache.exists():
+            try:
+                data = json.loads(scan_cache.read_text(encoding="utf-8"))
+                if data:  # non-empty means this ct has sub-versions
+                    result[ct] = data
+                continue
+            except Exception:
+                pass  # re-scrape on bad cache
+
+        if i % 50 == 0 or i == 1:
+            logger.info(
+                "[tisk pipeline] Scraping sub-tisk versions for period {}: {}/{}",
+                period, i, total,
+            )
+
+        # Scrape sub-tisk pages to find versions
+        versions_data = scrape_all_subtisk_documents(period, ct)
+        scraped += 1
+
+        if len(versions_data) <= 1:
+            # Only CT1=0 or nothing — save empty list to cache so we don't re-scrape
+            scan_cache.write_text("[]", encoding="utf-8")
+            time.sleep(PSP_REQUEST_DELAY)
+            continue
+
+        pdf_dir = cache_dir / TISKY_PDF_DIR / str(period)
+        text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
+        version_dicts = []
+
+        for v in versions_data:
+            if v.idd and v.ct1 > 0:  # CT1=0 is already downloaded by main pipeline
+                pdf = download_subtisk_pdf(period, ct, v.ct1, v.idd, cache_dir)
+                time.sleep(PSP_REQUEST_DELAY)
+
+                # Extract text if PDF downloaded
+                if pdf:
+                    txt_dest = text_dir / f"{ct}_{v.ct1}.txt"
+                    txt_dest.parent.mkdir(parents=True, exist_ok=True)
+                    if not txt_dest.exists():
+                        try:
+                            doc = pymupdf.open(pdf)
+                            pages = [page.get_text() for page in doc]
+                            doc.close()
+                            text = "\n\n".join(pages)
+                            if text.strip():
+                                txt_dest.write_text(text, encoding="utf-8")
+                                v.has_text = True
+                        except Exception:
+                            logger.opt(exception=True).warning(
+                                "Failed to extract text from {}", pdf.name,
+                            )
+                    else:
+                        v.has_text = True
+                    v.has_pdf = True
+
+            vd = asdict(v)
+            version_dicts.append(vd)
+
+        # Save scan result to cache (even if version_dicts is just CT1=0)
+        scan_cache.write_text(
+            json.dumps(version_dicts, ensure_ascii=False, indent=2), encoding="utf-8",
+        )
+        if version_dicts:
+            result[ct] = version_dicts
+
+    logger.info(
+        "[tisk pipeline] Sub-tisk versions for period {}: {} cached, {} new, {} with multiple versions",
+        period, total - scraped, scraped, len(result),
+    )
+    return result
+
+
+def _analyze_version_diffs_sync(
+    period: int,
+    ct_numbers: list[int],
+    cache_dir: Path,
+) -> dict[str, str]:
+    """Run LLM comparison on consecutive sub-tisk versions.
+
+    Returns {"{ct}_{ct1}": diff_summary} for each pair compared.
+    """
+    from pspcz_analyzer.services.ollama_service import OllamaClient
+
+    ollama = OllamaClient()
+    if not ollama.is_available():
+        logger.info("[tisk pipeline] Ollama not available, skipping version diff analysis")
+        return {}
+
+    text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
+    diff_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
+    diff_dir.mkdir(parents=True, exist_ok=True)
+
+    result: dict[str, str] = {}
+
+    for ct in ct_numbers:
+        # Find all text versions for this tisk
+        if not text_dir.exists():
+            continue
+
+        # Collect versions: {ct}.txt is CT1=0, {ct}_{ct1}.txt is CT1>0
+        versions: list[tuple[int, Path]] = []
+        base_txt = text_dir / f"{ct}.txt"
+        if base_txt.exists():
+            versions.append((0, base_txt))
+        for txt_path in sorted(text_dir.glob(f"{ct}_*.txt")):
+            parts = txt_path.stem.split("_")
+            if len(parts) == 2:
+                try:
+                    ct1 = int(parts[1])
+                    versions.append((ct1, txt_path))
+                except ValueError:
+                    continue
+
+        if len(versions) < 2:
+            continue
+
+        versions.sort(key=lambda x: x[0])
+
+        # Compare consecutive pairs
+        for j in range(len(versions) - 1):
+            ct1_old, path_old = versions[j]
+            ct1_new, path_new = versions[j + 1]
+            diff_key = f"{ct}_{ct1_new}"
+            diff_file = diff_dir / f"{diff_key}.txt"
+
+            # Check cache
+            if diff_file.exists():
+                result[diff_key] = diff_file.read_text(encoding="utf-8")
+                continue
+
+            text_old = path_old.read_text(encoding="utf-8")
+            text_new = path_new.read_text(encoding="utf-8")
+
+            logger.info(
+                "[tisk pipeline] Comparing versions CT1={} vs CT1={} for tisk {}/{}",
+                ct1_old, ct1_new, period, ct,
+            )
+            summary = ollama.compare_versions(
+                text_old, text_new, ct1_old, ct1_new,
+            )
+            if summary:
+                diff_file.write_text(summary, encoding="utf-8")
+                result[diff_key] = summary
+
+    logger.info(
+        "[tisk pipeline] Version diffs for period {}: {} comparisons",
+        period, len(result),
+    )
+    return result
+
+
 class TiskPipelineService:
     """Manages background tisk processing for loaded periods."""
 
@@ -490,7 +724,10 @@ class TiskPipelineService:
         period_ct_numbers: list[tuple[int, list[int]]],
         on_complete,
     ) -> None:
-        """Process periods one by one, sequentially."""
+        """Process periods one by one, sequentially.
+
+        Delegates to _run_period so all stages (including evolution) run.
+        """
         for period, ct_numbers in period_ct_numbers:
             if not ct_numbers:
                 continue
@@ -498,31 +735,7 @@ class TiskPipelineService:
                 "[tisk pipeline] === Starting period {} ({} tisky) ===",
                 period, len(ct_numbers),
             )
-            try:
-                # Scrape legislative history pages (fast, cached)
-                histories = await asyncio.to_thread(
-                    _scrape_histories_sync, period, ct_numbers, self.cache_dir,
-                )
-                pdf_paths, text_paths = await asyncio.to_thread(
-                    _process_period_sync, period, ct_numbers, self.cache_dir,
-                )
-                topic_map, summary_map = await asyncio.to_thread(
-                    _classify_and_save, period, text_paths, self.cache_dir,
-                )
-                # Consolidate similar/duplicate topics
-                topic_map, summary_map = await asyncio.to_thread(
-                    _consolidate_topics, period, self.cache_dir,
-                )
-                logger.info(
-                    "[tisk pipeline] Period {} complete: {} histories, {} PDFs, {} texts, {} topics",
-                    period, len(histories), len(pdf_paths), len(text_paths), len(topic_map),
-                )
-                if on_complete:
-                    on_complete(period, text_paths, topic_map, summary_map, histories)
-            except Exception:
-                logger.opt(exception=True).error(
-                    "[tisk pipeline] Failed for period {}, continuing to next", period,
-                )
+            await self._run_period(period, ct_numbers, on_complete)
         logger.info("[tisk pipeline] === All periods processed ===")
 
     async def _run_period(self, period: int, ct_numbers: list[int], on_complete) -> None:
@@ -542,12 +755,29 @@ class TiskPipelineService:
             topic_map, summary_map = await asyncio.to_thread(
                 _consolidate_topics, period, self.cache_dir,
             )
+            # Scrape proposed law changes for each tisk
+            law_changes_map = await asyncio.to_thread(
+                _scrape_law_changes_sync, period, ct_numbers, self.cache_dir,
+            )
+            # Download sub-tisk versions (CT1>0) and extract text
+            subtisk_map = await asyncio.to_thread(
+                _download_subtisk_versions_sync, period, ct_numbers, self.cache_dir,
+            )
+            # LLM comparison of consecutive versions
+            version_diffs = await asyncio.to_thread(
+                _analyze_version_diffs_sync, period, ct_numbers, self.cache_dir,
+            )
             logger.info(
-                "[tisk pipeline] Period {} complete: {} histories, {} PDFs, {} texts, {} topics",
-                period, len(histories), len(pdf_paths), len(text_paths), len(topic_map),
+                "[tisk pipeline] Period {} complete: {} histories, {} PDFs, {} texts, "
+                "{} topics, {} law changes, {} sub-tisk, {} diffs",
+                period, len(histories), len(pdf_paths), len(text_paths),
+                len(topic_map), len(law_changes_map), len(subtisk_map), len(version_diffs),
             )
             if on_complete:
-                on_complete(period, text_paths, topic_map, summary_map, histories)
+                on_complete(
+                    period, text_paths, topic_map, summary_map, histories,
+                    law_changes_map, subtisk_map, version_diffs,
+                )
         except Exception:
             logger.opt(exception=True).error("[tisk pipeline] Failed for period {}", period)
 

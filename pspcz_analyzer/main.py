@@ -53,6 +53,23 @@ app.include_router(pages_router)
 app.include_router(api_router, prefix="/api")
 app.include_router(charts_router, prefix="/charts")
 
+# Register shared Jinja2 filters on all template instances
+import markupsafe
+import markdown as _md
+
+def _md_filter(text: str) -> markupsafe.Markup:
+    """Convert markdown to HTML, safe for Jinja2 rendering."""
+    if not text:
+        return markupsafe.Markup("")
+    html = _md.markdown(text, extensions=["nl2br"])
+    return markupsafe.Markup(html)
+
+from pspcz_analyzer.routes.api import templates as api_templates
+from pspcz_analyzer.routes.pages import templates as pages_templates
+
+for t in (templates, api_templates, pages_templates):
+    t.env.filters["markdown"] = _md_filter
+
 
 def main() -> None:
     import uvicorn

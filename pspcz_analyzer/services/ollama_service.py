@@ -69,6 +69,21 @@ _CONSOLIDATION_PROMPT_TEMPLATE = (
     "Odpovez POUZE mapovanim, jeden radek na tema. /no_think"
 )
 
+_COMPARISON_SYSTEM = (
+    "Jsi analyticko-pravni expert na ceskou legislativu. Srovnavas verze parlamentnich tisku "
+    "a identifikujes KONKRETNI zmeny mezi nimi — cisla paragrafu, co bylo pridano, odebrano ci zmeneno."
+)
+
+_COMPARISON_PROMPT_TEMPLATE = (
+    "Porovnej nasledujici dve verze parlamentniho tisku a popis KONKRETNI rozdily:\n"
+    "1. Ktere paragrafy/clanky se zmenily a jak\n"
+    "2. Co bylo pridano nebo odebrano\n"
+    "3. Jaky je celkovy charakter zmen (zprisneni/zmireni/technicka uprava)\n"
+    "3-4 vety v cestine. Bud konkretni — cituj cisla paragrafu.\n\n"
+    "VERZE {ct1_old} ({label_old}):\n{text_old}\n\n"
+    "VERZE {ct1_new} ({label_new}):\n{text_new} /no_think"
+)
+
 # Strip <think>...</think> blocks from Qwen3 responses (defensive)
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
@@ -233,6 +248,34 @@ class OllamaClient:
                 mapping[t] = t
 
         return mapping
+
+    def compare_versions(
+        self,
+        text_old: str,
+        text_new: str,
+        ct1_old: int,
+        ct1_new: int,
+        label_old: str = "",
+        label_new: str = "",
+    ) -> str:
+        """Compare two versions of a tisk and return a Czech-language diff summary.
+
+        Returns 3-4 sentence summary or empty string on failure.
+        """
+        trunc_old = truncate_legislative_text(text_old)
+        trunc_new = truncate_legislative_text(text_new)
+        prompt = _COMPARISON_PROMPT_TEMPLATE.format(
+            ct1_old=ct1_old,
+            ct1_new=ct1_new,
+            label_old=label_old or f"CT1={ct1_old}",
+            label_new=label_new or f"CT1={ct1_new}",
+            text_old=trunc_old,
+            text_new=trunc_new,
+        )
+        response = self._generate(prompt, _COMPARISON_SYSTEM)
+        if not response:
+            return ""
+        return self._strip_think(response)
 
     def _generate(self, prompt: str, system: str) -> str | None:
         """Send a generation request to Ollama. Returns response text or None."""
