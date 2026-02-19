@@ -50,7 +50,7 @@ Pure logic tests with synthetic data — no network, no disk I/O beyond `tmp_pat
 
 ### API Tests (`tests/api/`)
 
-Use FastAPI's `TestClient` with a mocked `DataService` — no real downloads.
+Use FastAPI's `TestClient` with a mocked `DataService` — no real downloads. The test client goes through the full middleware stack (including `LocaleMiddleware` for i18n).
 
 | File | Tests | What it covers |
 |------|-------|----------------|
@@ -161,6 +161,19 @@ Triggers:
 Single job: `pytest -m integration --timeout=300 -v` with a 30-minute timeout. Uploads test artifacts on failure for debugging.
 
 **Why real integration tests?** psp.cz is government infrastructure — stable, but when upstream format changes happen, our parsing breaks silently. The weekly cron job is our early warning system.
+
+### `release.yml` — Docker Image Publishing
+
+Trigger: `workflow_dispatch` (manual)
+
+Steps:
+1. Checkout code
+2. Extract version from `pyproject.toml`
+3. Login to GitHub Container Registry (GHCR)
+4. Build Docker image with multi-stage `Dockerfile`
+5. Push with version tag + `latest` tag
+
+Bump version first (`uv run bump-my-version bump patch && git push`), then trigger the workflow.
 
 ## Version Management
 

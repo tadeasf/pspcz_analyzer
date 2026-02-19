@@ -9,6 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Environment variables (secrets)
+.env
+
 .playwright-mcp
 .coverage
 site/

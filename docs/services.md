@@ -19,7 +19,7 @@ Downloads ZIP archives from `https://www.psp.cz/eknih/cdrom/opendata`:
 - `schuze.zip` — session and agenda data
 - `tisky.zip` — parliamentary prints (bills, proposals)
 
-Files are cached in `~/.cache/pspcz-analyzer/psp/raw/`. Skips download if the file already exists.
+Files are cached in `~/.cache/pspcz-analyzer/psp/raw/` (or `$PSPCZ_CACHE_DIR/raw/`). Skips download if the file already exists.
 
 ### 2. Parse (`data/parser.py`)
 
@@ -32,7 +32,7 @@ CSV quoting is always disabled (`quote_char=None`) because UNL files never use C
 
 ### 3. Cache (`data/cache.py`)
 
-`get_or_parse()` checks if a Parquet file exists and is newer than the source. If so, it loads from Parquet; otherwise it calls the parse function and caches the result. Cache lives at `~/.cache/pspcz-analyzer/psp/parquet/`.
+`get_or_parse()` checks if a Parquet file exists and is newer than the source. If so, it loads from Parquet; otherwise it calls the parse function and caches the result. Cache lives at `~/.cache/pspcz-analyzer/psp/parquet/` (or `$PSPCZ_CACHE_DIR/parquet/`).
 
 ## DataService (`services/data_service.py`)
 
@@ -64,6 +64,28 @@ Two strategies for linking votes to parliamentary prints:
 
 1. **Primary**: schuze → bod_schuze → tisky (via session/agenda item IDs)
 2. **Fallback**: text-match vote descriptions against tisk names (for new periods where schuze.zip hasn't been updated yet)
+
+## i18n (`i18n/`)
+
+Dict-based Czech/English UI localization. Language is determined per-request from a cookie.
+
+### Architecture
+
+- **`i18n/__init__.py`** — Core module: `contextvars.ContextVar` for locale, `gettext(key)` / `ngettext(singular, plural, n)` lookup functions, `setup_jinja2_i18n(env)` to install Jinja2 i18n extension
+- **`i18n/translations.py`** — `TRANSLATIONS: dict[str, dict[str, str]]` with `"cs"` and `"en"` keys containing all UI strings
+- **`i18n/middleware.py`** — `LocaleMiddleware(BaseHTTPMiddleware)` reads `lang` cookie, calls `set_locale()`, sets `request.state.lang`
+
+### How It Works
+
+1. `LocaleMiddleware` reads the `lang` cookie on each request (default: `"cs"`)
+2. Sets `contextvars.ContextVar` so `gettext()` resolves the correct language
+3. Jinja2 templates use `{{ _("key") }}` which calls `gettext()`
+4. Chart labels and vote outcome labels also use `gettext()` for localization
+5. The `/set-lang/{lang}` endpoint sets the cookie and redirects back
+
+### ContextVar Propagation
+
+`run_with_timeout` in `middleware.py` uses `contextvars.copy_context().run()` to propagate the locale ContextVar into thread pool workers, ensuring chart rendering and analysis computations use the correct language.
 
 ## Analysis Services
 
@@ -116,13 +138,13 @@ Two outputs from the same vote matrix (MPs x votes, values: +1 YES, -1 NO, 0 oth
 
 ### Votes (`services/votes_service.py`)
 
-**`list_votes()`** — paginated vote listing with text search, outcome filtering, and topic filtering. Enriches each row with tisk links (to psp.cz source documents).
+**`list_votes()`** — paginated vote listing with text search, outcome filtering, and topic filtering. Enriches each row with tisk links (to psp.cz source documents). Outcome labels are localized via `gettext()`.
 
-**`vote_detail()`** — full breakdown of a single vote: metadata, per-party aggregates (YES/NO/ABSTAINED/etc. per party), per-MP individual votes, legislative history timeline, AI summary, and topic labels.
+**`vote_detail()`** — full breakdown of a single vote: metadata, per-party aggregates (YES/NO/ABSTAINED/etc. per party), per-MP individual votes, legislative history timeline, bilingual AI summary, and topic labels.
 
 ## Tisk Pipeline Services
 
-The tisk (parliamentary print) pipeline runs as a background process, downloading PDFs, extracting text, classifying topics, and scraping legislative histories.
+The tisk (parliamentary print) pipeline runs as a background process, downloading PDFs, extracting text, classifying topics, generating bilingual summaries, and scraping legislative histories.
 
 ### Tisk Pipeline Service (`services/tisk_pipeline_service.py`)
 
@@ -132,8 +154,9 @@ Pipeline stages per period:
 1. **Download** — fetch PDF documents from psp.cz for each print
 2. **Extract** — convert PDFs to plain text using PyMuPDF
 3. **Classify** — assign topic labels via Ollama LLM (or keyword fallback)
-4. **Consolidate** — merge per-tisk topic classifications into a single Parquet cache
-5. **Scrape histories** — fetch legislative process timelines from psp.cz HTML pages
+4. **Summarize** — generate bilingual (Czech + English) summaries via Ollama
+5. **Consolidate** — merge per-tisk topic classifications into a single Parquet cache
+6. **Scrape histories** — fetch legislative process timelines from psp.cz HTML pages
 
 Key class: `TiskPipelineService`
 - `start_period(period)` — launch background pipeline for a single period
@@ -163,19 +186,39 @@ Functions:
 
 ### Ollama Service (`services/ollama_service.py`)
 
-LLM-based topic classification and summarization using a local Ollama instance. This is optional — if Ollama is not running, the system falls back to keyword classification.
+LLM-based topic classification, summarization, and version comparison using Ollama. This is optional — if Ollama is not running, the system falls back to keyword classification.
+
+Supports both local Ollama (no auth) and remote HTTPS Ollama (Bearer token authentication via `OLLAMA_API_KEY`).
 
 Key class: `OllamaClient`
-- `is_available()` — health check against the Ollama API
+- `is_available()` — health check against the Ollama API (with auth headers if configured)
 - `classify_topics(name, text)` — LLM-based multi-label topic classification
-- `summarize(name, text)` — generate a concise summary of the legislative text
+- `summarize(name, text)` — generate a concise Czech summary
+- `summarize_bilingual(name, text)` — generate summaries in both Czech and English
+- `compare_versions(text1, text2)` — generate a Czech diff summary between two tisk versions
+- `compare_versions_bilingual(text1, text2)` — generate diff summaries in both Czech and English
 - `consolidate_topics(topics_by_ct)` — ask the LLM to merge/deduplicate topic labels across a period
 
-Configuration (in `config.py`):
-- `OLLAMA_BASE_URL` — default `http://localhost:11434`
-- `OLLAMA_MODEL` — default `qwen3:8b`
-- `OLLAMA_TIMEOUT` — per-request timeout (300s, generous for CPU inference)
-- `OLLAMA_MAX_TEXT_CHARS` — maximum text length sent to the LLM (50,000 chars)
+Configuration (in `config.py`, overridable via `.env`):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
+| `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
+| `OLLAMA_MODEL` | `qwen3:8b` | Model for inference |
+| `OLLAMA_TIMEOUT` | `300.0` | Per-request timeout in seconds |
+| `OLLAMA_MAX_TEXT_CHARS` | `50000` | Max text length sent to LLM |
+| `OLLAMA_VERBATIM_CHARS` | `40000` | Chars included verbatim (rest truncated) |
+
+If Ollama is not running or unreachable, the system silently falls back to keyword-based classification.
+
+### Tisk Version Service (`services/tisk_version_service.py`)
+
+Compares different versions (sub-tisky) of the same parliamentary print using LLM-generated diff summaries. Produces bilingual (Czech + English) comparison summaries stored as separate text files.
+
+### Tisk Cache Manager (`services/tisk_cache_manager.py`)
+
+Manages loading and caching of tisk enrichment data (topic classifications, summaries, English summaries, version diffs, legislative histories) from the file-based cache.
 
 ## Data Enrichment Modules
 

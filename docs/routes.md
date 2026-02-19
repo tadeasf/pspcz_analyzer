@@ -2,6 +2,8 @@
 
 All routes accept a `period` query parameter (default: `10`, the current electoral period). Changing the period loads data for that period on demand.
 
+All page and API routes respect the current UI language (set via the `lang` cookie). Chart labels and vote outcome labels are localized.
+
 ## Page Routes
 
 Full HTML pages rendered with Jinja2. Defined in `pspcz_analyzer/routes/pages.py`.
@@ -14,6 +16,7 @@ Full HTML pages rendered with Jinja2. Defined in `pspcz_analyzer/routes/pages.py
 | GET | `/similarity` | Cross-party voting similarity page |
 | GET | `/votes` | Votes browser (searchable, paginated) |
 | GET | `/votes/{vote_id}` | Single vote detail — per-party and per-MP breakdown |
+| GET | `/set-lang/{lang}` | Set UI language (`cs` or `en`) via cookie and redirect back |
 | GET | `/docs` | Scalar API documentation UI (not included in OpenAPI schema) |
 
 ## API Routes (HTMX Partials)
@@ -36,6 +39,10 @@ Return HTML fragments for dynamic table updates. Defined in `pspcz_analyzer/rout
 | `top` | int | 30 | Number of MPs to show |
 | `sort` | string | `worst` | Sort order: `worst` (lowest first), `best`, or `most_active` (by volume) |
 | `party` | string | `""` | Filter by party code (e.g. `ODS`, `ANO`) |
+
+### GET /api/attendance (sort=most_active)
+
+When `sort=most_active`, renders the "Most Active" view — MPs ranked by raw volume of active votes (YES + NO + ABSTAINED), rewarding consistent long-term participation.
 
 ### GET /api/similarity
 
@@ -63,6 +70,15 @@ Returns extracted PDF text for a parliamentary print as an HTML fragment (for la
 | `period` | int | 10 | Electoral period |
 | `ct` | int | 0 | Print number (cislo tisku) |
 
+### GET /api/tisk-evolution
+
+Returns the legislative evolution view for a parliamentary print, including sub-versions and LLM-generated diff summaries (bilingual — displays English when `lang=en`).
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `period` | int | 10 | Electoral period |
+| `ct` | int | *(required)* | Print number |
+
 ### GET /api/health
 
 Health check endpoint returning JSON.
@@ -82,7 +98,7 @@ Return PNG images via `StreamingResponse`. Defined in `pspcz_analyzer/routes/cha
 | GET | `/charts/attendance.png` | `period`, `top=20` | Horizontal bar chart — worst attendance (RdYlGn palette) |
 | GET | `/charts/similarity.png` | `period` | PCA scatter plot — MPs colored by party (husl palette) |
 
-All charts render at 150 DPI with a dark background (`#1a1a2e`).
+All charts render at 150 DPI with a dark background (`#1a1a2e`). Labels and titles are localized based on the current UI language.
 
 ## OpenAPI
 

@@ -3,6 +3,10 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # psp.cz open data base URL
 PSP_BASE_URL = "https://www.psp.cz/eknih/cdrom/opendata"
 
