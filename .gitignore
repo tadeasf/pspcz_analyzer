@@ -11,3 +11,4 @@ wheels/
 
 .playwright-mcp
 .coverage
+site/
