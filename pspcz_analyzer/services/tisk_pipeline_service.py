@@ -107,13 +107,13 @@ class TiskPipelineService:
                 ct_numbers,
                 self.cache_dir,
             )
-            topic_map, summary_map = await asyncio.to_thread(
+            topic_map, summary_map, summary_en_map = await asyncio.to_thread(
                 classify_and_save,
                 period,
                 text_paths,
                 self.cache_dir,
             )
-            topic_map, summary_map = await asyncio.to_thread(
+            topic_map, summary_map, summary_en_map = await asyncio.to_thread(
                 consolidate_topics,
                 period,
                 self.cache_dir,
@@ -130,7 +130,7 @@ class TiskPipelineService:
                 ct_numbers,
                 self.cache_dir,
             )
-            version_diffs = await asyncio.to_thread(
+            version_diffs, version_diffs_en = await asyncio.to_thread(
                 analyze_version_diffs_sync,
                 period,
                 ct_numbers,

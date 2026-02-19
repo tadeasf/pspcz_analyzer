@@ -6,18 +6,28 @@ import re
 
 import polars as pl
 
+from pspcz_analyzer.i18n import gettext as _
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.utils.text import normalize_czech
 
-# Outcome labels for display
-OUTCOME_LABELS = {
-    "A": "Passed",
-    "R": "Rejected",
-    "Z": "Void",
-    "P": "Procedural",
-    "N": "Not decided",
+# Keys into i18n translations, resolved at call time
+_OUTCOME_KEYS: dict[str, str] = {
+    "A": "outcome.passed",
+    "R": "outcome.rejected",
+    "Z": "outcome.void",
+    "P": "outcome.procedural",
+    "N": "outcome.not_decided",
 }
+
+
+def _outcome_label(code: str) -> str:
+    """Return the localized outcome label for a vote result code."""
+    key = _OUTCOME_KEYS.get(code)
+    if key:
+        return _(key)
+    return code or "?"
+
 
 _DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
 
@@ -124,7 +134,7 @@ def _apply_vote_filters(
 def _enrich_vote_rows(rows: list[dict], data: PeriodData) -> None:
     """Add outcome labels and tisk info to vote row dicts (in-place)."""
     for r in rows:
-        r["outcome_label"] = OUTCOME_LABELS.get(r["vysledek"], r["vysledek"] or "?")
+        r["outcome_label"] = _outcome_label(r["vysledek"])
         schuze = r.get("schuze")
         bod = r.get("bod")
         tisk = data.get_tisk(schuze, bod) if schuze and bod and bod > 0 else None
@@ -193,7 +203,7 @@ def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData) -> dict:
         pl.col("nazev_dlouhy").fill_null(""),
         pl.col("nazev_kratky").fill_null(""),
     ).to_dicts()[0]
-    info["outcome_label"] = OUTCOME_LABELS.get(info.get("vysledek", ""), "?")
+    info["outcome_label"] = _outcome_label(info.get("vysledek", ""))
 
     # Look up linked parliamentary print (tisk)
     schuze = info.get("schuze")
@@ -205,6 +215,7 @@ def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData) -> dict:
     info["tisk_topics"] = tisk.topics if tisk else []
     info["tisk_has_text"] = tisk.has_text if tisk else False
     info["tisk_summary"] = tisk.summary if tisk else ""
+    info["tisk_summary_en"] = tisk.summary_en if tisk else ""
     info["tisk_law_changes"] = tisk.law_changes if tisk else []
     info["tisk_sub_versions"] = tisk.sub_versions if tisk else []
 

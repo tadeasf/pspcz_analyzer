@@ -1,12 +1,12 @@
 <table>
     <thead>
         <tr>
-            <th>#</th>
-            <th>MP 1</th>
-            <th>Party</th>
-            <th>MP 2</th>
-            <th>Party</th>
-            <th>Similarity</th>
+            <th>{{ _("th.rank") }}</th>
+            <th>{{ _("th.mp1") }}</th>
+            <th>{{ _("th.party") }}</th>
+            <th>{{ _("th.mp2") }}</th>
+            <th>{{ _("th.party") }}</th>
+            <th>{{ _("th.similarity") }}</th>
         </tr>
     </thead>
     <tbody>
@@ -23,5 +23,5 @@
     </tbody>
 </table>
 {% if not rows %}
-<p>No data found.</p>
+<p>{{ _("no_data") }}</p>
 {% endif %}

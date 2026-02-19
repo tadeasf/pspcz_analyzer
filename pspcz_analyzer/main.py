@@ -1,5 +1,6 @@
 """Czech Parliamentary Voting Analyzer — FastAPI application."""
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.i18n import setup_jinja2_i18n
+from pspcz_analyzer.i18n.middleware import LocaleMiddleware
 from pspcz_analyzer.logging_config import setup_logging
 from pspcz_analyzer.middleware import SecurityHeadersMiddleware
 from pspcz_analyzer.rate_limit import limiter
@@ -59,6 +62,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # ty
 # Security: response headers
 app.add_middleware(SecurityHeadersMiddleware)
 
+# i18n: per-request locale from cookie
+app.add_middleware(LocaleMiddleware)
+
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # Mount static files
@@ -81,14 +87,16 @@ def _md_filter(text: str) -> markupsafe.Markup:
 
 for t in (templates, api_templates, pages_templates):
     t.env.filters["markdown"] = _md_filter
+    setup_jinja2_i18n(t.env)
 
 
 def main() -> None:
+    dev_mode = os.environ.get("PSPCZ_DEV", "1") == "1"
     uvicorn.run(
         "pspcz_analyzer.main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=dev_mode,
     )
 
 

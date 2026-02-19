@@ -1,36 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Voting Similarity — Czech Parliament Analyzer{% endblock %}
+{% block title %}{{ _("nav.similarity") }} — Czech Parliament Analyzer{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Voting Similarity</h1>
-    <p>MPs clustered by how they actually vote — colors represent parties</p>
+    <h1>{{ _("similarity.title") }}</h1>
+    <p>{{ _("similarity.subtitle") }}</p>
 </div>
 
 <details class="methodology">
-    <summary>How is similarity calculated?</summary>
+    <summary>{{ _("similarity.methodology_title") }}</summary>
     <article>
         <ol>
-            <li><strong>Build a vote matrix</strong> — each row is an MP, each column is a vote. Values are +1 (YES), -1 (NO), or 0 (anything else: absent, abstained, excused).</li>
-            <li><strong>PCA projection</strong> — Principal Component Analysis reduces the high-dimensional vote matrix to 2 dimensions for visualization. MPs with similar voting records cluster together.</li>
-            <li><strong>Cosine similarity</strong> — for the pairwise table, we compute cosine similarity between each pair of MPs' voting vectors. A score of 100% means they voted identically on every vote.</li>
+            <li><strong>{{ _("similarity.methodology.step1") }}</strong></li>
+            <li><strong>{{ _("similarity.methodology.step2") }}</strong></li>
+            <li><strong>{{ _("similarity.methodology.step3") }}</strong></li>
         </ol>
-        <p>The cross-party pairs table shows the most similar MP pairs who belong to <em>different</em> parties — revealing hidden alliances.</p>
+        <p>{{ _("similarity.methodology.cross_party") }}</p>
     </article>
 </details>
 
 <div class="chart-container">
-    <img src="/charts/similarity.png?period={{ period }}" alt="Voting similarity scatter plot" loading="lazy"
+    <img src="/charts/similarity.png?period={{ period }}" alt="{{ _('similarity.title') }}" loading="lazy"
          style="max-height: 700px;">
 </div>
 
-<h2>Top Cross-Party Pairs</h2>
-<p>MPs from different parties who vote most similarly:</p>
+<h2>{{ _("similarity.top_pairs") }}</h2>
+<p>{{ _("similarity.top_pairs_desc") }}</p>
 
 <div id="results" hx-get="/api/similarity?top=20&period={{ period }}" hx-trigger="load" hx-indicator="#loading">
     <div class="skeleton">{% for _ in range(8) %}
     <div class="skeleton-pulse skeleton-table-row"></div>
     {% endfor %}</div>
 </div>
-<span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
+<span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 {% endblock %}

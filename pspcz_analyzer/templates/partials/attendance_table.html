@@ -2,17 +2,17 @@
     <table>
         <thead>
             <tr>
-                <th>#</th>
-                <th>MP</th>
-                <th>Party</th>
-                <th>Active</th>
-                <th>YES</th>
-                <th>NO</th>
-                <th>Abstained</th>
-                <th>Passive</th>
-                <th>Absent</th>
-                <th>Excused</th>
-                <th>Attendance %</th>
+                <th>{{ _("th.rank") }}</th>
+                <th>{{ _("th.mp") }}</th>
+                <th>{{ _("th.party") }}</th>
+                <th>{{ _("th.active") }}</th>
+                <th>{{ _("th.yes") }}</th>
+                <th>{{ _("th.no") }}</th>
+                <th>{{ _("th.abstained") }}</th>
+                <th>{{ _("th.passive") }}</th>
+                <th>{{ _("th.absent") }}</th>
+                <th>{{ _("th.excused") }}</th>
+                <th>{{ _("th.attendance_pct") }}</th>
             </tr>
         </thead>
         <tbody>
@@ -35,5 +35,5 @@
     </table>
 </div>
 {% if not rows %}
-<p>No data found.</p>
+<p>{{ _("no_data") }}</p>
 {% endif %}

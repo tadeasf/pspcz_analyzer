@@ -105,13 +105,15 @@ class DataService:
             return
         topic_map = self._cache_mgr.load_topic_cache(period)
         summary_map = self._cache_mgr.summary_cache.get(period, {})
+        summary_en_map = self._cache_mgr.summary_en_cache.get(period, {})
         history_map = self._cache_mgr.load_history_cache(period)
         law_changes_map = self._cache_mgr.load_law_changes_cache(period)
         subtisk_map = self._cache_mgr.load_subtisk_versions_cache(period)
-        diffs_map = self._cache_mgr.load_version_diffs_cache(period)
+        diffs_map, diffs_en_map = self._cache_mgr.load_version_diffs_cache(period)
         for tisk in pd.tisk_lookup.values():
             tisk.topics = topic_map.get(tisk.ct, [])
             tisk.summary = summary_map.get(tisk.ct, "")
+            tisk.summary_en = summary_en_map.get(tisk.ct, "")
             tisk.has_text = self.tisk_text.has_text(period, tisk.ct)
             tisk.history = history_map.get(tisk.ct)
             tisk.law_changes = law_changes_map.get(tisk.ct, [])
@@ -120,6 +122,7 @@ class DataService:
             for v in versions:
                 diff_key = f"{tisk.ct}_{v.get('ct1', '')}"
                 v["llm_diff_summary"] = diffs_map.get(diff_key, "")
+                v["llm_diff_summary_en"] = diffs_en_map.get(diff_key, "")
             tisk.sub_versions = versions
 
     def initialize(self, period: int = DEFAULT_PERIOD) -> None:
@@ -307,6 +310,7 @@ class DataService:
             self.tisk_text,
             self._cache_mgr.topic_cache,
             self._cache_mgr.summary_cache,
+            self._cache_mgr.summary_en_cache,
         )
 
         pd = PeriodData(
@@ -361,10 +365,8 @@ class DataService:
             text_paths: dict,
             topic_map: dict,
             summary_map: dict,
-            histories: dict | None = None,
-            law_changes_map: dict | None = None,
-            subtisk_map: dict | None = None,
-            version_diffs: dict | None = None,
+            *_args: object,
+            **_kwargs: object,
         ) -> None:
             """Callback: refresh in-memory tisk data after pipeline finishes."""
             self._cache_mgr.invalidate(p)
@@ -407,10 +409,8 @@ class DataService:
             text_paths: dict,
             topic_map: dict,
             summary_map: dict,
-            histories: dict | None = None,
-            law_changes_map: dict | None = None,
-            subtisk_map: dict | None = None,
-            version_diffs: dict | None = None,
+            *_args: object,
+            **_kwargs: object,
         ) -> None:
             self._cache_mgr.invalidate(p)
             pd = self._periods.get(p)

@@ -112,6 +112,38 @@ main.container {
     white-space: nowrap;
 }
 
+/* Language switcher in header */
+.lang-switcher {
+    display: flex;
+    gap: 0.15rem;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+}
+
+.lang-switcher a {
+    display: inline-block;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    text-decoration: none;
+    border: 1px solid #D9D9D9;
+    border-radius: 3px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.lang-switcher a:hover {
+    background: #EBF1F8;
+    color: #1A4677;
+    text-decoration: none;
+}
+
+.lang-switcher a.active {
+    background: #3C71AC;
+    color: #fff;
+    border-color: #3C71AC;
+}
+
 /* Period selector in header */
 .period-select {
     font-size: 0.85rem;

@@ -92,20 +92,26 @@ def _classify_single_tisk(
     summary = ""
     source = "keyword"
 
+    summary_en = ""
     if use_ai:
         logger.info("[tisk pipeline] [{}/{}] AI classifying tisk ct={} ...", i, total, ct)
         topics = ollama.classify_topics(text, "")
         if topics:
             source = f"ollama:{ollama.model}"
-        logger.info("[tisk pipeline] [{}/{}] AI summarizing tisk ct={} ...", i, total, ct)
-        summary = ollama.summarize(text, "")
         logger.info(
-            "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} summary={}chars ({})",
+            "[tisk pipeline] [{}/{}] AI summarizing tisk ct={} (bilingual) ...", i, total, ct
+        )
+        summaries = ollama.summarize_bilingual(text, "")
+        summary = summaries["cs"]
+        summary_en = summaries["en"]
+        logger.info(
+            "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} summary={}chars summary_en={}chars ({})",
             i,
             total,
             ct,
             topics or "(none)",
             len(summary),
+            len(summary_en),
             source,
         )
     else:
@@ -131,6 +137,7 @@ def _classify_single_tisk(
         "ct": ct,
         "topic": serialize_topics(topics),
         "summary": summary,
+        "summary_en": summary_en,
         "source": source,
     }
 
@@ -232,16 +239,19 @@ def _build_topic_summary_maps(
     records: list[dict],
     period: int,
     log: bool = True,
-) -> tuple[dict[int, list[str]], dict[int, str]]:
-    """Build topic and summary maps from classification records."""
+) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
+    """Build topic, summary, and summary_en maps from classification records."""
     topic_map: dict[int, list[str]] = {}
     summary_map: dict[int, str] = {}
+    summary_en_map: dict[int, str] = {}
     for r in records:
         parsed = deserialize_topics(r.get("topic", ""))
         if parsed:
             topic_map[r["ct"]] = parsed
         if r.get("summary"):
             summary_map[r["ct"]] = r["summary"]
+        if r.get("summary_en"):
+            summary_en_map[r["ct"]] = r["summary_en"]
 
     if log:
         classified = len(topic_map)
@@ -255,4 +265,4 @@ def _build_topic_summary_maps(
             classified - ai_count,
         )
 
-    return topic_map, summary_map
+    return topic_map, summary_map, summary_en_map

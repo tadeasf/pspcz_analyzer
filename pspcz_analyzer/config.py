@@ -1,5 +1,6 @@
 """Central configuration: URLs, paths, constants."""
 
+import os
 from pathlib import Path
 
 # psp.cz open data base URL
@@ -11,8 +12,10 @@ POSLANCI_URL = f"{PSP_BASE_URL}/poslanci.zip"
 SCHUZE_URL = f"{PSP_BASE_URL}/schuze.zip"
 TISKY_URL = f"{PSP_BASE_URL}/tisky.zip"
 
-# Local cache
-DEFAULT_CACHE_DIR = Path.home() / ".cache" / "pspcz-analyzer" / "psp"
+# Local cache (overridable via PSPCZ_CACHE_DIR env var for Docker)
+DEFAULT_CACHE_DIR = Path(
+    os.environ.get("PSPCZ_CACHE_DIR", str(Path.home() / ".cache" / "pspcz-analyzer" / "psp"))
+)
 RAW_DIR = "raw"
 EXTRACTED_DIR = "extracted"
 PARQUET_DIR = "parquet"
@@ -85,7 +88,7 @@ PSP_ORIG2_BASE_URL = "https://www.psp.cz/sqw/text/orig2.sqw"
 PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
 
 # Ollama (local LLM) integration — optional, falls back to keyword classification
-OLLAMA_BASE_URL = "http://localhost:11434"
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = "qwen3:8b"
 OLLAMA_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 OLLAMA_HEALTH_TIMEOUT = 5.0  # connectivity check

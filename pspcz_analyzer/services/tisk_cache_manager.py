@@ -25,6 +25,8 @@ class TiskCacheManager:
         self._topic_cache: dict[int, dict[int, list[str]]] = {}
         # Summary cache: period -> {ct -> summary_text}
         self._summary_cache: dict[int, dict[int, str]] = {}
+        # English summary cache: period -> {ct -> summary_en_text}
+        self._summary_en_cache: dict[int, dict[int, str]] = {}
         # Track parquet mtime to detect incremental updates
         self._topic_cache_mtime: dict[int, float] = {}
         # Legislative history cache: period -> {ct -> TiskHistory}
@@ -38,10 +40,15 @@ class TiskCacheManager:
     def summary_cache(self) -> dict[int, dict[int, str]]:
         return self._summary_cache
 
+    @property
+    def summary_en_cache(self) -> dict[int, dict[int, str]]:
+        return self._summary_en_cache
+
     def invalidate(self, period: int) -> None:
         """Invalidate all caches for a period so next access re-reads from disk."""
         self._topic_cache.pop(period, None)
         self._summary_cache.pop(period, None)
+        self._summary_en_cache.pop(period, None)
         self._history_cache.pop(period, None)
 
     def load_topic_cache(self, period: int) -> dict[int, list[str]]:
@@ -54,6 +61,7 @@ class TiskCacheManager:
         if not meta_path.exists():
             self._topic_cache[period] = {}
             self._summary_cache[period] = {}
+            self._summary_en_cache[period] = {}
             self._topic_cache_mtime[period] = 0
             return {}
 
@@ -66,6 +74,7 @@ class TiskCacheManager:
         df = pl.read_parquet(meta_path)
         topics: dict[int, list[str]] = {}
         summaries: dict[int, str] = {}
+        summaries_en: dict[int, str] = {}
         for row in df.iter_rows(named=True):
             ct = row["ct"]
             raw_topic = row.get("topic", "")
@@ -75,14 +84,19 @@ class TiskCacheManager:
             summary = row.get("summary", "")
             if summary:
                 summaries[ct] = summary
+            summary_en = row.get("summary_en", "")
+            if summary_en:
+                summaries_en[ct] = summary_en
         self._topic_cache[period] = topics
         self._summary_cache[period] = summaries
+        self._summary_en_cache[period] = summaries_en
         self._topic_cache_mtime[period] = current_mtime
         logger.debug(
-            "Loaded topic classifications for period {}: {} tisky, {} summaries",
+            "Loaded topic classifications for period {}: {} tisky, {} summaries, {} EN summaries",
             period,
             len(topics),
             len(summaries),
+            len(summaries_en),
         )
         return topics
 
@@ -177,26 +191,38 @@ class TiskCacheManager:
 
         return versions
 
-    def load_version_diffs_cache(self, period: int) -> dict[str, str]:
+    def load_version_diffs_cache(self, period: int) -> tuple[dict[str, str], dict[str, str]]:
         """Load LLM version diff summaries for a period.
 
         Always reads from disk (no in-memory cache) so incremental pipeline
         results are visible immediately in the UI.
-        Returns {"{ct}_{ct1}": summary_text}.
+        Returns ({"{ct}_{ct1}": summary_cs}, {"{ct}_{ct1}": summary_en}).
         """
         diff_dir = self.cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
         diffs: dict[str, str] = {}
+        diffs_en: dict[str, str] = {}
         if not diff_dir.exists():
-            return diffs
+            return diffs, diffs_en
 
         for txt_path in diff_dir.glob("*.txt"):
-            key = txt_path.stem  # "{ct}_{ct1}"
-            try:
-                diffs[key] = txt_path.read_text(encoding="utf-8")
-            except Exception:
-                logger.opt(exception=True).warning(
-                    "Failed to load version diff from {}",
-                    txt_path,
-                )
+            stem = txt_path.stem
+            # English diff files end with _en
+            if stem.endswith("_en"):
+                key = stem[:-3]  # strip _en
+                try:
+                    diffs_en[key] = txt_path.read_text(encoding="utf-8")
+                except Exception:
+                    logger.opt(exception=True).warning(
+                        "Failed to load EN version diff from {}",
+                        txt_path,
+                    )
+            else:
+                try:
+                    diffs[stem] = txt_path.read_text(encoding="utf-8")
+                except Exception:
+                    logger.opt(exception=True).warning(
+                        "Failed to load version diff from {}",
+                        txt_path,
+                    )
 
-        return diffs
+        return diffs, diffs_en

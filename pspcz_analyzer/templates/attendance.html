@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Attendance — Czech Parliament Analyzer{% endblock %}
+{% block title %}{{ _("nav.attendance") }} — Czech Parliament Analyzer{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Attendance Analysis</h1>
-    <p>Who shows up to vote — and how do they vote?</p>
+    <h1>{{ _("attendance.title") }}</h1>
+    <p>{{ _("attendance.subtitle") }}</p>
 </div>
 
 <details class="methodology">
-    <summary>How is attendance calculated?</summary>
+    <summary>{{ _("attendance.methodology_title") }}</summary>
     <article>
-        <p>For each MP, every recorded vote is categorized as:</p>
+        <p>{{ _("attendance.methodology.intro") }}</p>
         <ul>
-            <li><strong>Active</strong> — voted YES (A), NO (B), or ABSTAINED (C)</li>
-            <li><strong>Passive</strong> — registered in the chamber but did not press any button (F)</li>
-            <li><strong>Absent</strong> — not registered at the time of the vote (@)</li>
-            <li><strong>Excused</strong> — formally excused absence (M)</li>
+            <li><strong>{{ _("attendance.methodology.active") }}</strong></li>
+            <li><strong>{{ _("attendance.methodology.passive") }}</strong></li>
+            <li><strong>{{ _("attendance.methodology.absent") }}</strong></li>
+            <li><strong>{{ _("attendance.methodology.excused") }}</strong></li>
         </ul>
-        <p><strong>Attendance %</strong> = Active / (Total - Excused) x 100</p>
-        <p>Excused absences are excluded from the denominator because they are legitimate (government duties, illness, etc.).</p>
-        <p>The vote breakdown shows how each MP splits their active votes between YES, NO, and ABSTAIN.</p>
+        <p><strong>{{ _("attendance.methodology.formula") }}</strong></p>
+        <p>{{ _("attendance.methodology.excused_note") }}</p>
+        <p>{{ _("attendance.methodology.breakdown_note") }}</p>
     </article>
 </details>
 
@@ -27,47 +27,47 @@
     <input type="hidden" name="period" value="{{ period }}">
     <div class="form-row">
         <label>
-            Top N MPs
+            {{ _("form.top_n") }}
             <input type="number" name="top" value="30" min="5" max="200" step="5">
         </label>
         <label>
-            Sort by
+            {{ _("form.sort_by") }}
             <select name="sort">
-                <optgroup label="Attendance">
-                    <option value="worst">Lowest attendance first</option>
-                    <option value="best">Highest attendance first</option>
+                <optgroup label="{{ _('sort.optgroup.attendance') }}">
+                    <option value="worst">{{ _("sort.worst") }}</option>
+                    <option value="best">{{ _("sort.best") }}</option>
                 </optgroup>
-                <optgroup label="Activity">
-                    <option value="most_active">Most active (by volume)</option>
-                    <option value="least_active">Least active (by volume)</option>
+                <optgroup label="{{ _('sort.optgroup.activity') }}">
+                    <option value="most_active">{{ _("sort.most_active") }}</option>
+                    <option value="least_active">{{ _("sort.least_active") }}</option>
                 </optgroup>
-                <optgroup label="Vote breakdown">
-                    <option value="most_yes">Most YES votes</option>
-                    <option value="most_no">Most NO votes</option>
-                    <option value="most_abstained">Most abstentions</option>
+                <optgroup label="{{ _('sort.optgroup.breakdown') }}">
+                    <option value="most_yes">{{ _("sort.most_yes") }}</option>
+                    <option value="most_no">{{ _("sort.most_no") }}</option>
+                    <option value="most_abstained">{{ _("sort.most_abstained") }}</option>
                 </optgroup>
-                <optgroup label="Absence">
-                    <option value="most_passive">Most passive (didn't press button)</option>
-                    <option value="most_absent">Most absent</option>
-                    <option value="most_excused">Most excused</option>
+                <optgroup label="{{ _('sort.optgroup.absence') }}">
+                    <option value="most_passive">{{ _("sort.most_passive") }}</option>
+                    <option value="most_absent">{{ _("sort.most_absent") }}</option>
+                    <option value="most_excused">{{ _("sort.most_excused") }}</option>
                 </optgroup>
             </select>
         </label>
         <label>
-            Party filter
-            <input type="text" name="party" placeholder="All parties" value="">
+            {{ _("form.party_filter") }}
+            <input type="text" name="party" placeholder="{{ _('form.all_parties') }}" value="">
         </label>
         <div class="form-submit">
             <label>&nbsp;</label>
-            <button type="submit">Analyze</button>
+            <button type="submit">{{ _("btn.analyze") }}</button>
         </div>
     </div>
 </form>
 
-<span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
+<span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
 <div class="chart-container">
-    <img id="attendance-chart" src="/charts/attendance.png?period={{ period }}" alt="Attendance chart" loading="lazy">
+    <img id="attendance-chart" src="/charts/attendance.png?period={{ period }}" alt="{{ _('attendance.title') }}" loading="lazy">
 </div>
 
 <div id="results" hx-get="/api/attendance?top=30&sort=worst&period={{ period }}" hx-trigger="load" hx-indicator="#loading">

@@ -53,7 +53,7 @@ async def loyalty_api(
     )
     return templates.TemplateResponse(
         "partials/loyalty_table.html",
-        {"request": request, "rows": rows},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 
@@ -79,7 +79,7 @@ async def attendance_api(
     )
     return templates.TemplateResponse(
         "partials/attendance_table.html",
-        {"request": request, "rows": rows},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 
@@ -103,7 +103,7 @@ async def similarity_api(
     )
     return templates.TemplateResponse(
         "partials/similarity_table.html",
-        {"request": request, "rows": rows},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 
@@ -135,6 +135,7 @@ async def votes_api(
             "search": search,
             "outcome": outcome,
             "topic": topic,
+            "lang": getattr(request.state, "lang", "cs"),
             **result,
         },
     )
@@ -204,6 +205,7 @@ async def tisk_evolution_api(
             "ct": ct,
             "law_changes": law_changes,
             "sub_versions": sub_versions,
+            "lang": getattr(request.state, "lang", "cs"),
         },
     )
 

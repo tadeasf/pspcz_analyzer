@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Votes Browser — Czech Parliament Analyzer{% endblock %}
+{% block title %}{{ _("nav.votes") }} — Czech Parliament Analyzer{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Votes Browser</h1>
-    <p>Search parliamentary votes and see who voted for or against</p>
+    <h1>{{ _("votes.title") }}</h1>
+    <p>{{ _("votes.subtitle") }}</p>
 </div>
 
 <details class="methodology">
-    <summary>About this data</summary>
+    <summary>{{ _("votes.methodology_title") }}</summary>
     <article>
-        <p>Every vote (hlasovani) taken in the Chamber of Deputies is recorded with its description, date, and outcome. Each individual MP's vote is also recorded.</p>
-        <p><strong>Outcomes:</strong> Passed (A), Rejected (R), Void/invalid (Z).</p>
-        <p>Click on any vote to see the full party-by-party and MP-by-MP breakdown.</p>
+        <p>{{ _("votes.methodology.intro") }}</p>
+        <p><strong>{{ _("votes.methodology.outcomes") }}</strong></p>
+        <p>{{ _("votes.methodology.click") }}</p>
     </article>
 </details>
 
@@ -20,21 +20,21 @@
     <input type="hidden" name="period" value="{{ period }}">
     <div class="form-row">
         <label>
-            Search votes
-            <input type="search" name="search" placeholder="e.g. rozpocet, duvera, dan (diacritics optional)..." value="">
+            {{ _("form.search_votes") }}
+            <input type="search" name="search" placeholder="{{ _('form.search_placeholder') }}" value="">
         </label>
         <label>
-            Outcome
+            {{ _("form.outcome") }}
             <select name="outcome">
-                <option value="">All</option>
-                <option value="A">Passed</option>
-                <option value="R">Rejected</option>
+                <option value="">{{ _("form.all") }}</option>
+                <option value="A">{{ _("form.passed") }}</option>
+                <option value="R">{{ _("form.rejected") }}</option>
             </select>
         </label>
         <label>
-            Topic
+            {{ _("form.topic") }}
             <select name="topic">
-                <option value="">All topics</option>
+                <option value="">{{ _("form.all_topics") }}</option>
                 {% for t in topics %}
                 <option value="{{ t }}">{{ t }}</option>
                 {% endfor %}
@@ -42,12 +42,12 @@
         </label>
         <div class="form-submit">
             <label>&nbsp;</label>
-            <button type="submit">Search</button>
+            <button type="submit">{{ _("btn.search") }}</button>
         </div>
     </div>
 </form>
 
-<span id="loading" class="htmx-indicator" aria-busy="true">Loading...</span>
+<span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
 <div id="results" hx-get="/api/votes?period={{ period }}" hx-trigger="load" hx-indicator="#loading">
     <div class="skeleton">{% for _ in range(8) %}

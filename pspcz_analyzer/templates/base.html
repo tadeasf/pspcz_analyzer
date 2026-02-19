@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="{{ lang|default('cs') }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Czech Parliamentary Voting Analyzer — OSINT tool for psp.cz open data">
+    <meta name="description" content="{{ _('site.description') }}">
     <meta name="theme-color" content="#3C71AC">
     <title>{% block title %}Czech Parliament Analyzer{% endblock %}</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
@@ -17,26 +17,30 @@
                 <img src="/static/logo-psp.png" alt="Poslanecka snemovna">
             </a>
             <div class="header-right">
-                <span class="header-title">Analyzer</span>
-                <select class="period-select" onchange="switchPeriod(this.value)" aria-label="Electoral period">
+                <span class="header-title">{{ _("site.title") }}</span>
+                <select class="period-select" onchange="switchPeriod(this.value)" aria-label="{{ _('period.select_aria') }}">
                     {% for p in periods %}
                     <option value="{{ p.number }}" {% if p.number == period %}selected{% endif %}>
-                        {{ p.number }}. period ({{ p.label }})
+                        {{ p.number }}. {{ _("period.label") }} ({{ p.label }})
                     </option>
                     {% endfor %}
                 </select>
+                <div class="lang-switcher">
+                    <a href="/set-lang/cs" {% if lang == "cs" %}class="active"{% endif %}>CZ</a>
+                    <a href="/set-lang/en" {% if lang == "en" %}class="active"{% endif %}>EN</a>
+                </div>
             </div>
         </div>
     </header>
 
     <nav class="site-nav">
         <div class="nav-inner">
-            <a href="/?period={{ period }}" {% if active_page == "index" %}aria-current="page"{% endif %}>Dashboard</a>
-            <a href="/loyalty?period={{ period }}" {% if active_page == "loyalty" %}aria-current="page"{% endif %}>Party Loyalty</a>
-            <a href="/attendance?period={{ period }}" {% if active_page == "attendance" %}aria-current="page"{% endif %}>Attendance</a>
-            <a href="/similarity?period={{ period }}" {% if active_page == "similarity" %}aria-current="page"{% endif %}>Similarity</a>
-            <a href="/votes?period={{ period }}" {% if active_page == "votes" %}aria-current="page"{% endif %}>Votes</a>
-            <a href="/docs">API Docs</a>
+            <a href="/?period={{ period }}" {% if active_page == "index" %}aria-current="page"{% endif %}>{{ _("nav.dashboard") }}</a>
+            <a href="/loyalty?period={{ period }}" {% if active_page == "loyalty" %}aria-current="page"{% endif %}>{{ _("nav.loyalty") }}</a>
+            <a href="/attendance?period={{ period }}" {% if active_page == "attendance" %}aria-current="page"{% endif %}>{{ _("nav.attendance") }}</a>
+            <a href="/similarity?period={{ period }}" {% if active_page == "similarity" %}aria-current="page"{% endif %}>{{ _("nav.similarity") }}</a>
+            <a href="/votes?period={{ period }}" {% if active_page == "votes" %}aria-current="page"{% endif %}>{{ _("nav.votes") }}</a>
+            <a href="/docs">{{ _("nav.api_docs") }}</a>
         </div>
     </nav>
 
@@ -45,7 +49,7 @@
     </main>
 
     <footer class="site-footer">
-        <p>Data source: <a href="https://www.psp.cz/sqw/hp.sqw?k=1300" target="_blank">psp.cz open data</a> | OSINT Educational Project</p>
+        <p>{{ _("footer.source") }} <a href="https://www.psp.cz/sqw/hp.sqw?k=1300" target="_blank">{{ _("footer.source_link") }}</a> | {{ _("footer.project") }}</p>
     </footer>
 
     <script>
