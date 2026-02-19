@@ -97,6 +97,7 @@ PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY", "")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:8b")
+TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "1") == "1"
 OLLAMA_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 OLLAMA_HEALTH_TIMEOUT = 5.0  # connectivity check
 OLLAMA_MAX_TEXT_CHARS = 50000

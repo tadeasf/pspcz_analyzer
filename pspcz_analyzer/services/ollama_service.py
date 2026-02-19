@@ -21,6 +21,7 @@ from pspcz_analyzer.config import (
     OLLAMA_MODEL,
     OLLAMA_TIMEOUT,
     OLLAMA_VERBATIM_CHARS,
+    TISK_SHORTENER,
 )
 
 _CLASSIFICATION_SYSTEM = (
@@ -145,11 +146,16 @@ def truncate_legislative_text(
 ) -> str:
     """Truncate Czech legislative text intelligently for LLM processing.
 
-    Strategy:
+    When TISK_SHORTENER is disabled (0), returns the full text unmodified.
+
+    Strategy (when enabled):
     1. First `verbatim_chars` characters verbatim (captures explanatory report)
     2. From remainder: extract heading lines + first 200 chars after each heading
     3. Hard cap at `max_chars` total
     """
+    if not TISK_SHORTENER:
+        return text
+
     if len(text) <= max_chars:
         return text
 
