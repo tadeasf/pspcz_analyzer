@@ -3,7 +3,8 @@
 TRANSLATIONS: dict[str, dict[str, str]] = {
     "cs": {
         # ── Base / Header / Nav ──────────────────────────────────────────
-        "site.title": "Analyzátor",
+        "site.title": "Poslanecká sněmovna",
+        "site.short_title": "PSP.cz",
         "site.description": "Analyzátor hlasování Poslanecké sněmovny — OSINT nástroj pro otevřená data psp.cz",
         "nav.dashboard": "Přehled",
         "nav.loyalty": "Stranická loajalita",
@@ -17,7 +18,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "footer.source_link": "otevřená data psp.cz",
         "footer.project": "OSINT vzdělávací projekt",
         # ── Dashboard (index) ────────────────────────────────────────────
-        "index.title": "Analyzátor hlasování Poslanecké sněmovny",
+        "index.title": "Hlasování Poslanecké sněmovny",
         "index.subtitle": "OSINT analýza hlasování Poslanecké sněmovny",
         "index.dataset": "Dataset: {period}. volební období ({label})",
         "index.total_votes": "Celkem hlasování",
@@ -190,6 +191,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "vote.passive": "Pasivní",
         "vote.absent": "Nepřítomen",
         "vote.excused": "Omluven",
+        "vote.not_found": "Hlasování nenalezeno",
         # ── Outcome labels ───────────────────────────────────────────────
         "outcome.passed": "Schváleno",
         "outcome.rejected": "Zamítnuto",
@@ -233,7 +235,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     },
     "en": {
         # ── Base / Header / Nav ──────────────────────────────────────────
-        "site.title": "Analyzer",
+        "site.title": "Czech Parliament",
+        "site.short_title": "PSP.cz",
         "site.description": "Czech Parliamentary Voting Analyzer — OSINT tool for psp.cz open data",
         "nav.dashboard": "Dashboard",
         "nav.loyalty": "Party Loyalty",
@@ -247,7 +250,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "footer.source_link": "psp.cz open data",
         "footer.project": "OSINT Educational Project",
         # ── Dashboard (index) ────────────────────────────────────────────
-        "index.title": "Czech Parliament Voting Analyzer",
+        "index.title": "Czech Parliament Voting",
         "index.subtitle": "OSINT analysis of voting records from the Chamber of Deputies (Poslanecka snemovna)",
         "index.dataset": "Dataset: {period}. Electoral Period ({label})",
         "index.total_votes": "Total Votes",
@@ -420,6 +423,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "vote.passive": "Passive",
         "vote.absent": "Absent",
         "vote.excused": "Excused",
+        "vote.not_found": "Vote not found",
         # ── Outcome labels ───────────────────────────────────────────────
         "outcome.passed": "Passed",
         "outcome.rejected": "Rejected",

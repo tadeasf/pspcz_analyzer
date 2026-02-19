@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ _("detail.vote_id").format(id=detail.info.id_hlasovani) }} — Czech Parliament Analyzer{% endblock %}
+{% block title %}{{ _("detail.vote_id").format(id=detail.info.id_hlasovani) }} — {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -194,8 +194,12 @@
                         <span class="vote-no">{{ _("vote.no") }}</span>
                         {% elif mp.vote_label == "ABSTAINED" %}
                         <span class="vote-abstained">{{ _("vote.abstained") }}</span>
+                        {% elif mp.vote_label == "Absent" %}
+                        <span class="vote-passive">{{ _("vote.absent") }}</span>
+                        {% elif mp.vote_label == "Excused" %}
+                        <span class="vote-passive">{{ _("vote.excused") }}</span>
                         {% else %}
-                        <span class="vote-passive">{{ mp.vote_label }}</span>
+                        <span class="vote-passive">{{ _("vote.passive") }}</span>
                         {% endif %}
                     </td>
                 </tr>

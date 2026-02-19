@@ -262,6 +262,21 @@ class OllamaClient:
             return ""
         return self._strip_think(response)
 
+    def summarize_en(self, text: str, title: str) -> str:
+        """Generate an English-language critical summary of a proposed law.
+
+        Returns summary text or empty string on failure.
+        """
+        truncated = truncate_legislative_text(text)
+        prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(
+            title=title or "(no title)",
+            text=truncated,
+        )
+        response = self._generate(prompt, _SUMMARY_SYSTEM_EN)
+        if not response:
+            return ""
+        return self._strip_think(response)
+
     def consolidate_topics(self, all_topics: list[str]) -> dict[str, str]:
         """Consolidate/deduplicate topic labels via the LLM.
 
@@ -333,13 +348,7 @@ class OllamaClient:
         Returns {"cs": ..., "en": ...}. Either may be empty on failure.
         """
         cs = self.summarize(text, title)
-        truncated = truncate_legislative_text(text)
-        prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(
-            title=title or "(no title)",
-            text=truncated,
-        )
-        response = self._generate(prompt, _SUMMARY_SYSTEM_EN)
-        en = self._strip_think(response) if response else ""
+        en = self.summarize_en(text, title)
         return {"cs": cs, "en": en}
 
     def compare_versions_bilingual(

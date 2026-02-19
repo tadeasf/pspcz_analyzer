@@ -195,10 +195,18 @@ Key class: `OllamaClient`
 - `is_available()` — health check against the Ollama API (with auth headers if configured)
 - `classify_topics(name, text)` — LLM-based multi-label topic classification
 - `summarize(name, text)` — generate a concise Czech summary
+- `summarize_en(name, text)` — generate a concise English summary
 - `summarize_bilingual(name, text)` — generate summaries in both Czech and English
 - `compare_versions(text1, text2)` — generate a Czech diff summary between two tisk versions
 - `compare_versions_bilingual(text1, text2)` — generate diff summaries in both Czech and English
 - `consolidate_topics(topics_by_ct)` — ask the LLM to merge/deduplicate topic labels across a period
+
+#### Diagnostic Endpoints
+
+Two JSON endpoints for verifying Ollama connectivity without running the full tisk pipeline:
+
+- **`GET /api/ollama/health`** — Connection check. Returns `{"available": true/false, "base_url": "...", "model": "..."}`. Rate limit: 10/minute.
+- **`GET /api/ollama/smoke-test`** — Concurrent bilingual generation test using a hardcoded Czech legislative sample. Fires two parallel LLM calls (Czech + English summaries) and measures wall-clock time. Returns `{"success": true, "model": "...", "duration_seconds": 4.2, "summary_cs": "...", "summary_en": "...", ...}`. Returns 503 if Ollama is down, 502 on generation failure. Rate limit: 2/minute.
 
 Configuration (in `config.py`, overridable via `.env`):
 

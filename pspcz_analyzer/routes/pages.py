@@ -10,6 +10,7 @@ from starlette.responses import Response
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
+from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.api import validate_period
 from pspcz_analyzer.services.votes_service import vote_detail
@@ -105,7 +106,7 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
     if detail is None:
         return templates.TemplateResponse(
             "votes.html",
-            _ctx(request, period, active_page="votes", error="Vote not found"),
+            _ctx(request, period, active_page="votes", error=_t("vote.not_found")),
         )
     return templates.TemplateResponse(
         "vote_detail.html",
