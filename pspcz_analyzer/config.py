@@ -88,8 +88,11 @@ PSP_ORIG2_BASE_URL = "https://www.psp.cz/sqw/text/orig2.sqw"
 PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
 
 # Ollama (local LLM) integration — optional, falls back to keyword classification
+# For remote HTTPS Ollama, set OLLAMA_BASE_URL (e.g. "https://ollama.example.com")
+# and OLLAMA_API_KEY (Bearer token for Authorization header).
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = "qwen3:8b"
+OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY", "")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:8b")
 OLLAMA_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 OLLAMA_HEALTH_TIMEOUT = 5.0  # connectivity check
 OLLAMA_MAX_TEXT_CHARS = 50000

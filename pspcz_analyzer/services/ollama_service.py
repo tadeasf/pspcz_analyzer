@@ -14,6 +14,7 @@ import httpx
 from loguru import logger
 
 from pspcz_analyzer.config import (
+    OLLAMA_API_KEY,
     OLLAMA_BASE_URL,
     OLLAMA_HEALTH_TIMEOUT,
     OLLAMA_MAX_TEXT_CHARS,
@@ -177,11 +178,15 @@ class OllamaClient:
         base_url: str = OLLAMA_BASE_URL,
         model: str = OLLAMA_MODEL,
         timeout: float = OLLAMA_TIMEOUT,
+        api_key: str = OLLAMA_API_KEY,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
         self._available: bool | None = None
+        self._headers: dict[str, str] = {}
+        if api_key:
+            self._headers["Authorization"] = f"Bearer {api_key}"
 
     def is_available(self) -> bool:
         """Check if Ollama is running and the model is available.
@@ -194,6 +199,7 @@ class OllamaClient:
         try:
             resp = httpx.get(
                 f"{self.base_url}/api/tags",
+                headers=self._headers,
                 timeout=OLLAMA_HEALTH_TIMEOUT,
             )
             resp.raise_for_status()
@@ -363,6 +369,7 @@ class OllamaClient:
         try:
             resp = httpx.post(
                 f"{self.base_url}/api/generate",
+                headers=self._headers,
                 json={
                     "model": self.model,
                     "prompt": prompt,
