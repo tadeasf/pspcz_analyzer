@@ -16,7 +16,7 @@ Built with FastAPI, Polars, and HTMX.
 - **Tisk Pipeline** — background processing that downloads parliamentary print PDFs, extracts text, and classifies topics
 - **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
 - **i18n** — full Czech/English UI localization with a header language switcher
-- **Docker** — containerized deployment with docker-compose (app + Ollama)
+- **Docker** — containerized deployment with docker-compose
 - **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
 
 ## Quick Start
@@ -56,7 +56,7 @@ See `.env.example` for a documented template.
 docker compose up --build
 ```
 
-The app runs at `http://localhost:8000` with a local Ollama sidecar. Override `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` to use a remote Ollama server instead.
+The app runs at `http://localhost:8000`. Configure `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` in `.env` to connect to your Ollama instance on the local network.
 
 ## Tech Stack
 

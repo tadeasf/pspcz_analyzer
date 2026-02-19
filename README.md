@@ -14,7 +14,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Tisk Pipeline** — background processing that downloads parliamentary print PDFs, extracts text, and classifies topics
 - **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
 - **i18n** — full Czech/English UI localization with a header language switcher
-- **Docker** — containerized deployment with docker-compose (app + Ollama)
+- **Docker** — containerized deployment with docker-compose
 - **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
 
 See detailed docs: [Routes](docs/routes.md) | [Services](docs/services.md) | [Templates](docs/templates.md) | [Data Model](docs/data-model.md) | [Testing & CI/CD](docs/testing.md)
@@ -51,16 +51,15 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 ## Docker
 
 ```bash
-# Build and start (app + Ollama)
-docker compose up --build
+# Copy .env and configure Ollama connection
+cp .env.example .env
+# Edit .env to set OLLAMA_BASE_URL and OLLAMA_API_KEY
 
-# Or with a remote Ollama instance
-OLLAMA_BASE_URL=https://ollama.example.com OLLAMA_API_KEY=your_key docker compose up --build
+# Build and start
+docker compose up --build
 ```
 
-The app is available at `http://localhost:8000`. Data cache is persisted in a Docker volume.
-
-See `docker-compose.yml` for the full service configuration (app + Ollama with model persistence).
+The app is available at `http://localhost:8000`. Data cache is persisted in a Docker volume. Ollama runs separately on the local network — configure its address via `OLLAMA_BASE_URL` in `.env`.
 
 ## VPS Deployment
 

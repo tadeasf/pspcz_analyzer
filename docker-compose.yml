@@ -5,23 +5,12 @@ services:
       - "8000:8000"
     volumes:
       - cache-data:/data/cache
+    env_file:
+      - .env
     environment:
       PSPCZ_CACHE_DIR: /data/cache
-      OLLAMA_BASE_URL: http://ollama:11434
-      # OLLAMA_API_KEY: ""  # Set for remote HTTPS Ollama with Bearer auth
-      # OLLAMA_MODEL: "qwen3:8b"  # Override default model
       PSPCZ_DEV: "0"
     restart: unless-stopped
-    depends_on:
-      - ollama
-
-  ollama:
-    image: ollama/ollama:latest
-    volumes:
-      - ollama-models:/root/.ollama
-    ports:
-      - "11434:11434"
 
 volumes:
   cache-data:
-  ollama-models:
