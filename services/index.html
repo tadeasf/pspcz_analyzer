@@ -1,0 +1,2939 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Czech Parliamentary Voting Analyzer — OSINT tool for psp.cz open data">
+      
+      
+      
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/services/">
+      
+      
+        <link rel="prev" href="../routes/">
+      
+      
+        <link rel="next" href="../templates/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>Services - PSP.cz Analyzer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#services" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PSP.cz Analyzer" class="md-header__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PSP.cz Analyzer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Services
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/tadeasf/pspcz_analyzer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    tadeasf/pspcz_analyzer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../data-model/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/pspcz_analyzer/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PSP.cz Analyzer" class="md-nav__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PSP.cz Analyzer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/tadeasf/pspcz_analyzer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    tadeasf/pspcz_analyzer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../routes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Routes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#data-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-download-datadownloaderpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Download (data/downloader.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-parse-dataparserpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Parse (data/parser.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-cache-datacachepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Cache (data/cache.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataservice-servicesdata_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataService (services/data_service.py)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DataService (services/data_service.py)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-period-data-perioddata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Period Data (PeriodData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-lookup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Lookup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis Services
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loyalty-servicesloyalty_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loyalty (services/loyalty_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attendance-servicesattendance_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attendance (services/attendance_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#similarity-servicessimilarity_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Similarity (services/similarity_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#votes-servicesvotes_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Votes (services/votes_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tisk-pipeline-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Pipeline Services
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tisk Pipeline Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tisk-pipeline-service-servicestisk_pipeline_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Pipeline Service (services/tisk_pipeline_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-text-service-servicestisk_text_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Text Service (services/tisk_text_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#topic-service-servicestopic_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topic Service (services/topic_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ollama-service-servicesollama_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ollama Service (services/ollama_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-enrichment-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Enrichment Modules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Enrichment Modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tisk-downloader-datatisk_downloaderpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Downloader (data/tisk_downloader.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-extractor-datatisk_extractorpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Extractor (data/tisk_extractor.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-scraper-datatisk_scraperpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Scraper (data/tisk_scraper.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#history-scraper-datahistory_scraperpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History Scraper (data/history_scraper.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../templates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing & CI/CD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/pspcz_analyzer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pspcz_analyzer
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    pspcz_analyzer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/pspcz_analyzer/data/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    data
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_2" id="__nav_3_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/downloader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    downloader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/history_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    history_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/law_changes_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    law_changes_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/parser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    parser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/tisk_downloader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_downloader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/tisk_extractor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_extractor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/data/tisk_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/logging_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    logging_config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/main/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    main
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/pspcz_analyzer/models/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    models
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_6" id="__nav_3_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/models/enums/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    enums
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/models/schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/models/tisk_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/rate_limit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rate_limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/pspcz_analyzer/routes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    routes
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_8" id="__nav_3_1_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    routes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/routes/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/routes/charts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    charts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/routes/pages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/pspcz_analyzer/services/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    services
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_9" id="__nav_3_1_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    services
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/analysis_cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    analysis_cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/attendance_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    attendance_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/data_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    data_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/loyalty_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    loyalty_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/mp_builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mp_builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/ollama_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ollama_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/similarity_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    similarity_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_cache_manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_cache_manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_classifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_classifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_downloader_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_downloader_pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_lookup_builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_lookup_builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_metadata_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_metadata_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_pipeline_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_pipeline_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_text_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_text_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/tisk_version_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_version_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/topic_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    topic_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/votes_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    votes_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/pspcz_analyzer/utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_10" id="__nav_3_1_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/utils/text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    text
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#data-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-download-datadownloaderpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Download (data/downloader.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-parse-dataparserpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Parse (data/parser.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-cache-datacachepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Cache (data/cache.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataservice-servicesdata_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataService (services/data_service.py)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DataService (services/data_service.py)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-period-data-perioddata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Period Data (PeriodData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-lookup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Lookup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis Services
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loyalty-servicesloyalty_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loyalty (services/loyalty_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attendance-servicesattendance_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attendance (services/attendance_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#similarity-servicessimilarity_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Similarity (services/similarity_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#votes-servicesvotes_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Votes (services/votes_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tisk-pipeline-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Pipeline Services
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tisk Pipeline Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tisk-pipeline-service-servicestisk_pipeline_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Pipeline Service (services/tisk_pipeline_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-text-service-servicestisk_text_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Text Service (services/tisk_text_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#topic-service-servicestopic_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topic Service (services/topic_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ollama-service-servicesollama_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ollama Service (services/ollama_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-enrichment-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Enrichment Modules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Enrichment Modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tisk-downloader-datatisk_downloaderpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Downloader (data/tisk_downloader.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-extractor-datatisk_extractorpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Extractor (data/tisk_extractor.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tisk-scraper-datatisk_scraperpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tisk Scraper (data/tisk_scraper.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#history-scraper-datahistory_scraperpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History Scraper (data/history_scraper.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="services">Services<a class="headerlink" href="#services" title="Permanent link">&para;</a></h1>
+<h2 id="data-pipeline">Data Pipeline<a class="headerlink" href="#data-pipeline" title="Permanent link">&para;</a></h2>
+<p>Data flows through three stages before it reaches the analysis services:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>psp.cz ZIPs  →  UNL files (extracted)  →  Polars DataFrames  →  Parquet cache
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>     ↓                  ↓                        ↓
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> downloader.py      parser.py               cache.py
+</code></pre></div>
+<h3 id="1-download-datadownloaderpy">1. Download (<code>data/downloader.py</code>)<a class="headerlink" href="#1-download-datadownloaderpy" title="Permanent link">&para;</a></h3>
+<p>Downloads ZIP archives from <code>https://www.psp.cz/eknih/cdrom/opendata</code>:</p>
+<ul>
+<li><code>hl-{year}ps.zip</code> — voting data for a specific period</li>
+<li><code>poslanci.zip</code> — MP/person/organ/membership data (shared)</li>
+<li><code>schuze.zip</code> — session and agenda data</li>
+<li><code>tisky.zip</code> — parliamentary prints (bills, proposals)</li>
+</ul>
+<p>Files are cached in <code>~/.cache/pspcz-analyzer/psp/raw/</code>. Skips download if the file already exists.</p>
+<h3 id="2-parse-dataparserpy">2. Parse (<code>data/parser.py</code>)<a class="headerlink" href="#2-parse-dataparserpy" title="Permanent link">&para;</a></h3>
+<p>UNL files are pipe-delimited with no header row, Windows-1250 encoded, and have a trailing pipe on each line (producing an extra empty column that gets dropped).</p>
+<ul>
+<li><code>parse_unl()</code> — parses a single file given column names and optional dtype casts</li>
+<li><code>parse_unl_multi()</code> — parses multiple files matching a glob pattern and concatenates them (used for per-session vote files like <code>hl2025h1.unl</code>, <code>hl2025h2.unl</code>, ...)</li>
+</ul>
+<p>CSV quoting is always disabled (<code>quote_char=None</code>) because UNL files never use CSV-style quoting — any double quotes in the data are literal characters.</p>
+<h3 id="3-cache-datacachepy">3. Cache (<code>data/cache.py</code>)<a class="headerlink" href="#3-cache-datacachepy" title="Permanent link">&para;</a></h3>
+<p><code>get_or_parse()</code> checks if a Parquet file exists and is newer than the source. If so, it loads from Parquet; otherwise it calls the parse function and caches the result. Cache lives at <code>~/.cache/pspcz-analyzer/psp/parquet/</code>.</p>
+<h2 id="dataservice-servicesdata_servicepy">DataService (<code>services/data_service.py</code>)<a class="headerlink" href="#dataservice-servicesdata_servicepy" title="Permanent link">&para;</a></h2>
+<p>Central orchestrator, initialized at app startup via FastAPI lifespan and stored on <code>app.state.data</code>.</p>
+<h3 id="shared-tables">Shared Tables<a class="headerlink" href="#shared-tables" title="Permanent link">&para;</a></h3>
+<p>Loaded once, used across all periods:</p>
+<ul>
+<li><strong>osoby</strong> — persons (id_osoba, name, etc.)</li>
+<li><strong>poslanec</strong> — MP records linking person to period</li>
+<li><strong>organy</strong> — organs/organizations (parties, committees, etc.)</li>
+<li><strong>zarazeni</strong> — memberships (which person belongs to which organ)</li>
+<li><strong>schuze / bod_schuze / tisky</strong> — sessions, agenda items, parliamentary prints</li>
+</ul>
+<h3 id="per-period-data-perioddata">Per-Period Data (<code>PeriodData</code>)<a class="headerlink" href="#per-period-data-perioddata" title="Permanent link">&para;</a></h3>
+<p>Loaded on demand when a period is first requested:</p>
+<ul>
+<li><strong>votes</strong> (<code>hl_hlasovani</code>) — vote summaries (date, result, counts)</li>
+<li><strong>mp_votes</strong> (<code>hl_poslanec</code>) — individual MP votes per vote event</li>
+<li><strong>void_votes</strong> (<code>zmatecne</code>) — IDs of void votes (always filtered out)</li>
+<li><strong>mp_info</strong> — derived table: id_poslanec → name + current party</li>
+<li><strong>tisk_lookup</strong> — <code>dict[(schuze_num, bod_num), TiskInfo]</code> linking votes to parliamentary prints</li>
+</ul>
+<h3 id="tisk-lookup">Tisk Lookup<a class="headerlink" href="#tisk-lookup" title="Permanent link">&para;</a></h3>
+<p>Two strategies for linking votes to parliamentary prints:</p>
+<ol>
+<li><strong>Primary</strong>: schuze → bod_schuze → tisky (via session/agenda item IDs)</li>
+<li><strong>Fallback</strong>: text-match vote descriptions against tisk names (for new periods where schuze.zip hasn't been updated yet)</li>
+</ol>
+<h2 id="analysis-services">Analysis Services<a class="headerlink" href="#analysis-services" title="Permanent link">&para;</a></h2>
+<p>All services take a <code>PeriodData</code> instance and return <code>list[dict]</code>. Void votes are always excluded.</p>
+<h3 id="loyalty-servicesloyalty_servicepy">Loyalty (<code>services/loyalty_service.py</code>)<a class="headerlink" href="#loyalty-servicesloyalty_servicepy" title="Permanent link">&para;</a></h3>
+<p>Computes rebellion rates — how often an MP votes against their party's majority.</p>
+<ol>
+<li>Filter to active votes only (YES or NO; abstentions excluded)</li>
+<li>For each (vote, party) pair, determine majority direction (YES or NO; ties excluded)</li>
+<li>An MP "rebels" when their vote differs from the party majority</li>
+<li><code>rebellion_pct = rebellions / active_votes_with_clear_direction * 100</code></li>
+</ol>
+<p>Supports filtering by party code.</p>
+<h3 id="attendance-servicesattendance_servicepy">Attendance (<code>services/attendance_service.py</code>)<a class="headerlink" href="#attendance-servicesattendance_servicepy" title="Permanent link">&para;</a></h3>
+<p>Computes participation rates with category breakdowns and vote type breakdown (YES/NO/ABSTAINED).</p>
+<p>Vote categories:
+- <strong>Active</strong>: YES (<code>A</code>), NO (<code>B</code>), ABSTAINED (<code>C</code>)
+- <strong>Passive</strong>: registered but no button press (<code>F</code>)
+- <strong>Absent</strong>: not registered (<code>@</code>)
+- <strong>Excused</strong>: formally excused (<code>M</code>)</p>
+<p>Formula: <code>attendance_pct = active / (total - excused) * 100</code></p>
+<p>Excused absences are excluded from the denominator (legitimate absences don't penalize).</p>
+<p>Sort modes:
+- <code>worst</code> — lowest attendance first (default)
+- <code>best</code> — highest attendance first
+- <code>most_active</code> — ranked by raw volume of active votes (YES + NO + ABSTAINED), rewarding consistent long-term participation</p>
+<p>Supports filtering by party code.</p>
+<h3 id="similarity-servicessimilarity_servicepy">Similarity (<code>services/similarity_service.py</code>)<a class="headerlink" href="#similarity-servicessimilarity_servicepy" title="Permanent link">&para;</a></h3>
+<p>Two outputs from the same vote matrix (MPs x votes, values: +1 YES, -1 NO, 0 other):</p>
+<p><strong>PCA Projection</strong> (<code>compute_pca_coords</code>):
+- Centers the matrix, runs SVD, projects to 2D
+- Returns (x, y) coordinates per MP for scatter plot visualization</p>
+<p><strong>Cross-Party Pairs</strong> (<code>compute_cross_party_similarity</code>):
+- Computes cosine similarity between all MP pairs
+- Filters to cross-party pairs only
+- Returns top N most similar pairs</p>
+<h3 id="votes-servicesvotes_servicepy">Votes (<code>services/votes_service.py</code>)<a class="headerlink" href="#votes-servicesvotes_servicepy" title="Permanent link">&para;</a></h3>
+<p><strong><code>list_votes()</code></strong> — paginated vote listing with text search, outcome filtering, and topic filtering. Enriches each row with tisk links (to psp.cz source documents).</p>
+<p><strong><code>vote_detail()</code></strong> — full breakdown of a single vote: metadata, per-party aggregates (YES/NO/ABSTAINED/etc. per party), per-MP individual votes, legislative history timeline, AI summary, and topic labels.</p>
+<h2 id="tisk-pipeline-services">Tisk Pipeline Services<a class="headerlink" href="#tisk-pipeline-services" title="Permanent link">&para;</a></h2>
+<p>The tisk (parliamentary print) pipeline runs as a background process, downloading PDFs, extracting text, classifying topics, and scraping legislative histories.</p>
+<h3 id="tisk-pipeline-service-servicestisk_pipeline_servicepy">Tisk Pipeline Service (<code>services/tisk_pipeline_service.py</code>)<a class="headerlink" href="#tisk-pipeline-service-servicestisk_pipeline_servicepy" title="Permanent link">&para;</a></h3>
+<p>Background processing orchestrator that coordinates the full tisk data enrichment pipeline. Started automatically at app startup for all periods (newest first).</p>
+<p>Pipeline stages per period:
+1. <strong>Download</strong> — fetch PDF documents from psp.cz for each print
+2. <strong>Extract</strong> — convert PDFs to plain text using PyMuPDF
+3. <strong>Classify</strong> — assign topic labels via Ollama LLM (or keyword fallback)
+4. <strong>Consolidate</strong> — merge per-tisk topic classifications into a single Parquet cache
+5. <strong>Scrape histories</strong> — fetch legislative process timelines from psp.cz HTML pages</p>
+<p>Key class: <code>TiskPipelineService</code>
+- <code>start_period(period)</code> — launch background pipeline for a single period
+- <code>start_all_periods()</code> — launch pipeline for all configured periods sequentially
+- <code>is_running(period)</code> — check if a period's pipeline is still running</p>
+<h3 id="tisk-text-service-servicestisk_text_servicepy">Tisk Text Service (<code>services/tisk_text_service.py</code>)<a class="headerlink" href="#tisk-text-service-servicestisk_text_servicepy" title="Permanent link">&para;</a></h3>
+<p>Cache and retrieval layer for extracted tisk PDF text. Used by the <code>/api/tisk-text</code> endpoint for lazy-loading on vote detail pages.</p>
+<p>Key class: <code>TiskTextService</code>
+- <code>get_text(period, ct)</code> — retrieve cached plain text for a print, or <code>None</code> if not yet extracted
+- <code>has_text(period, ct)</code> — check if text exists in cache
+- <code>available_tisky(period)</code> — list all print numbers with cached text</p>
+<p>Text files are stored at <code>~/.cache/pspcz-analyzer/psp/tisky_text/{period}/{ct}.txt</code>.</p>
+<h3 id="topic-service-servicestopic_servicepy">Topic Service (<code>services/topic_service.py</code>)<a class="headerlink" href="#topic-service-servicestopic_servicepy" title="Permanent link">&para;</a></h3>
+<p>Keyword-based topic classifier — the fast, offline fallback when Ollama is unavailable.</p>
+<p>Uses a <code>TOPIC_TAXONOMY</code> dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords.</p>
+<p>Functions:
+- <code>classify_tisk(name, text)</code> — returns all matching topic labels
+- <code>classify_tisk_primary_label(name, text)</code> — returns the single best-matching topic</p>
+<h3 id="ollama-service-servicesollama_servicepy">Ollama Service (<code>services/ollama_service.py</code>)<a class="headerlink" href="#ollama-service-servicesollama_servicepy" title="Permanent link">&para;</a></h3>
+<p>LLM-based topic classification and summarization using a local Ollama instance. This is optional — if Ollama is not running, the system falls back to keyword classification.</p>
+<p>Key class: <code>OllamaClient</code>
+- <code>is_available()</code> — health check against the Ollama API
+- <code>classify_topics(name, text)</code> — LLM-based multi-label topic classification
+- <code>summarize(name, text)</code> — generate a concise summary of the legislative text
+- <code>consolidate_topics(topics_by_ct)</code> — ask the LLM to merge/deduplicate topic labels across a period</p>
+<p>Configuration (in <code>config.py</code>):
+- <code>OLLAMA_BASE_URL</code> — default <code>http://localhost:11434</code>
+- <code>OLLAMA_MODEL</code> — default <code>qwen3:8b</code>
+- <code>OLLAMA_TIMEOUT</code> — per-request timeout (300s, generous for CPU inference)
+- <code>OLLAMA_MAX_TEXT_CHARS</code> — maximum text length sent to the LLM (50,000 chars)</p>
+<h2 id="data-enrichment-modules">Data Enrichment Modules<a class="headerlink" href="#data-enrichment-modules" title="Permanent link">&para;</a></h2>
+<h3 id="tisk-downloader-datatisk_downloaderpy">Tisk Downloader (<code>data/tisk_downloader.py</code>)<a class="headerlink" href="#tisk-downloader-datatisk_downloaderpy" title="Permanent link">&para;</a></h3>
+<p>Downloads PDF documents for parliamentary prints from psp.cz.</p>
+<ul>
+<li><code>download_tisk_pdf(period, ct)</code> — download a single print's PDF</li>
+<li><code>download_period_tisky(period, ct_list)</code> — batch download for a period</li>
+</ul>
+<p>PDFs are cached at <code>~/.cache/pspcz-analyzer/psp/tisky_pdf/{period}/{ct}.pdf</code>.</p>
+<h3 id="tisk-extractor-datatisk_extractorpy">Tisk Extractor (<code>data/tisk_extractor.py</code>)<a class="headerlink" href="#tisk-extractor-datatisk_extractorpy" title="Permanent link">&para;</a></h3>
+<p>Extracts plain text from downloaded PDF files using PyMuPDF (fitz).</p>
+<ul>
+<li><code>extract_text_from_pdf(pdf_path)</code> — extract text from a single PDF</li>
+<li><code>extract_and_cache(period, ct)</code> — extract and save to the text cache</li>
+<li><code>extract_period_texts(period)</code> — batch extract all PDFs for a period</li>
+</ul>
+<h3 id="tisk-scraper-datatisk_scraperpy">Tisk Scraper (<code>data/tisk_scraper.py</code>)<a class="headerlink" href="#tisk-scraper-datatisk_scraperpy" title="Permanent link">&para;</a></h3>
+<p>Scrapes psp.cz HTML pages to discover available PDF documents for a given print.</p>
+<ul>
+<li><code>scrape_tisk_documents(period, ct)</code> — returns list of <code>TiskDocument</code> objects (URLs, types)</li>
+<li><code>get_best_pdf(documents)</code> — selects the most relevant PDF from available documents</li>
+</ul>
+<h3 id="history-scraper-datahistory_scraperpy">History Scraper (<code>data/history_scraper.py</code>)<a class="headerlink" href="#history-scraper-datahistory_scraperpy" title="Permanent link">&para;</a></h3>
+<p>Scrapes legislative process history from psp.cz HTML pages for each parliamentary print.</p>
+<ul>
+<li><code>scrape_tisk_history(period, ct)</code> — returns a <code>TiskHistory</code> object with a list of <code>TiskHistoryStage</code> entries</li>
+<li><code>save_history_json(period, ct, history)</code> / <code>load_history_json(period, ct)</code> — JSON cache persistence</li>
+</ul>
+<p>Each <code>TiskHistoryStage</code> contains:
+- <code>stage_type</code> — e.g. "1. čtení", "2. čtení", "3. čtení", "Senát", "Prezident"
+- <code>label</code> — human-readable label
+- <code>date</code> — when the stage occurred
+- <code>outcome</code> — result text (approved, rejected, etc.)
+- <code>vote_number</code> — link to the specific vote, if applicable</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.instant", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
