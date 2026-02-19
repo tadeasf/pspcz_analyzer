@@ -342,7 +342,8 @@ label {
 input[type="text"],
 input[type="number"],
 input[type="search"],
-select {
+select,
+textarea {
     width: 100%;
     padding: 0.4rem 0.5rem;
     font-size: 0.9rem;
@@ -355,7 +356,7 @@ select {
     transition: border-color 0.15s;
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
     border-color: #3C71AC;
     background: #FAFBFD;
     box-shadow: 0 0 0 2px rgba(60, 113, 172, 0.12);

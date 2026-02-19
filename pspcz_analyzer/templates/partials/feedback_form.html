@@ -1,0 +1,24 @@
+{% set suffix = feedback_id_suffix | default("") %}
+<div id="feedback-area{{ suffix }}" style="padding: 0.75rem 0;">
+    <form hx-post="/api/feedback"
+          hx-target="#feedback-area{{ suffix }}"
+          hx-swap="outerHTML"
+          hx-indicator="#feedback-loading{{ suffix }}">
+        <input type="hidden" name="vote_id" value="{{ detail.info.id_hlasovani if detail is defined else 0 }}">
+        <input type="hidden" name="period" value="{{ period }}">
+        <div style="margin-bottom: 0.5rem;">
+            <label for="feedback-title{{ suffix }}">{{ _("feedback.title_label") }}</label>
+            <input type="text" id="feedback-title{{ suffix }}" name="title"
+                   minlength="5" maxlength="200" required
+                   placeholder="{{ _('feedback.title_placeholder') }}">
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+            <label for="feedback-body{{ suffix }}">{{ _("feedback.body_label") }}</label>
+            <textarea id="feedback-body{{ suffix }}" name="body"
+                      rows="4" minlength="10" maxlength="2000" required
+                      placeholder="{{ _('feedback.body_placeholder') }}"></textarea>
+        </div>
+        <button type="submit">{{ _("feedback.submit") }}</button>
+        <span id="feedback-loading{{ suffix }}" class="htmx-indicator" aria-busy="true" style="margin-left: 0.5rem;">{{ _("loading") }}</span>
+    </form>
+</div>

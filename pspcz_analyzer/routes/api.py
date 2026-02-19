@@ -6,11 +6,17 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from pspcz_analyzer.config import DEFAULT_CACHE_DIR, DEFAULT_PERIOD, PERIOD_YEARS, TISKY_TEXT_DIR
+from pspcz_analyzer.config import (
+    DEFAULT_CACHE_DIR,
+    DEFAULT_PERIOD,
+    GITHUB_FEEDBACK_ENABLED,
+    PERIOD_YEARS,
+    TISKY_TEXT_DIR,
+)
 from pspcz_analyzer.data.law_changes_scraper import (
     load_related_bills_json,
     save_related_bills_json,
@@ -21,6 +27,7 @@ from pspcz_analyzer.middleware import run_with_timeout
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
+from pspcz_analyzer.services.feedback_service import GitHubFeedbackClient
 from pspcz_analyzer.services.loyalty_service import compute_loyalty
 from pspcz_analyzer.services.ollama_service import OllamaClient
 from pspcz_analyzer.services.similarity_service import compute_cross_party_similarity
@@ -209,6 +216,7 @@ async def tisk_evolution_api(
             "law_changes": law_changes,
             "sub_versions": sub_versions,
             "lang": getattr(request.state, "lang", "cs"),
+            "feedback_enabled": GITHUB_FEEDBACK_ENABLED,
         },
     )
 
@@ -267,6 +275,80 @@ async def related_bills_api(
         "</tr></thead>"
         f"<tbody>{rows_html}</tbody>"
         "</table>"
+    )
+
+
+def _validate_feedback_fields(title: str, body: str) -> str | None:
+    """Return an error message if feedback fields are invalid, else None."""
+    if len(title) < 5 or len(title) > 200 or len(body) < 10 or len(body) > 2000:
+        return _t("feedback.error_validation")
+    return None
+
+
+@router.post("/feedback", response_class=HTMLResponse)
+@limiter.limit("3/hour")
+async def feedback_api(
+    request: Request,
+    vote_id: int = Form(default=0),
+    period: int = Form(default=0),
+    title: str = Form(default=""),
+    body: str = Form(default=""),
+):
+    """Submit user feedback as a GitHub issue."""
+    lang = getattr(request.state, "lang", "cs")
+    suffix = ""
+
+    if not GITHUB_FEEDBACK_ENABLED:
+        return templates.TemplateResponse(
+            "partials/feedback_result.html",
+            {
+                "request": request,
+                "success": False,
+                "error_message": _t("feedback.disabled"),
+                "feedback_id_suffix": suffix,
+                "lang": lang,
+            },
+        )
+
+    validation_error = _validate_feedback_fields(title, body)
+    if validation_error:
+        return templates.TemplateResponse(
+            "partials/feedback_result.html",
+            {
+                "request": request,
+                "success": False,
+                "error_message": validation_error,
+                "feedback_id_suffix": suffix,
+                "lang": lang,
+            },
+        )
+
+    page_url = str(request.headers.get("referer", f"/votes/{vote_id}?period={period}"))
+    client = GitHubFeedbackClient()
+    result = await asyncio.to_thread(
+        client.create_issue, title, body, vote_id, period, page_url, lang
+    )
+
+    if result:
+        return templates.TemplateResponse(
+            "partials/feedback_result.html",
+            {
+                "request": request,
+                "success": True,
+                "issue_url": result["html_url"],
+                "feedback_id_suffix": suffix,
+                "lang": lang,
+            },
+        )
+    return templates.TemplateResponse(
+        "partials/feedback_result.html",
+        {
+            "request": request,
+            "success": False,
+            "error_message": _t("feedback.error_generic"),
+            "feedback_id_suffix": suffix,
+            "lang": lang,
+        },
     )
 
 

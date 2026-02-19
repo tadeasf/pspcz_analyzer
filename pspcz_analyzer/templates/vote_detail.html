@@ -38,6 +38,13 @@
     </div>
     {% endif %}
 
+    {% if feedback_enabled %}
+    <details style="margin: 0.75rem 0;">
+        <summary>{{ _("feedback.button") }}</summary>
+        {% include "partials/feedback_form.html" %}
+    </details>
+    {% endif %}
+
     {% if detail.info.tisk_current_stage %}
     <p>
         <strong>{{ _("detail.this_vote") }}</strong>

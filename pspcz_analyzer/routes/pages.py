@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from scalar_fastapi import get_scalar_api_reference
 from starlette.responses import Response
 
-from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.config import DEFAULT_PERIOD, GITHUB_FEEDBACK_ENABLED
 from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
 from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.rate_limit import limiter
@@ -110,7 +110,13 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
         )
     return templates.TemplateResponse(
         "vote_detail.html",
-        _ctx(request, period, detail=detail, active_page="votes"),
+        _ctx(
+            request,
+            period,
+            detail=detail,
+            active_page="votes",
+            feedback_enabled=GITHUB_FEEDBACK_ENABLED,
+        ),
     )
 
 

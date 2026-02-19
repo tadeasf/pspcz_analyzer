@@ -94,6 +94,15 @@
         </div>
     </div>
     {% endif %}
+
+    {% if feedback_enabled %}
+    <details style="margin: 0.75rem 0 0;">
+        <summary>{{ _("feedback.button") }}</summary>
+        {% with feedback_id_suffix="-evolution" %}
+        {% include "partials/feedback_form.html" %}
+        {% endwith %}
+    </details>
+    {% endif %}
 </div>
 {% else %}
 <p style="color: #6c757d; font-size: 0.85rem; margin-top: 0.5rem;">
