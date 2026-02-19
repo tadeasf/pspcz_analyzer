@@ -1,5 +1,6 @@
 """Data service: orchestrates download, parsing, caching, and holds DataFrames."""
 
+import asyncio
 from pathlib import Path
 
 import polars as pl
@@ -43,6 +44,7 @@ from pspcz_analyzer.models.schemas import (
     ZMATECNE_DTYPES,
 )
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.mp_builder import build_mp_info
 from pspcz_analyzer.services.tisk_cache_manager import TiskCacheManager
 from pspcz_analyzer.services.tisk_lookup_builder import build_tisk_lookup
@@ -59,6 +61,7 @@ class DataService:
         self.tisk_text = TiskTextService(cache_dir)
         self.tisk_pipeline = TiskPipelineService(cache_dir)
         self._cache_mgr = TiskCacheManager(cache_dir)
+        self._refresh_lock = asyncio.Lock()
 
         # Shared tables (not period-specific), populated by _load_shared_tables
         self._persons: pl.DataFrame | None = None
@@ -420,3 +423,67 @@ class DataService:
             logger.info("[tisk pipeline] Updated in-memory tisk data for period {}", p)
 
         self.tisk_pipeline.start_all_periods(period_ct, on_complete=_on_complete)
+
+    def _force_reload_shared_tables(self) -> None:
+        """Re-download and re-parse all shared tables (MPs, organs, sessions, tisky)."""
+        self._persons = None
+        self._mps = None
+        self._organs = None
+        self._memberships = None
+        self._poslanci_dir = None
+        self._schuze = None
+        self._bod_schuze = None
+        self._tisky = None
+
+        download_poslanci_data(self.cache_dir, force=True)
+        download_schuze_data(self.cache_dir, force=True)
+        download_tisky_data(self.cache_dir, force=True)
+        self._load_shared_tables()
+
+    def _force_reload_period(self, period: int) -> None:
+        """Re-download and re-parse voting data for a single period."""
+        download_voting_data(period, self.cache_dir, force=True)
+        self._load_period(period)
+
+    async def refresh_all_data(self) -> None:
+        """Re-download all data from psp.cz and reload in-memory state.
+
+        Pauses the tisk AI pipeline, refreshes data, then restarts the pipeline.
+        Safe for concurrent HTTP requests — old data stays valid until swapped.
+        """
+        if self._refresh_lock.locked():
+            logger.warning("[daily-refresh] Refresh already in progress, skipping")
+            return
+
+        async with self._refresh_lock:
+            logger.info("[daily-refresh] Starting full data refresh ...")
+
+            # 1. Cancel tisk pipeline
+            await self.tisk_pipeline.cancel_all()
+
+            # 2. Re-download and reload shared tables
+            try:
+                await asyncio.to_thread(self._force_reload_shared_tables)
+                logger.info("[daily-refresh] Shared tables reloaded")
+            except Exception:
+                logger.opt(exception=True).error("[daily-refresh] Failed to reload shared tables")
+
+            # 3. Re-download and reload each loaded period
+            for period in list(self._periods.keys()):
+                try:
+                    await asyncio.to_thread(self._force_reload_period, period)
+                    logger.info("[daily-refresh] Period {} reloaded", period)
+                except Exception:
+                    logger.opt(exception=True).error(
+                        "[daily-refresh] Failed to reload period {}", period
+                    )
+
+            # 4. Invalidate analysis caches
+            analysis_cache.invalidate()
+            for period in self._periods:
+                self._cache_mgr.invalidate(period)
+
+            # 5. Restart tisk pipeline with fresh data
+            self.start_all_tisk_pipelines()
+
+            logger.info("[daily-refresh] Full data refresh complete")

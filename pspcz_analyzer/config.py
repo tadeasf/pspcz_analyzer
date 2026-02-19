@@ -102,3 +102,7 @@ OLLAMA_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 OLLAMA_HEALTH_TIMEOUT = 5.0  # connectivity check
 OLLAMA_MAX_TEXT_CHARS = 50000
 OLLAMA_VERBATIM_CHARS = 40000
+
+# Daily data refresh — re-downloads psp.cz data and reloads in-memory state
+DAILY_REFRESH_ENABLED = os.environ.get("DAILY_REFRESH_ENABLED", "1") == "1"
+DAILY_REFRESH_HOUR = int(os.environ.get("DAILY_REFRESH_HOUR", "3"))

@@ -47,6 +47,8 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
 | `OLLAMA_MODEL` | `qwen3:8b` | Model for topic classification and summarization |
+| `DAILY_REFRESH_ENABLED` | `1` | Enable daily re-download of psp.cz data |
+| `DAILY_REFRESH_HOUR` | `3` | Hour (CET, 0-23) for daily data refresh |
 
 ## Docker
 

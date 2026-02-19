@@ -175,6 +175,8 @@ All configuration is via environment variables, loaded from `.env` by `python-do
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
 | `OLLAMA_MODEL` | `qwen3:8b` | Model for inference |
+| `DAILY_REFRESH_ENABLED` | `1` | `1` to enable daily data refresh, `0` to disable |
+| `DAILY_REFRESH_HOUR` | `3` | Hour (CET, 0-23) at which the daily refresh runs |
 
 ### Ollama Configuration
 

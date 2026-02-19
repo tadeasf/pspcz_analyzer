@@ -162,6 +162,7 @@ Key class: `TiskPipelineService`
 - `start_period(period)` — launch background pipeline for a single period
 - `start_all_periods()` — launch pipeline for all configured periods sequentially
 - `is_running(period)` — check if a period's pipeline is still running
+- `cancel_all()` — cancel all running pipeline tasks (used by the daily refresh service)
 
 ### Tisk Text Service (`services/tisk_text_service.py`)
 
@@ -219,6 +220,33 @@ Compares different versions (sub-tisky) of the same parliamentary print using LL
 ### Tisk Cache Manager (`services/tisk_cache_manager.py`)
 
 Manages loading and caching of tisk enrichment data (topic classifications, summaries, English summaries, version diffs, legislative histories) from the file-based cache.
+
+## Daily Refresh Service (`services/daily_refresh_service.py`)
+
+Asyncio-based daily scheduler that re-downloads fresh data from psp.cz and reloads all in-memory state. Ensures the app serves up-to-date voting data without manual restarts.
+
+### How It Works
+
+1. Sleeps until the configured hour (default: 03:00 CET)
+2. Pauses the tisk AI pipeline via `TiskPipelineService.cancel_all()`
+3. Re-downloads shared tables (MPs, organs, sessions, tisky) with `force=True`
+4. Re-downloads and reloads each loaded electoral period's voting data
+5. Invalidates all analysis caches
+6. Restarts the tisk pipeline (resumes incrementally — no AI work is lost)
+
+Key class: `DailyRefreshService`
+- `start()` — start the scheduler loop (idempotent, respects `DAILY_REFRESH_ENABLED`)
+- `stop()` — cancel the scheduler gracefully
+- `trigger_now()` — manually trigger an immediate refresh (for admin/debug use)
+
+Configuration:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DAILY_REFRESH_ENABLED` | `1` | `1` to enable, `0` to disable |
+| `DAILY_REFRESH_HOUR` | `3` | Hour (CET, 0-23) at which the daily refresh runs |
+
+The refresh itself takes ~1-5 minutes (downloads + parsing). The tisk AI pipeline's incremental resume logic (Parquet checkpointing, JSON caching, file caching) ensures no AI work is redone after restart.
 
 ## Data Enrichment Modules
 

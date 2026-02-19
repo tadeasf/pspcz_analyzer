@@ -25,6 +25,7 @@ from pspcz_analyzer.routes.api import templates as api_templates
 from pspcz_analyzer.routes.charts import router as charts_router
 from pspcz_analyzer.routes.pages import router as pages_router
 from pspcz_analyzer.routes.pages import templates as pages_templates
+from pspcz_analyzer.services.daily_refresh_service import DailyRefreshService
 from pspcz_analyzer.services.data_service import DataService
 
 setup_logging()
@@ -43,7 +44,16 @@ async def lifespan(app: FastAPI):
     # Start background tisk pipeline for all periods (newest first)
     svc.start_all_tisk_pipelines()
 
+    # Start daily data refresh scheduler
+    refresh_svc = DailyRefreshService(svc)
+    refresh_svc.start()
+    app.state.refresh = refresh_svc
+
     yield
+
+    # Graceful shutdown
+    await refresh_svc.stop()
+    await svc.tisk_pipeline.cancel_all()
 
 
 app = FastAPI(

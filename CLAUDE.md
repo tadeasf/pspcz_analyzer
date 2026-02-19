@@ -31,6 +31,8 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
 - `OLLAMA_API_KEY` — Bearer token for remote HTTPS Ollama (default: empty)
 - `OLLAMA_MODEL` — model name (default: `qwen3:8b`)
+- `DAILY_REFRESH_ENABLED` — `1` to enable daily data refresh, `0` to disable (default: `1`)
+- `DAILY_REFRESH_HOUR` — hour (CET, 0-23) for daily refresh (default: `3`)
 
 ## Architecture
 

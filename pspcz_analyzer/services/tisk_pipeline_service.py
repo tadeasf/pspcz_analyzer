@@ -81,16 +81,20 @@ class TiskPipelineService:
         on_complete,
     ) -> None:
         """Process periods one by one, sequentially."""
-        for period, ct_numbers in period_ct_numbers:
-            if not ct_numbers:
-                continue
-            logger.info(
-                "[tisk pipeline] === Starting period {} ({} tisky) ===",
-                period,
-                len(ct_numbers),
-            )
-            await self._run_period(period, ct_numbers, on_complete)
-        logger.info("[tisk pipeline] === All periods processed ===")
+        try:
+            for period, ct_numbers in period_ct_numbers:
+                if not ct_numbers:
+                    continue
+                logger.info(
+                    "[tisk pipeline] === Starting period {} ({} tisky) ===",
+                    period,
+                    len(ct_numbers),
+                )
+                await self._run_period(period, ct_numbers, on_complete)
+            logger.info("[tisk pipeline] === All periods processed ===")
+        except asyncio.CancelledError:
+            logger.info("[tisk pipeline] All-periods pipeline cancelled")
+            raise
 
     async def _run_period(self, period: int, ct_numbers: list[int], on_complete) -> None:
         """Run the full pipeline in a thread to avoid blocking the event loop."""
@@ -159,9 +163,33 @@ class TiskPipelineService:
                     subtisk_map,
                     version_diffs,
                 )
+        except asyncio.CancelledError:
+            logger.info("[tisk pipeline] Pipeline cancelled for period {}", period)
+            raise
         except Exception:
             logger.opt(exception=True).error("[tisk pipeline] Failed for period {}", period)
 
     def is_running(self, period: int) -> bool:
         task = self._tasks.get(period)
         return task is not None and not task.done()
+
+    async def cancel_all(self) -> None:
+        """Cancel all running pipeline tasks and wait for them to finish."""
+        tasks_to_cancel: list[asyncio.Task] = []
+
+        if self._all_task is not None and not self._all_task.done():
+            self._all_task.cancel()
+            tasks_to_cancel.append(self._all_task)
+
+        for task in self._tasks.values():
+            if not task.done():
+                task.cancel()
+                tasks_to_cancel.append(task)
+
+        if tasks_to_cancel:
+            logger.info("[tisk pipeline] Cancelling {} tasks ...", len(tasks_to_cancel))
+            await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
+            logger.info("[tisk pipeline] All tasks cancelled")
+
+        self._tasks.clear()
+        self._all_task = None
