@@ -1,0 +1,17 @@
+{% set suffix = feedback_id_suffix | default("") %}
+<div id="feedback-area{{ suffix }}">
+    {% if success %}
+    <div class="info-box" style="background: #e8f5e9; border-color: #a5d6a7;">
+        <p style="color: #2e7d32; margin: 0;">
+            {{ _("feedback.success") }}
+            {% if issue_url %}
+            <a href="{{ issue_url }}" target="_blank">{{ _("feedback.issue_link") }} &nearr;</a>
+            {% endif %}
+        </p>
+    </div>
+    {% else %}
+    <div class="info-box" style="background: #ffebee; border-color: #ef9a9a;">
+        <p style="color: #c62828; margin: 0;">{{ error_message }}</p>
+    </div>
+    {% endif %}
+</div>

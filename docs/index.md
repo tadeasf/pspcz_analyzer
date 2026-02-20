@@ -14,7 +14,9 @@ Built with FastAPI, Polars, and HTMX.
 - **Chart Endpoints** — server-rendered PNG charts (seaborn/matplotlib)
 - **Multi-period Support** — covers all 10 electoral periods (1993 to present)
 - **Tisk Pipeline** — background processing that downloads parliamentary print PDFs, extracts text, and classifies topics
-- **AI Summaries** — optional LLM-based summarization and topic classification via local Ollama
+- **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
+- **i18n** — full Czech/English UI localization with a header language switcher
+- **Docker** — containerized deployment with docker-compose
 - **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
 
 ## Quick Start
@@ -25,30 +27,58 @@ Requires Python >= 3.12 and [uv](https://docs.astral.sh/uv/).
 # Install dependencies
 uv sync
 
+# (Optional) Copy and edit environment variables
+cp .env.example .env
+
 # Run the dev server (with hot reload)
 uv run python -m pspcz_analyzer.main
 ```
 
 The app starts on `http://localhost:8000`. On first launch it downloads ~50 MB of open data from psp.cz and caches it locally as Parquet files.
 
+## Configuration
+
+All configuration is via environment variables loaded from `.env` by `python-dotenv`:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Data cache directory |
+| `PSPCZ_DEV` | `1` | `1` for hot reload, `0` for production |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
+| `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
+| `OLLAMA_MODEL` | `qwen3:8b` | Model for classification and summarization |
+
+See `.env.example` for a documented template.
+
+## Docker
+
+```bash
+docker compose up --build
+```
+
+The app runs at `http://localhost:8000`. Configure `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` in `.env` to connect to your Ollama instance on the local network.
+
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Web framework | FastAPI + Uvicorn |
-| Templating | Jinja2 |
+| Templating | Jinja2 + i18n extension |
 | Frontend interactivity | HTMX |
 | CSS | Pico CSS (dark theme) |
+| Localization | Dict-based i18n (Czech + English) |
 | Data processing | Polars |
 | Charts | Seaborn + Matplotlib |
 | PDF extraction | PyMuPDF |
 | HTML scraping | BeautifulSoup4 |
-| LLM integration | Ollama (optional) |
+| LLM integration | Ollama (optional, bilingual) |
 | API documentation | Scalar |
 | HTTP client | httpx |
+| Configuration | python-dotenv |
 | Testing | pytest + pytest-cov |
 | Linting & formatting | Ruff |
 | Type checking | Pyright |
+| Containerization | Docker + docker-compose |
 | CI/CD | GitHub Actions |
 | Package manager | uv |
 
@@ -56,7 +86,7 @@ The app starts on `http://localhost:8000`. On first launch it downloads ~50 MB o
 
 All data comes from the [psp.cz open data portal](https://www.psp.cz/eknih/cdrom/opendata). Files are pipe-delimited UNL format, Windows-1250 encoded. The app downloads and caches them automatically on first access.
 
-Cached data is stored at `~/.cache/pspcz-analyzer/psp/`.
+Cached data is stored at `~/.cache/pspcz-analyzer/psp/` (override with `PSPCZ_CACHE_DIR`).
 
 ## License
 

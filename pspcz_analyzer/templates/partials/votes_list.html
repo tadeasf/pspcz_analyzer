@@ -1,15 +1,15 @@
-<p><strong>{{ total }}</strong> votes found (page {{ page }}/{{ total_pages }})</p>
+<p><strong>{{ _("votes_found").format(total=total, page=page, total_pages=total_pages) }}</strong></p>
 
 <div class="overflow-auto">
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Result</th>
-                <th>For</th>
-                <th>Against</th>
-                <th>Abstained</th>
+                <th>{{ _("th.date") }}</th>
+                <th>{{ _("th.description") }}</th>
+                <th>{{ _("th.result") }}</th>
+                <th>{{ _("th.for") }}</th>
+                <th>{{ _("th.against") }}</th>
+                <th>{{ _("th.abstained") }}</th>
                 <th></th>
             </tr>
         </thead>
@@ -23,7 +23,7 @@
                     {% elif row.nazev_dlouhy %}
                     {{ row.nazev_dlouhy[:120] }}{% if row.nazev_dlouhy|length > 120 %}...{% endif %}
                     {% else %}
-                    <em>Session {{ row.schuze }}, vote {{ row.cislo }}</em>
+                    <em>{{ _("session_vote").format(session=row.schuze, number=row.cislo) }}</em>
                     {% endif %}
                     {% if row.tisk_url %}
                     <br><small><a href="{{ row.tisk_url }}" target="_blank">Tisk {{ row.tisk_ct }}</a></small>
@@ -45,7 +45,7 @@
                 <td>{{ row.proti }}</td>
                 <td>{{ row.zdrzel }}</td>
                 <td>
-                    <a href="/votes/{{ row.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">Detail</a>
+                    <a href="/votes/{{ row.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
                     <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ row.id_hlasovani }}" target="_blank" class="btn-small" style="font-size: 0.8rem;">psp.cz</a>
                 </td>
             </tr>
@@ -58,12 +58,12 @@
 <div class="pagination">
     {% if page > 1 %}
     <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
-       hx-target="#results" hx-indicator="#loading">&larr; Previous</a>
+       hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</a>
     {% endif %}
-    <span>Page {{ page }} of {{ total_pages }}</span>
+    <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
     {% if page < total_pages %}
     <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
-       hx-target="#results" hx-indicator="#loading">Next &rarr;</a>
+       hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</a>
     {% endif %}
 </div>
 {% endif %}

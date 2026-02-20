@@ -32,6 +32,7 @@ class TiskInfo:
     topics: list[str] = field(default_factory=list)
     has_text: bool = False
     summary: str = ""
+    summary_en: str = ""
     history: TiskHistory | None = None
     law_changes: list[dict] = field(default_factory=list)
     sub_versions: list[dict] = field(default_factory=list)

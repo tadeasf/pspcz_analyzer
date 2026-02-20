@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - cache-data:/data/cache
+    env_file:
+      - .env
+    environment:
+      PSPCZ_CACHE_DIR: /data/cache
+      PSPCZ_DEV: "0"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  cache-data:

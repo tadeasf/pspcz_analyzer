@@ -1,12 +1,12 @@
 <table>
     <thead>
         <tr>
-            <th>#</th>
-            <th>MP</th>
-            <th>Party</th>
-            <th>Active Votes</th>
-            <th>Rebellions</th>
-            <th>Rebellion %</th>
+            <th>{{ _("th.rank") }}</th>
+            <th>{{ _("th.mp") }}</th>
+            <th>{{ _("th.party") }}</th>
+            <th>{{ _("th.active_votes") }}</th>
+            <th>{{ _("th.rebellions") }}</th>
+            <th>{{ _("th.rebellion_pct") }}</th>
         </tr>
     </thead>
     <tbody>
@@ -24,17 +24,17 @@
             <td colspan="6" style="padding: 0 0 0 2rem; border-top: none;">
                 <details>
                     <summary>
-                        Show {{ row.rebellion_votes | length }} rebellion vote{{ "s" if row.rebellion_votes | length != 1 else "" }}
+                        {{ _("rebellion_votes.show").format(count=row.rebellion_votes | length) }}
                     </summary>
                     <div class="overflow-auto">
                         <table style="font-size: 0.85rem; margin: 0.5rem 0;">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Description</th>
-                                    <th>MP Vote</th>
-                                    <th>Party Vote</th>
-                                    <th>Links</th>
+                                    <th>{{ _("th.date") }}</th>
+                                    <th>{{ _("th.description") }}</th>
+                                    <th>{{ _("th.mp_vote") }}</th>
+                                    <th>{{ _("th.party_vote") }}</th>
+                                    <th>{{ _("th.links") }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -44,16 +44,16 @@
                                     <td>{{ v.nazev_dlouhy[:120] }}{% if v.nazev_dlouhy|length > 120 %}&hellip;{% endif %}</td>
                                     <td>
                                         {% if v.mp_vote == "A" %}
-                                        <span class="vote-yes">YES</span>
+                                        <span class="vote-yes">{{ _("vote.yes") }}</span>
                                         {% elif v.mp_vote == "B" %}
-                                        <span class="vote-no">NO</span>
+                                        <span class="vote-no">{{ _("vote.no") }}</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if v.party_direction == "A" %}
-                                        <span class="vote-yes">YES</span>
+                                        <span class="vote-yes">{{ _("vote.yes") }}</span>
                                         {% elif v.party_direction == "B" %}
-                                        <span class="vote-no">NO</span>
+                                        <span class="vote-no">{{ _("vote.no") }}</span>
                                         {% endif %}
                                     </td>
                                     <td style="white-space: nowrap;">
@@ -75,5 +75,5 @@
     </tbody>
 </table>
 {% if not rows %}
-<p>No data found for the given filters.</p>
+<p>{{ _("no_data_filters") }}</p>
 {% endif %}

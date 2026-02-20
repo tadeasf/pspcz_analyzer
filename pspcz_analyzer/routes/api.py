@@ -1,24 +1,35 @@
 """HTMX partial endpoints — return HTML fragments."""
 
+import asyncio
 import html as html_mod
+import time
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from pspcz_analyzer.config import DEFAULT_CACHE_DIR, DEFAULT_PERIOD, PERIOD_YEARS, TISKY_TEXT_DIR
+from pspcz_analyzer.config import (
+    DEFAULT_CACHE_DIR,
+    DEFAULT_PERIOD,
+    GITHUB_FEEDBACK_ENABLED,
+    PERIOD_YEARS,
+    TISKY_TEXT_DIR,
+)
 from pspcz_analyzer.data.law_changes_scraper import (
     load_related_bills_json,
     save_related_bills_json,
     scrape_related_bills,
 )
+from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.middleware import run_with_timeout
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
+from pspcz_analyzer.services.feedback_service import GitHubFeedbackClient
 from pspcz_analyzer.services.loyalty_service import compute_loyalty
+from pspcz_analyzer.services.ollama_service import OllamaClient
 from pspcz_analyzer.services.similarity_service import compute_cross_party_similarity
 from pspcz_analyzer.services.votes_service import list_votes
 
@@ -53,7 +64,7 @@ async def loyalty_api(
     )
     return templates.TemplateResponse(
         "partials/loyalty_table.html",
-        {"request": request, "rows": rows},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 
@@ -79,7 +90,7 @@ async def attendance_api(
     )
     return templates.TemplateResponse(
         "partials/attendance_table.html",
-        {"request": request, "rows": rows},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 
@@ -103,7 +114,7 @@ async def similarity_api(
     )
     return templates.TemplateResponse(
         "partials/similarity_table.html",
-        {"request": request, "rows": rows},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 
@@ -135,6 +146,7 @@ async def votes_api(
             "search": search,
             "outcome": outcome,
             "topic": topic,
+            "lang": getattr(request.state, "lang", "cs"),
             **result,
         },
     )
@@ -162,8 +174,7 @@ async def tisk_text_api(
     if text is None:
         return HTMLResponse(
             '<article style="background: #fff3cd; padding: 1rem;">'
-            "<p>No extracted text available for this tisk yet. "
-            "The background pipeline will download and extract it automatically.</p>"
+            f"<p>{html_mod.escape(_t('tisk.no_text'))}</p>"
             "</article>"
         )
     escaped = html_mod.escape(text)
@@ -204,6 +215,8 @@ async def tisk_evolution_api(
             "ct": ct,
             "law_changes": law_changes,
             "sub_versions": sub_versions,
+            "lang": getattr(request.state, "lang", "cs"),
+            "feedback_enabled": GITHUB_FEEDBACK_ENABLED,
         },
     )
 
@@ -216,7 +229,7 @@ async def related_bills_api(
 ):
     """Lazy-load related bills for a specific law (scrapes on demand, caches)."""
     if idsb <= 0:
-        return HTMLResponse("<p>Invalid law reference.</p>")
+        return HTMLResponse(f"<p>{html_mod.escape(_t('related.invalid'))}</p>")
 
     cache_dir = DEFAULT_CACHE_DIR
     cached = load_related_bills_json(idsb, cache_dir)
@@ -235,7 +248,7 @@ async def related_bills_api(
     if not bills:
         return HTMLResponse(
             '<p style="color: #6c757d; font-size: 0.85rem;">'
-            "No related bills found for this law.</p>"
+            f"{html_mod.escape(_t('related.no_bills'))}</p>"
         )
 
     rows_html = ""
@@ -255,10 +268,87 @@ async def related_bills_api(
     return HTMLResponse(
         '<table style="font-size: 0.85rem; margin: 0.5rem 0;">'
         "<thead><tr>"
-        "<th>Tisk</th><th>Title</th><th>Type</th><th>Status</th>"
+        f"<th>{html_mod.escape(_t('related.th.tisk'))}</th>"
+        f"<th>{html_mod.escape(_t('related.th.title'))}</th>"
+        f"<th>{html_mod.escape(_t('related.th.type'))}</th>"
+        f"<th>{html_mod.escape(_t('related.th.status'))}</th>"
         "</tr></thead>"
         f"<tbody>{rows_html}</tbody>"
         "</table>"
+    )
+
+
+def _validate_feedback_fields(title: str, body: str) -> str | None:
+    """Return an error message if feedback fields are invalid, else None."""
+    if len(title) < 5 or len(title) > 200 or len(body) < 10 or len(body) > 2000:
+        return _t("feedback.error_validation")
+    return None
+
+
+@router.post("/feedback", response_class=HTMLResponse)
+@limiter.limit("3/hour")
+async def feedback_api(
+    request: Request,
+    vote_id: int = Form(default=0),
+    period: int = Form(default=0),
+    title: str = Form(default=""),
+    body: str = Form(default=""),
+):
+    """Submit user feedback as a GitHub issue."""
+    lang = getattr(request.state, "lang", "cs")
+    suffix = ""
+
+    if not GITHUB_FEEDBACK_ENABLED:
+        return templates.TemplateResponse(
+            "partials/feedback_result.html",
+            {
+                "request": request,
+                "success": False,
+                "error_message": _t("feedback.disabled"),
+                "feedback_id_suffix": suffix,
+                "lang": lang,
+            },
+        )
+
+    validation_error = _validate_feedback_fields(title, body)
+    if validation_error:
+        return templates.TemplateResponse(
+            "partials/feedback_result.html",
+            {
+                "request": request,
+                "success": False,
+                "error_message": validation_error,
+                "feedback_id_suffix": suffix,
+                "lang": lang,
+            },
+        )
+
+    page_url = str(request.headers.get("referer", f"/votes/{vote_id}?period={period}"))
+    client = GitHubFeedbackClient()
+    result = await asyncio.to_thread(
+        client.create_issue, title, body, vote_id, period, page_url, lang
+    )
+
+    if result:
+        return templates.TemplateResponse(
+            "partials/feedback_result.html",
+            {
+                "request": request,
+                "success": True,
+                "issue_url": result["html_url"],
+                "feedback_id_suffix": suffix,
+                "lang": lang,
+            },
+        )
+    return templates.TemplateResponse(
+        "partials/feedback_result.html",
+        {
+            "request": request,
+            "success": False,
+            "error_message": _t("feedback.error_generic"),
+            "feedback_id_suffix": suffix,
+            "lang": lang,
+        },
     )
 
 
@@ -268,3 +358,83 @@ async def health(request: Request):
     """Health check endpoint."""
     data_svc = request.app.state.data
     return {"status": "ok", "periods_loaded": list(data_svc.loaded_periods)}
+
+
+# ── Ollama diagnostic constants ──────────────────────────────────────────
+
+_SMOKE_TEST_TITLE = "Novela zákona o státní službě"
+_SMOKE_TEST_TEXT = (
+    "Navrhovaná novela zákona č. 234/2014 Sb., o státní službě, zavádí nový systém "
+    "hodnocení výkonu státních zaměstnanců založený na klíčových ukazatelích výkonnosti. "
+    "Služební orgán bude oprávněn stanovit individuální výkonnostní cíle pro každého "
+    "zaměstnance a jejich plnění bude podmínkou pro přiznání osobního příplatku.\n\n"
+    "Dále se mění ustanovení § 72 odst. 1 tak, že se zkracuje doba potřebná pro vznik "
+    "nároku na služební volno z pěti na tři roky nepřetržité služby. Současně se ruší "
+    "povinnost služebního úřadu zajistit zastupitelnost zaměstnanců v době jejich "
+    "nepřítomnosti delší než 30 dnů.\n\n"
+    "Přechodná ustanovení stanoví, že stávající zaměstnanci budou hodnoceni podle nových "
+    "pravidel nejpozději od 1. ledna následujícího kalendářního roku po nabytí účinnosti "
+    "této novely."
+)
+
+
+@router.get("/api/ollama/health", response_class=JSONResponse, tags=["Health"])
+@limiter.limit("10/minute")
+async def ollama_health(request: Request) -> dict:
+    """Check Ollama connectivity and model availability."""
+    client = OllamaClient()
+    available = await asyncio.to_thread(client.is_available)
+    return {
+        "available": available,
+        "base_url": client.base_url,
+        "model": client.model,
+    }
+
+
+def _build_smoke_error(error: str, duration: float, model: str) -> dict:
+    """Build a failure response dict for the smoke-test endpoint."""
+    return {
+        "success": False,
+        "error": error,
+        "duration_seconds": round(duration, 2),
+        "model": model,
+    }
+
+
+@router.get("/api/ollama/smoke-test", response_class=JSONResponse, tags=["Health"])
+@limiter.limit("2/minute")
+async def ollama_smoke_test(request: Request) -> dict:
+    """Run concurrent bilingual generation to verify Ollama end-to-end."""
+    client = OllamaClient()
+    start = time.monotonic()
+
+    available = await asyncio.to_thread(client.is_available)
+    if not available:
+        duration = time.monotonic() - start
+        raise HTTPException(
+            status_code=503,
+            detail=_build_smoke_error("Ollama is not available", duration, client.model),
+        )
+
+    try:
+        cs_result, en_result = await asyncio.gather(
+            asyncio.to_thread(client.summarize, _SMOKE_TEST_TEXT, _SMOKE_TEST_TITLE),
+            asyncio.to_thread(client.summarize_en, _SMOKE_TEST_TEXT, _SMOKE_TEST_TITLE),
+        )
+    except Exception as exc:
+        duration = time.monotonic() - start
+        raise HTTPException(
+            status_code=502,
+            detail=_build_smoke_error(str(exc), duration, client.model),
+        ) from exc
+
+    duration = time.monotonic() - start
+    return {
+        "success": True,
+        "model": client.model,
+        "duration_seconds": round(duration, 2),
+        "summary_cs": cs_result,
+        "summary_en": en_result,
+        "summary_cs_length": len(cs_result),
+        "summary_en_length": len(en_result),
+    }

@@ -14,12 +14,14 @@ import httpx
 from loguru import logger
 
 from pspcz_analyzer.config import (
+    OLLAMA_API_KEY,
     OLLAMA_BASE_URL,
     OLLAMA_HEALTH_TIMEOUT,
     OLLAMA_MAX_TEXT_CHARS,
     OLLAMA_MODEL,
     OLLAMA_TIMEOUT,
     OLLAMA_VERBATIM_CHARS,
+    TISK_SHORTENER,
 )
 
 _CLASSIFICATION_SYSTEM = (
@@ -84,6 +86,42 @@ _COMPARISON_PROMPT_TEMPLATE = (
     "VERZE {ct1_new} ({label_new}):\n{text_new} /no_think"
 )
 
+# ── English prompts for bilingual output ──────────────────────────────────
+
+_SUMMARY_SYSTEM_EN = (
+    "You are a critical analyst of the Czech Parliament. You write sharp, factual assessments "
+    "without embellishment. You expose hidden impacts of laws, risks of abuse, and who truly "
+    "benefits from amendments. Don't hesitate to name problems directly — e.g. weakening of "
+    "official independence, expanding powers without oversight, hidden privatizations, or "
+    "restrictions on civil rights. 3-4 sentences."
+)
+
+_SUMMARY_PROMPT_TEMPLATE_EN = (
+    "Analyze the following Czech parliamentary bill CRITICALLY. Don't just say 'what it changes' — explain:\n"
+    "1. What SPECIFICALLY changes (no vague formulations)\n"
+    "2. Who benefits and who is harmed\n"
+    "3. What is the RISK of abuse or unintended consequence\n"
+    "Be direct and critical. If the law weakens oversight, independence, or rights, say it clearly.\n"
+    "3-4 sentences in English.\n\n"
+    "Title: {title}\n\n"
+    "Text:\n{text} /no_think"
+)
+
+_COMPARISON_SYSTEM_EN = (
+    "You are a legal expert on Czech legislation. You compare versions of parliamentary bills "
+    "and identify SPECIFIC changes between them — paragraph numbers, what was added, removed, or modified."
+)
+
+_COMPARISON_PROMPT_TEMPLATE_EN = (
+    "Compare the following two versions of a Czech parliamentary bill and describe SPECIFIC differences:\n"
+    "1. Which paragraphs/articles changed and how\n"
+    "2. What was added or removed\n"
+    "3. What is the overall character of changes (tightening/loosening/technical adjustment)\n"
+    "3-4 sentences in English. Be specific — cite paragraph numbers.\n\n"
+    "VERSION {ct1_old} ({label_old}):\n{text_old}\n\n"
+    "VERSION {ct1_new} ({label_new}):\n{text_new} /no_think"
+)
+
 # Strip <think>...</think> blocks from Qwen3 responses (defensive)
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
@@ -108,11 +146,16 @@ def truncate_legislative_text(
 ) -> str:
     """Truncate Czech legislative text intelligently for LLM processing.
 
-    Strategy:
+    When TISK_SHORTENER is disabled (0), returns the full text unmodified.
+
+    Strategy (when enabled):
     1. First `verbatim_chars` characters verbatim (captures explanatory report)
     2. From remainder: extract heading lines + first 200 chars after each heading
     3. Hard cap at `max_chars` total
     """
+    if not TISK_SHORTENER:
+        return text
+
     if len(text) <= max_chars:
         return text
 
@@ -141,11 +184,15 @@ class OllamaClient:
         base_url: str = OLLAMA_BASE_URL,
         model: str = OLLAMA_MODEL,
         timeout: float = OLLAMA_TIMEOUT,
+        api_key: str = OLLAMA_API_KEY,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
         self._available: bool | None = None
+        self._headers: dict[str, str] = {}
+        if api_key:
+            self._headers["Authorization"] = f"Bearer {api_key}"
 
     def is_available(self) -> bool:
         """Check if Ollama is running and the model is available.
@@ -158,6 +205,7 @@ class OllamaClient:
         try:
             resp = httpx.get(
                 f"{self.base_url}/api/tags",
+                headers=self._headers,
                 timeout=OLLAMA_HEALTH_TIMEOUT,
             )
             resp.raise_for_status()
@@ -210,6 +258,21 @@ class OllamaClient:
             text=truncated,
         )
         response = self._generate(prompt, _SUMMARY_SYSTEM)
+        if not response:
+            return ""
+        return self._strip_think(response)
+
+    def summarize_en(self, text: str, title: str) -> str:
+        """Generate an English-language critical summary of a proposed law.
+
+        Returns summary text or empty string on failure.
+        """
+        truncated = truncate_legislative_text(text)
+        prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(
+            title=title or "(no title)",
+            text=truncated,
+        )
+        response = self._generate(prompt, _SUMMARY_SYSTEM_EN)
         if not response:
             return ""
         return self._strip_think(response)
@@ -279,11 +342,49 @@ class OllamaClient:
             return ""
         return self._strip_think(response)
 
+    def summarize_bilingual(self, text: str, title: str) -> dict[str, str]:
+        """Generate both Czech and English summaries.
+
+        Returns {"cs": ..., "en": ...}. Either may be empty on failure.
+        """
+        cs = self.summarize(text, title)
+        en = self.summarize_en(text, title)
+        return {"cs": cs, "en": en}
+
+    def compare_versions_bilingual(
+        self,
+        text_old: str,
+        text_new: str,
+        ct1_old: int,
+        ct1_new: int,
+        label_old: str = "",
+        label_new: str = "",
+    ) -> dict[str, str]:
+        """Compare two versions and return bilingual diff summaries.
+
+        Returns {"cs": ..., "en": ...}. Either may be empty on failure.
+        """
+        cs = self.compare_versions(text_old, text_new, ct1_old, ct1_new, label_old, label_new)
+        trunc_old = truncate_legislative_text(text_old)
+        trunc_new = truncate_legislative_text(text_new)
+        prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(
+            ct1_old=ct1_old,
+            ct1_new=ct1_new,
+            label_old=label_old or f"CT1={ct1_old}",
+            label_new=label_new or f"CT1={ct1_new}",
+            text_old=trunc_old,
+            text_new=trunc_new,
+        )
+        response = self._generate(prompt, _COMPARISON_SYSTEM_EN)
+        en = self._strip_think(response) if response else ""
+        return {"cs": cs, "en": en}
+
     def _generate(self, prompt: str, system: str) -> str | None:
         """Send a generation request to Ollama. Returns response text or None."""
         try:
             resp = httpx.post(
                 f"{self.base_url}/api/generate",
+                headers=self._headers,
                 json={
                     "model": self.model,
                     "prompt": prompt,

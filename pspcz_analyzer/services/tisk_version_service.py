@@ -128,21 +128,22 @@ def analyze_version_diffs_sync(
     period: int,
     ct_numbers: list[int],
     cache_dir: Path,
-) -> dict[str, str]:
+) -> tuple[dict[str, str], dict[str, str]]:
     """Run LLM comparison on consecutive sub-tisk versions.
 
-    Returns {"{ct}_{ct1}": diff_summary} for each pair compared.
+    Returns ({"{ct}_{ct1}": diff_cs}, {"{ct}_{ct1}": diff_en}).
     """
     ollama = OllamaClient()
     if not ollama.is_available():
         logger.info("[tisk pipeline] Ollama not available, skipping version diff analysis")
-        return {}
+        return {}, {}
 
     text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
     diff_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
     diff_dir.mkdir(parents=True, exist_ok=True)
 
     result: dict[str, str] = {}
+    result_en: dict[str, str] = {}
 
     for ct in ct_numbers:
         if not text_dir.exists():
@@ -158,25 +159,31 @@ def analyze_version_diffs_sync(
             ct1_new, path_new = versions[j + 1]
             diff_key = f"{ct}_{ct1_new}"
             diff_file = diff_dir / f"{diff_key}.txt"
+            diff_file_en = diff_dir / f"{diff_key}_en.txt"
 
-            # Check cache
+            # Check cache — both CS and EN
             if diff_file.exists():
                 result[diff_key] = diff_file.read_text(encoding="utf-8")
+                if diff_file_en.exists():
+                    result_en[diff_key] = diff_file_en.read_text(encoding="utf-8")
                 continue
 
-            summary = _compare_version_pair(
+            summaries = _compare_version_pair_bilingual(
                 ollama, path_old, path_new, ct1_old, ct1_new, period, ct
             )
-            if summary:
-                diff_file.write_text(summary, encoding="utf-8")
-                result[diff_key] = summary
+            if summaries["cs"]:
+                diff_file.write_text(summaries["cs"], encoding="utf-8")
+                result[diff_key] = summaries["cs"]
+            if summaries["en"]:
+                diff_file_en.write_text(summaries["en"], encoding="utf-8")
+                result_en[diff_key] = summaries["en"]
 
     logger.info(
         "[tisk pipeline] Version diffs for period {}: {} comparisons",
         period,
         len(result),
     )
-    return result
+    return result, result_en
 
 
 def _collect_version_texts(text_dir: Path, ct: int) -> list[tuple[int, Path]]:
@@ -197,7 +204,7 @@ def _collect_version_texts(text_dir: Path, ct: int) -> list[tuple[int, Path]]:
     return versions
 
 
-def _compare_version_pair(
+def _compare_version_pair_bilingual(
     ollama: OllamaClient,
     path_old: Path,
     path_new: Path,
@@ -205,19 +212,19 @@ def _compare_version_pair(
     ct1_new: int,
     period: int,
     ct: int,
-) -> str | None:
-    """Compare two consecutive version texts using LLM."""
+) -> dict[str, str]:
+    """Compare two consecutive version texts using LLM, bilingual output."""
     text_old = path_old.read_text(encoding="utf-8")
     text_new = path_new.read_text(encoding="utf-8")
 
     logger.info(
-        "[tisk pipeline] Comparing versions CT1={} vs CT1={} for tisk {}/{}",
+        "[tisk pipeline] Comparing versions CT1={} vs CT1={} for tisk {}/{} (bilingual)",
         ct1_old,
         ct1_new,
         period,
         ct,
     )
-    return ollama.compare_versions(
+    return ollama.compare_versions_bilingual(
         text_old,
         text_new,
         ct1_old,

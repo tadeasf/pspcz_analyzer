@@ -1,61 +1,61 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — Czech Parliament Analyzer{% endblock %}
+{% block title %}{{ _("nav.dashboard") }} — {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Czech Parliament Voting Analyzer</h1>
-    <p>OSINT analysis of voting records from the Chamber of Deputies (Poslanecka snemovna)</p>
+    <h1>{{ _("index.title") }}</h1>
+    <p>{{ _("index.subtitle") }}</p>
 </div>
 
-<h2>Dataset: {{ stats.period }}. Electoral Period ({{ stats.label }})</h2>
+<h2>{{ _("index.dataset").format(period=stats.period, label=stats.label) }}</h2>
 
 <div class="stat-grid">
     <article class="stat-card stat-card-blue">
         <h3>{{ "{:,}".format(stats.total_votes) }}</h3>
-        <p>Total Votes</p>
+        <p>{{ _("index.total_votes") }}</p>
     </article>
     <article class="stat-card stat-card-blue">
         <h3>{{ "{:,}".format(stats.total_mps) }}</h3>
-        <p>MPs</p>
+        <p>{{ _("index.mps") }}</p>
     </article>
     <article class="stat-card stat-card-blue">
         <h3>{{ "{:,}".format(stats.total_mp_records) }}</h3>
-        <p>Individual Vote Records</p>
+        <p>{{ _("index.individual_records") }}</p>
     </article>
     <article class="stat-card stat-card-gray">
         <h3>{{ "{:,}".format(stats.void_votes) }}</h3>
-        <p>Void Votes</p>
+        <p>{{ _("index.void_votes") }}</p>
     </article>
 </div>
 
 <article>
-    <header>Date Range</header>
+    <header>{{ _("index.date_range") }}</header>
     <p>{{ stats.date_min }} — {{ stats.date_max }}</p>
 </article>
 
-<h2>Available Analyses</h2>
+<h2>{{ _("index.available_analyses") }}</h2>
 <div class="grid">
     <article>
-        <header>Party Loyalty</header>
-        <p>Which MPs rebel against their party line? Rebellion rates and patterns.</p>
-        <a href="/loyalty?period={{ period }}" class="btn-explore">Explore</a>
+        <header>{{ _("index.card.loyalty") }}</header>
+        <p>{{ _("index.card.loyalty_desc") }}</p>
+        <a href="/loyalty?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
     </article>
     <article>
-        <header>Attendance</header>
-        <p>Participation rates, vote breakdown by YES/NO/ABSTAIN — who shows up and how they vote.</p>
-        <a href="/attendance?period={{ period }}" class="btn-explore">Explore</a>
+        <header>{{ _("index.card.attendance") }}</header>
+        <p>{{ _("index.card.attendance_desc") }}</p>
+        <a href="/attendance?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
     </article>
 </div>
 <div class="grid">
     <article>
-        <header>Voting Similarity</header>
-        <p>Cluster MPs by how they vote — reveals hidden alliances across party lines.</p>
-        <a href="/similarity?period={{ period }}" class="btn-explore">Explore</a>
+        <header>{{ _("index.card.similarity") }}</header>
+        <p>{{ _("index.card.similarity_desc") }}</p>
+        <a href="/similarity?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
     </article>
     <article>
-        <header>Votes Browser</header>
-        <p>Search all parliamentary votes. See which laws passed or failed and how each party and MP voted.</p>
-        <a href="/votes?period={{ period }}" class="btn-explore">Explore</a>
+        <header>{{ _("index.card.votes") }}</header>
+        <p>{{ _("index.card.votes_desc") }}</p>
+        <a href="/votes?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
     </article>
 </div>
 {% endblock %}

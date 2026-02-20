@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from matplotlib.figure import Figure
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.i18n import gettext as _
 from pspcz_analyzer.middleware import run_with_timeout
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.api import validate_period
@@ -52,6 +53,10 @@ async def loyalty_chart(
         label="loyalty chart",
     )
 
+    # Resolve labels in request context (ContextVar propagated by run_with_timeout)
+    xlabel = _("chart.loyalty.xlabel")
+    title = _("chart.loyalty.title")
+
     fig, ax = plt.subplots(figsize=(12, max(6, len(rows) * 0.35)))
     fig.patch.set_facecolor("#FFFFFF")
     ax.set_facecolor("#F7F7F7")
@@ -61,8 +66,8 @@ async def loyalty_chart(
 
     colors = sns.color_palette("coolwarm", len(rows))
     ax.barh(names[::-1], values[::-1], color=colors)
-    ax.set_xlabel("Rebellion Rate (%)", color="#333333")
-    ax.set_title("Top MP Rebels — Votes Against Party Line", color="#333333", fontsize=14)
+    ax.set_xlabel(xlabel, color="#333333")
+    ax.set_title(title, color="#333333", fontsize=14)
     ax.tick_params(colors="#333333")
     for spine in ax.spines.values():
         spine.set_color("#D9D9D9")
@@ -98,57 +103,24 @@ async def attendance_chart(
 
     names = [f"{r['jmeno']} {r['prijmeni']} ({r['party'] or '?'})" for r in rows]
 
-    chart_meta: dict[str, tuple[str, str, str, str]] = {
-        # sort_key: (data_field, xlabel, title, palette)
-        "worst": (
-            "attendance_pct",
-            "Attendance Rate (%)",
-            "Lowest Attendance — MPs Who Skip Votes",
-            "RdYlGn",
-        ),
-        "best": (
-            "attendance_pct",
-            "Attendance Rate (%)",
-            "Highest Attendance — Most Reliable MPs",
-            "RdYlGn",
-        ),
-        "most_active": (
-            "active",
-            "Active Votes (YES + NO + ABSTAINED)",
-            "Most Active MPs — Total Votes Cast",
-            "viridis",
-        ),
-        "least_active": (
-            "active",
-            "Active Votes (YES + NO + ABSTAINED)",
-            "Least Active MPs — Fewest Votes Cast",
-            "viridis",
-        ),
-        "most_abstained": (
-            "abstained",
-            "Abstentions",
-            "Most Abstentions — MPs Who Abstain Most",
-            "YlOrRd",
-        ),
-        "most_excused": (
-            "excused",
-            "Excused Absences",
-            "Most Excused — MPs With Most Excused Absences",
-            "PuBuGn",
-        ),
-        "most_passive": (
-            "passive",
-            "Passive Votes",
-            "Most Passive — Registered but Didn't Vote",
-            "OrRd",
-        ),
-        "most_absent": ("absent", "Absences", "Most Absent — MPs Not Present for Votes", "Reds"),
-        "most_yes": ("yes_votes", "YES Votes", "Most YES Votes — MPs Who Vote Yes Most", "Greens"),
-        "most_no": ("no_votes", "NO Votes", "Most NO Votes — MPs Who Vote No Most", "Blues"),
+    chart_meta: dict[str, tuple[str, str, str]] = {
+        # sort_key: (data_field, chart_key_prefix, palette)
+        "worst": ("attendance_pct", "chart.attendance.worst", "RdYlGn"),
+        "best": ("attendance_pct", "chart.attendance.best", "RdYlGn"),
+        "most_active": ("active", "chart.attendance.most_active", "viridis"),
+        "least_active": ("active", "chart.attendance.least_active", "viridis"),
+        "most_abstained": ("abstained", "chart.attendance.most_abstained", "YlOrRd"),
+        "most_excused": ("excused", "chart.attendance.most_excused", "PuBuGn"),
+        "most_passive": ("passive", "chart.attendance.most_passive", "OrRd"),
+        "most_absent": ("absent", "chart.attendance.most_absent", "Reds"),
+        "most_yes": ("yes_votes", "chart.attendance.most_yes", "Greens"),
+        "most_no": ("no_votes", "chart.attendance.most_no", "Blues"),
     }
-    field, xlabel, title, palette = chart_meta.get(
-        sort, ("attendance_pct", "Attendance Rate (%)", "Attendance", "RdYlGn")
+    field, chart_key, palette = chart_meta.get(
+        sort, ("attendance_pct", "chart.attendance.worst", "RdYlGn")
     )
+    xlabel = _(f"{chart_key}.xlabel")
+    title = _(f"{chart_key}.title")
 
     values = [r[field] for r in rows]
     colors = sns.color_palette(palette, len(rows))
@@ -197,10 +169,10 @@ async def similarity_chart(request: Request, period: int = DEFAULT_PERIOD):
             linewidths=0.5,
         )
 
-    ax.set_xlabel("PC1", color="#333333")
-    ax.set_ylabel("PC2", color="#333333")
+    ax.set_xlabel(_("chart.similarity.xlabel"), color="#333333")
+    ax.set_ylabel(_("chart.similarity.ylabel"), color="#333333")
     ax.set_title(
-        "MP Voting Similarity — PCA Projection (colored by party)",
+        _("chart.similarity.title"),
         color="#333333",
         fontsize=14,
     )

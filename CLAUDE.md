@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, and visualizes open data from psp.cz (Czech Parliament). Built as a FastAPI web app with Jinja2/HTMX frontend and Polars for data processing.
+Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, and visualizes open data from psp.cz (Czech Parliament). Built as a FastAPI web app with Jinja2/HTMX frontend and Polars for data processing. Supports Czech/English UI localization and bilingual AI summaries via Ollama.
 
 ## Commands
 
@@ -18,8 +18,21 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Type check:** `uv run pyright`
 - **Pre-commit:** `uv run pre-commit run --all-files`
 - **Version bump:** `uv run bump-my-version bump patch|minor|major`
+- **Docker:** `docker compose up --build`
 
 Python >= 3.12 required (pinned to 3.14 in `.python-version`).
+
+## Configuration
+
+Environment variables are loaded from `.env` via `python-dotenv` (see `.env.example`). Key variables:
+
+- `PSPCZ_CACHE_DIR` — data cache directory (default: `~/.cache/pspcz-analyzer/psp`)
+- `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`)
+- `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
+- `OLLAMA_API_KEY` — Bearer token for remote HTTPS Ollama (default: empty)
+- `OLLAMA_MODEL` — model name (default: `qwen3:8b`)
+- `DAILY_REFRESH_ENABLED` — `1` to enable daily data refresh, `0` to disable (default: `1`)
+- `DAILY_REFRESH_HOUR` — hour (CET, 0-23) for daily refresh (default: `3`)
 
 ## Architecture
 
@@ -38,6 +51,15 @@ Central orchestrator. Initialized at startup via FastAPI lifespan, stored on `ap
 - **Per-period data** (`PeriodData` dataclass) — voting records, MP votes, void votes, MP info, tisk (print) lookups
 - Periods are loaded on demand; `config.py` maps period numbers to years, organ IDs, and labels
 
+### i18n (`i18n/`)
+
+Dict-based Czech/English localization using `contextvars.ContextVar` for per-request locale:
+- **`i18n/__init__.py`** — `gettext()`, `ngettext()`, `setup_jinja2_i18n()` for Jinja2 i18n extension
+- **`i18n/translations.py`** — all UI strings in `TRANSLATIONS["cs"]` / `TRANSLATIONS["en"]`
+- **`i18n/middleware.py`** — `LocaleMiddleware` reads `lang` cookie, sets ContextVar + `request.state.lang`
+
+Language is switched via `/set-lang/{lang}` which sets a cookie and redirects back.
+
 ### Analysis Services
 
 Each in `services/`, each takes a `PeriodData` and returns `list[dict]`:
@@ -48,14 +70,15 @@ Each in `services/`, each takes a `PeriodData` and returns `list[dict]`:
 
 ### Web Layer
 
-- **`routes/pages.py`** — Full HTML page renders (Jinja2 templates)
+- **`routes/pages.py`** — Full HTML page renders (Jinja2 templates) + `/set-lang/{lang}` endpoint
 - **`routes/api.py`** — HTMX partial endpoints returning HTML fragments
 - **`routes/charts.py`** — Seaborn/matplotlib chart endpoints returning PNG via `StreamingResponse`
 - Templates in `templates/`, partials in `templates/partials/`
+- All user-visible strings use `{{ _("key") }}` Jinja2 i18n calls
 
 ### Configuration (`config.py`)
 
-All psp.cz URLs, cache paths (`~/.cache/pspcz-analyzer/psp`), period-to-year mappings, and UNL format constants. The `PERIOD_ORGAN_IDS` map is critical — `id_obdobi` in the psp.cz database uses organ IDs, not period numbers.
+Loads `.env` via `python-dotenv`. Contains psp.cz URLs, cache paths, period-to-year mappings, UNL format constants, and Ollama settings. The `PERIOD_ORGAN_IDS` map is critical — `id_obdobi` in the psp.cz database uses organ IDs, not period numbers.
 
 ### Domain Enums (`models/enums.py`)
 

@@ -1,21 +1,21 @@
 {% if law_changes or sub_versions %}
 <div class="legis-box" style="margin-top: 1rem;">
     <div class="legis-box-header">
-        Legislative Evolution
-        <small>Law changes &amp; version history</small>
+        {{ _("evolution.title") }}
+        <small>{{ _("evolution.subtitle") }}</small>
     </div>
 
     {% if law_changes %}
     <div style="margin-bottom: 1rem;">
-        <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">Proposed Law Changes</h4>
+        <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">{{ _("evolution.law_changes") }}</h4>
         <div class="overflow-auto">
             <table style="font-size: 0.85rem;">
                 <thead>
                     <tr>
-                        <th>Citation</th>
-                        <th>Change Type</th>
-                        <th>Law</th>
-                        <th>Related Bills</th>
+                        <th>{{ _("evolution.th.citation") }}</th>
+                        <th>{{ _("evolution.th.change_type") }}</th>
+                        <th>{{ _("evolution.th.law") }}</th>
+                        <th>{{ _("evolution.th.related_bills") }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -31,9 +31,9 @@
                                     hx-target="#related-bills-{{ lc.idsb }}"
                                     hx-swap="innerHTML"
                                     hx-indicator="#rb-loading-{{ lc.idsb }}">
-                                Show related bills
+                                {{ _("evolution.show_related") }}
                             </button>
-                            <span id="rb-loading-{{ lc.idsb }}" class="htmx-indicator" aria-busy="true" style="font-size: 0.8rem;">Loading...</span>
+                            <span id="rb-loading-{{ lc.idsb }}" class="htmx-indicator" aria-busy="true" style="font-size: 0.8rem;">{{ _("loading") }}</span>
                             <div id="related-bills-{{ lc.idsb }}"></div>
                             {% else %}
                             —
@@ -49,7 +49,7 @@
 
     {% if sub_versions %}
     <div>
-        <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">Version History</h4>
+        <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">{{ _("evolution.version_history") }}</h4>
         <div class="legislative-timeline" style="margin-left: 0.5rem;">
             {% for v in sub_versions %}
             <div class="timeline-stage">
@@ -57,33 +57,34 @@
                 <span class="timeline-label">
                     <strong>CT1={{ v.ct1 }}
                     {% if v.ct1 == 0 %}
-                    (Original)
+                    {{ _("evolution.original") }}
                     {% elif v.ct1 == 1 %}
-                    (Government opinion)
+                    {{ _("evolution.gov_opinion") }}
                     {% else %}
-                    (Amendment {{ v.ct1 }})
+                    {{ _("evolution.amendment").format(n=v.ct1) }}
                     {% endif %}</strong>
                 </span>
                 {% if v.description %}
                 <span class="timeline-date">{{ v.description }}</span>
                 {% endif %}
 
-                {% if v.llm_diff_summary %}
+                {% set show_diff = v.llm_diff_summary_en if (lang == "en" and v.llm_diff_summary_en) else v.llm_diff_summary %}
+                {% if show_diff %}
                 <div class="version-diff-summary">
-                    {{ v.llm_diff_summary | markdown }}
+                    {{ show_diff | markdown }}
                 </div>
                 {% endif %}
 
                 <div style="margin-top: 0.25rem; font-size: 0.8rem;">
                     {% if v.has_pdf %}
-                    <span style="color: #2e7d32;">PDF available</span>
+                    <span style="color: #2e7d32;">{{ _("evolution.pdf_available") }}</span>
                     {% endif %}
                     {% if v.has_text %}
                     <details style="margin-top: 0.25rem;">
-                        <summary style="cursor: pointer; font-size: 0.8rem;">View extracted text</summary>
+                        <summary style="cursor: pointer; font-size: 0.8rem;">{{ _("evolution.view_text") }}</summary>
                         <div hx-get="/api/tisk-text?period={{ period }}&ct={{ ct }}&ct1={{ v.ct1 }}"
                              hx-trigger="intersect once">
-                            <span class="htmx-indicator" aria-busy="true" style="font-size: 0.8rem;">Loading text...</span>
+                            <span class="htmx-indicator" aria-busy="true" style="font-size: 0.8rem;">{{ _("evolution.loading_text") }}</span>
                         </div>
                     </details>
                     {% endif %}
@@ -93,9 +94,18 @@
         </div>
     </div>
     {% endif %}
+
+    {% if feedback_enabled %}
+    <details style="margin: 0.75rem 0 0;">
+        <summary>{{ _("feedback.button") }}</summary>
+        {% with feedback_id_suffix="-evolution" %}
+        {% include "partials/feedback_form.html" %}
+        {% endwith %}
+    </details>
+    {% endif %}
 </div>
 {% else %}
 <p style="color: #6c757d; font-size: 0.85rem; margin-top: 0.5rem;">
-    No legislative evolution data available yet. The background pipeline will process this data automatically.
+    {{ _("evolution.no_data") }}
 </p>
 {% endif %}

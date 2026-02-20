@@ -3,10 +3,14 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from scalar_fastapi import get_scalar_api_reference
+from starlette.responses import Response
 
-from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.config import DEFAULT_PERIOD, GITHUB_FEEDBACK_ENABLED
+from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
+from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.api import validate_period
 from pspcz_analyzer.services.votes_service import vote_detail
@@ -22,8 +26,20 @@ def _ctx(request: Request, period: int, **kwargs) -> dict:
         "request": request,
         "period": period,
         "periods": data_svc.available_periods,
+        "lang": getattr(request.state, "lang", "cs"),
         **kwargs,
     }
+
+
+@router.get("/set-lang/{lang}")
+async def set_lang(request: Request, lang: str) -> Response:
+    """Set the UI language via cookie and redirect back."""
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = "cs"
+    referer = request.headers.get("referer", "/")
+    response = RedirectResponse(url=referer, status_code=303)
+    response.set_cookie("lang", lang, max_age=365 * 24 * 3600, samesite="lax", httponly=False)
+    return response
 
 
 @router.get("/")
@@ -90,11 +106,17 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
     if detail is None:
         return templates.TemplateResponse(
             "votes.html",
-            _ctx(request, period, active_page="votes", error="Vote not found"),
+            _ctx(request, period, active_page="votes", error=_t("vote.not_found")),
         )
     return templates.TemplateResponse(
         "vote_detail.html",
-        _ctx(request, period, detail=detail, active_page="votes"),
+        _ctx(
+            request,
+            period,
+            detail=detail,
+            active_page="votes",
+            feedback_enabled=GITHUB_FEEDBACK_ENABLED,
+        ),
     )
 
 

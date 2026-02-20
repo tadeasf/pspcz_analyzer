@@ -1,6 +1,7 @@
 """Security headers middleware and computation timeout helper."""
 
 import asyncio
+import contextvars
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
@@ -32,12 +33,14 @@ async def run_with_timeout(
 ) -> Any:
     """Run a sync function in a bounded thread pool with timeout.
 
+    Propagates ContextVars (incl. locale) into the worker thread.
     Returns the result or raises HTTP 503 on timeout.
     """
     loop = asyncio.get_running_loop()
+    ctx = contextvars.copy_context()
     try:
         return await asyncio.wait_for(
-            loop.run_in_executor(_compute_pool, partial(fn, *args)),
+            loop.run_in_executor(_compute_pool, partial(ctx.run, fn, *args)),
             timeout=timeout,
         )
     except TimeoutError as err:
