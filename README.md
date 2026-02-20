@@ -2,11 +2,9 @@
 
 Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, and visualizes open voting data from the [Czech Chamber of Deputies](https://www.psp.cz/). Built with FastAPI, Polars, and HTMX.
 
-You can find at: https://snemovna.hlidacstatu.cz
-
-Supports: https://github.com/HlidacStatu
-
-Vision: https://www.hlidacstatu.cz/texty/vize/
+* You can find at: https://snemovna.hlidacstatu.cz
+* Supports: https://github.com/HlidacStatu
+* Vision: https://www.hlidacstatu.cz/texty/vize/
 
 ## Features
 
