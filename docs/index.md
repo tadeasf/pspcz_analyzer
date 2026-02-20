@@ -17,7 +17,7 @@ Built with FastAPI, Polars, and HTMX.
 - **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
 - **i18n** — full Czech/English UI localization with a header language switcher
 - **Docker** — containerized deployment with docker-compose
-- **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
+- **Documentation** — project docs on [GitHub](https://tadeasf.github.io/pspcz_analyzer/)
 
 ## Quick Start
 
@@ -40,13 +40,14 @@ The app starts on `http://localhost:8000`. On first launch it downloads ~50 MB o
 
 All configuration is via environment variables loaded from `.env` by `python-dotenv`:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Data cache directory |
-| `PSPCZ_DEV` | `1` | `1` for hot reload, `0` for production |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
-| `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
-| `OLLAMA_MODEL` | `qwen3:8b` | Model for classification and summarization |
+| Variable          | Default                       | Description                                     |
+| ----------------- | ----------------------------- | ----------------------------------------------- |
+| `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Data cache directory                            |
+| `PSPCZ_DEV`       | `1`                           | `1` for hot reload, `0` for production          |
+| `PORT`            | `8000`                        | Server port (used by both local dev and Docker) |
+| `OLLAMA_BASE_URL` | `http://localhost:11434`      | Ollama API endpoint                             |
+| `OLLAMA_API_KEY`  | _(empty)_                     | Bearer token for remote HTTPS Ollama            |
+| `OLLAMA_MODEL`    | `qwen3:8b`                    | Model for classification and summarization      |
 
 See `.env.example` for a documented template.
 
@@ -56,31 +57,31 @@ See `.env.example` for a documented template.
 docker compose up --build
 ```
 
-The app runs at `http://localhost:8000`. Configure `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` in `.env` to connect to your Ollama instance on the local network.
+The app runs at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. Configure `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` in `.env` to connect to your Ollama instance on the local network.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Web framework | FastAPI + Uvicorn |
-| Templating | Jinja2 + i18n extension |
-| Frontend interactivity | HTMX |
-| CSS | Pico CSS (institutional light theme) |
-| Localization | Dict-based i18n (Czech + English) |
-| Data processing | Polars |
-| Charts | Seaborn + Matplotlib |
-| PDF extraction | PyMuPDF |
-| HTML scraping | BeautifulSoup4 |
-| LLM integration | Ollama (optional, bilingual) |
-| API documentation | Scalar |
-| HTTP client | httpx |
-| Configuration | python-dotenv |
-| Testing | pytest + pytest-cov |
-| Linting & formatting | Ruff |
-| Type checking | Pyright |
-| Containerization | Docker + docker-compose |
-| CI/CD | GitHub Actions |
-| Package manager | uv |
+| Layer                  | Technology                           |
+| ---------------------- | ------------------------------------ |
+| Web framework          | FastAPI + Uvicorn                    |
+| Templating             | Jinja2 + i18n extension              |
+| Frontend interactivity | HTMX                                 |
+| CSS                    | Pico CSS (institutional light theme) |
+| Localization           | Dict-based i18n (Czech + English)    |
+| Data processing        | Polars                               |
+| Charts                 | Seaborn + Matplotlib                 |
+| PDF extraction         | PyMuPDF                              |
+| HTML scraping          | BeautifulSoup4                       |
+| LLM integration        | Ollama (optional, bilingual)         |
+| Documentation          | GitHub + MkDocs                      |
+| HTTP client            | httpx                                |
+| Configuration          | python-dotenv                        |
+| Testing                | pytest + pytest-cov                  |
+| Linting & formatting   | Ruff                                 |
+| Type checking          | Pyright                              |
+| Containerization       | Docker + docker-compose              |
+| CI/CD                  | GitHub Actions                       |
+| Package manager        | uv                                   |
 
 ## Data Source
 

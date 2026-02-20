@@ -28,6 +28,7 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 
 - `PSPCZ_CACHE_DIR` — data cache directory (default: `~/.cache/pspcz-analyzer/psp`)
 - `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`)
+- `PORT` — server port (default: `8000`)
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
 - `OLLAMA_API_KEY` — Bearer token for remote HTTPS Ollama (default: empty)
 - `OLLAMA_MODEL` — model name (default: `qwen3:8b`)
@@ -79,7 +80,7 @@ Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`.
 
 ### Security & Rate Limiting
 
-- **`middleware.py`** — `SecurityHeadersMiddleware` adds `X-Content-Type-Options`, `X-Frame-Options`, etc. Also `run_with_timeout` for ContextVar-safe thread execution.
+- **`middleware.py`** — `SecurityHeadersMiddleware` adds CSP, HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. XSS sanitization via nh3 for markdown content and `html.escape` for external data. CSRF protection via Origin/Referer validation on POST endpoints. Also `run_with_timeout` for ContextVar-safe thread execution.
 - **`rate_limit.py`** — Per-endpoint rate limits via slowapi (e.g. 15/min for analysis APIs, 3/hour for feedback).
 
 ### Web Layer

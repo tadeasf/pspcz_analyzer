@@ -107,6 +107,9 @@ OLLAMA_VERBATIM_CHARS = 40000
 DAILY_REFRESH_ENABLED = os.environ.get("DAILY_REFRESH_ENABLED", "1") == "1"
 DAILY_REFRESH_HOUR = int(os.environ.get("DAILY_REFRESH_HOUR", "3"))
 
+# Server port (overridable for Docker and deployment)
+PORT = int(os.environ.get("PORT", "8000"))
+
 # GitHub feedback — user feedback creates GitHub issues
 GITHUB_FEEDBACK_ENABLED = os.environ.get("GITHUB_FEEDBACK_ENABLED", "0") == "1"
 GITHUB_FEEDBACK_TOKEN = os.environ.get("GITHUB_FEEDBACK_TOKEN", "")

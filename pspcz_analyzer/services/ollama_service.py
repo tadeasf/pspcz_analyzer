@@ -35,8 +35,8 @@ _CLASSIFICATION_PROMPT_TEMPLATE = (
     "Urc 1-3 hlavni temata nasledujiciho parlamentniho tisku. "
     "Pouzij kratke ceske nazvy temat (2-4 slova). "
     "Bud konkretni - napr. misto 'Pravo' napis 'Trestni pravo' nebo 'Obcanske pravo'.\n\n"
-    "Nazev tisku: {title}\n\n"
-    "Text tisku:\n{text}\n\n"
+    "Nazev tisku:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text tisku:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
     "Odpovez POUZE: TOPICS: tema1, tema2, tema3 /no_think"
 )
 
@@ -54,8 +54,8 @@ _SUMMARY_PROMPT_TEMPLATE = (
     "3. Jake je RIZIKO zneuziti nebo nezamysleny dusledek\n"
     "Bud primy a kriticko-analyticky. Pokud zakon oslabuje kontrolu, nezavislost nebo prava, rekni to jasne.\n"
     "3-4 vety v cestine.\n\n"
-    "Nazev: {title}\n\n"
-    "Text:\n{text} /no_think"
+    "Nazev:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT--- /no_think"
 )
 
 _CONSOLIDATION_SYSTEM = (
@@ -82,8 +82,8 @@ _COMPARISON_PROMPT_TEMPLATE = (
     "2. Co bylo pridano nebo odebrano\n"
     "3. Jaky je celkovy charakter zmen (zprisneni/zmireni/technicka uprava)\n"
     "3-4 vety v cestine. Bud konkretni — cituj cisla paragrafu.\n\n"
-    "VERZE {ct1_old} ({label_old}):\n{text_old}\n\n"
-    "VERZE {ct1_new} ({label_new}):\n{text_new} /no_think"
+    "VERZE {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
+    "VERZE {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT--- /no_think"
 )
 
 # ── English classification prompts ────────────────────────────────────────
@@ -99,8 +99,8 @@ _CLASSIFICATION_PROMPT_TEMPLATE_EN = (
     "Identify 1-3 main topics of the following Czech parliamentary bill. "
     "Use short English topic names (2-4 words). "
     "Be specific — e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
-    "Bill title: {title}\n\n"
-    "Bill text:\n{text}\n\n"
+    "Bill title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Bill text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
     "Respond ONLY: TOPICS: topic1, topic2, topic3 /no_think"
 )
 
@@ -134,8 +134,8 @@ _SUMMARY_PROMPT_TEMPLATE_EN = (
     "3. What is the RISK of abuse or unintended consequence\n"
     "Be direct and critical. If the law weakens oversight, independence, or rights, say it clearly.\n"
     "3-4 sentences in English.\n\n"
-    "Title: {title}\n\n"
-    "Text:\n{text} /no_think"
+    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT--- /no_think"
 )
 
 _COMPARISON_SYSTEM_EN = (
@@ -149,9 +149,24 @@ _COMPARISON_PROMPT_TEMPLATE_EN = (
     "2. What was added or removed\n"
     "3. What is the overall character of changes (tightening/loosening/technical adjustment)\n"
     "3-4 sentences in English. Be specific — cite paragraph numbers.\n\n"
-    "VERSION {ct1_old} ({label_old}):\n{text_old}\n\n"
-    "VERSION {ct1_new} ({label_new}):\n{text_new} /no_think"
+    "VERSION {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
+    "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT--- /no_think"
 )
+
+_INJECTION_PHRASES_RE = re.compile(
+    r"(?:ignore (?:all )?(?:previous|above|prior) instructions"
+    r"|you are now"
+    r"|new instructions:"
+    r"|system prompt:"
+    r"|---END USER TEXT---)",
+    re.IGNORECASE,
+)
+
+
+def _sanitize_llm_input(text: str) -> str:
+    """Strip common prompt injection phrases from user-supplied text."""
+    return _INJECTION_PHRASES_RE.sub("[REDACTED]", text)
+
 
 # Strip <think>...</think> blocks from Qwen3 responses (defensive)
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
@@ -270,8 +285,8 @@ class OllamaClient:
         """
         truncated = truncate_legislative_text(text)
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(
-            title=title or "(bez názvu)",
-            text=truncated,
+            title=_sanitize_llm_input(title or "(bez názvu)"),
+            text=_sanitize_llm_input(truncated),
         )
         response = self._generate(prompt, _CLASSIFICATION_SYSTEM)
         if response is None:
@@ -285,8 +300,8 @@ class OllamaClient:
         """
         truncated = truncate_legislative_text(text)
         prompt = _SUMMARY_PROMPT_TEMPLATE.format(
-            title=title or "(bez názvu)",
-            text=truncated,
+            title=_sanitize_llm_input(title or "(bez názvu)"),
+            text=_sanitize_llm_input(truncated),
         )
         response = self._generate(prompt, _SUMMARY_SYSTEM)
         if not response:
@@ -300,8 +315,8 @@ class OllamaClient:
         """
         truncated = truncate_legislative_text(text)
         prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(
-            title=title or "(no title)",
-            text=truncated,
+            title=_sanitize_llm_input(title or "(no title)"),
+            text=_sanitize_llm_input(truncated),
         )
         response = self._generate(prompt, _SUMMARY_SYSTEM_EN)
         if not response:
@@ -352,8 +367,8 @@ class OllamaClient:
         """
         truncated = truncate_legislative_text(text)
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE_EN.format(
-            title=title or "(no title)",
-            text=truncated,
+            title=_sanitize_llm_input(title or "(no title)"),
+            text=_sanitize_llm_input(truncated),
         )
         response = self._generate(prompt, _CLASSIFICATION_SYSTEM_EN)
         if response is None:
@@ -434,8 +449,8 @@ class OllamaClient:
             ct1_new=ct1_new,
             label_old=label_old or f"CT1={ct1_old}",
             label_new=label_new or f"CT1={ct1_new}",
-            text_old=trunc_old,
-            text_new=trunc_new,
+            text_old=_sanitize_llm_input(trunc_old),
+            text_new=_sanitize_llm_input(trunc_new),
         )
         response = self._generate(prompt, _COMPARISON_SYSTEM)
         if not response:
@@ -472,8 +487,8 @@ class OllamaClient:
             ct1_new=ct1_new,
             label_old=label_old or f"CT1={ct1_old}",
             label_new=label_new or f"CT1={ct1_new}",
-            text_old=trunc_old,
-            text_new=trunc_new,
+            text_old=_sanitize_llm_input(trunc_old),
+            text_new=_sanitize_llm_input(trunc_new),
         )
         response = self._generate(prompt, _COMPARISON_SYSTEM_EN)
         en = self._strip_think(response) if response else ""

@@ -11,7 +11,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "nav.attendance": "Účast",
         "nav.similarity": "Podobnost",
         "nav.votes": "Hlasování",
-        "nav.api_docs": "API Dokumentace",
+        "nav.docs": "Dokumentace",
         "period.label": "volební období",
         "period.select_aria": "Volební období",
         "footer.source": "Zdroj dat:",
@@ -244,6 +244,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "feedback.error_generic": "Nepodařilo se odeslat zpětnou vazbu. Zkuste to prosím později.",
         "feedback.error_validation": "Nadpis musí mít 5–200 znaků a popis 10–2000 znaků.",
         "feedback.disabled": "Funkce zpětné vazby není k dispozici.",
+        "feedback.error_csrf": "Neplatný požadavek. Zkuste stránku obnovit a odeslat znovu.",
     },
     "en": {
         # ── Base / Header / Nav ──────────────────────────────────────────
@@ -255,7 +256,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "nav.attendance": "Attendance",
         "nav.similarity": "Similarity",
         "nav.votes": "Votes",
-        "nav.api_docs": "API Docs",
+        "nav.docs": "Documentation",
         "period.label": "period",
         "period.select_aria": "Electoral period",
         "footer.source": "Data source:",
@@ -488,5 +489,6 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "feedback.error_generic": "Failed to submit feedback. Please try again later.",
         "feedback.error_validation": "Title must be 5–200 characters and description 10–2000 characters.",
         "feedback.disabled": "Feedback feature is not available.",
+        "feedback.error_csrf": "Invalid request. Please refresh the page and try again.",
     },
 }

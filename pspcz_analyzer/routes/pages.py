@@ -1,11 +1,11 @@
 """HTML page routes (full-page renders)."""
 
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from scalar_fastapi import get_scalar_api_reference
 from starlette.responses import Response
 
 from pspcz_analyzer.config import DEFAULT_PERIOD, GITHUB_FEEDBACK_ENABLED
@@ -31,14 +31,41 @@ def _ctx(request: Request, period: int, **kwargs) -> dict:
     }
 
 
+def _safe_referer(referer: str | None) -> str:
+    """Extract path from referer, rejecting external URLs."""
+    if not referer:
+        return "/"
+    try:
+        parsed = urlparse(referer)
+        if parsed.scheme or parsed.netloc:
+            path = parsed.path or "/"
+            if parsed.query:
+                path = f"{path}?{parsed.query}"
+            if path.startswith("//"):
+                return "/"
+            return path
+        if referer.startswith("//"):
+            return "/"
+        return referer
+    except ValueError:
+        return "/"
+
+
 @router.get("/set-lang/{lang}")
 async def set_lang(request: Request, lang: str) -> Response:
     """Set the UI language via cookie and redirect back."""
     if lang not in SUPPORTED_LANGUAGES:
         lang = "cs"
-    referer = request.headers.get("referer", "/")
-    response = RedirectResponse(url=referer, status_code=303)
-    response.set_cookie("lang", lang, max_age=365 * 24 * 3600, samesite="lax", httponly=False)
+    redirect_path = _safe_referer(request.headers.get("referer"))
+    response = RedirectResponse(url=redirect_path, status_code=303)
+    response.set_cookie(
+        "lang",
+        lang,
+        max_age=365 * 24 * 3600,
+        samesite="lax",
+        httponly=True,
+        secure=request.url.scheme == "https",
+    )
     return response
 
 
@@ -119,13 +146,4 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
             active_page="votes",
             feedback_enabled=GITHUB_FEEDBACK_ENABLED,
         ),
-    )
-
-
-@router.get("/docs", include_in_schema=False)
-@limiter.limit("60/minute")
-async def scalar_docs(request: Request):
-    return get_scalar_api_reference(
-        openapi_url=request.app.openapi_url,
-        title="PSP.cz Analyzer — API Documentation",
     )

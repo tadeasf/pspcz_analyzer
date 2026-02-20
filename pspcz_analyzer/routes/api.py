@@ -5,6 +5,7 @@ import html as html_mod
 import time
 from dataclasses import asdict
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -222,6 +223,19 @@ async def tisk_evolution_api(
     )
 
 
+def _safe_url(url: str) -> str:
+    """Return url only if scheme is http/https, else empty string."""
+    if not url:
+        return ""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme in ("http", "https"):
+            return url
+    except ValueError:
+        pass
+    return ""
+
+
 @router.get("/related-bills", response_class=HTMLResponse)
 @limiter.limit("5/minute")
 async def related_bills_api(
@@ -254,17 +268,17 @@ async def related_bills_api(
 
     rows_html = ""
     for b in bills:
-        url = b.get("url", "")
-        cislo = b.get("cislo", "?")
-        link = f'<a href="{url}" target="_blank">{cislo}</a>' if url else cislo
-        rows_html += (
-            f"<tr>"
-            f"<td>{link}</td>"
-            f"<td>{b.get('kratky_nazev', '')}</td>"
-            f"<td>{b.get('typ_tisku', '')}</td>"
-            f"<td>{b.get('stav', '')}</td>"
-            f"</tr>"
-        )
+        raw_url = _safe_url(b.get("url", ""))
+        cislo = html_mod.escape(str(b.get("cislo", "?")))
+        if raw_url:
+            safe_href = html_mod.escape(raw_url)
+            link = f'<a href="{safe_href}" target="_blank" rel="noopener">{cislo}</a>'
+        else:
+            link = cislo
+        nazev = html_mod.escape(str(b.get("kratky_nazev", "")))
+        typ = html_mod.escape(str(b.get("typ_tisku", "")))
+        stav = html_mod.escape(str(b.get("stav", "")))
+        rows_html += f"<tr><td>{link}</td><td>{nazev}</td><td>{typ}</td><td>{stav}</td></tr>"
 
     return HTMLResponse(
         '<table style="font-size: 0.85rem; margin: 0.5rem 0;">'
@@ -277,6 +291,19 @@ async def related_bills_api(
         f"<tbody>{rows_html}</tbody>"
         "</table>"
     )
+
+
+def _validate_origin(request: Request) -> bool:
+    """Check that Origin or Referer matches the request host."""
+    expected = request.url.hostname
+    for header in ("origin", "referer"):
+        value = request.headers.get(header)
+        if value:
+            try:
+                return urlparse(value).hostname == expected
+            except ValueError:
+                return False
+    return False
 
 
 def _validate_feedback_fields(title: str, body: str) -> str | None:
@@ -298,6 +325,18 @@ async def feedback_api(
     """Submit user feedback as a GitHub issue."""
     lang = getattr(request.state, "lang", "cs")
     suffix = ""
+
+    if not _validate_origin(request):
+        return templates.TemplateResponse(
+            "partials/feedback_result.html",
+            {
+                "request": request,
+                "success": False,
+                "error_message": _t("feedback.error_csrf"),
+                "feedback_id_suffix": suffix,
+                "lang": lang,
+            },
+        )
 
     if not GITHUB_FEEDBACK_ENABLED:
         return templates.TemplateResponse(

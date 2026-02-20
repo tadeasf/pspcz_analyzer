@@ -6,6 +6,8 @@ import pytest
 
 from pspcz_analyzer.rate_limit import limiter
 
+_CSRF_HEADERS = {"origin": "http://testserver"}
+
 
 class TestFeedbackEndpoint:
     @pytest.fixture(autouse=True)
@@ -31,6 +33,7 @@ class TestFeedbackEndpoint:
                 "title": "Test issue title",
                 "body": "This is a detailed description of the problem",
             },
+            headers=_CSRF_HEADERS,
         )
         assert resp.status_code == 200
         assert "github.com" in resp.text
@@ -45,6 +48,7 @@ class TestFeedbackEndpoint:
                 "title": "Hi",
                 "body": "This is a detailed description of the problem",
             },
+            headers=_CSRF_HEADERS,
         )
         assert resp.status_code == 200
         assert "github.com" not in resp.text
@@ -54,6 +58,7 @@ class TestFeedbackEndpoint:
         resp = client.post(
             "/api/feedback",
             data={"vote_id": "100", "period": "1", "title": "Valid title here", "body": "Short"},
+            headers=_CSRF_HEADERS,
         )
         assert resp.status_code == 200
         assert "github.com" not in resp.text
@@ -68,6 +73,7 @@ class TestFeedbackEndpoint:
                 "title": "Test issue title",
                 "body": "This is a detailed description of the problem",
             },
+            headers=_CSRF_HEADERS,
         )
         assert resp.status_code == 200
         assert "github.com" not in resp.text
@@ -87,6 +93,7 @@ class TestFeedbackEndpoint:
                 "title": "Test issue title",
                 "body": "This is a detailed description of the problem",
             },
+            headers=_CSRF_HEADERS,
         )
         assert resp.status_code == 200
         assert "github.com" not in resp.text
