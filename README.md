@@ -17,7 +17,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Rate Limiting & Security** — per-endpoint rate limits (slowapi), CSP/HSTS/Permissions-Policy headers, CSRF protection, and XSS sanitization (nh3)
 - **Legislative Evolution** — bill version diffs, law changes, and related bills discovery
 - **Docker** — containerized deployment with docker-compose
-- **Documentation** — project docs on [GitHub](https://github.com/tadeasf/pspcz_analyzer)
+- **Documentation** — project docs on [GitHub](https://tadeasf.github.io/pspcz_analyzer/)
 
 See detailed docs: [Routes](docs/routes.md) | [Services](docs/services.md) | [Templates](docs/templates.md) | [Data Model](docs/data-model.md) | [Testing & CI/CD](docs/testing.md)
 
@@ -42,21 +42,21 @@ The app starts on `http://localhost:8000`. On first launch it downloads ~50 MB o
 
 All configuration is via environment variables. Copy `.env.example` to `.env` for local development — `python-dotenv` loads it automatically.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Data cache directory |
-| `PSPCZ_DEV` | `1` | Set to `1` for hot reload, `0` for production |
-| `PORT` | `8000` | Server port (used by both local dev and Docker) |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
-| `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
-| `OLLAMA_MODEL` | `qwen3:8b` | Model for topic classification and summarization |
-| `DAILY_REFRESH_ENABLED` | `1` | Enable daily re-download of psp.cz data |
-| `DAILY_REFRESH_HOUR` | `3` | Hour (CET, 0-23) for daily data refresh |
-| `GITHUB_FEEDBACK_ENABLED` | `0` | Enable user feedback via GitHub Issues |
-| `GITHUB_FEEDBACK_TOKEN` | *(empty)* | GitHub PAT with `public_repo` scope |
-| `GITHUB_FEEDBACK_REPO` | `tadeasf/pspcz_analyzer` | Repository for feedback issues |
-| `GITHUB_FEEDBACK_LABELS` | `user-feedback` | Labels applied to feedback issues |
-| `TISK_SHORTENER` | `0` | Truncate tisk text for LLM (`0` = full text) |
+| Variable                  | Default                       | Description                                      |
+| ------------------------- | ----------------------------- | ------------------------------------------------ |
+| `PSPCZ_CACHE_DIR`         | `~/.cache/pspcz-analyzer/psp` | Data cache directory                             |
+| `PSPCZ_DEV`               | `1`                           | Set to `1` for hot reload, `0` for production    |
+| `PORT`                    | `8000`                        | Server port (used by both local dev and Docker)  |
+| `OLLAMA_BASE_URL`         | `http://localhost:11434`      | Ollama API endpoint                              |
+| `OLLAMA_API_KEY`          | _(empty)_                     | Bearer token for remote HTTPS Ollama             |
+| `OLLAMA_MODEL`            | `qwen3:8b`                    | Model for topic classification and summarization |
+| `DAILY_REFRESH_ENABLED`   | `1`                           | Enable daily re-download of psp.cz data          |
+| `DAILY_REFRESH_HOUR`      | `3`                           | Hour (CET, 0-23) for daily data refresh          |
+| `GITHUB_FEEDBACK_ENABLED` | `0`                           | Enable user feedback via GitHub Issues           |
+| `GITHUB_FEEDBACK_TOKEN`   | _(empty)_                     | GitHub PAT with `public_repo` scope              |
+| `GITHUB_FEEDBACK_REPO`    | `tadeasf/pspcz_analyzer`      | Repository for feedback issues                   |
+| `GITHUB_FEEDBACK_LABELS`  | `user-feedback`               | Labels applied to feedback issues                |
+| `TISK_SHORTENER`          | `0`                           | Truncate tisk text for LLM (`0` = full text)     |
 
 ## Docker
 
@@ -123,27 +123,27 @@ See [Testing & CI/CD](docs/testing.md) for full details on the test suite, CI pi
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Web framework | FastAPI + Uvicorn |
-| Templating | Jinja2 + i18n extension |
-| Frontend interactivity | HTMX |
-| CSS | Pico CSS (institutional light theme) |
-| Localization | Dict-based i18n (Czech + English) |
-| Data processing | Polars |
-| Charts | Seaborn + Matplotlib |
-| PDF extraction | PyMuPDF |
-| HTML scraping | BeautifulSoup4 |
-| LLM integration | Ollama (optional, bilingual) |
-| Documentation | GitHub + MkDocs |
-| HTTP client | httpx |
-| Configuration | python-dotenv |
-| Testing | pytest + pytest-cov |
-| Linting & formatting | Ruff |
-| Type checking | Pyright |
-| CI/CD | GitHub Actions |
-| Containerization | Docker + docker-compose |
-| Package manager | uv |
+| Layer                  | Technology                           |
+| ---------------------- | ------------------------------------ |
+| Web framework          | FastAPI + Uvicorn                    |
+| Templating             | Jinja2 + i18n extension              |
+| Frontend interactivity | HTMX                                 |
+| CSS                    | Pico CSS (institutional light theme) |
+| Localization           | Dict-based i18n (Czech + English)    |
+| Data processing        | Polars                               |
+| Charts                 | Seaborn + Matplotlib                 |
+| PDF extraction         | PyMuPDF                              |
+| HTML scraping          | BeautifulSoup4                       |
+| LLM integration        | Ollama (optional, bilingual)         |
+| Documentation          | GitHub + MkDocs                      |
+| HTTP client            | httpx                                |
+| Configuration          | python-dotenv                        |
+| Testing                | pytest + pytest-cov                  |
+| Linting & formatting   | Ruff                                 |
+| Type checking          | Pyright                              |
+| CI/CD                  | GitHub Actions                       |
+| Containerization       | Docker + docker-compose              |
+| Package manager        | uv                                   |
 
 ## Data Source
 
@@ -167,12 +167,12 @@ This data powers the vote detail pages (topic tags, AI summaries, legislative ti
 
 ## Documentation
 
-| Document | Contents |
-|----------|----------|
-| [Routes](docs/routes.md) | All HTTP endpoints — pages, API partials, chart images, health check, OpenAPI |
-| [Services](docs/services.md) | Data pipeline, analysis services, tisk pipeline, Ollama integration |
-| [Templates](docs/templates.md) | Frontend structure, HTMX patterns, i18n, vote detail, skeleton loading, styling |
-| [Data Model](docs/data-model.md) | Electoral periods, UNL format, table schemas, vote codes, tisk data, Ollama/env config |
+| Document                           | Contents                                                                               |
+| ---------------------------------- | -------------------------------------------------------------------------------------- |
+| [Routes](docs/routes.md)           | All HTTP endpoints — pages, API partials, chart images, health check, OpenAPI          |
+| [Services](docs/services.md)       | Data pipeline, analysis services, tisk pipeline, Ollama integration                    |
+| [Templates](docs/templates.md)     | Frontend structure, HTMX patterns, i18n, vote detail, skeleton loading, styling        |
+| [Data Model](docs/data-model.md)   | Electoral periods, UNL format, table schemas, vote codes, tisk data, Ollama/env config |
 | [Testing & CI/CD](docs/testing.md) | Test suite structure, fixtures, linting config, GitHub Actions workflows, contributing |
 
 ## License
