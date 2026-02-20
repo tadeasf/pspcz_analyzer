@@ -42,7 +42,11 @@ def _safe_referer(referer: str | None) -> str:
             path = parsed.path or "/"
             if parsed.query:
                 path = f"{path}?{parsed.query}"
+            if path.startswith("//"):
+                return "/"
             return path
+        if referer.startswith("//"):
+            return "/"
         return referer
     except ValueError:
         return "/"

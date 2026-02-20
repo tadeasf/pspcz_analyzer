@@ -338,7 +338,7 @@ Configuration:
 
 ### CSRF Protection
 
-POST endpoints validate the `Origin` and `Referer` headers against the request host. Requests with mismatched origins are rejected with 403 Forbidden.
+POST endpoints validate the `Origin` and `Referer` headers against the request host. Requests with mismatched or missing origins are rejected with an error message (HTTP 200 with an HTMX error partial).
 
 ### XSS Sanitization
 

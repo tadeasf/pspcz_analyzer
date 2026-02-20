@@ -51,6 +51,15 @@ class TestSafeReferer:
         result = _safe_referer("http://localhost:8000/loyalty")
         assert result == "/loyalty"
 
+    def test_protocol_relative_redirect_blocked(self) -> None:
+        """Prevent //evil.com open redirect bypass."""
+        assert _safe_referer("https://evil.com//evil.com/phishing") == "/"
+
+    def test_double_slash_raw_extracts_path(self) -> None:
+        """//host/path is parsed as netloc=host, path=/path — safe local path."""
+        assert _safe_referer("//evil.com/phishing") == "/phishing"
+        assert _safe_referer("//evil.com") == "/"
+
 
 class TestMdFilter:
     def test_script_stripped(self) -> None:
