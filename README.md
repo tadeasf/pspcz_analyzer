@@ -4,6 +4,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 
 You can find at: https://snemovna.hlidacstatu.cz
 Supports: https://github.com/HlidacStatu
+Vision: https://www.hlidacstatu.cz/texty/vize/
 
 ## Features
 
