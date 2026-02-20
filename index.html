@@ -2490,7 +2490,7 @@
 <li><strong>AI Summaries</strong> — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama</li>
 <li><strong>i18n</strong> — full Czech/English UI localization with a header language switcher</li>
 <li><strong>Docker</strong> — containerized deployment with docker-compose</li>
-<li><strong>API Documentation</strong> — interactive Scalar UI at <code>/docs</code> with full OpenAPI schema</li>
+<li><strong>Documentation</strong> — project docs on <a href="https://tadeasf.github.io/pspcz_analyzer/">GitHub</a></li>
 </ul>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <p>Requires Python &gt;= 3.12 and <a href="https://docs.astral.sh/uv/">uv</a>.</p>
@@ -2526,6 +2526,11 @@
 <td><code>1</code> for hot reload, <code>0</code> for production</td>
 </tr>
 <tr>
+<td><code>PORT</code></td>
+<td><code>8000</code></td>
+<td>Server port (used by both local dev and Docker)</td>
+</tr>
+<tr>
 <td><code>OLLAMA_BASE_URL</code></td>
 <td><code>http://localhost:11434</code></td>
 <td>Ollama API endpoint</td>
@@ -2546,7 +2551,7 @@
 <h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
 </code></pre></div>
-<p>The app runs at <code>http://localhost:8000</code>. Configure <code>OLLAMA_BASE_URL</code> and <code>OLLAMA_API_KEY</code> in <code>.env</code> to connect to your Ollama instance on the local network.</p>
+<p>The app runs at <code>http://localhost:8000</code> (or the port set by <code>PORT</code>). Data cache is persisted via a bind mount at <code>./cache-data/</code>. Configure <code>OLLAMA_BASE_URL</code> and <code>OLLAMA_API_KEY</code> in <code>.env</code> to connect to your Ollama instance on the local network.</p>
 <h2 id="tech-stack">Tech Stack<a class="headerlink" href="#tech-stack" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2597,8 +2602,8 @@
 <td>Ollama (optional, bilingual)</td>
 </tr>
 <tr>
-<td>API documentation</td>
-<td>Scalar</td>
+<td>Documentation</td>
+<td>GitHub + MkDocs</td>
 </tr>
 <tr>
 <td>HTTP client</td>

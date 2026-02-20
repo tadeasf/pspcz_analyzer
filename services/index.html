@@ -979,6 +979,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#csrf-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSRF Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xss-sanitization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        XSS Sanitization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rate-limiting-rate_limitpy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3236,6 +3258,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#csrf-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSRF Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xss-sanitization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        XSS Sanitization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rate-limiting-rate_limitpy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3615,8 +3659,17 @@
 <p><code>SecurityHeadersMiddleware</code> adds security headers to all responses:
 - <code>X-Content-Type-Options: nosniff</code>
 - <code>X-Frame-Options: DENY</code>
-- <code>X-XSS-Protection: 1; mode=block</code>
-- <code>Referrer-Policy: strict-origin-when-cross-origin</code></p>
+- <code>Referrer-Policy: strict-origin-when-cross-origin</code>
+- <code>Content-Security-Policy</code> — restricts script/style/image/font/connect sources to <code>'self'</code> (with <code>https://unpkg.com</code> for HTMX and <code>'unsafe-inline'</code> for inline scripts/styles)
+- <code>Strict-Transport-Security: max-age=31536000; includeSubDomains</code>
+- <code>Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()</code></p>
+<h3 id="csrf-protection">CSRF Protection<a class="headerlink" href="#csrf-protection" title="Permanent link">&para;</a></h3>
+<p>POST endpoints validate the <code>Origin</code> and <code>Referer</code> headers against the request host. Requests with mismatched or missing origins are rejected with an error message (HTTP 200 with an HTMX error partial).</p>
+<h3 id="xss-sanitization">XSS Sanitization<a class="headerlink" href="#xss-sanitization" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Markdown content</strong> — rendered via <code>markdown</code> library, then sanitized through <code>nh3</code> (Rust-based HTML sanitizer) before being marked safe for Jinja2</li>
+<li><strong>External data</strong> — user-supplied and psp.cz-sourced text is escaped via <code>html.escape()</code> before rendering</li>
+</ul>
 <h3 id="rate-limiting-rate_limitpy">Rate Limiting (<code>rate_limit.py</code>)<a class="headerlink" href="#rate-limiting-rate_limitpy" title="Permanent link">&para;</a></h3>
 <p>Per-endpoint rate limits via slowapi/limits. Each API endpoint declares its own limit via <code>@limiter.limit()</code> decorator.</p>
 <h3 id="context-aware-timeout-middlewarepy">Context-Aware Timeout (<code>middleware.py</code>)<a class="headerlink" href="#context-aware-timeout-middlewarepy" title="Permanent link">&para;</a></h3>

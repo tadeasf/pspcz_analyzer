@@ -2440,23 +2440,37 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/routes/pages.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/set-lang/</span><span class="si">{lang}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_lang</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the UI language via cookie and redirect back.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="k">if</span> <span class="n">lang</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_LANGUAGES</span><span class="p">:</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="n">lang</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">referer</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;referer&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">RedirectResponse</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">referer</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">303</span><span class="p">)</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">response</span><span class="o">.</span><span class="n">set_cookie</span><span class="p">(</span><span class="s2">&quot;lang&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="p">,</span> <span class="n">max_age</span><span class="o">=</span><span class="mi">365</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span> <span class="n">samesite</span><span class="o">=</span><span class="s2">&quot;lax&quot;</span><span class="p">,</span> <span class="n">httponly</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="k">return</span> <span class="n">response</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/set-lang/</span><span class="si">{lang}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_lang</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the UI language via cookie and redirect back.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">if</span> <span class="n">lang</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_LANGUAGES</span><span class="p">:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="n">lang</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="n">redirect_path</span> <span class="o">=</span> <span class="n">_safe_referer</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;referer&quot;</span><span class="p">))</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">RedirectResponse</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">redirect_path</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">303</span><span class="p">)</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">response</span><span class="o">.</span><span class="n">set_cookie</span><span class="p">(</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="s2">&quot;lang&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="n">lang</span><span class="p">,</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">max_age</span><span class="o">=</span><span class="mi">365</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">samesite</span><span class="o">=</span><span class="s2">&quot;lax&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="n">httponly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">secure</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s2">&quot;https&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="p">)</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="k">return</span> <span class="n">response</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
