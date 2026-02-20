@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from scalar_fastapi import get_scalar_api_reference
 from starlette.responses import Response
 
 from pspcz_analyzer.config import DEFAULT_PERIOD, GITHUB_FEEDBACK_ENABLED
@@ -147,13 +146,4 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
             active_page="votes",
             feedback_enabled=GITHUB_FEEDBACK_ENABLED,
         ),
-    )
-
-
-@router.get("/docs", include_in_schema=False)
-@limiter.limit("60/minute")
-async def scalar_docs(request: Request):
-    return get_scalar_api_reference(
-        openapi_url=request.app.openapi_url,
-        title="PSP.cz Analyzer — API Documentation",
     )

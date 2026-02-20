@@ -16,7 +16,6 @@ dependencies = [
     "loguru>=0.7.3",
     "beautifulsoup4>=4.12",
     "pymupdf>=1.25",
-    "scalar-fastapi>=1.6.2",
     "markdown>=3.10.2",
     "slowapi>=0.1.9",
     "python-dotenv>=1.2.1",

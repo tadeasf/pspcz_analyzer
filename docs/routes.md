@@ -17,7 +17,6 @@ Full HTML pages rendered with Jinja2. Defined in `pspcz_analyzer/routes/pages.py
 | GET | `/votes` | Votes browser (searchable, paginated) |
 | GET | `/votes/{vote_id}` | Single vote detail — per-party and per-MP breakdown |
 | GET | `/set-lang/{lang}` | Set UI language (`cs` or `en`) via cookie and redirect back |
-| GET | `/docs` | Scalar API documentation UI (not included in OpenAPI schema) |
 
 ## API Routes (HTMX Partials)
 
@@ -146,7 +145,7 @@ All charts render at 150 DPI with a light background (`#FFFFFF` with `#F7F7F7` p
 
 ## OpenAPI
 
-The full OpenAPI schema is available at `/openapi.json`. The interactive API documentation (Scalar UI) is at `/docs`. Default Swagger UI and ReDoc are disabled in favor of Scalar.
+The full OpenAPI schema is available at `/openapi.json`. Default Swagger UI and ReDoc are disabled. The nav bar links to the [GitHub repository](https://github.com/tadeasf/pspcz_analyzer) for documentation.
 
 ## Rate Limiting
 

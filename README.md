@@ -17,7 +17,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Rate Limiting & Security** — per-endpoint rate limits (slowapi), CSP/HSTS/Permissions-Policy headers, CSRF protection, and XSS sanitization (nh3)
 - **Legislative Evolution** — bill version diffs, law changes, and related bills discovery
 - **Docker** — containerized deployment with docker-compose
-- **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
+- **Documentation** — project docs on [GitHub](https://github.com/tadeasf/pspcz_analyzer)
 
 See detailed docs: [Routes](docs/routes.md) | [Services](docs/services.md) | [Templates](docs/templates.md) | [Data Model](docs/data-model.md) | [Testing & CI/CD](docs/testing.md)
 
@@ -135,7 +135,7 @@ See [Testing & CI/CD](docs/testing.md) for full details on the test suite, CI pi
 | PDF extraction | PyMuPDF |
 | HTML scraping | BeautifulSoup4 |
 | LLM integration | Ollama (optional, bilingual) |
-| API documentation | Scalar |
+| Documentation | GitHub + MkDocs |
 | HTTP client | httpx |
 | Configuration | python-dotenv |
 | Testing | pytest + pytest-cov |

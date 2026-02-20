@@ -17,7 +17,7 @@ Built with FastAPI, Polars, and HTMX.
 - **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
 - **i18n** — full Czech/English UI localization with a header language switcher
 - **Docker** — containerized deployment with docker-compose
-- **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
+- **Documentation** — project docs on [GitHub](https://github.com/tadeasf/pspcz_analyzer)
 
 ## Quick Start
 
@@ -73,7 +73,7 @@ The app runs at `http://localhost:8000` (or the port set by `PORT`). Data cache 
 | PDF extraction | PyMuPDF |
 | HTML scraping | BeautifulSoup4 |
 | LLM integration | Ollama (optional, bilingual) |
-| API documentation | Scalar |
+| Documentation | GitHub + MkDocs |
 | HTTP client | httpx |
 | Configuration | python-dotenv |
 | Testing | pytest + pytest-cov |
