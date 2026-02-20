@@ -928,8 +928,91 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#law-changes-scraper-datalaw_changes_scraperpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law Changes Scraper (data/law_changes_scraper.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feedback-service-servicesfeedback_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feedback Service (services/feedback_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-middleware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security &amp; Middleware
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security &amp; Middleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-headers-middlewarepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Headers (middleware.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rate-limiting-rate_limitpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate Limiting (rate_limit.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-aware-timeout-middlewarepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Aware Timeout (middleware.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-cache-servicesanalysis_cachepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis Cache (services/analysis_cache.py)
+      
+    </span>
+  </a>
   
 </li>
       
@@ -3102,8 +3185,91 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#law-changes-scraper-datalaw_changes_scraperpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law Changes Scraper (data/law_changes_scraper.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feedback-service-servicesfeedback_servicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feedback Service (services/feedback_service.py)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-middleware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security &amp; Middleware
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security &amp; Middleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-headers-middlewarepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Headers (middleware.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rate-limiting-rate_limitpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate Limiting (rate_limit.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-aware-timeout-middlewarepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Aware Timeout (middleware.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-cache-servicesanalysis_cachepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis Cache (services/analysis_cache.py)
+      
+    </span>
+  </a>
   
 </li>
       
@@ -3260,8 +3426,8 @@
 <p>Keyword-based topic classifier — the fast, offline fallback when Ollama is unavailable.</p>
 <p>Uses a <code>TOPIC_TAXONOMY</code> dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords.</p>
 <p>Functions:
-- <code>classify_tisk(name, text)</code> — returns all matching topic labels
-- <code>classify_tisk_primary_label(name, text)</code> — returns the single best-matching topic</p>
+- <code>classify_tisk(name, text)</code> — returns all matching topic IDs with match counts
+- <code>classify_tisk_primary_label(name, text)</code> — returns <code>(label_cs, label_en)</code> tuple of the best-matching topic, or <code>None</code></p>
 <h3 id="ollama-service-servicesollama_servicepy">Ollama Service (<code>services/ollama_service.py</code>)<a class="headerlink" href="#ollama-service-servicesollama_servicepy" title="Permanent link">&para;</a></h3>
 <p>LLM-based topic classification, summarization, and version comparison using Ollama. This is optional — if Ollama is not running, the system falls back to keyword classification.</p>
 <p>Supports both local Ollama (no auth) and remote HTTPS Ollama (Bearer token authentication via <code>OLLAMA_API_KEY</code>).</p>
@@ -3398,6 +3564,68 @@
 - <code>date</code> — when the stage occurred
 - <code>outcome</code> — result text (approved, rejected, etc.)
 - <code>vote_number</code> — link to the specific vote, if applicable</p>
+<h3 id="law-changes-scraper-datalaw_changes_scraperpy">Law Changes Scraper (<code>data/law_changes_scraper.py</code>)<a class="headerlink" href="#law-changes-scraper-datalaw_changes_scraperpy" title="Permanent link">&para;</a></h3>
+<p>Scrapes zakon.cz to discover laws affected by a parliamentary print and find related bills.</p>
+<ul>
+<li><code>scrape_law_changes(period, ct)</code> — returns list of law change dicts (law name, amendment type)</li>
+<li><code>scrape_related_bills(idsb)</code> — discovers related bills via zakon.cz cross-references</li>
+<li><code>save_related_bills_json()</code> / <code>load_related_bills_json()</code> — JSON cache persistence</li>
+</ul>
+<p>Related bills are cached at <code>~/.cache/pspcz-analyzer/psp/tisky_meta/{period}/tisky_related_bills/{idsb}.json</code>.</p>
+<h2 id="feedback-service-servicesfeedback_servicepy">Feedback Service (<code>services/feedback_service.py</code>)<a class="headerlink" href="#feedback-service-servicesfeedback_servicepy" title="Permanent link">&para;</a></h2>
+<p>Submits user feedback as GitHub Issues via the GitHub API.</p>
+<p>Key class: <code>GitHubFeedbackClient</code>
+- <code>submit(title, body, vote_id, period, page_url)</code> — creates a GitHub issue with metadata labels
+- Requires <code>GITHUB_FEEDBACK_ENABLED=1</code> and a valid <code>GITHUB_FEEDBACK_TOKEN</code>
+- Issues are labeled with <code>GITHUB_FEEDBACK_LABELS</code> (comma-separated)</p>
+<p>Configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GITHUB_FEEDBACK_ENABLED</code></td>
+<td><code>0</code></td>
+<td>Enable feedback submission</td>
+</tr>
+<tr>
+<td><code>GITHUB_FEEDBACK_TOKEN</code></td>
+<td><em>(empty)</em></td>
+<td>GitHub PAT with <code>public_repo</code> scope</td>
+</tr>
+<tr>
+<td><code>GITHUB_FEEDBACK_REPO</code></td>
+<td><code>tadeasf/pspcz_analyzer</code></td>
+<td>Target repository</td>
+</tr>
+<tr>
+<td><code>GITHUB_FEEDBACK_LABELS</code></td>
+<td><code>user-feedback</code></td>
+<td>Labels for issues</td>
+</tr>
+</tbody>
+</table>
+<h2 id="security-middleware">Security &amp; Middleware<a class="headerlink" href="#security-middleware" title="Permanent link">&para;</a></h2>
+<h3 id="security-headers-middlewarepy">Security Headers (<code>middleware.py</code>)<a class="headerlink" href="#security-headers-middlewarepy" title="Permanent link">&para;</a></h3>
+<p><code>SecurityHeadersMiddleware</code> adds security headers to all responses:
+- <code>X-Content-Type-Options: nosniff</code>
+- <code>X-Frame-Options: DENY</code>
+- <code>X-XSS-Protection: 1; mode=block</code>
+- <code>Referrer-Policy: strict-origin-when-cross-origin</code></p>
+<h3 id="rate-limiting-rate_limitpy">Rate Limiting (<code>rate_limit.py</code>)<a class="headerlink" href="#rate-limiting-rate_limitpy" title="Permanent link">&para;</a></h3>
+<p>Per-endpoint rate limits via slowapi/limits. Each API endpoint declares its own limit via <code>@limiter.limit()</code> decorator.</p>
+<h3 id="context-aware-timeout-middlewarepy">Context-Aware Timeout (<code>middleware.py</code>)<a class="headerlink" href="#context-aware-timeout-middlewarepy" title="Permanent link">&para;</a></h3>
+<p><code>run_with_timeout(func, timeout, *args)</code> runs a synchronous function in a thread pool with a timeout. Uses <code>contextvars.copy_context().run()</code> to propagate the locale ContextVar into worker threads.</p>
+<h2 id="analysis-cache-servicesanalysis_cachepy">Analysis Cache (<code>services/analysis_cache.py</code>)<a class="headerlink" href="#analysis-cache-servicesanalysis_cachepy" title="Permanent link">&para;</a></h2>
+<p>In-memory TTL cache (1-hour default) for analysis results. Prevents recomputing loyalty, attendance, similarity, and vote list results on every request.</p>
+<p>Key class: <code>AnalysisCache</code>
+- <code>get_or_compute(key, compute_fn)</code> — returns cached result or computes and caches
+- <code>invalidate_all()</code> — clears all cached results (called by daily refresh)</p>
 
 
 

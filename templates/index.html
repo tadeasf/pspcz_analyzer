@@ -2578,7 +2578,7 @@
 <li><strong>Navigation</strong>: Logo + "PSP.cz Analyzer" branding, page links, API Docs link, period selector</li>
 <li><strong>Language switcher</strong>: CZ/EN toggle links in the header (active language highlighted)</li>
 <li><strong>Footer</strong>: data source attribution + educational project disclaimer (separated by CSS border)</li>
-<li><strong>Theme</strong>: Pico CSS dark mode (<code>data-theme="dark"</code>)</li>
+<li><strong>Theme</strong>: Pico CSS light mode (institutional theme, <code>data-theme="light"</code>)</li>
 </ul>
 <p>Active navigation item is highlighted via <code>aria-current="page"</code>, controlled by the <code>active_page</code> template variable.</p>
 <h2 id="page-templates">Page Templates<a class="headerlink" href="#page-templates" title="Permanent link">&para;</a></h2>
@@ -2638,6 +2638,7 @@
 <li><strong>Vote counts</strong> — stat cards (For/Against/Abstained/Did not vote)</li>
 <li><strong>Party breakdown</strong> — table with per-party vote counts</li>
 <li><strong>Individual MPs</strong> — collapsible table of all MP votes with color-coded results</li>
+<li><strong>Feedback form</strong> — user feedback submission form (when <code>GITHUB_FEEDBACK_ENABLED=1</code>)</li>
 </ol>
 <h2 id="partials-templatespartials">Partials (<code>templates/partials/</code>)<a class="headerlink" href="#partials-templatespartials" title="Permanent link">&para;</a></h2>
 <p>HTML fragments returned by <code>/api/*</code> endpoints for HTMX swaps:</p>
@@ -2675,6 +2676,16 @@
 <td><code>/api/tisk-evolution</code></td>
 <td>Sub-version comparison with bilingual diff summaries</td>
 </tr>
+<tr>
+<td><code>feedback_form.html</code></td>
+<td><code>/api/feedback</code> (form)</td>
+<td>Feedback submission form with title/body fields</td>
+</tr>
+<tr>
+<td><code>feedback_result.html</code></td>
+<td><code>/api/feedback</code> (result)</td>
+<td>Success/error message after feedback submission</td>
+</tr>
 </tbody>
 </table>
 <h2 id="htmx-pattern">HTMX Pattern<a class="headerlink" href="#htmx-pattern" title="Permanent link">&para;</a></h2>
@@ -2710,9 +2721,9 @@
 </ul>
 <p>The skeleton is shown immediately on period change (<code>switchPeriod()</code>) and on nav link clicks, before the full page reload completes. This prevents stale data from being visible during loading.</p>
 <h2 id="charts">Charts<a class="headerlink" href="#charts" title="Permanent link">&para;</a></h2>
-<p>Chart images are embedded as <code>&lt;img&gt;</code> tags pointing to <code>/charts/*.png</code> endpoints. They render server-side via matplotlib/seaborn with a dark theme matching the UI (<code>#1a1a2e</code> background). Chart labels and titles are localized via <code>gettext()</code>.</p>
+<p>Chart images are embedded as <code>&lt;img&gt;</code> tags pointing to <code>/charts/*.png</code> endpoints. They render server-side via matplotlib/seaborn with a light theme (<code>#FFFFFF</code> background with <code>#F7F7F7</code> plot area). Chart labels and titles are localized via <code>gettext()</code>.</p>
 <h2 id="styling">Styling<a class="headerlink" href="#styling" title="Permanent link">&para;</a></h2>
-<p>All custom CSS lives in <code>/static/style.css</code> (external file). Pico CSS v2 dark theme is the base. Key customizations:</p>
+<p>All custom CSS lives in <code>/static/style.css</code> (external file). Pico CSS v2 light theme is the base. Key customizations:</p>
 <ul>
 <li><code>--pico-border-radius: 0.25rem</code> — sharper corners for a more formal/institutional feel</li>
 <li>Legislative timeline styles (dots, lines, active glow)</li>
@@ -2721,6 +2732,9 @@
 <li>Navigation period selector styling</li>
 <li>Language switcher (<code>.lang-switcher</code>) — flex layout with active state highlight</li>
 <li>Footer with CSS border separator (no <code>&lt;hr&gt;</code>)</li>
+<li>Blue gradient navigation bar with institutional feel</li>
+<li>Georgia font for headings</li>
+<li>Zebra-striped tables for readability</li>
 </ul>
 <h2 id="methodology-sections">Methodology Sections<a class="headerlink" href="#methodology-sections" title="Permanent link">&para;</a></h2>
 <p>Each analysis page includes a collapsible <code>&lt;details&gt;</code> element explaining the calculation methodology — this serves as inline documentation for users. Methodology text is fully localized.</p>

@@ -2446,7 +2446,7 @@
 
 
 <h3 id="pspcz_analyzer.services.votes_service.list_votes" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">list_votes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">search</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">per_page</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">outcome_filter</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">topic_filter</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">list_votes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">search</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">per_page</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">outcome_filter</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">topic_filter</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s1">&#39;cs&#39;</span><span class="p">)</span></code>
 
 <a href="#pspcz_analyzer.services.votes_service.list_votes" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -2454,15 +2454,43 @@
     <div class="doc doc-contents ">
 
         <p>List votes with optional text search, topic filter, and pagination.</p>
-<p>Returns dict with keys: rows, total, page, per_page, total_pages.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>lang</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Language code for topic labels ('cs' or 'en').</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;cs&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>Returns dict with keys: rows, total, page, per_page, total_pages.</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/votes_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-147">147</a></span>
-<span class="normal"><a href="#__codelineno-0-148">148</a></span>
-<span class="normal"><a href="#__codelineno-0-149">149</a></span>
-<span class="normal"><a href="#__codelineno-0-150">150</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-150">150</a></span>
 <span class="normal"><a href="#__codelineno-0-151">151</a></span>
 <span class="normal"><a href="#__codelineno-0-152">152</a></span>
 <span class="normal"><a href="#__codelineno-0-153">153</a></span>
@@ -2509,57 +2537,68 @@
 <span class="normal"><a href="#__codelineno-0-194">194</a></span>
 <span class="normal"><a href="#__codelineno-0-195">195</a></span>
 <span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="k">def</span><span class="w"> </span><span class="nf">list_votes</span><span class="p">(</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148"></a>    <span class="n">data</span><span class="p">:</span> <span class="n">PeriodData</span><span class="p">,</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149"></a>    <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150"></a>    <span class="n">page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151"></a>    <span class="n">per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152"></a>    <span class="n">outcome_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153"></a>    <span class="n">topic_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;List votes with optional text search, topic filter, and pagination.</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156"></a>
-<a id="__codelineno-0-157" name="__codelineno-0-157"></a><span class="sd">    Returns dict with keys: rows, total, page, per_page, total_pages.</span>
-<a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a>    <span class="n">void_ids</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">void_votes</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">~</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">void_ids</span><span class="p">))</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">_apply_vote_filters</span><span class="p">(</span><span class="n">votes</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">search</span><span class="p">,</span> <span class="n">outcome_filter</span><span class="p">,</span> <span class="n">topic_filter</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="k">def</span><span class="w"> </span><span class="nf">list_votes</span><span class="p">(</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a>    <span class="n">data</span><span class="p">:</span> <span class="n">PeriodData</span><span class="p">,</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a>    <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a>    <span class="n">page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a>    <span class="n">per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="n">outcome_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="n">topic_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a>    <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;List votes with optional text search, topic filter, and pagination.</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">        lang: Language code for topic labels (&#39;cs&#39; or &#39;en&#39;).</span>
 <a id="__codelineno-0-163" name="__codelineno-0-163"></a>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="n">total</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">height</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="n">total_pages</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">total</span> <span class="o">+</span> <span class="n">per_page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">per_page</span><span class="p">)</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="n">page</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">total_pages</span><span class="p">))</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;datum&quot;</span><span class="p">,</span> <span class="s2">&quot;cas&quot;</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a>    <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">per_page</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170"></a>    <span class="n">page_rows</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">per_page</span><span class="p">)</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171"></a>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="n">rows</span> <span class="o">=</span> <span class="n">page_rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="s2">&quot;id_hlasovani&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="s2">&quot;datum&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>        <span class="s2">&quot;cas&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="s2">&quot;schuze&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a>        <span class="s2">&quot;cislo&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a>        <span class="s2">&quot;bod&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="s2">&quot;nazev_dlouhy&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="s2">&quot;nazev_kratky&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="s2">&quot;vysledek&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="s2">&quot;pro&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="s2">&quot;proti&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="s2">&quot;zdrzel&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>        <span class="s2">&quot;nehlasoval&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="s2">&quot;prihlaseno&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="p">)</span><span class="o">.</span><span class="n">to_dicts</span><span class="p">()</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="n">_enrich_vote_rows</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="s2">&quot;rows&quot;</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="n">total</span><span class="p">,</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a>        <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a>        <span class="s2">&quot;per_page&quot;</span><span class="p">:</span> <span class="n">per_page</span><span class="p">,</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a>        <span class="s2">&quot;total_pages&quot;</span><span class="p">:</span> <span class="n">total_pages</span><span class="p">,</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a>    <span class="p">}</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a><span class="sd">    Returns dict with keys: rows, total, page, per_page, total_pages.</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="n">void_ids</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">void_votes</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">~</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">void_ids</span><span class="p">))</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">_apply_vote_filters</span><span class="p">(</span><span class="n">votes</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">search</span><span class="p">,</span> <span class="n">outcome_filter</span><span class="p">,</span> <span class="n">topic_filter</span><span class="p">)</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="n">total</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">height</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="n">total_pages</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">total</span> <span class="o">+</span> <span class="n">per_page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">per_page</span><span class="p">)</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="n">page</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">total_pages</span><span class="p">))</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;datum&quot;</span><span class="p">,</span> <span class="s2">&quot;cas&quot;</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">per_page</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="n">page_rows</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">per_page</span><span class="p">)</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="n">rows</span> <span class="o">=</span> <span class="n">page_rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="s2">&quot;id_hlasovani&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="s2">&quot;datum&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="s2">&quot;cas&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="s2">&quot;schuze&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="s2">&quot;cislo&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>        <span class="s2">&quot;bod&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="s2">&quot;nazev_dlouhy&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="s2">&quot;nazev_kratky&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="s2">&quot;vysledek&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="s2">&quot;pro&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="s2">&quot;proti&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="s2">&quot;zdrzel&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="s2">&quot;nehlasoval&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="s2">&quot;prihlaseno&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="p">)</span><span class="o">.</span><span class="n">to_dicts</span><span class="p">()</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="n">_enrich_vote_rows</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">lang</span><span class="p">)</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="s2">&quot;rows&quot;</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="n">total</span><span class="p">,</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>        <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>        <span class="s2">&quot;per_page&quot;</span><span class="p">:</span> <span class="n">per_page</span><span class="p">,</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="s2">&quot;total_pages&quot;</span><span class="p">:</span> <span class="n">total_pages</span><span class="p">,</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2570,7 +2609,7 @@
 
 
 <h3 id="pspcz_analyzer.services.votes_service.vote_detail" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">vote_detail</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">vote_id</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">vote_detail</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">vote_id</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s1">&#39;cs&#39;</span><span class="p">)</span></code>
 
 <a href="#pspcz_analyzer.services.votes_service.vote_detail" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -2582,39 +2621,39 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/votes_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-280">280</a></span>
-<span class="normal"><a href="#__codelineno-0-281">281</a></span>
-<span class="normal"><a href="#__codelineno-0-282">282</a></span>
-<span class="normal"><a href="#__codelineno-0-283">283</a></span>
-<span class="normal"><a href="#__codelineno-0-284">284</a></span>
-<span class="normal"><a href="#__codelineno-0-285">285</a></span>
-<span class="normal"><a href="#__codelineno-0-286">286</a></span>
-<span class="normal"><a href="#__codelineno-0-287">287</a></span>
-<span class="normal"><a href="#__codelineno-0-288">288</a></span>
-<span class="normal"><a href="#__codelineno-0-289">289</a></span>
-<span class="normal"><a href="#__codelineno-0-290">290</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-290">290</a></span>
 <span class="normal"><a href="#__codelineno-0-291">291</a></span>
 <span class="normal"><a href="#__codelineno-0-292">292</a></span>
 <span class="normal"><a href="#__codelineno-0-293">293</a></span>
 <span class="normal"><a href="#__codelineno-0-294">294</a></span>
 <span class="normal"><a href="#__codelineno-0-295">295</a></span>
-<span class="normal"><a href="#__codelineno-0-296">296</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="k">def</span><span class="w"> </span><span class="nf">vote_detail</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PeriodData</span><span class="p">,</span> <span class="n">vote_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get full detail for a single vote: metadata + per-party + per-MP breakdown.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282"></a>    <span class="n">vote_row</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">vote_id</span><span class="p">)</span>
-<a id="__codelineno-0-283" name="__codelineno-0-283"></a>    <span class="k">if</span> <span class="n">vote_row</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="n">info</span> <span class="o">=</span> <span class="n">_build_vote_info</span><span class="p">(</span><span class="n">vote_row</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a>    <span class="c1"># Individual MP votes for this vote</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289"></a>    <span class="n">mp_rows</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mp_votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">vote_id</span><span class="p">)</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290"></a>    <span class="n">mp_detail</span> <span class="o">=</span> <span class="n">mp_rows</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">mp_info</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;id_poslanec&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291"></a>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a>    <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a>        <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">info</span><span class="p">,</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="s2">&quot;party_breakdown&quot;</span><span class="p">:</span> <span class="n">_build_party_breakdown</span><span class="p">(</span><span class="n">mp_detail</span><span class="p">),</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295"></a>        <span class="s2">&quot;mp_votes&quot;</span><span class="p">:</span> <span class="n">_build_mp_breakdown</span><span class="p">(</span><span class="n">mp_detail</span><span class="p">),</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296"></a>    <span class="p">}</span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span>
+<span class="normal"><a href="#__codelineno-0-301">301</a></span>
+<span class="normal"><a href="#__codelineno-0-302">302</a></span>
+<span class="normal"><a href="#__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#__codelineno-0-304">304</a></span>
+<span class="normal"><a href="#__codelineno-0-305">305</a></span>
+<span class="normal"><a href="#__codelineno-0-306">306</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="k">def</span><span class="w"> </span><span class="nf">vote_detail</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PeriodData</span><span class="p">,</span> <span class="n">vote_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get full detail for a single vote: metadata + per-party + per-MP breakdown.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a>    <span class="n">vote_row</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">vote_id</span><span class="p">)</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a>    <span class="k">if</span> <span class="n">vote_row</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>    <span class="n">info</span> <span class="o">=</span> <span class="n">_build_vote_info</span><span class="p">(</span><span class="n">vote_row</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">lang</span><span class="p">)</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a>    <span class="c1"># Individual MP votes for this vote</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>    <span class="n">mp_rows</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mp_votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">vote_id</span><span class="p">)</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>    <span class="n">mp_detail</span> <span class="o">=</span> <span class="n">mp_rows</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">mp_info</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;id_poslanec&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a>        <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">info</span><span class="p">,</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>        <span class="s2">&quot;party_breakdown&quot;</span><span class="p">:</span> <span class="n">_build_party_breakdown</span><span class="p">(</span><span class="n">mp_detail</span><span class="p">),</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="s2">&quot;mp_votes&quot;</span><span class="p">:</span> <span class="n">_build_mp_breakdown</span><span class="p">(</span><span class="n">mp_detail</span><span class="p">),</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a>    <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

@@ -551,17 +551,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#get-apiattendance-sortmost_active" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GET /api/attendance (sort=most_active)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#get-apisimilarity" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -606,6 +595,50 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get-apirelated-bills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/related-bills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apifeedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiollamahealth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/ollama/health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiollamasmoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/ollama/smoke-test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#get-apihealth" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -637,6 +670,17 @@
     <span class="md-ellipsis">
       
         OpenAPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate Limiting
       
     </span>
   </a>
@@ -2491,17 +2535,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#get-apiattendance-sortmost_active" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GET /api/attendance (sort=most_active)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#get-apisimilarity" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2546,6 +2579,50 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get-apirelated-bills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/related-bills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apifeedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiollamahealth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/ollama/health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiollamasmoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/ollama/smoke-test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#get-apihealth" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2577,6 +2654,17 @@
     <span class="md-ellipsis">
       
         OpenAPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate Limiting
       
     </span>
   </a>
@@ -2719,7 +2807,7 @@
 <td><code>sort</code></td>
 <td>string</td>
 <td><code>worst</code></td>
-<td>Sort order: <code>worst</code> (lowest first), <code>best</code>, or <code>most_active</code> (by volume)</td>
+<td>Sort order: <code>worst</code>, <code>best</code>, <code>most_active</code>, <code>least_active</code>, <code>most_yes</code>, <code>most_no</code>, <code>most_abstained</code>, <code>most_passive</code>, <code>most_absent</code>, <code>most_excused</code></td>
 </tr>
 <tr>
 <td><code>party</code></td>
@@ -2729,8 +2817,6 @@
 </tr>
 </tbody>
 </table>
-<h3 id="get-apiattendance-sortmost_active">GET /api/attendance (sort=most_active)<a class="headerlink" href="#get-apiattendance-sortmost_active" title="Permanent link">&para;</a></h3>
-<p>When <code>sort=most_active</code>, renders the "Most Active" view — MPs ranked by raw volume of active votes (YES + NO + ABSTAINED), rewarding consistent long-term participation.</p>
 <h3 id="get-apisimilarity">GET /api/similarity<a class="headerlink" href="#get-apisimilarity" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2851,10 +2937,89 @@
 </tr>
 </tbody>
 </table>
+<h3 id="get-apirelated-bills">GET /api/related-bills<a class="headerlink" href="#get-apirelated-bills" title="Permanent link">&para;</a></h3>
+<p>Returns related bills for a parliamentary print, discovered via zakon.cz cross-references.</p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>idsb</code></td>
+<td>int</td>
+<td><em>(required)</em></td>
+<td>Bill identifier from zakon.cz</td>
+</tr>
+</tbody>
+</table>
+<p>Rate limit: 5/minute.</p>
+<h3 id="post-apifeedback">POST /api/feedback<a class="headerlink" href="#post-apifeedback" title="Permanent link">&para;</a></h3>
+<p>Submit user feedback as a GitHub Issue (requires <code>GITHUB_FEEDBACK_ENABLED=1</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code></td>
+<td>string</td>
+<td><em>(required)</em></td>
+<td>Feedback title</td>
+</tr>
+<tr>
+<td><code>body</code></td>
+<td>string</td>
+<td><em>(required)</em></td>
+<td>Feedback body text</td>
+</tr>
+<tr>
+<td><code>vote_id</code></td>
+<td>string</td>
+<td><code>""</code></td>
+<td>Related vote ID</td>
+</tr>
+<tr>
+<td><code>period</code></td>
+<td>string</td>
+<td><code>""</code></td>
+<td>Related electoral period</td>
+</tr>
+<tr>
+<td><code>page_url</code></td>
+<td>string</td>
+<td><code>""</code></td>
+<td>URL of the page where feedback was submitted</td>
+</tr>
+</tbody>
+</table>
+<p>Rate limit: 3/hour.</p>
+<h3 id="get-apiollamahealth">GET /api/ollama/health<a class="headerlink" href="#get-apiollamahealth" title="Permanent link">&para;</a></h3>
+<p>Returns Ollama availability status as JSON.</p>
+<p><strong>Response:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">&quot;available&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;base_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:11434&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;qwen3:8b&quot;</span><span class="p">}</span>
+</code></pre></div></p>
+<p>Rate limit: 10/minute.</p>
+<h3 id="get-apiollamasmoke-test">GET /api/ollama/smoke-test<a class="headerlink" href="#get-apiollamasmoke-test" title="Permanent link">&para;</a></h3>
+<p>Concurrent bilingual generation test. Fires two parallel LLM calls and measures wall-clock time.</p>
+<p><strong>Response:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;qwen3:8b&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;duration_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4.2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;summary_cs&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;summary_en&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">}</span>
+</code></pre></div></p>
+<p>Returns 503 if Ollama is down, 502 on generation failure.</p>
+<p>Rate limit: 2/minute.</p>
 <h3 id="get-apihealth">GET /api/health<a class="headerlink" href="#get-apihealth" title="Permanent link">&para;</a></h3>
 <p>Health check endpoint returning JSON.</p>
 <p><strong>Response:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;periods_loaded&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">]}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;periods_loaded&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">]}</span>
 </code></pre></div></p>
 <h2 id="chart-routes">Chart Routes<a class="headerlink" href="#chart-routes" title="Permanent link">&para;</a></h2>
 <p>Return PNG images via <code>StreamingResponse</code>. Defined in <code>pspcz_analyzer/routes/charts.py</code>. Mounted under <code>/charts</code>.</p>
@@ -2888,9 +3053,49 @@
 </tr>
 </tbody>
 </table>
-<p>All charts render at 150 DPI with a dark background (<code>#1a1a2e</code>). Labels and titles are localized based on the current UI language.</p>
+<p>All charts render at 150 DPI with a light background (<code>#FFFFFF</code> with <code>#F7F7F7</code> plot area). Labels and titles are localized based on the current UI language.</p>
 <h2 id="openapi">OpenAPI<a class="headerlink" href="#openapi" title="Permanent link">&para;</a></h2>
 <p>The full OpenAPI schema is available at <code>/openapi.json</code>. The interactive API documentation (Scalar UI) is at <code>/docs</code>. Default Swagger UI and ReDoc are disabled in favor of Scalar.</p>
+<h2 id="rate-limiting">Rate Limiting<a class="headerlink" href="#rate-limiting" title="Permanent link">&para;</a></h2>
+<p>Per-endpoint rate limits (via slowapi/limits):</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Limit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Page routes</td>
+<td>60/minute</td>
+</tr>
+<tr>
+<td>Analysis APIs (<code>/api/loyalty</code>, etc.)</td>
+<td>15/minute</td>
+</tr>
+<tr>
+<td><code>/api/related-bills</code></td>
+<td>5/minute</td>
+</tr>
+<tr>
+<td><code>/api/feedback</code></td>
+<td>3/hour</td>
+</tr>
+<tr>
+<td><code>/api/ollama/health</code></td>
+<td>10/minute</td>
+</tr>
+<tr>
+<td><code>/api/ollama/smoke-test</code></td>
+<td>2/minute</td>
+</tr>
+<tr>
+<td>Chart routes</td>
+<td>30/minute</td>
+</tr>
+</tbody>
+</table>
 
 
 
