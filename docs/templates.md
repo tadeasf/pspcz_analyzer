@@ -22,7 +22,7 @@ All pages extend `base.html`, which provides:
 - **Navigation**: Logo + "PSP.cz Analyzer" branding, page links, API Docs link, period selector
 - **Language switcher**: CZ/EN toggle links in the header (active language highlighted)
 - **Footer**: data source attribution + educational project disclaimer (separated by CSS border)
-- **Theme**: Pico CSS dark mode (`data-theme="dark"`)
+- **Theme**: Pico CSS light mode (institutional theme, `data-theme="light"`)
 
 Active navigation item is highlighted via `aria-current="page"`, controlled by the `active_page` template variable.
 
@@ -54,6 +54,7 @@ The most complex template. Displays:
 9. **Vote counts** — stat cards (For/Against/Abstained/Did not vote)
 10. **Party breakdown** — table with per-party vote counts
 11. **Individual MPs** — collapsible table of all MP votes with color-coded results
+12. **Feedback form** — user feedback submission form (when `GITHUB_FEEDBACK_ENABLED=1`)
 
 ## Partials (`templates/partials/`)
 
@@ -66,6 +67,8 @@ HTML fragments returned by `/api/*` endpoints for HTMX swaps:
 | `similarity_table.html` | `/api/similarity` | Table of cross-party MP pairs by similarity |
 | `votes_list.html` | `/api/votes` | Paginated vote rows with tisk links |
 | `tisk_evolution.html` | `/api/tisk-evolution` | Sub-version comparison with bilingual diff summaries |
+| `feedback_form.html` | `/api/feedback` (form) | Feedback submission form with title/body fields |
+| `feedback_result.html` | `/api/feedback` (result) | Success/error message after feedback submission |
 
 ## HTMX Pattern
 
@@ -106,11 +109,11 @@ The skeleton is shown immediately on period change (`switchPeriod()`) and on nav
 
 ## Charts
 
-Chart images are embedded as `<img>` tags pointing to `/charts/*.png` endpoints. They render server-side via matplotlib/seaborn with a dark theme matching the UI (`#1a1a2e` background). Chart labels and titles are localized via `gettext()`.
+Chart images are embedded as `<img>` tags pointing to `/charts/*.png` endpoints. They render server-side via matplotlib/seaborn with a light theme (`#FFFFFF` background with `#F7F7F7` plot area). Chart labels and titles are localized via `gettext()`.
 
 ## Styling
 
-All custom CSS lives in `/static/style.css` (external file). Pico CSS v2 dark theme is the base. Key customizations:
+All custom CSS lives in `/static/style.css` (external file). Pico CSS v2 light theme is the base. Key customizations:
 
 - `--pico-border-radius: 0.25rem` — sharper corners for a more formal/institutional feel
 - Legislative timeline styles (dots, lines, active glow)
@@ -119,6 +122,9 @@ All custom CSS lives in `/static/style.css` (external file). Pico CSS v2 dark th
 - Navigation period selector styling
 - Language switcher (`.lang-switcher`) — flex layout with active state highlight
 - Footer with CSS border separator (no `<hr>`)
+- Blue gradient navigation bar with institutional feel
+- Georgia font for headings
+- Zebra-striped tables for readability
 
 ## Methodology Sections
 

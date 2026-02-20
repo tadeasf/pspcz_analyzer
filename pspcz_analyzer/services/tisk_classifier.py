@@ -18,12 +18,12 @@ def classify_and_save(
     period: int,
     text_paths: dict[int, Path],
     cache_dir: Path,
-) -> tuple[dict[int, list[str]], dict[int, str]]:
+) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run topic classification on extracted texts, save parquet, return maps.
 
     Uses Ollama AI when available (free-form topics), falls back to keyword matching.
     Saves incrementally after each tisk and resumes from where it left off.
-    Returns (topic_map, summary_map).
+    Returns (topic_map, summary_map, summary_en_map).
     """
     meta_dir = cache_dir / TISKY_META_DIR / str(period)
     meta_dir.mkdir(parents=True, exist_ok=True)
@@ -89,13 +89,16 @@ def _classify_single_tisk(
     """Classify a single tisk and return its record dict."""
     text = text_path.read_text(encoding="utf-8")
     topics: list[str] = []
+    topics_en: list[str] = []
     summary = ""
     source = "keyword"
 
     summary_en = ""
     if use_ai:
-        logger.info("[tisk pipeline] [{}/{}] AI classifying tisk ct={} ...", i, total, ct)
-        topics = ollama.classify_topics(text, "")
+        logger.info(
+            "[tisk pipeline] [{}/{}] AI classifying tisk ct={} (bilingual) ...", i, total, ct
+        )
+        topics, topics_en = ollama.classify_topics_bilingual(text, "")
         if topics:
             source = f"ollama:{ollama.model}"
         logger.info(
@@ -105,37 +108,41 @@ def _classify_single_tisk(
         summary = summaries["cs"]
         summary_en = summaries["en"]
         logger.info(
-            "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} summary={}chars summary_en={}chars ({})",
+            "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} topics_en={} summary={}chars summary_en={}chars ({})",
             i,
             total,
             ct,
             topics or "(none)",
+            topics_en or "(none)",
             len(summary),
             len(summary_en),
             source,
         )
     else:
-        kw_topic = classify_tisk_primary_label(text, "")
-        if kw_topic:
-            topics = [kw_topic]
+        kw_result = classify_tisk_primary_label(text, "")
+        if kw_result:
+            topics = [kw_result[0]]
+            topics_en = [kw_result[1]]
         if i % 20 == 0 or i == total:
             logger.info("[tisk pipeline] [{}/{}] keyword classification progress", i, total)
 
     # Fall back to keyword classification if AI didn't produce topics
     if use_ai and not topics:
-        kw_topic = classify_tisk_primary_label(text, "")
-        if kw_topic:
-            topics = [kw_topic]
+        kw_result = classify_tisk_primary_label(text, "")
+        if kw_result:
+            topics = [kw_result[0]]
+            topics_en = [kw_result[1]]
             source = "keyword"
             logger.debug(
                 "[tisk pipeline] tisk ct={} AI returned no topics, keyword fallback -> {}",
                 ct,
-                kw_topic,
+                kw_result[0],
             )
 
     return {
         "ct": ct,
         "topic": serialize_topics(topics),
+        "topic_en": serialize_topics(topics_en),
         "summary": summary,
         "summary_en": summary_en,
         "source": source,
@@ -145,13 +152,13 @@ def _classify_single_tisk(
 def consolidate_topics(
     period: int,
     cache_dir: Path,
-) -> tuple[dict[int, list[str]], dict[int, str]]:
+) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run LLM-powered topic deduplication after classification.
 
     Reads the parquet, collects all unique topic labels, asks the LLM to
     consolidate similar ones, applies the mapping, and re-writes the parquet.
 
-    Returns updated (topic_map, summary_map).
+    Returns updated (topic_map, summary_map, summary_en_map).
     """
     meta_dir = cache_dir / TISKY_META_DIR / str(period)
     parquet_path = meta_dir / "topic_classifications.parquet"
@@ -159,7 +166,7 @@ def consolidate_topics(
 
     if not parquet_path.exists():
         logger.warning("[tisk pipeline] No parquet to consolidate for period {}", period)
-        return {}, {}
+        return {}, {}, {}
 
     df = pl.read_parquet(parquet_path)
     records = df.to_dicts()
@@ -172,18 +179,23 @@ def consolidate_topics(
         )
         return _build_topic_summary_maps(records, period, log=False)
 
-    # Collect all unique topic labels
-    all_topics: set[str] = set()
+    # Collect all unique topic labels (Czech and English)
+    all_topics_cs: set[str] = set()
+    all_topics_en: set[str] = set()
     for r in records:
         for t in deserialize_topics(r.get("topic", "")):
-            all_topics.add(t)
+            all_topics_cs.add(t)
+        for t in deserialize_topics(r.get("topic_en", "")):
+            all_topics_en.add(t)
 
-    unique_topics = sorted(all_topics)
+    unique_topics_cs = sorted(all_topics_cs)
+    unique_topics_en = sorted(all_topics_en)
 
-    if len(unique_topics) <= 10:
+    if len(unique_topics_cs) <= 10 and len(unique_topics_en) <= 10:
         logger.info(
-            "[tisk pipeline] Only {} unique topics for period {}, skipping consolidation",
-            len(unique_topics),
+            "[tisk pipeline] Only {} CS + {} EN unique topics for period {}, skipping consolidation",
+            len(unique_topics_cs),
+            len(unique_topics_en),
             period,
         )
         consolidated_marker.touch()
@@ -195,35 +207,36 @@ def consolidate_topics(
         return _build_topic_summary_maps(records, period, log=False)
 
     logger.info(
-        "[tisk pipeline] Consolidating topics for period {}: {} unique topics",
+        "[tisk pipeline] Consolidating topics for period {}: {} CS + {} EN unique topics",
         period,
-        len(unique_topics),
+        len(unique_topics_cs),
+        len(unique_topics_en),
     )
-    mapping = ollama.consolidate_topics(unique_topics)
+    mapping_cs, mapping_en = ollama.consolidate_topics_bilingual(unique_topics_cs, unique_topics_en)
 
     # Count how many actually changed
-    changed = sum(1 for old, new in mapping.items() if old != new)
-    canonical = len(set(mapping.values()))
+    changed_cs = sum(1 for old, new in mapping_cs.items() if old != new)
+    changed_en = sum(1 for old, new in mapping_en.items() if old != new)
     logger.info(
-        "[tisk pipeline] Consolidating topics for period {}: {} unique -> {} canonical ({} remapped)",
+        "[tisk pipeline] Consolidated topics for period {}: CS {} -> {} ({} remapped), EN {} -> {} ({} remapped)",
         period,
-        len(unique_topics),
-        canonical,
-        changed,
+        len(unique_topics_cs),
+        len(set(mapping_cs.values())),
+        changed_cs,
+        len(unique_topics_en),
+        len(set(mapping_en.values())),
+        changed_en,
     )
 
-    # Apply mapping to all records
+    # Apply mappings to all records
     for r in records:
         old_topics = deserialize_topics(r.get("topic", ""))
-        new_topics = [mapping.get(t, t) for t in old_topics]
-        # Deduplicate while preserving order
-        seen: set[str] = set()
-        deduped: list[str] = []
-        for t in new_topics:
-            if t not in seen:
-                seen.add(t)
-                deduped.append(t)
-        r["topic"] = serialize_topics(deduped)
+        new_topics = _apply_topic_mapping(old_topics, mapping_cs)
+        r["topic"] = serialize_topics(new_topics)
+
+        old_topics_en = deserialize_topics(r.get("topic_en", ""))
+        new_topics_en = _apply_topic_mapping(old_topics_en, mapping_en)
+        r["topic_en"] = serialize_topics(new_topics_en)
 
     # Re-write parquet
     df = pl.DataFrame(records)
@@ -235,23 +248,46 @@ def consolidate_topics(
     return _build_topic_summary_maps(records, period)
 
 
+def _apply_topic_mapping(topics: list[str], mapping: dict[str, str]) -> list[str]:
+    """Apply a consolidation mapping to a list of topics, deduplicating."""
+    new_topics = [mapping.get(t, t) for t in topics]
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for t in new_topics:
+        if t not in seen:
+            seen.add(t)
+            deduped.append(t)
+    return deduped
+
+
 def _build_topic_summary_maps(
     records: list[dict],
     period: int,
     log: bool = True,
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
-    """Build topic, summary, and summary_en maps from classification records."""
+    """Build topic, summary, and summary_en maps from classification records.
+
+    Also populates the topic_en_map on the module-level _topic_en_maps dict
+    so it can be retrieved by the cache manager.
+    """
     topic_map: dict[int, list[str]] = {}
+    topic_en_map: dict[int, list[str]] = {}
     summary_map: dict[int, str] = {}
     summary_en_map: dict[int, str] = {}
     for r in records:
         parsed = deserialize_topics(r.get("topic", ""))
         if parsed:
             topic_map[r["ct"]] = parsed
+        parsed_en = deserialize_topics(r.get("topic_en", ""))
+        if parsed_en:
+            topic_en_map[r["ct"]] = parsed_en
         if r.get("summary"):
             summary_map[r["ct"]] = r["summary"]
         if r.get("summary_en"):
             summary_en_map[r["ct"]] = r["summary_en"]
+
+    # Store English topic map for retrieval by cache manager
+    _topic_en_maps[period] = topic_en_map
 
     if log:
         classified = len(topic_map)
@@ -266,3 +302,12 @@ def _build_topic_summary_maps(
         )
 
     return topic_map, summary_map, summary_en_map
+
+
+# Module-level store for English topic maps (populated by _build_topic_summary_maps)
+_topic_en_maps: dict[int, dict[int, list[str]]] = {}
+
+
+def get_topic_en_map(period: int) -> dict[int, list[str]]:
+    """Get the English topic map for a period (populated during classify_and_save)."""
+    return _topic_en_maps.get(period, {})

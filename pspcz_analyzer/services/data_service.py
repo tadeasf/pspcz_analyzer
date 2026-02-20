@@ -314,6 +314,7 @@ class DataService:
             self._cache_mgr.topic_cache,
             self._cache_mgr.summary_cache,
             self._cache_mgr.summary_en_cache,
+            self._cache_mgr.topic_en_cache,
         )
 
         pd = PeriodData(

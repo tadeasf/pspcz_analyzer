@@ -131,11 +131,12 @@ async def votes_api(
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    key = f"votes:{period}:{search}:{outcome}:{topic}:{page}"
+    lang = getattr(request.state, "lang", "cs")
+    key = f"votes:{period}:{search}:{outcome}:{topic}:{page}:{lang}"
     result = analysis_cache.get_or_compute(
         key,
         lambda: list_votes(
-            pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic
+            pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic, lang=lang
         ),
     )
     return templates.TemplateResponse(
@@ -146,7 +147,7 @@ async def votes_api(
             "search": search,
             "outcome": outcome,
             "topic": topic,
-            "lang": getattr(request.state, "lang", "cs"),
+            "lang": lang,
             **result,
         },
     )

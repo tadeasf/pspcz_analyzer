@@ -33,6 +33,11 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `OLLAMA_MODEL` — model name (default: `qwen3:8b`)
 - `DAILY_REFRESH_ENABLED` — `1` to enable daily data refresh, `0` to disable (default: `1`)
 - `DAILY_REFRESH_HOUR` — hour (CET, 0-23) for daily refresh (default: `3`)
+- `GITHUB_FEEDBACK_ENABLED` — enable feedback form (`0` or `1`, default: `0`)
+- `GITHUB_FEEDBACK_TOKEN` — GitHub PAT for creating issues (default: empty)
+- `GITHUB_FEEDBACK_REPO` — target repository (default: `tadeasf/pspcz_analyzer`)
+- `GITHUB_FEEDBACK_LABELS` — labels for feedback issues (default: `user-feedback`)
+- `TISK_SHORTENER` — truncate tisk text for LLM (`0` = full text, `1` = truncate, default: `0`)
 
 ## Architecture
 
@@ -67,6 +72,15 @@ Each in `services/`, each takes a `PeriodData` and returns `list[dict]`:
 - **`attendance_service`** — Attendance %, vote breakdown (YES/NO/ABSTAINED), activity ranking
 - **`similarity_service`** — Cosine similarity + SVD-based PCA on vote matrix (MPs × votes, +1/-1/0)
 - **`votes_service`** — Vote search/list with pagination, vote detail with per-party breakdown
+
+### Feedback Service (`services/feedback_service.py`)
+
+Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`. Requires a `GITHUB_FEEDBACK_TOKEN` with `public_repo` scope.
+
+### Security & Rate Limiting
+
+- **`middleware.py`** — `SecurityHeadersMiddleware` adds `X-Content-Type-Options`, `X-Frame-Options`, etc. Also `run_with_timeout` for ContextVar-safe thread execution.
+- **`rate_limit.py`** — Per-endpoint rate limits via slowapi (e.g. 15/min for analysis APIs, 3/hour for feedback).
 
 ### Web Layer
 

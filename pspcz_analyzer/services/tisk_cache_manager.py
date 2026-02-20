@@ -23,6 +23,8 @@ class TiskCacheManager:
         self.cache_dir = cache_dir
         # Topic classification cache: period -> {ct -> [topic_labels]}
         self._topic_cache: dict[int, dict[int, list[str]]] = {}
+        # English topic classification cache: period -> {ct -> [topic_labels_en]}
+        self._topic_en_cache: dict[int, dict[int, list[str]]] = {}
         # Summary cache: period -> {ct -> summary_text}
         self._summary_cache: dict[int, dict[int, str]] = {}
         # English summary cache: period -> {ct -> summary_en_text}
@@ -37,6 +39,10 @@ class TiskCacheManager:
         return self._topic_cache
 
     @property
+    def topic_en_cache(self) -> dict[int, dict[int, list[str]]]:
+        return self._topic_en_cache
+
+    @property
     def summary_cache(self) -> dict[int, dict[int, str]]:
         return self._summary_cache
 
@@ -47,6 +53,7 @@ class TiskCacheManager:
     def invalidate(self, period: int) -> None:
         """Invalidate all caches for a period so next access re-reads from disk."""
         self._topic_cache.pop(period, None)
+        self._topic_en_cache.pop(period, None)
         self._summary_cache.pop(period, None)
         self._summary_en_cache.pop(period, None)
         self._history_cache.pop(period, None)
@@ -60,6 +67,7 @@ class TiskCacheManager:
         meta_path = self.cache_dir / TISKY_META_DIR / str(period) / "topic_classifications.parquet"
         if not meta_path.exists():
             self._topic_cache[period] = {}
+            self._topic_en_cache[period] = {}
             self._summary_cache[period] = {}
             self._summary_en_cache[period] = {}
             self._topic_cache_mtime[period] = 0
@@ -73,6 +81,7 @@ class TiskCacheManager:
 
         df = pl.read_parquet(meta_path)
         topics: dict[int, list[str]] = {}
+        topics_en: dict[int, list[str]] = {}
         summaries: dict[int, str] = {}
         summaries_en: dict[int, str] = {}
         for row in df.iter_rows(named=True):
@@ -81,6 +90,10 @@ class TiskCacheManager:
             parsed = deserialize_topics(raw_topic)
             if parsed:
                 topics[ct] = parsed
+            raw_topic_en = row.get("topic_en", "")
+            parsed_en = deserialize_topics(raw_topic_en)
+            if parsed_en:
+                topics_en[ct] = parsed_en
             summary = row.get("summary", "")
             if summary:
                 summaries[ct] = summary
@@ -88,13 +101,15 @@ class TiskCacheManager:
             if summary_en:
                 summaries_en[ct] = summary_en
         self._topic_cache[period] = topics
+        self._topic_en_cache[period] = topics_en
         self._summary_cache[period] = summaries
         self._summary_en_cache[period] = summaries_en
         self._topic_cache_mtime[period] = current_mtime
         logger.debug(
-            "Loaded topic classifications for period {}: {} tisky, {} summaries, {} EN summaries",
+            "Loaded topic classifications for period {}: {} tisky ({} EN), {} summaries, {} EN summaries",
             period,
             len(topics),
+            len(topics_en),
             len(summaries),
             len(summaries_en),
         )

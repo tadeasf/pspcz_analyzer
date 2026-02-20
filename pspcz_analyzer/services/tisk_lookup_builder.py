@@ -18,6 +18,7 @@ def build_tisk_lookup(
     topic_cache: dict[int, dict[int, list[str]]],
     summary_cache: dict[int, dict[int, str]],
     summary_en_cache: dict[int, dict[int, str]] | None = None,
+    topic_en_cache: dict[int, dict[int, list[str]]] | None = None,
 ) -> dict[tuple[int, int], TiskInfo]:
     """Build a mapping from (schuze_num, bod_num) -> TiskInfo for a given period.
 
@@ -28,12 +29,21 @@ def build_tisk_lookup(
     """
     organ_id = PERIOD_ORGAN_IDS[period]
     en_cache = summary_en_cache or {}
+    en_topic_cache = topic_en_cache or {}
 
     # Try primary path via schuze -> bod_schuze
     sessions = schuze.filter(pl.col("id_org") == organ_id)
     if sessions.height > 0:
         return build_tisk_lookup_via_schuze(
-            period, sessions, bod_schuze, tisky, tisk_text, topic_cache, summary_cache, en_cache
+            period,
+            sessions,
+            bod_schuze,
+            tisky,
+            tisk_text,
+            topic_cache,
+            summary_cache,
+            en_cache,
+            en_topic_cache,
         )
 
     # Fallback: text matching for periods without schuze data
@@ -43,7 +53,14 @@ def build_tisk_lookup(
         organ_id,
     )
     return build_tisk_lookup_via_text(
-        period, votes, tisky, tisk_text, topic_cache, summary_cache, en_cache
+        period,
+        votes,
+        tisky,
+        tisk_text,
+        topic_cache,
+        summary_cache,
+        en_cache,
+        en_topic_cache,
     )
 
 
@@ -56,6 +73,7 @@ def build_tisk_lookup_via_schuze(
     topic_cache: dict[int, dict[int, list[str]]],
     summary_cache: dict[int, dict[int, str]],
     summary_en_cache: dict[int, dict[int, str]] | None = None,
+    topic_en_cache: dict[int, dict[int, list[str]]] | None = None,
 ) -> dict[tuple[int, int], TiskInfo]:
     """Build lookup using the schuze -> bod_schuze -> tisky chain."""
     session_map = dict(
@@ -78,6 +96,7 @@ def build_tisk_lookup_via_schuze(
 
     # Load topic classifications, summaries, and text availability
     topic_map = topic_cache.get(period, {})
+    topic_en_map = (topic_en_cache or {}).get(period, {})
     summary_map = summary_cache.get(period, {})
     summary_en_map = (summary_en_cache or {}).get(period, {})
 
@@ -93,6 +112,7 @@ def build_tisk_lookup_via_schuze(
                 nazev=row.get("nazev_tisku") or "",
                 period=period,
                 topics=topic_map.get(ct, []),
+                topics_en=topic_en_map.get(ct, []),
                 has_text=tisk_text.has_text(period, ct),
                 summary=summary_map.get(ct, ""),
                 summary_en=summary_en_map.get(ct, ""),
@@ -123,6 +143,7 @@ def build_tisk_lookup_via_text(
     topic_cache: dict[int, dict[int, list[str]]],
     summary_cache: dict[int, dict[int, str]],
     summary_en_cache: dict[int, dict[int, str]] | None = None,
+    topic_en_cache: dict[int, dict[int, list[str]]] | None = None,
 ) -> dict[tuple[int, int], TiskInfo]:
     """Fallback: match vote descriptions to tisk names for this period.
 
@@ -135,6 +156,7 @@ def build_tisk_lookup_via_text(
 
     # Load topic classifications, summaries, and text availability
     topic_map = topic_cache.get(period, {})
+    topic_en_map = (topic_en_cache or {}).get(period, {})
     summary_map = summary_cache.get(period, {})
     summary_en_map = (summary_en_cache or {}).get(period, {})
 
@@ -151,6 +173,7 @@ def build_tisk_lookup_via_text(
                     nazev=nazev,
                     period=period,
                     topics=topic_map.get(ct, []),
+                    topics_en=topic_en_map.get(ct, []),
                     has_text=tisk_text.has_text(period, ct),
                     summary=summary_map.get(ct, ""),
                     summary_en=summary_en_map.get(ct, ""),

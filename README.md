@@ -6,7 +6,6 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 
 - **Party Loyalty** — rebellion rates: how often each MP votes against their party's majority
 - **Attendance** — participation rates with breakdowns (active, passive, absent, excused)
-- **Most Active MPs** — ranked by raw vote count (YES + NO + ABSTAIN)
 - **Voting Similarity** — cross-party alliances via cosine similarity + PCA visualization
 - **Votes Browser** — searchable, paginated list of all parliamentary votes with detail views
 - **Chart Endpoints** — server-rendered PNG charts (seaborn/matplotlib)
@@ -14,6 +13,9 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Tisk Pipeline** — background processing that downloads parliamentary print PDFs, extracts text, and classifies topics
 - **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
 - **i18n** — full Czech/English UI localization with a header language switcher
+- **Feedback** — user feedback form on vote detail pages, submitted as GitHub Issues
+- **Rate Limiting & Security** — per-endpoint rate limits (slowapi) and security headers
+- **Legislative Evolution** — bill version diffs, law changes, and related bills discovery
 - **Docker** — containerized deployment with docker-compose
 - **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
 
@@ -49,6 +51,11 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `OLLAMA_MODEL` | `qwen3:8b` | Model for topic classification and summarization |
 | `DAILY_REFRESH_ENABLED` | `1` | Enable daily re-download of psp.cz data |
 | `DAILY_REFRESH_HOUR` | `3` | Hour (CET, 0-23) for daily data refresh |
+| `GITHUB_FEEDBACK_ENABLED` | `0` | Enable user feedback via GitHub Issues |
+| `GITHUB_FEEDBACK_TOKEN` | *(empty)* | GitHub PAT with `public_repo` scope |
+| `GITHUB_FEEDBACK_REPO` | `tadeasf/pspcz_analyzer` | Repository for feedback issues |
+| `GITHUB_FEEDBACK_LABELS` | `user-feedback` | Labels applied to feedback issues |
+| `TISK_SHORTENER` | `0` | Truncate tisk text for LLM (`0` = full text) |
 
 ## Docker
 
@@ -63,48 +70,9 @@ docker compose up --build
 
 The app is available at `http://localhost:8000`. Data cache is persisted in a Docker volume. Ollama runs separately on the local network — configure its address via `OLLAMA_BASE_URL` in `.env`.
 
-## VPS Deployment
+## Reverse Proxy
 
-### Using `fastapi run`
-
-The `fastapi[standard]` dependency includes the FastAPI CLI. Run in production mode:
-
-```bash
-uv run fastapi run pspcz_analyzer/main.py --host 0.0.0.0 --port 8000
-```
-
-This starts uvicorn without `--reload` and with production defaults.
-
-### systemd Service
-
-Create `/etc/systemd/system/pspcz-analyzer.service`:
-
-```ini
-[Unit]
-Description=PSP.cz Analyzer
-After=network.target
-
-[Service]
-Type=simple
-User=deploy
-WorkingDirectory=/opt/pspcz-analyzer
-EnvironmentFile=/opt/pspcz-analyzer/.env
-ExecStart=/opt/pspcz-analyzer/.venv/bin/fastapi run pspcz_analyzer/main.py --host 0.0.0.0 --port 8000
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# On the VPS
-cd /opt/pspcz-analyzer
-uv sync
-sudo systemctl enable --now pspcz-analyzer
-```
-
-### Reverse Proxy (Caddy)
+### Caddy
 
 ```
 yourdomain.cz {
@@ -112,7 +80,7 @@ yourdomain.cz {
 }
 ```
 
-Or with nginx:
+### nginx
 
 ```nginx
 server {
@@ -153,7 +121,7 @@ See [Testing & CI/CD](docs/testing.md) for full details on the test suite, CI pi
 | Web framework | FastAPI + Uvicorn |
 | Templating | Jinja2 + i18n extension |
 | Frontend interactivity | HTMX |
-| CSS | Pico CSS (dark theme) |
+| CSS | Pico CSS (institutional light theme) |
 | Localization | Dict-based i18n (Czech + English) |
 | Data processing | Polars |
 | Charts | Seaborn + Matplotlib |
@@ -185,6 +153,8 @@ On startup, the app launches a background pipeline that enriches parliamentary p
 3. **Classify** topics using Ollama LLM (falls back to keyword matching if Ollama is unavailable)
 4. **Summarize** each print in both Czech and English (bilingual AI summaries)
 5. **Scrape** legislative process histories from psp.cz HTML pages
+6. **Discover** related bills via zakon.cz cross-references
+7. **Track** law changes (affected existing laws) from legislative process pages
 
 This data powers the vote detail pages (topic tags, AI summaries, legislative timelines, and tisk transcriptions).
 

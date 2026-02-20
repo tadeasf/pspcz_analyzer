@@ -317,11 +317,11 @@ def classify_tisk(text: str, title: str) -> list[tuple[str, int]]:
     return results
 
 
-def classify_tisk_primary_label(text: str, title: str) -> str | None:
-    """Return the Czech label of the best-matching topic, or None."""
+def classify_tisk_primary_label(text: str, title: str) -> tuple[str, str] | None:
+    """Return (label_cs, label_en) of the best-matching topic, or None."""
     results = classify_tisk(text, title)
     if not results:
         return None
     topic_id = results[0][0]
-    label_cs, _, _ = TOPIC_TAXONOMY[topic_id]
-    return label_cs
+    label_cs, label_en, _ = TOPIC_TAXONOMY[topic_id]
+    return label_cs, label_en
