@@ -86,6 +86,37 @@ _COMPARISON_PROMPT_TEMPLATE = (
     "VERZE {ct1_new} ({label_new}):\n{text_new} /no_think"
 )
 
+# ── English classification prompts ────────────────────────────────────────
+
+_CLASSIFICATION_SYSTEM_EN = (
+    "You are a Czech Parliament analyst. You analyze parliamentary bills and assign topic labels. "
+    "Respond ONLY in format 'TOPICS: topic1, topic2, topic3' where topics are 1-3 short English names "
+    "of thematic areas (e.g. 'Taxes & Fees', 'Social Insurance', 'Criminal Law'). "
+    "Use concise and specific topic names. No other text."
+)
+
+_CLASSIFICATION_PROMPT_TEMPLATE_EN = (
+    "Identify 1-3 main topics of the following Czech parliamentary bill. "
+    "Use short English topic names (2-4 words). "
+    "Be specific — e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
+    "Bill title: {title}\n\n"
+    "Bill text:\n{text}\n\n"
+    "Respond ONLY: TOPICS: topic1, topic2, topic3 /no_think"
+)
+
+_CONSOLIDATION_SYSTEM_EN = (
+    "You are a Czech Parliament analyst. You will receive a list of topic labels. "
+    "Unify similar/overlapping topics under one canonical English name."
+)
+
+_CONSOLIDATION_PROMPT_TEMPLATE_EN = (
+    "Here is a list of {n} topics from parliamentary bills. Unify similar and overlapping topics.\n"
+    "For each topic write a mapping in format: old_topic -> canonical_name\n"
+    "If a topic is already good, map it to itself.\n\n"
+    "Topics:\n{topics_list}\n\n"
+    "Respond ONLY with mappings, one line per topic. /no_think"
+)
+
 # ── English prompts for bilingual output ──────────────────────────────────
 
 _SUMMARY_SYSTEM_EN = (
@@ -313,6 +344,75 @@ class OllamaClient:
                 mapping[t] = t
 
         return mapping
+
+    def classify_topics_en(self, text: str, title: str) -> list[str]:
+        """Classify a tisk into 1-3 free-form English topic labels using the LLM.
+
+        Returns list of English topic labels, or empty list on failure.
+        """
+        truncated = truncate_legislative_text(text)
+        prompt = _CLASSIFICATION_PROMPT_TEMPLATE_EN.format(
+            title=title or "(no title)",
+            text=truncated,
+        )
+        response = self._generate(prompt, _CLASSIFICATION_SYSTEM_EN)
+        if response is None:
+            return []
+        return self._parse_topics_response(response)
+
+    def classify_topics_bilingual(self, text: str, title: str) -> tuple[list[str], list[str]]:
+        """Classify a tisk into topic labels in both Czech and English.
+
+        Returns (topics_cs, topics_en). Either may be empty on failure.
+        """
+        topics_cs = self.classify_topics(text, title)
+        topics_en = self.classify_topics_en(text, title)
+        return topics_cs, topics_en
+
+    def consolidate_topics_en(self, all_topics: list[str]) -> dict[str, str]:
+        """Consolidate/deduplicate English topic labels via the LLM.
+
+        Returns dict mapping old_name -> canonical_name.
+        """
+        topics_list = "\n".join(f"- {t}" for t in all_topics)
+        prompt = _CONSOLIDATION_PROMPT_TEMPLATE_EN.format(
+            n=len(all_topics),
+            topics_list=topics_list,
+        )
+        response = self._generate(prompt, _CONSOLIDATION_SYSTEM_EN)
+        if not response:
+            return {t: t for t in all_topics}
+
+        response = self._strip_think(response)
+        mapping: dict[str, str] = {}
+        for line in response.splitlines():
+            line = line.strip()
+            if " -> " not in line:
+                continue
+            parts = line.split(" -> ", 1)
+            old = parts[0].strip().strip("- ")
+            new = parts[1].strip()
+            if old and new:
+                mapping[old] = new
+
+        for t in all_topics:
+            if t not in mapping:
+                mapping[t] = t
+
+        return mapping
+
+    def consolidate_topics_bilingual(
+        self,
+        all_topics_cs: list[str],
+        all_topics_en: list[str],
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Consolidate topic labels in both Czech and English.
+
+        Returns (mapping_cs, mapping_en).
+        """
+        mapping_cs = self.consolidate_topics(all_topics_cs)
+        mapping_en = self.consolidate_topics_en(all_topics_en)
+        return mapping_cs, mapping_en
 
     def compare_versions(
         self,

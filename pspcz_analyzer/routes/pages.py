@@ -90,9 +90,10 @@ async def votes_page(request: Request, period: int = DEFAULT_PERIOD):
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
+    lang = getattr(request.state, "lang", "cs")
     return templates.TemplateResponse(
         "votes.html",
-        _ctx(request, period, active_page="votes", topics=pd.get_all_topic_labels()),
+        _ctx(request, period, active_page="votes", topics=pd.get_all_topic_labels(lang)),
     )
 
 
@@ -102,7 +103,8 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    detail = vote_detail(pd, vote_id)
+    lang = getattr(request.state, "lang", "cs")
+    detail = vote_detail(pd, vote_id, lang)
     if detail is None:
         return templates.TemplateResponse(
             "votes.html",

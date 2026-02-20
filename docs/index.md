@@ -65,7 +65,7 @@ The app runs at `http://localhost:8000`. Configure `OLLAMA_BASE_URL` and `OLLAMA
 | Web framework | FastAPI + Uvicorn |
 | Templating | Jinja2 + i18n extension |
 | Frontend interactivity | HTMX |
-| CSS | Pico CSS (dark theme) |
+| CSS | Pico CSS (institutional light theme) |
 | Localization | Dict-based i18n (Czech + English) |
 | Data processing | Polars |
 | Charts | Seaborn + Matplotlib |

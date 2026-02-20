@@ -131,7 +131,7 @@ def _apply_vote_filters(
     return votes
 
 
-def _enrich_vote_rows(rows: list[dict], data: PeriodData) -> None:
+def _enrich_vote_rows(rows: list[dict], data: PeriodData, lang: str = "cs") -> None:
     """Add outcome labels and tisk info to vote row dicts (in-place)."""
     for r in rows:
         r["outcome_label"] = _outcome_label(r["vysledek"])
@@ -141,7 +141,10 @@ def _enrich_vote_rows(rows: list[dict], data: PeriodData) -> None:
         r["tisk_url"] = tisk.url if tisk else None
         r["tisk_nazev"] = tisk.nazev if tisk else None
         r["tisk_ct"] = tisk.ct if tisk else None
-        r["tisk_topics"] = tisk.topics if tisk else []
+        if tisk:
+            r["tisk_topics"] = tisk.topics_en if lang == "en" and tisk.topics_en else tisk.topics
+        else:
+            r["tisk_topics"] = []
 
 
 def list_votes(
@@ -151,8 +154,12 @@ def list_votes(
     per_page: int = 30,
     outcome_filter: str = "",
     topic_filter: str = "",
+    lang: str = "cs",
 ) -> dict:
     """List votes with optional text search, topic filter, and pagination.
+
+    Args:
+        lang: Language code for topic labels ('cs' or 'en').
 
     Returns dict with keys: rows, total, page, per_page, total_pages.
     """
@@ -186,7 +193,7 @@ def list_votes(
         "prihlaseno",
     ).to_dicts()
 
-    _enrich_vote_rows(rows, data)
+    _enrich_vote_rows(rows, data, lang)
 
     return {
         "rows": rows,
@@ -197,7 +204,7 @@ def list_votes(
     }
 
 
-def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData) -> dict:
+def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData, lang: str = "cs") -> dict:
     """Build vote metadata dict with tisk enrichment and history matching."""
     info = vote_row.with_columns(
         pl.col("nazev_dlouhy").fill_null(""),
@@ -212,7 +219,10 @@ def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData) -> dict:
     info["tisk_url"] = tisk.url if tisk else None
     info["tisk_nazev"] = tisk.nazev if tisk else None
     info["tisk_ct"] = tisk.ct if tisk else None
-    info["tisk_topics"] = tisk.topics if tisk else []
+    if tisk:
+        info["tisk_topics"] = tisk.topics_en if lang == "en" and tisk.topics_en else tisk.topics
+    else:
+        info["tisk_topics"] = []
     info["tisk_has_text"] = tisk.has_text if tisk else False
     info["tisk_summary"] = tisk.summary if tisk else ""
     info["tisk_summary_en"] = tisk.summary_en if tisk else ""
@@ -277,13 +287,13 @@ def _build_mp_breakdown(mp_detail: pl.DataFrame) -> list[dict]:
     return mp_dicts
 
 
-def vote_detail(data: PeriodData, vote_id: int) -> dict | None:
+def vote_detail(data: PeriodData, vote_id: int, lang: str = "cs") -> dict | None:
     """Get full detail for a single vote: metadata + per-party + per-MP breakdown."""
     vote_row = data.votes.filter(pl.col("id_hlasovani") == vote_id)
     if vote_row.height == 0:
         return None
 
-    info = _build_vote_info(vote_row, data)
+    info = _build_vote_info(vote_row, data, lang)
 
     # Individual MP votes for this vote
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)

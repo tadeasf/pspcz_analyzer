@@ -18,6 +18,7 @@ class TiskInfo:
         nazev: Title of the tisk.
         period: Electoral period number.
         topics: LLM-classified topic labels (1-3 Czech labels).
+        topics_en: LLM-classified topic labels (1-3 English labels).
         has_text: Whether extracted full text is available.
         summary: LLM-generated Czech summary of the tisk.
         history: Scraped legislative history stages.
@@ -30,6 +31,7 @@ class TiskInfo:
     nazev: str
     period: int
     topics: list[str] = field(default_factory=list)
+    topics_en: list[str] = field(default_factory=list)
     has_text: bool = False
     summary: str = ""
     summary_en: str = ""
@@ -82,9 +84,17 @@ class PeriodData:
         """Get tisk info for a vote given its session and agenda item numbers."""
         return self.tisk_lookup.get((schuze, bod))
 
-    def get_all_topic_labels(self) -> list[str]:
-        """Collect all unique topic labels across all tisky, sorted."""
+    def get_all_topic_labels(self, lang: str = "cs") -> list[str]:
+        """Collect all unique topic labels across all tisky, sorted.
+
+        Args:
+            lang: Language code ('cs' or 'en'). Uses English labels when
+                  available and lang == 'en', otherwise Czech.
+        """
         labels: set[str] = set()
         for tisk in self.tisk_lookup.values():
-            labels.update(tisk.topics)
+            if lang == "en" and tisk.topics_en:
+                labels.update(tisk.topics_en)
+            else:
+                labels.update(tisk.topics)
         return sorted(labels)

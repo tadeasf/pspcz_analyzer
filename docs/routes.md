@@ -37,12 +37,8 @@ Return HTML fragments for dynamic table updates. Defined in `pspcz_analyzer/rout
 |-------|------|---------|-------------|
 | `period` | int | 10 | Electoral period |
 | `top` | int | 30 | Number of MPs to show |
-| `sort` | string | `worst` | Sort order: `worst` (lowest first), `best`, or `most_active` (by volume) |
+| `sort` | string | `worst` | Sort order: `worst`, `best`, `most_active`, `least_active`, `most_yes`, `most_no`, `most_abstained`, `most_passive`, `most_absent`, `most_excused` |
 | `party` | string | `""` | Filter by party code (e.g. `ODS`, `ANO`) |
-
-### GET /api/attendance (sort=most_active)
-
-When `sort=most_active`, renders the "Most Active" view — MPs ranked by raw volume of active votes (YES + NO + ABSTAINED), rewarding consistent long-term participation.
 
 ### GET /api/similarity
 
@@ -79,6 +75,54 @@ Returns the legislative evolution view for a parliamentary print, including sub-
 | `period` | int | 10 | Electoral period |
 | `ct` | int | *(required)* | Print number |
 
+### GET /api/related-bills
+
+Returns related bills for a parliamentary print, discovered via zakon.cz cross-references.
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `idsb` | int | *(required)* | Bill identifier from zakon.cz |
+
+Rate limit: 5/minute.
+
+### POST /api/feedback
+
+Submit user feedback as a GitHub Issue (requires `GITHUB_FEEDBACK_ENABLED=1`).
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `title` | string | *(required)* | Feedback title |
+| `body` | string | *(required)* | Feedback body text |
+| `vote_id` | string | `""` | Related vote ID |
+| `period` | string | `""` | Related electoral period |
+| `page_url` | string | `""` | URL of the page where feedback was submitted |
+
+Rate limit: 3/hour.
+
+### GET /api/ollama/health
+
+Returns Ollama availability status as JSON.
+
+**Response:**
+```json
+{"available": true, "base_url": "http://localhost:11434", "model": "qwen3:8b"}
+```
+
+Rate limit: 10/minute.
+
+### GET /api/ollama/smoke-test
+
+Concurrent bilingual generation test. Fires two parallel LLM calls and measures wall-clock time.
+
+**Response:**
+```json
+{"success": true, "model": "qwen3:8b", "duration_seconds": 4.2, "summary_cs": "...", "summary_en": "..."}
+```
+
+Returns 503 if Ollama is down, 502 on generation failure.
+
+Rate limit: 2/minute.
+
 ### GET /api/health
 
 Health check endpoint returning JSON.
@@ -98,8 +142,22 @@ Return PNG images via `StreamingResponse`. Defined in `pspcz_analyzer/routes/cha
 | GET | `/charts/attendance.png` | `period`, `top=20` | Horizontal bar chart — worst attendance (RdYlGn palette) |
 | GET | `/charts/similarity.png` | `period` | PCA scatter plot — MPs colored by party (husl palette) |
 
-All charts render at 150 DPI with a dark background (`#1a1a2e`). Labels and titles are localized based on the current UI language.
+All charts render at 150 DPI with a light background (`#FFFFFF` with `#F7F7F7` plot area). Labels and titles are localized based on the current UI language.
 
 ## OpenAPI
 
 The full OpenAPI schema is available at `/openapi.json`. The interactive API documentation (Scalar UI) is at `/docs`. Default Swagger UI and ReDoc are disabled in favor of Scalar.
+
+## Rate Limiting
+
+Per-endpoint rate limits (via slowapi/limits):
+
+| Endpoint | Limit |
+|----------|-------|
+| Page routes | 60/minute |
+| Analysis APIs (`/api/loyalty`, etc.) | 15/minute |
+| `/api/related-bills` | 5/minute |
+| `/api/feedback` | 3/hour |
+| `/api/ollama/health` | 10/minute |
+| `/api/ollama/smoke-test` | 2/minute |
+| Chart routes | 30/minute |

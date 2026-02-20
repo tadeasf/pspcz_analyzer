@@ -182,8 +182,8 @@ Keyword-based topic classifier — the fast, offline fallback when Ollama is una
 Uses a `TOPIC_TAXONOMY` dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords.
 
 Functions:
-- `classify_tisk(name, text)` — returns all matching topic labels
-- `classify_tisk_primary_label(name, text)` — returns the single best-matching topic
+- `classify_tisk(name, text)` — returns all matching topic IDs with match counts
+- `classify_tisk_primary_label(name, text)` — returns `(label_cs, label_en)` tuple of the best-matching topic, or `None`
 
 ### Ollama Service (`services/ollama_service.py`)
 
@@ -295,3 +295,57 @@ Each `TiskHistoryStage` contains:
 - `date` — when the stage occurred
 - `outcome` — result text (approved, rejected, etc.)
 - `vote_number` — link to the specific vote, if applicable
+
+### Law Changes Scraper (`data/law_changes_scraper.py`)
+
+Scrapes zakon.cz to discover laws affected by a parliamentary print and find related bills.
+
+- `scrape_law_changes(period, ct)` — returns list of law change dicts (law name, amendment type)
+- `scrape_related_bills(idsb)` — discovers related bills via zakon.cz cross-references
+- `save_related_bills_json()` / `load_related_bills_json()` — JSON cache persistence
+
+Related bills are cached at `~/.cache/pspcz-analyzer/psp/tisky_meta/{period}/tisky_related_bills/{idsb}.json`.
+
+## Feedback Service (`services/feedback_service.py`)
+
+Submits user feedback as GitHub Issues via the GitHub API.
+
+Key class: `GitHubFeedbackClient`
+- `submit(title, body, vote_id, period, page_url)` — creates a GitHub issue with metadata labels
+- Requires `GITHUB_FEEDBACK_ENABLED=1` and a valid `GITHUB_FEEDBACK_TOKEN`
+- Issues are labeled with `GITHUB_FEEDBACK_LABELS` (comma-separated)
+
+Configuration:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHUB_FEEDBACK_ENABLED` | `0` | Enable feedback submission |
+| `GITHUB_FEEDBACK_TOKEN` | *(empty)* | GitHub PAT with `public_repo` scope |
+| `GITHUB_FEEDBACK_REPO` | `tadeasf/pspcz_analyzer` | Target repository |
+| `GITHUB_FEEDBACK_LABELS` | `user-feedback` | Labels for issues |
+
+## Security & Middleware
+
+### Security Headers (`middleware.py`)
+
+`SecurityHeadersMiddleware` adds security headers to all responses:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### Rate Limiting (`rate_limit.py`)
+
+Per-endpoint rate limits via slowapi/limits. Each API endpoint declares its own limit via `@limiter.limit()` decorator.
+
+### Context-Aware Timeout (`middleware.py`)
+
+`run_with_timeout(func, timeout, *args)` runs a synchronous function in a thread pool with a timeout. Uses `contextvars.copy_context().run()` to propagate the locale ContextVar into worker threads.
+
+## Analysis Cache (`services/analysis_cache.py`)
+
+In-memory TTL cache (1-hour default) for analysis results. Prevents recomputing loyalty, attendance, similarity, and vote list results on every request.
+
+Key class: `AnalysisCache`
+- `get_or_compute(key, compute_fn)` — returns cached result or computes and caches
+- `invalidate_all()` — clears all cached results (called by daily refresh)

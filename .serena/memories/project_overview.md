@@ -7,7 +7,7 @@ Czech Parliamentary Voting Analyzer — OSINT tool for downloading, parsing, and
 - **Python 3.14** (pinned in .python-version, requires >=3.12)
 - **Package manager**: uv
 - **Web**: FastAPI + Uvicorn + Jinja2 + HTMX
-- **CSS**: Pico CSS v2 (CDN, dark theme)
+- **CSS**: Pico CSS v2 (CDN, institutional light theme)
 - **Data**: Polars (DataFrames, Parquet caching)
 - **Charts**: Matplotlib + Seaborn (server-rendered PNG)
 - **HTTP client**: httpx

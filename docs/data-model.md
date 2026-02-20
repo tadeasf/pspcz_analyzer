@@ -112,6 +112,7 @@ The `TiskInfo` dataclass (`models/tisk_models.py`) holds enriched data for each 
 | `nazev` | str | Print name |
 | `url` | str | psp.cz URL |
 | `topics` | list[str] | Topic labels (from LLM or keyword classification) |
+| `topics_en` | list[str] | English topic labels (from LLM or keyword classification) |
 | `summary` | str | Czech AI summary |
 | `summary_en` | str | English AI summary |
 | `has_text` | bool | Whether extracted PDF text exists |
@@ -135,7 +136,7 @@ Per-period topic classification stored as Parquet files:
 ~/.cache/pspcz-analyzer/psp/tisky_meta/{period}/topic_classifications.parquet
 ```
 
-Columns: `ct` (print number), `topic` (serialized topic labels), `summary` (Czech), `summary_en` (English), `source` (classification method).
+Columns: `ct` (print number), `topic` (serialized Czech topic labels), `topic_en` (serialized English topic labels), `summary` (Czech), `summary_en` (English), `source` (classification method).
 
 Topics are assigned either by keyword matching (`topic_service.py`) or by LLM classification (`ollama_service.py`). The LLM results take priority when available.
 
@@ -177,6 +178,11 @@ All configuration is via environment variables, loaded from `.env` by `python-do
 | `OLLAMA_MODEL` | `qwen3:8b` | Model for inference |
 | `DAILY_REFRESH_ENABLED` | `1` | `1` to enable daily data refresh, `0` to disable |
 | `DAILY_REFRESH_HOUR` | `3` | Hour (CET, 0-23) at which the daily refresh runs |
+| `GITHUB_FEEDBACK_ENABLED` | `0` | Enable user feedback via GitHub Issues |
+| `GITHUB_FEEDBACK_TOKEN` | *(empty)* | GitHub PAT with `public_repo` scope |
+| `GITHUB_FEEDBACK_REPO` | `tadeasf/pspcz_analyzer` | Repository for feedback issues |
+| `GITHUB_FEEDBACK_LABELS` | `user-feedback` | Labels applied to feedback issues |
+| `TISK_SHORTENER` | `0` | Truncate tisk text for LLM (`0` = full, `1` = truncate) |
 
 ### Ollama Configuration
 
@@ -230,6 +236,7 @@ Votes in the `zmatecne` table are void and are always filtered out before any an
     tisky_meta/       # Topic classification + summary Parquet caches
     tisky_historie/   # Legislative history JSON files
     tisky_version_diffs/  # LLM diff summaries (Czech + English)
+    tisky_related_bills/  # Related bills JSON files (from zakon.cz)
 ```
 
 The Parquet cache uses file modification times: if the Parquet file is newer than the source UNL directory, it's loaded directly. Otherwise the UNL files are re-parsed and the Parquet is regenerated.
