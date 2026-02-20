@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/tisk_models/">
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/daily_refresh_service/">
       
       
-        <link rel="prev" href="../schemas/">
+        <link rel="prev" href="../attendance_service/">
       
       
-        <link rel="next" href="../../rate_limit/">
+        <link rel="next" href="../data_service/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>tisk_models - PSP.cz Analyzer</title>
+        <title>daily_refresh_service - PSP.cz Analyzer</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pspcz_analyzer.models.tisk_models" class="md-skip">
+        <a href="#pspcz_analyzer.services.daily_refresh_service" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              tisk_models
+              daily_refresh_service
             
           </span>
         </div>
@@ -1204,8 +1204,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1218,15 +1216,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_7" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../models/" class="md-nav__link ">
               
   
   
@@ -1250,7 +1248,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_1_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1268,7 +1266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../enums/" class="md-nav__link">
+      <a href="../../models/enums/" class="md-nav__link">
         
   
   
@@ -1296,7 +1294,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../schemas/" class="md-nav__link">
+      <a href="../../models/schemas/" class="md-nav__link">
         
   
   
@@ -1321,35 +1319,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    tisk_models
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../models/tisk_models/" class="md-nav__link">
         
   
   
@@ -1365,91 +1338,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        tisk_models
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="tisk_models">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.TiskInfo" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TiskInfo
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.PeriodData" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        PeriodData
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="PeriodData">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.PeriodData.get_tisk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        get_tisk
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.PeriodData.get_all_topic_labels" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        get_all_topic_labels
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1646,8 +1534,10 @@
                 
   
   
+    
   
   
+  
     
     
     
@@ -1658,15 +1548,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../services/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -1690,7 +1580,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_10_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_10_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_1_10">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1708,7 +1598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/analysis_cache/" class="md-nav__link">
+      <a href="../analysis_cache/" class="md-nav__link">
         
   
   
@@ -1736,7 +1626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/attendance_service/" class="md-nav__link">
+      <a href="../attendance_service/" class="md-nav__link">
         
   
   
@@ -1761,10 +1651,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../services/daily_refresh_service/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    daily_refresh_service
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1780,6 +1695,91 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.daily_refresh_service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        daily_refresh_service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="daily_refresh_service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DailyRefreshService
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DailyRefreshService">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.stop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.trigger_now" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        trigger_now
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1792,7 +1792,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/data_service/" class="md-nav__link">
+      <a href="../data_service/" class="md-nav__link">
         
   
   
@@ -1820,7 +1820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/feedback_service/" class="md-nav__link">
+      <a href="../feedback_service/" class="md-nav__link">
         
   
   
@@ -1848,7 +1848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/loyalty_service/" class="md-nav__link">
+      <a href="../loyalty_service/" class="md-nav__link">
         
   
   
@@ -1876,7 +1876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/mp_builder/" class="md-nav__link">
+      <a href="../mp_builder/" class="md-nav__link">
         
   
   
@@ -1904,7 +1904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/ollama_service/" class="md-nav__link">
+      <a href="../ollama_service/" class="md-nav__link">
         
   
   
@@ -1932,7 +1932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/similarity_service/" class="md-nav__link">
+      <a href="../similarity_service/" class="md-nav__link">
         
   
   
@@ -1960,7 +1960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_cache_manager/" class="md-nav__link">
+      <a href="../tisk_cache_manager/" class="md-nav__link">
         
   
   
@@ -1988,7 +1988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_classifier/" class="md-nav__link">
+      <a href="../tisk_classifier/" class="md-nav__link">
         
   
   
@@ -2016,7 +2016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_downloader_pipeline/" class="md-nav__link">
+      <a href="../tisk_downloader_pipeline/" class="md-nav__link">
         
   
   
@@ -2044,7 +2044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_lookup_builder/" class="md-nav__link">
+      <a href="../tisk_lookup_builder/" class="md-nav__link">
         
   
   
@@ -2072,7 +2072,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_metadata_scraper/" class="md-nav__link">
+      <a href="../tisk_metadata_scraper/" class="md-nav__link">
         
   
   
@@ -2100,7 +2100,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_pipeline_service/" class="md-nav__link">
+      <a href="../tisk_pipeline_service/" class="md-nav__link">
         
   
   
@@ -2128,7 +2128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_text_service/" class="md-nav__link">
+      <a href="../tisk_text_service/" class="md-nav__link">
         
   
   
@@ -2156,7 +2156,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/tisk_version_service/" class="md-nav__link">
+      <a href="../tisk_version_service/" class="md-nav__link">
         
   
   
@@ -2184,7 +2184,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/topic_service/" class="md-nav__link">
+      <a href="../topic_service/" class="md-nav__link">
         
   
   
@@ -2212,7 +2212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../services/votes_service/" class="md-nav__link">
+      <a href="../votes_service/" class="md-nav__link">
         
   
   
@@ -2376,22 +2376,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.daily_refresh_service" class="md-nav__link">
     <span class="md-ellipsis">
       
-        tisk_models
+        daily_refresh_service
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="tisk_models">
+    <nav class="md-nav" aria-label="daily_refresh_service">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.TiskInfo" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TiskInfo
+        DailyRefreshService
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DailyRefreshService">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start
       
     </span>
   </a>
@@ -2399,22 +2411,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.PeriodData" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.stop" class="md-nav__link">
     <span class="md-ellipsis">
       
-        PeriodData
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="PeriodData">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.PeriodData.get_tisk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        get_tisk
+        stop
       
     </span>
   </a>
@@ -2422,10 +2422,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.models.tisk_models.PeriodData.get_all_topic_labels" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.trigger_now" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_all_topic_labels
+        trigger_now
       
     </span>
   </a>
@@ -2462,21 +2462,24 @@
   
 
 
-  <h1>tisk_models</h1>
+  <h1>daily_refresh_service</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<h2 id="pspcz_analyzer.models.tisk_models" class="doc doc-heading">
-            <code>tisk_models</code>
+<h2 id="pspcz_analyzer.services.daily_refresh_service" class="doc doc-heading">
+            <code>daily_refresh_service</code>
 
 
-<a href="#pspcz_analyzer.models.tisk_models" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pspcz_analyzer.services.daily_refresh_service" class="headerlink" title="Permanent link">&para;</a></h2>
 
     <div class="doc doc-contents first">
 
-        <p>Data models for parliamentary prints (tisky) and period data.</p>
+        <p>Daily data refresh scheduler.</p>
+<p>Pauses the tisk AI pipeline, re-downloads fresh data from psp.cz,
+reloads all in-memory state, then restarts the pipeline.
+Uses pure asyncio — no external scheduler dependencies.</p>
 
 
 
@@ -2501,149 +2504,17 @@
 
 
 
-<h3 id="pspcz_analyzer.models.tisk_models.TiskInfo" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">TiskInfo</span><span class="p">(</span><span class="n">id_tisk</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">nazev</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">topics</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">has_text</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">summary_en</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">history</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">law_changes</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">sub_versions</span><span class="o">=</span><span class="nb">list</span><span class="p">())</span></code>
+<h3 id="pspcz_analyzer.services.daily_refresh_service.DailyRefreshService" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">DailyRefreshService</span><span class="p">(</span><span class="n">data_service</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="n">DAILY_REFRESH_HOUR</span><span class="p">)</span></code>
 
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#pspcz_analyzer.models.tisk_models.TiskInfo" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
 
 
 
-        <p>Metadata for a parliamentary print (tisk) linked to a vote.</p>
-
-
-<p><span class="doc-section-title">Attributes:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.id_tisk">id_tisk</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Database ID of the tisk.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.ct">ct</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tisk number (cislo tisku).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.nazev">nazev</span></code></td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Title of the tisk.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.period">period</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Electoral period number.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.topics">topics</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<span title="str">str</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>LLM-classified topic labels (1-3 Czech labels).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.has_text">has_text</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether extracted full text is available.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.summary">summary</span></code></td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>LLM-generated Czech summary of the tisk.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.history">history</span></code></td>
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="TiskHistory(ct, period, submitter='', submitter_date=None, government_opinion=None, stages=list(), current_status='projednáváno', law_number=None, scraped_at='', law_changes=list())
-
-  
-      dataclass
-   (pspcz_analyzer.data.history_scraper.TiskHistory)" href="../../data/history_scraper/#pspcz_analyzer.data.history_scraper.TiskHistory">TiskHistory</a> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Scraped legislative history stages.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.law_changes">law_changes</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>List of affected existing laws.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.TiskInfo.sub_versions">sub_versions</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Sub-tisk version dicts (amendments, gov opinions).</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>Asyncio-based daily scheduler that refreshes all psp.cz data.</p>
 
 
 
@@ -2652,139 +2523,17 @@
 
 
 
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h3 id="pspcz_analyzer.models.tisk_models.PeriodData" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">PeriodData</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">votes</span><span class="p">,</span> <span class="n">mp_votes</span><span class="p">,</span> <span class="n">void_votes</span><span class="p">,</span> <span class="n">mp_info</span><span class="p">,</span> <span class="n">tisk_lookup</span><span class="o">=</span><span class="nb">dict</span><span class="p">())</span></code>
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#pspcz_analyzer.models.tisk_models.PeriodData" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-
-
-        <p>All DataFrames and lookups for a single electoral period.</p>
-
-
-<p><span class="doc-section-title">Attributes:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.PeriodData.period">period</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Electoral period number.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.PeriodData.votes">votes</span></code></td>
-            <td>
-                  <code><span title="polars.DataFrame">DataFrame</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Polars DataFrame of vote records (hl_hlasovani).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.PeriodData.mp_votes">mp_votes</span></code></td>
-            <td>
-                  <code><span title="polars.DataFrame">DataFrame</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Polars DataFrame of per-MP vote results (hl_poslanec).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.PeriodData.void_votes">void_votes</span></code></td>
-            <td>
-                  <code><span title="polars.DataFrame">DataFrame</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Polars DataFrame of void vote IDs (zmatecne).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.PeriodData.mp_info">mp_info</span></code></td>
-            <td>
-                  <code><span title="polars.DataFrame">DataFrame</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Polars DataFrame of MP info (name, party, organ).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pspcz_analyzer.models.tisk_models.PeriodData.tisk_lookup">tisk_lookup</span></code></td>
-            <td>
-                  <code><span title="dict">dict</span>[<span title="tuple">tuple</span>[<span title="int">int</span>, <span title="int">int</span>], <a class="autorefs autorefs-internal" title="TiskInfo(id_tisk, ct, nazev, period, topics=list(), has_text=False, summary='', summary_en='', history=None, law_changes=list(), sub_versions=list())
-
-  
-      dataclass
-   (pspcz_analyzer.models.tisk_models.TiskInfo)" href="#pspcz_analyzer.models.tisk_models.TiskInfo">TiskInfo</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Mapping of (session, agenda_item) to TiskInfo.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-
-
-
-
-
-
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>pspcz_analyzer/services/daily_refresh_service.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_service</span><span class="p">:</span> <span class="n">DataService</span><span class="p">,</span> <span class="n">hour</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DAILY_REFRESH_HOUR</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_data_service</span> <span class="o">=</span> <span class="n">data_service</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_hour</span> <span class="o">=</span> <span class="n">hour</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
 
 
 
@@ -2802,24 +2551,52 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.models.tisk_models.PeriodData.get_tisk" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_tisk</span><span class="p">(</span><span class="n">schuze</span><span class="p">,</span> <span class="n">bod</span><span class="p">)</span></code>
+<h4 id="pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.start" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">start</span><span class="p">()</span></code>
 
-<a href="#pspcz_analyzer.models.tisk_models.PeriodData.get_tisk" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.start" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>Get tisk info for a vote given its session and agenda item numbers.</p>
+        <p>Start the scheduler loop. Idempotent — does nothing if already running.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/models/tisk_models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_tisk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schuze</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">bod</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TiskInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get tisk info for a vote given its session and agenda item numbers.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">schuze</span><span class="p">,</span> <span class="n">bod</span><span class="p">))</span>
+              <summary>Source code in <code>pspcz_analyzer/services/daily_refresh_service.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Start the scheduler loop. Idempotent — does nothing if already running.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">DAILY_REFRESH_ENABLED</span><span class="p">:</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Scheduler disabled via DAILY_REFRESH_ENABLED=0&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="k">return</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="k">return</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_scheduler_loop</span><span class="p">(),</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;daily-refresh-scheduler&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="p">)</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="s2">&quot;[daily-refresh] Scheduler started (refresh at </span><span class="si">{:02d}</span><span class="s2">:00 CET daily)&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_hour</span><span class="p">,</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2829,30 +2606,71 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.models.tisk_models.PeriodData.get_all_topic_labels" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_all_topic_labels</span><span class="p">()</span></code>
+<h4 id="pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.stop" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">stop</span><span class="p">()</span></code>
 
-<a href="#pspcz_analyzer.models.tisk_models.PeriodData.get_all_topic_labels" class="headerlink" title="Permanent link">&para;</a></h4>
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.stop" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>Collect all unique topic labels across all tisky, sorted.</p>
+        <p>Cancel the scheduler gracefully.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/models/tisk_models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-85">85</a></span>
-<span class="normal"><a href="#__codelineno-0-86">86</a></span>
-<span class="normal"><a href="#__codelineno-0-87">87</a></span>
-<span class="normal"><a href="#__codelineno-0-88">88</a></span>
-<span class="normal"><a href="#__codelineno-0-89">89</a></span>
-<span class="normal"><a href="#__codelineno-0-90">90</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_all_topic_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect all unique topic labels across all tisky, sorted.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="n">labels</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="k">for</span> <span class="n">tisk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_lookup</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="n">labels</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tisk</span><span class="o">.</span><span class="n">topics</span><span class="p">)</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+              <summary>Source code in <code>pspcz_analyzer/services/daily_refresh_service.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Cancel the scheduler gracefully.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">):</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Scheduler stopped&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.trigger_now" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">trigger_now</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.services.daily_refresh_service.DailyRefreshService.trigger_now" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Manually trigger an immediate refresh (for admin/debug use).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/daily_refresh_service.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">trigger_now</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Manually trigger an immediate refresh (for admin/debug use).&quot;&quot;&quot;</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Manual refresh triggered&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_service</span><span class="o">.</span><span class="n">refresh_all_data</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
