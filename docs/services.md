@@ -331,8 +331,19 @@ Configuration:
 `SecurityHeadersMiddleware` adds security headers to all responses:
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
-- `X-XSS-Protection: 1; mode=block`
 - `Referrer-Policy: strict-origin-when-cross-origin`
+- `Content-Security-Policy` — restricts script/style/image/font/connect sources to `'self'` (with `https://unpkg.com` for HTMX and `'unsafe-inline'` for inline scripts/styles)
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`
+
+### CSRF Protection
+
+POST endpoints validate the `Origin` and `Referer` headers against the request host. Requests with mismatched origins are rejected with 403 Forbidden.
+
+### XSS Sanitization
+
+- **Markdown content** — rendered via `markdown` library, then sanitized through `nh3` (Rust-based HTML sanitizer) before being marked safe for Jinja2
+- **External data** — user-supplied and psp.cz-sourced text is escaped via `html.escape()` before rendering
 
 ### Rate Limiting (`rate_limit.py`)
 

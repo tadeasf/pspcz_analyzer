@@ -1,6 +1,7 @@
 """HTML page routes (full-page renders)."""
 
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
@@ -31,14 +32,37 @@ def _ctx(request: Request, period: int, **kwargs) -> dict:
     }
 
 
+def _safe_referer(referer: str | None) -> str:
+    """Extract path from referer, rejecting external URLs."""
+    if not referer:
+        return "/"
+    try:
+        parsed = urlparse(referer)
+        if parsed.scheme or parsed.netloc:
+            path = parsed.path or "/"
+            if parsed.query:
+                path = f"{path}?{parsed.query}"
+            return path
+        return referer
+    except ValueError:
+        return "/"
+
+
 @router.get("/set-lang/{lang}")
 async def set_lang(request: Request, lang: str) -> Response:
     """Set the UI language via cookie and redirect back."""
     if lang not in SUPPORTED_LANGUAGES:
         lang = "cs"
-    referer = request.headers.get("referer", "/")
-    response = RedirectResponse(url=referer, status_code=303)
-    response.set_cookie("lang", lang, max_age=365 * 24 * 3600, samesite="lax", httponly=False)
+    redirect_path = _safe_referer(request.headers.get("referer"))
+    response = RedirectResponse(url=redirect_path, status_code=303)
+    response.set_cookie(
+        "lang",
+        lang,
+        max_age=365 * 24 * 3600,
+        samesite="lax",
+        httponly=True,
+        secure=request.url.scheme == "https",
+    )
     return response
 
 

@@ -44,6 +44,7 @@ All configuration is via environment variables loaded from `.env` by `python-dot
 |----------|---------|-------------|
 | `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Data cache directory |
 | `PSPCZ_DEV` | `1` | `1` for hot reload, `0` for production |
+| `PORT` | `8000` | Server port (used by both local dev and Docker) |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
 | `OLLAMA_MODEL` | `qwen3:8b` | Model for classification and summarization |
@@ -56,7 +57,7 @@ See `.env.example` for a documented template.
 docker compose up --build
 ```
 
-The app runs at `http://localhost:8000`. Configure `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` in `.env` to connect to your Ollama instance on the local network.
+The app runs at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. Configure `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` in `.env` to connect to your Ollama instance on the local network.
 
 ## Tech Stack
 

@@ -14,7 +14,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
 - **i18n** — full Czech/English UI localization with a header language switcher
 - **Feedback** — user feedback form on vote detail pages, submitted as GitHub Issues
-- **Rate Limiting & Security** — per-endpoint rate limits (slowapi) and security headers
+- **Rate Limiting & Security** — per-endpoint rate limits (slowapi), CSP/HSTS/Permissions-Policy headers, CSRF protection, and XSS sanitization (nh3)
 - **Legislative Evolution** — bill version diffs, law changes, and related bills discovery
 - **Docker** — containerized deployment with docker-compose
 - **API Documentation** — interactive Scalar UI at `/docs` with full OpenAPI schema
@@ -46,6 +46,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 |----------|---------|-------------|
 | `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Data cache directory |
 | `PSPCZ_DEV` | `1` | Set to `1` for hot reload, `0` for production |
+| `PORT` | `8000` | Server port (used by both local dev and Docker) |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
 | `OLLAMA_MODEL` | `qwen3:8b` | Model for topic classification and summarization |
@@ -68,7 +69,13 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app is available at `http://localhost:8000`. Data cache is persisted in a Docker volume. Ollama runs separately on the local network — configure its address via `OLLAMA_BASE_URL` in `.env`.
+The app is available at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. Ollama runs separately on the local network — configure its address via `OLLAMA_BASE_URL` in `.env`.
+
+To use a custom port:
+
+```bash
+PORT=9000 docker compose up --build
+```
 
 ## Reverse Proxy
 

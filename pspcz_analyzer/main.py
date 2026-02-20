@@ -6,6 +6,7 @@ from pathlib import Path
 
 import markdown as _md
 import markupsafe
+import nh3
 import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +15,7 @@ from loguru import logger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from pspcz_analyzer.config import DEFAULT_PERIOD
+from pspcz_analyzer.config import DEFAULT_PERIOD, PORT
 from pspcz_analyzer.i18n import setup_jinja2_i18n
 from pspcz_analyzer.i18n.middleware import LocaleMiddleware
 from pspcz_analyzer.logging_config import setup_logging
@@ -88,11 +89,12 @@ app.include_router(charts_router, prefix="/charts")
 
 # Register shared Jinja2 filters on all template instances
 def _md_filter(text: str) -> markupsafe.Markup:
-    """Convert markdown to HTML, safe for Jinja2 rendering."""
+    """Convert markdown to HTML, sanitized for safe Jinja2 rendering."""
     if not text:
         return markupsafe.Markup("")
-    html = _md.markdown(text, extensions=["nl2br"])
-    return markupsafe.Markup(html)
+    raw_html = _md.markdown(text, extensions=["nl2br"])
+    safe_html = nh3.clean(raw_html)
+    return markupsafe.Markup(safe_html)
 
 
 for t in (templates, api_templates, pages_templates):
@@ -105,7 +107,7 @@ def main() -> None:
     uvicorn.run(
         "pspcz_analyzer.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=PORT,
         reload=dev_mode,
     )
 

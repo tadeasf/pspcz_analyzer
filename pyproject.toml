@@ -20,6 +20,7 @@ dependencies = [
     "markdown>=3.10.2",
     "slowapi>=0.1.9",
     "python-dotenv>=1.2.1",
+    "nh3>=0.3.3",
 ]
 
 [project.optional-dependencies]
