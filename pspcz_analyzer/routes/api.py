@@ -15,6 +15,7 @@ from pspcz_analyzer.config import (
     DEFAULT_CACHE_DIR,
     DEFAULT_PERIOD,
     GITHUB_FEEDBACK_ENABLED,
+    LLM_PROVIDER,
     PERIOD_YEARS,
     TISKY_TEXT_DIR,
 )
@@ -30,7 +31,7 @@ from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
 from pspcz_analyzer.services.feedback_service import GitHubFeedbackClient
 from pspcz_analyzer.services.loyalty_service import compute_loyalty
-from pspcz_analyzer.services.ollama_service import OllamaClient
+from pspcz_analyzer.services.ollama_service import create_llm_client
 from pspcz_analyzer.services.similarity_service import compute_cross_party_similarity
 from pspcz_analyzer.services.votes_service import list_votes
 
@@ -421,11 +422,12 @@ _SMOKE_TEST_TEXT = (
 @router.get("/api/ollama/health", response_class=JSONResponse, tags=["Health"])
 @limiter.limit("10/minute")
 async def ollama_health(request: Request) -> dict:
-    """Check Ollama connectivity and model availability."""
-    client = OllamaClient()
+    """Check LLM connectivity and model availability."""
+    client = create_llm_client()
     available = await asyncio.to_thread(client.is_available)
     return {
         "available": available,
+        "provider": LLM_PROVIDER,
         "base_url": client.base_url,
         "model": client.model,
     }
@@ -444,8 +446,8 @@ def _build_smoke_error(error: str, duration: float, model: str) -> dict:
 @router.get("/api/ollama/smoke-test", response_class=JSONResponse, tags=["Health"])
 @limiter.limit("2/minute")
 async def ollama_smoke_test(request: Request) -> dict:
-    """Run concurrent bilingual generation to verify Ollama end-to-end."""
-    client = OllamaClient()
+    """Run concurrent bilingual generation to verify LLM end-to-end."""
+    client = create_llm_client()
     start = time.monotonic()
 
     available = await asyncio.to_thread(client.is_available)
@@ -453,7 +455,7 @@ async def ollama_smoke_test(request: Request) -> dict:
         duration = time.monotonic() - start
         raise HTTPException(
             status_code=503,
-            detail=_build_smoke_error("Ollama is not available", duration, client.model),
+            detail=_build_smoke_error("LLM is not available", duration, client.model),
         )
 
     try:
@@ -471,6 +473,7 @@ async def ollama_smoke_test(request: Request) -> dict:
     duration = time.monotonic() - start
     return {
         "success": True,
+        "provider": LLM_PROVIDER,
         "model": client.model,
         "duration_seconds": round(duration, 2),
         "summary_cs": cs_result,

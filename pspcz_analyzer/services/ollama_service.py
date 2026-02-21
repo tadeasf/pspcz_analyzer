@@ -1,19 +1,27 @@
-"""Ollama integration for AI topic classification and tisk summarization.
+"""LLM integration for AI topic classification and tisk summarization.
 
-When Ollama is running locally with the configured model, provides:
+Supports two backends:
+- Ollama (local/remote, default) — uses /api/generate endpoint
+- OpenAI-compatible (OpenAI, Azure, Together, Groq, vLLM) — uses /chat/completions
+
+When the configured LLM is available, provides:
 - Free-form topic classification (1-3 Czech topic labels per tisk)
 - Czech-language summaries explaining what each proposed law changes
 
-Falls back gracefully to keyword classification when Ollama is unavailable.
+Falls back gracefully to keyword classification when LLM is unavailable.
 """
+
+from __future__ import annotations
 
 import json
 import re
+from typing import Protocol
 
 import httpx
 from loguru import logger
 
 from pspcz_analyzer.config import (
+    LLM_PROVIDER,
     OLLAMA_API_KEY,
     OLLAMA_BASE_URL,
     OLLAMA_HEALTH_TIMEOUT,
@@ -21,6 +29,9 @@ from pspcz_analyzer.config import (
     OLLAMA_MODEL,
     OLLAMA_TIMEOUT,
     OLLAMA_VERBATIM_CHARS,
+    OPENAI_API_KEY,
+    OPENAI_BASE_URL,
+    OPENAI_MODEL,
     TISK_SHORTENER,
 )
 
@@ -162,6 +173,9 @@ _INJECTION_PHRASES_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Qwen-specific /no_think suffix — stripped for OpenAI-compatible backends
+_NO_THINK_RE = re.compile(r"\s*/no_think\s*$")
+
 
 def _sanitize_llm_input(text: str) -> str:
     """Strip common prompt injection phrases from user-supplied text."""
@@ -220,6 +234,34 @@ def truncate_legislative_text(
         result += "\n\n[...]\n\n" + "\n\n".join(highlights)
 
     return result[:max_chars]
+
+
+class LLMClient(Protocol):
+    """Protocol for LLM backend clients."""
+
+    base_url: str
+    model: str
+
+    def is_available(self) -> bool: ...
+    def classify_topics(self, text: str, title: str) -> list[str]: ...
+    def summarize(self, text: str, title: str) -> str: ...
+    def summarize_en(self, text: str, title: str) -> str: ...
+    def consolidate_topics(self, all_topics: list[str]) -> dict[str, str]: ...
+    def classify_topics_en(self, text: str, title: str) -> list[str]: ...
+    def classify_topics_bilingual(self, text: str, title: str) -> tuple[list[str], list[str]]: ...
+    def consolidate_topics_en(self, all_topics: list[str]) -> dict[str, str]: ...
+    def consolidate_topics_bilingual(
+        self, all_topics_cs: list[str], all_topics_en: list[str]
+    ) -> tuple[dict[str, str], dict[str, str]]: ...
+    def compare_versions(
+        self, text_old: str, text_new: str, ct1_old: int, ct1_new: int,
+        label_old: str = "", label_new: str = "",
+    ) -> str: ...
+    def summarize_bilingual(self, text: str, title: str) -> dict[str, str]: ...
+    def compare_versions_bilingual(
+        self, text_old: str, text_new: str, ct1_old: int, ct1_new: int,
+        label_old: str = "", label_new: str = "",
+    ) -> dict[str, str]: ...
 
 
 class OllamaClient:
@@ -565,3 +607,255 @@ def deserialize_topics(raw: str) -> list[str]:
             logger.debug("Failed to parse topics JSON: {}", raw)
     # Old format: single topic ID like "finance" or "justice"
     return [raw]
+
+
+class OpenAIClient:
+    """Client for OpenAI-compatible LLM APIs (OpenAI, Azure, Together, Groq, vLLM, etc.)."""
+
+    def __init__(
+        self,
+        base_url: str = OPENAI_BASE_URL,
+        model: str = OPENAI_MODEL,
+        timeout: float = OLLAMA_TIMEOUT,
+        api_key: str = OPENAI_API_KEY,
+    ) -> None:
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+        self.timeout = timeout
+        self._available: bool | None = None
+        self._headers: dict[str, str] = {"Content-Type": "application/json"}
+        if api_key:
+            self._headers["Authorization"] = f"Bearer {api_key}"
+
+    def is_available(self) -> bool:
+        """Check if the OpenAI-compatible API is reachable.
+
+        Caches result after first call.
+        """
+        if self._available is not None:
+            return self._available
+
+        try:
+            resp = httpx.get(
+                f"{self.base_url}/models",
+                headers=self._headers,
+                timeout=OLLAMA_HEALTH_TIMEOUT,
+            )
+            resp.raise_for_status()
+            self._available = True
+            logger.info("[openai] Available at {} with model {}", self.base_url, self.model)
+        except Exception:
+            self._available = False
+            logger.info("[openai] Not available (connection to {} failed)", self.base_url)
+
+        return self._available
+
+    def _generate(self, prompt: str, system: str) -> str | None:
+        """Send a chat completion request. Returns response text or None."""
+        # Strip Qwen-specific /no_think suffix — irrelevant for OpenAI models
+        prompt = _NO_THINK_RE.sub("", prompt)
+        system = _NO_THINK_RE.sub("", system)
+
+        try:
+            resp = httpx.post(
+                f"{self.base_url}/chat/completions",
+                headers=self._headers,
+                json={
+                    "model": self.model,
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "stream": False,
+                },
+                timeout=self.timeout,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            choices = data.get("choices", [])
+            if choices:
+                return choices[0].get("message", {}).get("content")
+            return None
+        except Exception:
+            logger.opt(exception=True).debug("[openai] Chat completion request failed")
+            return None
+
+    # All high-level methods delegate to the same logic as OllamaClient,
+    # only _generate differs. We reuse OllamaClient's methods via composition.
+
+    def classify_topics(self, text: str, title: str) -> list[str]:
+        truncated = truncate_legislative_text(text)
+        prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(
+            title=_sanitize_llm_input(title or "(bez názvu)"),
+            text=_sanitize_llm_input(truncated),
+        )
+        response = self._generate(prompt, _CLASSIFICATION_SYSTEM)
+        if response is None:
+            return []
+        return self._parse_topics_response(response)
+
+    def summarize(self, text: str, title: str) -> str:
+        truncated = truncate_legislative_text(text)
+        prompt = _SUMMARY_PROMPT_TEMPLATE.format(
+            title=_sanitize_llm_input(title or "(bez názvu)"),
+            text=_sanitize_llm_input(truncated),
+        )
+        response = self._generate(prompt, _SUMMARY_SYSTEM)
+        if not response:
+            return ""
+        return self._strip_think(response)
+
+    def summarize_en(self, text: str, title: str) -> str:
+        truncated = truncate_legislative_text(text)
+        prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(
+            title=_sanitize_llm_input(title or "(no title)"),
+            text=_sanitize_llm_input(truncated),
+        )
+        response = self._generate(prompt, _SUMMARY_SYSTEM_EN)
+        if not response:
+            return ""
+        return self._strip_think(response)
+
+    def consolidate_topics(self, all_topics: list[str]) -> dict[str, str]:
+        topics_list = "\n".join(f"- {t}" for t in all_topics)
+        prompt = _CONSOLIDATION_PROMPT_TEMPLATE.format(
+            n=len(all_topics), topics_list=topics_list,
+        )
+        response = self._generate(prompt, _CONSOLIDATION_SYSTEM)
+        if not response:
+            return {t: t for t in all_topics}
+        return self._parse_consolidation_response(response, all_topics)
+
+    def classify_topics_en(self, text: str, title: str) -> list[str]:
+        truncated = truncate_legislative_text(text)
+        prompt = _CLASSIFICATION_PROMPT_TEMPLATE_EN.format(
+            title=_sanitize_llm_input(title or "(no title)"),
+            text=_sanitize_llm_input(truncated),
+        )
+        response = self._generate(prompt, _CLASSIFICATION_SYSTEM_EN)
+        if response is None:
+            return []
+        return self._parse_topics_response(response)
+
+    def classify_topics_bilingual(self, text: str, title: str) -> tuple[list[str], list[str]]:
+        topics_cs = self.classify_topics(text, title)
+        topics_en = self.classify_topics_en(text, title)
+        return topics_cs, topics_en
+
+    def consolidate_topics_en(self, all_topics: list[str]) -> dict[str, str]:
+        topics_list = "\n".join(f"- {t}" for t in all_topics)
+        prompt = _CONSOLIDATION_PROMPT_TEMPLATE_EN.format(
+            n=len(all_topics), topics_list=topics_list,
+        )
+        response = self._generate(prompt, _CONSOLIDATION_SYSTEM_EN)
+        if not response:
+            return {t: t for t in all_topics}
+        return self._parse_consolidation_response(response, all_topics)
+
+    def consolidate_topics_bilingual(
+        self, all_topics_cs: list[str], all_topics_en: list[str],
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        mapping_cs = self.consolidate_topics(all_topics_cs)
+        mapping_en = self.consolidate_topics_en(all_topics_en)
+        return mapping_cs, mapping_en
+
+    def compare_versions(
+        self, text_old: str, text_new: str, ct1_old: int, ct1_new: int,
+        label_old: str = "", label_new: str = "",
+    ) -> str:
+        trunc_old = truncate_legislative_text(text_old)
+        trunc_new = truncate_legislative_text(text_new)
+        prompt = _COMPARISON_PROMPT_TEMPLATE.format(
+            ct1_old=ct1_old, ct1_new=ct1_new,
+            label_old=label_old or f"CT1={ct1_old}",
+            label_new=label_new or f"CT1={ct1_new}",
+            text_old=_sanitize_llm_input(trunc_old),
+            text_new=_sanitize_llm_input(trunc_new),
+        )
+        response = self._generate(prompt, _COMPARISON_SYSTEM)
+        if not response:
+            return ""
+        return self._strip_think(response)
+
+    def summarize_bilingual(self, text: str, title: str) -> dict[str, str]:
+        cs = self.summarize(text, title)
+        en = self.summarize_en(text, title)
+        return {"cs": cs, "en": en}
+
+    def compare_versions_bilingual(
+        self, text_old: str, text_new: str, ct1_old: int, ct1_new: int,
+        label_old: str = "", label_new: str = "",
+    ) -> dict[str, str]:
+        cs = self.compare_versions(text_old, text_new, ct1_old, ct1_new, label_old, label_new)
+        trunc_old = truncate_legislative_text(text_old)
+        trunc_new = truncate_legislative_text(text_new)
+        prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(
+            ct1_old=ct1_old, ct1_new=ct1_new,
+            label_old=label_old or f"CT1={ct1_old}",
+            label_new=label_new or f"CT1={ct1_new}",
+            text_old=_sanitize_llm_input(trunc_old),
+            text_new=_sanitize_llm_input(trunc_new),
+        )
+        response = self._generate(prompt, _COMPARISON_SYSTEM_EN)
+        en = self._strip_think(response) if response else ""
+        return {"cs": cs, "en": en}
+
+    @staticmethod
+    def _strip_think(text: str) -> str:
+        return _THINK_RE.sub("", text).strip()
+
+    def _parse_topics_response(self, response: str) -> list[str]:
+        response = self._strip_think(response)
+        match = re.search(r"TOPICS?:\s*(.+)", response, re.IGNORECASE)
+        if not match:
+            logger.debug("[openai] Could not parse topics from response: {}", response[:200])
+            return []
+        raw = match.group(1).strip()
+        topics = [t.strip().strip(".,;:-–") for t in raw.split(",")]
+        topics = [t for t in topics if t and t.lower() != "none"]
+        if not topics:
+            logger.debug("[openai] No valid topics parsed from: {}", raw[:200])
+            return []
+        return topics[:3]
+
+    @staticmethod
+    def _parse_consolidation_response(response: str, all_topics: list[str]) -> dict[str, str]:
+        response = _THINK_RE.sub("", response).strip()
+        mapping: dict[str, str] = {}
+        for line in response.splitlines():
+            line = line.strip()
+            if " -> " not in line:
+                continue
+            parts = line.split(" -> ", 1)
+            old = parts[0].strip().strip("- ")
+            new = parts[1].strip()
+            if old and new:
+                mapping[old] = new
+        for t in all_topics:
+            if t not in mapping:
+                mapping[t] = t
+        return mapping
+
+
+def create_llm_client() -> OllamaClient | OpenAIClient:
+    """Factory: return the configured LLM backend client.
+
+    Reads LLM_PROVIDER from config:
+    - "ollama" (default) -> OllamaClient
+    - "openai" -> OpenAIClient (fails fast if OPENAI_API_KEY is empty)
+
+    Raises ValueError for unknown provider.
+    """
+    provider = LLM_PROVIDER.lower().strip()
+    if provider == "ollama":
+        return OllamaClient()
+    if provider == "openai":
+        if not OPENAI_API_KEY:
+            msg = (
+                "LLM_PROVIDER=openai but OPENAI_API_KEY is not set. "
+                "Set OPENAI_API_KEY in your .env or environment."
+            )
+            raise ValueError(msg)
+        return OpenAIClient()
+    msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
+    raise ValueError(msg)
