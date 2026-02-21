@@ -16,7 +16,7 @@ from pspcz_analyzer.config import (
 )
 from pspcz_analyzer.data.tisk_downloader import download_subtisk_pdf
 from pspcz_analyzer.data.tisk_scraper import SubTiskVersion, scrape_all_subtisk_documents
-from pspcz_analyzer.services.ollama_service import OllamaClient
+from pspcz_analyzer.services.ollama_service import OllamaClient, OpenAIClient, create_llm_client
 
 
 def download_subtisk_versions_sync(
@@ -133,9 +133,9 @@ def analyze_version_diffs_sync(
 
     Returns ({"{ct}_{ct1}": diff_cs}, {"{ct}_{ct1}": diff_en}).
     """
-    ollama = OllamaClient()
-    if not ollama.is_available():
-        logger.info("[tisk pipeline] Ollama not available, skipping version diff analysis")
+    llm = create_llm_client()
+    if not llm.is_available():
+        logger.info("[tisk pipeline] LLM not available, skipping version diff analysis")
         return {}, {}
 
     text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
@@ -169,7 +169,7 @@ def analyze_version_diffs_sync(
                 continue
 
             summaries = _compare_version_pair_bilingual(
-                ollama, path_old, path_new, ct1_old, ct1_new, period, ct
+                llm, path_old, path_new, ct1_old, ct1_new, period, ct
             )
             if summaries["cs"]:
                 diff_file.write_text(summaries["cs"], encoding="utf-8")
@@ -205,7 +205,7 @@ def _collect_version_texts(text_dir: Path, ct: int) -> list[tuple[int, Path]]:
 
 
 def _compare_version_pair_bilingual(
-    ollama: OllamaClient,
+    llm: OllamaClient | OpenAIClient,
     path_old: Path,
     path_new: Path,
     ct1_old: int,
@@ -224,7 +224,7 @@ def _compare_version_pair_bilingual(
         period,
         ct,
     )
-    return ollama.compare_versions_bilingual(
+    return llm.compare_versions_bilingual(
         text_old,
         text_new,
         ct1_old,
