@@ -91,6 +91,9 @@ TISKY_VERSION_DIFFS_DIR = "tisky_version_diffs"
 PSP_ORIG2_BASE_URL = "https://www.psp.cz/sqw/text/orig2.sqw"
 PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
 
+# LLM provider selection: "ollama" (default) or "openai" (any OpenAI-compatible API)
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
+
 # Ollama (local LLM) integration — optional, falls back to keyword classification
 # For remote HTTPS Ollama, set OLLAMA_BASE_URL (e.g. "https://ollama.example.com")
 # and OLLAMA_API_KEY (Bearer token for Authorization header).
@@ -102,6 +105,12 @@ OLLAMA_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 OLLAMA_HEALTH_TIMEOUT = 5.0  # connectivity check
 OLLAMA_MAX_TEXT_CHARS = 50000
 OLLAMA_VERBATIM_CHARS = 40000
+
+# OpenAI-compatible API integration (OpenAI, Azure OpenAI, Together, Groq, vLLM, etc.)
+# Used when LLM_PROVIDER=openai
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
 # Daily data refresh — re-downloads psp.cz data and reloads in-memory state
 DAILY_REFRESH_ENABLED = os.environ.get("DAILY_REFRESH_ENABLED", "1") == "1"

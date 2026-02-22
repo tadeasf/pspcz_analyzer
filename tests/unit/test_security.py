@@ -5,7 +5,7 @@ import markupsafe
 from pspcz_analyzer.main import _md_filter
 from pspcz_analyzer.routes.api import _safe_url
 from pspcz_analyzer.routes.pages import _safe_referer
-from pspcz_analyzer.services.ollama_service import _sanitize_llm_input
+from pspcz_analyzer.services.llm_service import _sanitize_llm_input
 
 
 class TestSafeUrl:

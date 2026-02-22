@@ -6,8 +6,9 @@ import polars as pl
 from loguru import logger
 
 from pspcz_analyzer.config import TISKY_META_DIR
-from pspcz_analyzer.services.ollama_service import (
-    OllamaClient,
+from pspcz_analyzer.services.llm_service import (
+    BaseLLMClient,
+    create_llm_client,
     deserialize_topics,
     serialize_topics,
 )
@@ -21,7 +22,7 @@ def classify_and_save(
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run topic classification on extracted texts, save parquet, return maps.
 
-    Uses Ollama AI when available (free-form topics), falls back to keyword matching.
+    Uses LLM when available (free-form topics), falls back to keyword matching.
     Saves incrementally after each tisk and resumes from where it left off.
     Returns (topic_map, summary_map, summary_en_map).
     """
@@ -39,8 +40,8 @@ def classify_and_save(
     # Figure out which tisky still need processing
     remaining = {ct: p for ct, p in text_paths.items() if ct not in existing}
 
-    ollama = OllamaClient()
-    use_ai = ollama.is_available()
+    llm = create_llm_client()
+    use_ai = llm.is_available()
     total = len(text_paths)
     already = len(existing)
 
@@ -54,12 +55,13 @@ def classify_and_save(
 
     if use_ai:
         logger.info(
-            "[tisk pipeline] Ollama available, using AI classification + summarization ({} to process)",
+            "[tisk pipeline] LLM available ({}), using AI classification + summarization ({} to process)",
+            llm.model,
             len(remaining),
         )
     else:
         logger.info(
-            "[tisk pipeline] Ollama not available, using keyword classification ({} to process)",
+            "[tisk pipeline] LLM not available, using keyword classification ({} to process)",
             len(remaining),
         )
 
@@ -67,7 +69,7 @@ def classify_and_save(
     records = list(existing.values())
 
     for i, (ct, text_path) in enumerate(sorted(remaining.items()), already + 1):
-        record = _classify_single_tisk(ct, text_path, ollama, use_ai, i, total)
+        record = _classify_single_tisk(ct, text_path, llm, use_ai, i, total)
         records.append(record)
 
         # Save after every tisk so progress is never lost
@@ -81,7 +83,7 @@ def classify_and_save(
 def _classify_single_tisk(
     ct: int,
     text_path: Path,
-    ollama: OllamaClient,
+    llm: BaseLLMClient,
     use_ai: bool,
     i: int,
     total: int,
@@ -98,13 +100,13 @@ def _classify_single_tisk(
         logger.info(
             "[tisk pipeline] [{}/{}] AI classifying tisk ct={} (bilingual) ...", i, total, ct
         )
-        topics, topics_en = ollama.classify_topics_bilingual(text, "")
+        topics, topics_en = llm.classify_topics_bilingual(text, "")
         if topics:
-            source = f"ollama:{ollama.model}"
+            source = f"llm:{llm.model}"
         logger.info(
             "[tisk pipeline] [{}/{}] AI summarizing tisk ct={} (bilingual) ...", i, total, ct
         )
-        summaries = ollama.summarize_bilingual(text, "")
+        summaries = llm.summarize_bilingual(text, "")
         summary = summaries["cs"]
         summary_en = summaries["en"]
         logger.info(
@@ -201,9 +203,9 @@ def consolidate_topics(
         consolidated_marker.touch()
         return _build_topic_summary_maps(records, period, log=False)
 
-    ollama = OllamaClient()
-    if not ollama.is_available():
-        logger.info("[tisk pipeline] Ollama not available, skipping topic consolidation")
+    llm = create_llm_client()
+    if not llm.is_available():
+        logger.info("[tisk pipeline] LLM not available, skipping topic consolidation")
         return _build_topic_summary_maps(records, period, log=False)
 
     logger.info(
@@ -212,7 +214,7 @@ def consolidate_topics(
         len(unique_topics_cs),
         len(unique_topics_en),
     )
-    mapping_cs, mapping_en = ollama.consolidate_topics_bilingual(unique_topics_cs, unique_topics_en)
+    mapping_cs, mapping_en = llm.consolidate_topics_bilingual(unique_topics_cs, unique_topics_en)
 
     # Count how many actually changed
     changed_cs = sum(1 for old, new in mapping_cs.items() if old != new)
@@ -291,7 +293,7 @@ def _build_topic_summary_maps(
 
     if log:
         classified = len(topic_map)
-        ai_count = sum(1 for r in records if r.get("source", "").startswith("ollama"))
+        ai_count = sum(1 for r in records if r.get("source", "").startswith(("ollama", "llm:")))
         logger.info(
             "[tisk pipeline] Classified {}/{} tisky for period {} (AI: {}, keyword: {})",
             classified,

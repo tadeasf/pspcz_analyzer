@@ -185,14 +185,12 @@ Functions:
 - `classify_tisk(name, text)` — returns all matching topic IDs with match counts
 - `classify_tisk_primary_label(name, text)` — returns `(label_cs, label_en)` tuple of the best-matching topic, or `None`
 
-### Ollama Service (`services/ollama_service.py`)
+### LLM Service (`services/llm_service.py`)
 
-LLM-based topic classification, summarization, and version comparison using Ollama. This is optional — if Ollama is not running, the system falls back to keyword classification.
+LLM-based topic classification, summarization, and version comparison. Supports two backends: Ollama (local/remote) and OpenAI-compatible APIs (OpenAI, Azure, Together, Groq, vLLM). This is optional — if the LLM is not running, the system falls back to keyword classification.
 
-Supports both local Ollama (no auth) and remote HTTPS Ollama (Bearer token authentication via `OLLAMA_API_KEY`).
-
-Key class: `OllamaClient`
-- `is_available()` — health check against the Ollama API (with auth headers if configured)
+Key class: `BaseLLMClient` (ABC) with two implementations: `OllamaClient` and `OpenAIClient`.
+- `is_available()` — health check against the LLM API
 - `classify_topics(name, text)` — LLM-based multi-label topic classification
 - `summarize(name, text)` — generate a concise Czech summary
 - `summarize_en(name, text)` — generate a concise English summary
@@ -201,12 +199,14 @@ Key class: `OllamaClient`
 - `compare_versions_bilingual(text1, text2)` — generate diff summaries in both Czech and English
 - `consolidate_topics(topics_by_ct)` — ask the LLM to merge/deduplicate topic labels across a period
 
+Factory: `create_llm_client()` reads `LLM_PROVIDER` from config and returns the appropriate client.
+
 #### Diagnostic Endpoints
 
-Two JSON endpoints for verifying Ollama connectivity without running the full tisk pipeline:
+Two JSON endpoints for verifying LLM connectivity without running the full tisk pipeline:
 
-- **`GET /api/ollama/health`** — Connection check. Returns `{"available": true/false, "base_url": "...", "model": "..."}`. Rate limit: 10/minute.
-- **`GET /api/ollama/smoke-test`** — Concurrent bilingual generation test using a hardcoded Czech legislative sample. Fires two parallel LLM calls (Czech + English summaries) and measures wall-clock time. Returns `{"success": true, "model": "...", "duration_seconds": 4.2, "summary_cs": "...", "summary_en": "...", ...}`. Returns 503 if Ollama is down, 502 on generation failure. Rate limit: 2/minute.
+- **`GET /api/llm/health`** — Connection check. Returns `{"available": true/false, "provider": "...", "base_url": "...", "model": "..."}`. Rate limit: 10/minute.
+- **`GET /api/llm/smoke-test`** — Concurrent bilingual generation test using a hardcoded Czech legislative sample. Fires two parallel LLM calls (Czech + English summaries) and measures wall-clock time. Returns `{"success": true, "provider": "...", "model": "...", "duration_seconds": 4.2, "summary_cs": "...", "summary_en": "...", ...}`. Returns 503 if LLM is down, 502 on generation failure. Rate limit: 2/minute.
 
 Configuration (in `config.py`, overridable via `.env`):
 
