@@ -45,7 +45,7 @@ pspcz_analyzer/
 │   ├── attendance_service.py  — Participation rates + vote breakdown + activity ranking
 │   ├── similarity_service.py  — Cosine similarity + PCA
 │   ├── votes_service.py       — Vote search/detail
-│   ├── ollama_service.py      — LLM integration
+│   ├── llm_service.py      — LLM integration
 │   ├── topic_service.py       — Keyword-based classification
 │   ├── tisk_pipeline_service.py
 │   └── tisk_text_service.py
@@ -113,7 +113,7 @@ pspcz_analyzer/
 │   ├── attendance_service.py
 │   ├── similarity_service.py
 │   ├── votes_service.py
-│   ├── ollama_service.py
+│   ├── llm_service.py
 │   ├── topic_service.py
 │   └── tisk_text_service.py
 ├── routes/

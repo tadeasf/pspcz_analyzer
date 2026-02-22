@@ -1,11 +1,12 @@
-"""Tests for OpenAIClient and create_llm_client factory."""
+"""Tests for OpenAIClient, BaseLLMClient, and create_llm_client factory."""
 
 from unittest.mock import patch
 
 import httpx
 import pytest
 
-from pspcz_analyzer.services.ollama_service import (
+from pspcz_analyzer.services.llm_service import (
+    BaseLLMClient,
     OllamaClient,
     OpenAIClient,
     create_llm_client,
@@ -16,35 +17,40 @@ class TestCreateLLMClientFactory:
     """Tests for the create_llm_client() factory function."""
 
     def test_default_returns_ollama(self):
-        with patch("pspcz_analyzer.services.ollama_service.LLM_PROVIDER", "ollama"):
+        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"):
             client = create_llm_client()
         assert isinstance(client, OllamaClient)
 
     def test_openai_provider_returns_openai_client(self):
         with (
-            patch("pspcz_analyzer.services.ollama_service.LLM_PROVIDER", "openai"),
-            patch("pspcz_analyzer.services.ollama_service.OPENAI_API_KEY", "sk-test-key"),
+            patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "openai"),
+            patch("pspcz_analyzer.services.llm_service.OPENAI_API_KEY", "sk-test-key"),
         ):
             client = create_llm_client()
         assert isinstance(client, OpenAIClient)
 
     def test_openai_provider_without_key_raises(self):
         with (
-            patch("pspcz_analyzer.services.ollama_service.LLM_PROVIDER", "openai"),
-            patch("pspcz_analyzer.services.ollama_service.OPENAI_API_KEY", ""),
+            patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "openai"),
+            patch("pspcz_analyzer.services.llm_service.OPENAI_API_KEY", ""),
         ):
             with pytest.raises(ValueError, match="OPENAI_API_KEY is not set"):
                 create_llm_client()
 
     def test_unknown_provider_raises(self):
-        with patch("pspcz_analyzer.services.ollama_service.LLM_PROVIDER", "bogus"):
+        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "bogus"):
             with pytest.raises(ValueError, match="Unknown LLM_PROVIDER"):
                 create_llm_client()
 
     def test_case_insensitive_provider(self):
-        with patch("pspcz_analyzer.services.ollama_service.LLM_PROVIDER", "OLLAMA"):
+        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "OLLAMA"):
             client = create_llm_client()
         assert isinstance(client, OllamaClient)
+
+    def test_factory_returns_base_llm_client(self):
+        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"):
+            client = create_llm_client()
+        assert isinstance(client, BaseLLMClient)
 
 
 class TestOpenAIClientGenerate:
@@ -67,11 +73,9 @@ class TestOpenAIClientGenerate:
 
     def test_generate_success(self):
         client = self._make_client()
-        mock_response = self._ok_response({
-            "choices": [
-                {"message": {"role": "assistant", "content": "TOPICS: Dane, Pravo"}}
-            ]
-        })
+        mock_response = self._ok_response(
+            {"choices": [{"message": {"role": "assistant", "content": "TOPICS: Dane, Pravo"}}]}
+        )
         with patch("httpx.post", return_value=mock_response) as mock_post:
             result = client._generate("classify this", "system prompt")
 
@@ -84,15 +88,23 @@ class TestOpenAIClientGenerate:
         assert payload["messages"][0]["role"] == "system"
         assert payload["messages"][1]["role"] == "user"
 
-    def test_generate_strips_no_think_from_prompt(self):
+    def test_generate_passes_reasoning_effort(self):
         client = self._make_client()
         mock_response = self._ok_response({"choices": [{"message": {"content": "result"}}]})
         with patch("httpx.post", return_value=mock_response) as mock_post:
-            client._generate("classify this /no_think", "system prompt /no_think")
+            client._generate("classify this", "system prompt", reasoning_effort="low")
 
         payload = mock_post.call_args.kwargs["json"]
-        assert "/no_think" not in payload["messages"][1]["content"]
-        assert "/no_think" not in payload["messages"][0]["content"]
+        assert payload["reasoning_effort"] == "low"
+
+    def test_generate_omits_reasoning_effort_when_none(self):
+        client = self._make_client()
+        mock_response = self._ok_response({"choices": [{"message": {"content": "result"}}]})
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client._generate("classify this", "system prompt")
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert "reasoning_effort" not in payload
 
     def test_generate_returns_none_on_http_error(self):
         client = self._make_client()
@@ -187,11 +199,9 @@ class TestOpenAIClientClassifyTopics:
 
     def test_classify_topics_parses_response(self):
         client = self._make_client()
-        mock_response = self._ok_response({
-            "choices": [
-                {"message": {"content": "TOPICS: Dane a poplatky, Socialni pojisteni"}}
-            ]
-        })
+        mock_response = self._ok_response(
+            {"choices": [{"message": {"content": "TOPICS: Dane a poplatky, Socialni pojisteni"}}]}
+        )
         with patch("httpx.post", return_value=mock_response):
             topics = client.classify_topics("some law text", "Novela zakona")
         assert topics == ["Dane a poplatky", "Socialni pojisteni"]

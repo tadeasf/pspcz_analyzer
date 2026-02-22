@@ -30,8 +30,8 @@ from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
 from pspcz_analyzer.services.feedback_service import GitHubFeedbackClient
+from pspcz_analyzer.services.llm_service import create_llm_client
 from pspcz_analyzer.services.loyalty_service import compute_loyalty
-from pspcz_analyzer.services.ollama_service import create_llm_client
 from pspcz_analyzer.services.similarity_service import compute_cross_party_similarity
 from pspcz_analyzer.services.votes_service import list_votes
 
@@ -401,7 +401,7 @@ async def health(request: Request):
     return {"status": "ok", "periods_loaded": list(data_svc.loaded_periods)}
 
 
-# ── Ollama diagnostic constants ──────────────────────────────────────────
+# ── LLM diagnostic constants ─────────────────────────────────────────────
 
 _SMOKE_TEST_TITLE = "Novela zákona o státní službě"
 _SMOKE_TEST_TEXT = (
@@ -419,9 +419,9 @@ _SMOKE_TEST_TEXT = (
 )
 
 
-@router.get("/api/ollama/health", response_class=JSONResponse, tags=["Health"])
+@router.get("/api/llm/health", response_class=JSONResponse, tags=["Health"])
 @limiter.limit("10/minute")
-async def ollama_health(request: Request) -> dict:
+async def llm_health(request: Request) -> dict:
     """Check LLM connectivity and model availability."""
     client = create_llm_client()
     available = await asyncio.to_thread(client.is_available)
@@ -443,9 +443,9 @@ def _build_smoke_error(error: str, duration: float, model: str) -> dict:
     }
 
 
-@router.get("/api/ollama/smoke-test", response_class=JSONResponse, tags=["Health"])
+@router.get("/api/llm/smoke-test", response_class=JSONResponse, tags=["Health"])
 @limiter.limit("2/minute")
-async def ollama_smoke_test(request: Request) -> dict:
+async def llm_smoke_test(request: Request) -> dict:
     """Run concurrent bilingual generation to verify LLM end-to-end."""
     client = create_llm_client()
     start = time.monotonic()

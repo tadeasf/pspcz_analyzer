@@ -6,9 +6,8 @@ import polars as pl
 from loguru import logger
 
 from pspcz_analyzer.config import TISKY_META_DIR
-from pspcz_analyzer.services.ollama_service import (
-    OllamaClient,
-    OpenAIClient,
+from pspcz_analyzer.services.llm_service import (
+    BaseLLMClient,
     create_llm_client,
     deserialize_topics,
     serialize_topics,
@@ -84,7 +83,7 @@ def classify_and_save(
 def _classify_single_tisk(
     ct: int,
     text_path: Path,
-    llm: OllamaClient | OpenAIClient,
+    llm: BaseLLMClient,
     use_ai: bool,
     i: int,
     total: int,
@@ -294,10 +293,7 @@ def _build_topic_summary_maps(
 
     if log:
         classified = len(topic_map)
-        ai_count = sum(
-            1 for r in records
-            if r.get("source", "").startswith(("ollama", "llm:"))
-        )
+        ai_count = sum(1 for r in records if r.get("source", "").startswith(("ollama", "llm:")))
         logger.info(
             "[tisk pipeline] Classified {}/{} tisky for period {} (AI: {}, keyword: {})",
             classified,

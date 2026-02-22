@@ -98,19 +98,19 @@ Submit user feedback as a GitHub Issue (requires `GITHUB_FEEDBACK_ENABLED=1`).
 
 Rate limit: 3/hour.
 
-### GET /api/ollama/health
+### GET /api/llm/health
 
-Returns Ollama availability status as JSON.
+Returns LLM availability status as JSON.
 
 **Response:**
 
 ```json
-{ "available": true, "base_url": "http://localhost:11434", "model": "qwen3:8b" }
+{ "available": true, "provider": "ollama", "base_url": "http://localhost:11434", "model": "qwen3:8b" }
 ```
 
 Rate limit: 10/minute.
 
-### GET /api/ollama/smoke-test
+### GET /api/llm/smoke-test
 
 Concurrent bilingual generation test. Fires two parallel LLM calls and measures wall-clock time.
 
@@ -119,6 +119,7 @@ Concurrent bilingual generation test. Fires two parallel LLM calls and measures 
 ```json
 {
   "success": true,
+  "provider": "ollama",
   "model": "qwen3:8b",
   "duration_seconds": 4.2,
   "summary_cs": "...",
@@ -126,7 +127,7 @@ Concurrent bilingual generation test. Fires two parallel LLM calls and measures 
 }
 ```
 
-Returns 503 if Ollama is down, 502 on generation failure.
+Returns 503 if LLM is down, 502 on generation failure.
 
 Rate limit: 2/minute.
 
@@ -166,6 +167,6 @@ Per-endpoint rate limits (via slowapi/limits):
 | Analysis APIs (`/api/loyalty`, etc.) | 15/minute |
 | `/api/related-bills`                 | 5/minute  |
 | `/api/feedback`                      | 3/hour    |
-| `/api/ollama/health`                 | 10/minute |
-| `/api/ollama/smoke-test`             | 2/minute  |
+| `/api/llm/health`                    | 10/minute |
+| `/api/llm/smoke-test`               | 2/minute  |
 | Chart routes                         | 30/minute |

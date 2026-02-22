@@ -13,7 +13,7 @@ from pspcz_analyzer.config import (
     TISKY_VERSION_DIFFS_DIR,
 )
 from pspcz_analyzer.data.history_scraper import load_history_json
-from pspcz_analyzer.services.ollama_service import deserialize_topics
+from pspcz_analyzer.services.llm_service import deserialize_topics
 
 
 class TiskCacheManager:

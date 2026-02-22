@@ -16,7 +16,7 @@ from pspcz_analyzer.config import (
 )
 from pspcz_analyzer.data.tisk_downloader import download_subtisk_pdf
 from pspcz_analyzer.data.tisk_scraper import SubTiskVersion, scrape_all_subtisk_documents
-from pspcz_analyzer.services.ollama_service import OllamaClient, OpenAIClient, create_llm_client
+from pspcz_analyzer.services.llm_service import BaseLLMClient, create_llm_client
 
 
 def download_subtisk_versions_sync(
@@ -205,7 +205,7 @@ def _collect_version_texts(text_dir: Path, ct: int) -> list[tuple[int, Path]]:
 
 
 def _compare_version_pair_bilingual(
-    llm: OllamaClient | OpenAIClient,
+    llm: BaseLLMClient,
     path_old: Path,
     path_new: Path,
     ct1_old: int,
