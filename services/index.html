@@ -790,15 +790,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ollama-service-servicesollama_servicepy" class="md-nav__link">
+  <a href="#llm-service-servicesllm_servicepy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ollama Service (services/ollama_service.py)
+        LLM Service (services/llm_service.py)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Ollama Service (services/ollama_service.py)">
+    <nav class="md-nav" aria-label="LLM Service (services/llm_service.py)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2283,6 +2283,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/llm_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    llm_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reference/pspcz_analyzer/services/loyalty_service/" class="md-nav__link">
         
   
@@ -2319,34 +2347,6 @@
     
   
     mp_builder
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../reference/pspcz_analyzer/services/ollama_service/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ollama_service
   
 
     
@@ -3069,15 +3069,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ollama-service-servicesollama_servicepy" class="md-nav__link">
+  <a href="#llm-service-servicesllm_servicepy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ollama Service (services/ollama_service.py)
+        LLM Service (services/llm_service.py)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Ollama Service (services/ollama_service.py)">
+    <nav class="md-nav" aria-label="LLM Service (services/llm_service.py)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3472,11 +3472,10 @@
 <p>Functions:
 - <code>classify_tisk(name, text)</code> — returns all matching topic IDs with match counts
 - <code>classify_tisk_primary_label(name, text)</code> — returns <code>(label_cs, label_en)</code> tuple of the best-matching topic, or <code>None</code></p>
-<h3 id="ollama-service-servicesollama_servicepy">Ollama Service (<code>services/ollama_service.py</code>)<a class="headerlink" href="#ollama-service-servicesollama_servicepy" title="Permanent link">&para;</a></h3>
-<p>LLM-based topic classification, summarization, and version comparison using Ollama. This is optional — if Ollama is not running, the system falls back to keyword classification.</p>
-<p>Supports both local Ollama (no auth) and remote HTTPS Ollama (Bearer token authentication via <code>OLLAMA_API_KEY</code>).</p>
-<p>Key class: <code>OllamaClient</code>
-- <code>is_available()</code> — health check against the Ollama API (with auth headers if configured)
+<h3 id="llm-service-servicesllm_servicepy">LLM Service (<code>services/llm_service.py</code>)<a class="headerlink" href="#llm-service-servicesllm_servicepy" title="Permanent link">&para;</a></h3>
+<p>LLM-based topic classification, summarization, and version comparison. Supports two backends: Ollama (local/remote) and OpenAI-compatible APIs (OpenAI, Azure, Together, Groq, vLLM). This is optional — if the LLM is not running, the system falls back to keyword classification.</p>
+<p>Key class: <code>BaseLLMClient</code> (ABC) with two implementations: <code>OllamaClient</code> and <code>OpenAIClient</code>.
+- <code>is_available()</code> — health check against the LLM API
 - <code>classify_topics(name, text)</code> — LLM-based multi-label topic classification
 - <code>summarize(name, text)</code> — generate a concise Czech summary
 - <code>summarize_en(name, text)</code> — generate a concise English summary
@@ -3484,11 +3483,12 @@
 - <code>compare_versions(text1, text2)</code> — generate a Czech diff summary between two tisk versions
 - <code>compare_versions_bilingual(text1, text2)</code> — generate diff summaries in both Czech and English
 - <code>consolidate_topics(topics_by_ct)</code> — ask the LLM to merge/deduplicate topic labels across a period</p>
+<p>Factory: <code>create_llm_client()</code> reads <code>LLM_PROVIDER</code> from config and returns the appropriate client.</p>
 <h4 id="diagnostic-endpoints">Diagnostic Endpoints<a class="headerlink" href="#diagnostic-endpoints" title="Permanent link">&para;</a></h4>
-<p>Two JSON endpoints for verifying Ollama connectivity without running the full tisk pipeline:</p>
+<p>Two JSON endpoints for verifying LLM connectivity without running the full tisk pipeline:</p>
 <ul>
-<li><strong><code>GET /api/ollama/health</code></strong> — Connection check. Returns <code>{"available": true/false, "base_url": "...", "model": "..."}</code>. Rate limit: 10/minute.</li>
-<li><strong><code>GET /api/ollama/smoke-test</code></strong> — Concurrent bilingual generation test using a hardcoded Czech legislative sample. Fires two parallel LLM calls (Czech + English summaries) and measures wall-clock time. Returns <code>{"success": true, "model": "...", "duration_seconds": 4.2, "summary_cs": "...", "summary_en": "...", ...}</code>. Returns 503 if Ollama is down, 502 on generation failure. Rate limit: 2/minute.</li>
+<li><strong><code>GET /api/llm/health</code></strong> — Connection check. Returns <code>{"available": true/false, "provider": "...", "base_url": "...", "model": "..."}</code>. Rate limit: 10/minute.</li>
+<li><strong><code>GET /api/llm/smoke-test</code></strong> — Concurrent bilingual generation test using a hardcoded Czech legislative sample. Fires two parallel LLM calls (Czech + English summaries) and measures wall-clock time. Returns <code>{"success": true, "provider": "...", "model": "...", "duration_seconds": 4.2, "summary_cs": "...", "summary_en": "...", ...}</code>. Returns 503 if LLM is down, 502 on generation failure. Rate limit: 2/minute.</li>
 </ul>
 <p>Configuration (in <code>config.py</code>, overridable via <code>.env</code>):</p>
 <table>
