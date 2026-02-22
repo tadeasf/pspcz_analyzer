@@ -419,11 +419,14 @@ _SMOKE_TEST_TEXT = (
 )
 
 
-@router.get("/api/llm/health", response_class=JSONResponse, tags=["Health"])
+@router.get("/llm/health", response_class=JSONResponse, tags=["Health"])
 @limiter.limit("10/minute")
 async def llm_health(request: Request) -> dict:
     """Check LLM connectivity and model availability."""
-    client = create_llm_client()
+    try:
+        client = create_llm_client()
+    except ValueError as exc:
+        return {"available": False, "provider": LLM_PROVIDER, "error": str(exc)}
     available = await asyncio.to_thread(client.is_available)
     return {
         "available": available,
@@ -437,17 +440,24 @@ def _build_smoke_error(error: str, duration: float, model: str) -> dict:
     """Build a failure response dict for the smoke-test endpoint."""
     return {
         "success": False,
+        "provider": LLM_PROVIDER,
         "error": error,
         "duration_seconds": round(duration, 2),
         "model": model,
     }
 
 
-@router.get("/api/llm/smoke-test", response_class=JSONResponse, tags=["Health"])
+@router.get("/llm/smoke-test", response_class=JSONResponse, tags=["Health"])
 @limiter.limit("2/minute")
 async def llm_smoke_test(request: Request) -> dict:
     """Run concurrent bilingual generation to verify LLM end-to-end."""
-    client = create_llm_client()
+    try:
+        client = create_llm_client()
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=_build_smoke_error(str(exc), 0.0, "unknown"),
+        ) from exc
     start = time.monotonic()
 
     available = await asyncio.to_thread(client.is_available)

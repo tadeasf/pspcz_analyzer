@@ -22,7 +22,7 @@ def classify_and_save(
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run topic classification on extracted texts, save parquet, return maps.
 
-    Uses Ollama AI when available (free-form topics), falls back to keyword matching.
+    Uses LLM when available (free-form topics), falls back to keyword matching.
     Saves incrementally after each tisk and resumes from where it left off.
     Returns (topic_map, summary_map, summary_en_map).
     """

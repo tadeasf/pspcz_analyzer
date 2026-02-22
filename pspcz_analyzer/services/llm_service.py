@@ -687,16 +687,17 @@ def create_llm_client() -> BaseLLMClient:
 
     Raises ValueError for unknown provider.
     """
-    provider = LLM_PROVIDER.lower().strip()
-    if provider == "ollama":
-        return OllamaClient()
-    if provider == "openai":
-        if not OPENAI_API_KEY:
-            msg = (
-                "LLM_PROVIDER=openai but OPENAI_API_KEY is not set. "
-                "Set OPENAI_API_KEY in your .env or environment."
-            )
+    match LLM_PROVIDER.lower().strip():
+        case "ollama":
+            return OllamaClient()
+        case "openai":
+            if not OPENAI_API_KEY:
+                msg = (
+                    "LLM_PROVIDER=openai but OPENAI_API_KEY is not set. "
+                    "Set OPENAI_API_KEY in your .env or environment."
+                )
+                raise ValueError(msg)
+            return OpenAIClient()
+        case _:
+            msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
             raise ValueError(msg)
-        return OpenAIClient()
-    msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
-    raise ValueError(msg)
