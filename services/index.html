@@ -3506,8 +3506,8 @@
 <p>Pipeline stages per period:
 1. <strong>Download</strong> — fetch PDF documents from psp.cz for each print
 2. <strong>Extract</strong> — convert PDFs to plain text using PyMuPDF
-3. <strong>Classify</strong> — assign topic labels via Ollama LLM (or keyword fallback)
-4. <strong>Summarize</strong> — generate bilingual (Czech + English) summaries via Ollama
+3. <strong>Classify</strong> — assign topic labels via the configured LLM backend (or keyword fallback)
+4. <strong>Summarize</strong> — generate bilingual (Czech + English) summaries via the configured LLM backend
 5. <strong>Consolidate</strong> — merge per-tisk topic classifications into a single Parquet cache
 6. <strong>Scrape histories</strong> — fetch legislative process timelines from psp.cz HTML pages</p>
 <p>Key class: <code>TiskPipelineService</code>
@@ -3524,7 +3524,7 @@
 <p>Text files are stored at <code>~/.cache/pspcz-analyzer/psp/tisky_text/{period}/{ct}.txt</code>.</p>
 <h3 id="topic-service-servicestopic_servicepy">Topic Service (<code>services/topic_service.py</code>)<a class="headerlink" href="#topic-service-servicestopic_servicepy" title="Permanent link">&para;</a></h3>
 <p>Keyword-based topic classifier — the fast, offline fallback when Ollama is unavailable.</p>
-<p>Uses a <code>TOPIC_TAXONOMY</code> dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords.</p>
+<p>Uses a <code>TOPIC_TAXONOMY</code> dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords. This is the offline fallback when the configured LLM is unavailable.</p>
 <p>Functions:
 - <code>classify_tisk(name, text)</code> — returns all matching topic IDs with match counts
 - <code>classify_tisk_primary_label(name, text)</code> — returns <code>(label_cs, label_en)</code> tuple of the best-matching topic, or <code>None</code></p>
@@ -3547,6 +3547,7 @@
 <li><strong><code>GET /api/llm/smoke-test</code></strong> — Concurrent bilingual generation test using a hardcoded Czech legislative sample. Fires two parallel LLM calls (Czech + English summaries) and measures wall-clock time. Returns <code>{"success": true, "provider": "...", "model": "...", "duration_seconds": 4.2, "summary_cs": "...", "summary_en": "...", ...}</code>. Returns 503 if LLM is down, 502 on generation failure. Rate limit: 2/minute.</li>
 </ul>
 <p>Configuration (in <code>config.py</code>, overridable via <code>.env</code>):</p>
+<p><strong>Ollama backend</strong> (<code>LLM_PROVIDER=ollama</code>):</p>
 <table>
 <thead>
 <tr>
@@ -3569,26 +3570,70 @@
 <tr>
 <td><code>OLLAMA_MODEL</code></td>
 <td><code>qwen3:8b</code></td>
-<td>Model for inference</td>
+<td>Model for Ollama inference</td>
+</tr>
+</tbody>
+</table>
+<p><strong>OpenAI-compatible backend</strong> (<code>LLM_PROVIDER=openai</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OPENAI_BASE_URL</code></td>
+<td><code>https://api.openai.com/v1</code></td>
+<td>OpenAI-compatible API endpoint</td>
 </tr>
 <tr>
-<td><code>OLLAMA_TIMEOUT</code></td>
+<td><code>OPENAI_API_KEY</code></td>
+<td><em>(empty)</em></td>
+<td>API key (required)</td>
+</tr>
+<tr>
+<td><code>OPENAI_MODEL</code></td>
+<td><code>gpt-4o-mini</code></td>
+<td>Model name</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Shared constants</strong> (not overridable via env var):</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LLM_TIMEOUT</code></td>
 <td><code>300.0</code></td>
 <td>Per-request timeout in seconds</td>
 </tr>
 <tr>
-<td><code>OLLAMA_MAX_TEXT_CHARS</code></td>
+<td><code>LLM_HEALTH_TIMEOUT</code></td>
+<td><code>5.0</code></td>
+<td>Health check timeout</td>
+</tr>
+<tr>
+<td><code>LLM_MAX_TEXT_CHARS</code></td>
 <td><code>50000</code></td>
 <td>Max text length sent to LLM</td>
 </tr>
 <tr>
-<td><code>OLLAMA_VERBATIM_CHARS</code></td>
+<td><code>LLM_VERBATIM_CHARS</code></td>
 <td><code>40000</code></td>
 <td>Chars included verbatim (rest truncated)</td>
 </tr>
 </tbody>
 </table>
-<p>If Ollama is not running or unreachable, the system silently falls back to keyword-based classification.</p>
+<p>If the configured LLM is not running or unreachable, the system silently falls back to keyword-based classification.</p>
 <h3 id="tisk-version-service-servicestisk_version_servicepy">Tisk Version Service (<code>services/tisk_version_service.py</code>)<a class="headerlink" href="#tisk-version-service-servicestisk_version_servicepy" title="Permanent link">&para;</a></h3>
 <p>Compares different versions (sub-tisky) of the same parliamentary print using LLM-generated diff summaries. Produces bilingual (Czech + English) comparison summaries stored as separate text files.</p>
 <h3 id="tisk-cache-manager-servicestisk_cache_managerpy">Tisk Cache Manager (<code>services/tisk_cache_manager.py</code>)<a class="headerlink" href="#tisk-cache-manager-servicestisk_cache_managerpy" title="Permanent link">&para;</a></h3>

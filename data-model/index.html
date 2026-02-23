@@ -656,10 +656,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ollama-configuration" class="md-nav__link">
+  <a href="#llm-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ollama Configuration
+        LLM Configuration
       
     </span>
   </a>
@@ -2786,10 +2786,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ollama-configuration" class="md-nav__link">
+  <a href="#llm-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ollama Configuration
+        LLM Configuration
       
     </span>
   </a>
@@ -3248,6 +3248,11 @@
 <td><code>1</code> for hot reload (dev), <code>0</code> for production</td>
 </tr>
 <tr>
+<td><code>LLM_PROVIDER</code></td>
+<td><code>ollama</code></td>
+<td>LLM backend: <code>ollama</code> or <code>openai</code></td>
+</tr>
+<tr>
 <td><code>OLLAMA_BASE_URL</code></td>
 <td><code>http://localhost:11434</code></td>
 <td>Ollama API endpoint</td>
@@ -3260,7 +3265,27 @@
 <tr>
 <td><code>OLLAMA_MODEL</code></td>
 <td><code>qwen3:8b</code></td>
-<td>Model for inference</td>
+<td>Model for Ollama inference</td>
+</tr>
+<tr>
+<td><code>OPENAI_BASE_URL</code></td>
+<td><code>https://api.openai.com/v1</code></td>
+<td>OpenAI-compatible API endpoint</td>
+</tr>
+<tr>
+<td><code>OPENAI_API_KEY</code></td>
+<td><em>(empty)</em></td>
+<td>API key for OpenAI-compatible backend</td>
+</tr>
+<tr>
+<td><code>OPENAI_MODEL</code></td>
+<td><code>gpt-4o-mini</code></td>
+<td>Model for OpenAI-compatible inference</td>
+</tr>
+<tr>
+<td><code>AI_PERIODS_LIMIT</code></td>
+<td><code>3</code></td>
+<td>Number of newest periods to process with AI (0 = all)</td>
 </tr>
 <tr>
 <td><code>DAILY_REFRESH_ENABLED</code></td>
@@ -3299,7 +3324,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="ollama-configuration">Ollama Configuration<a class="headerlink" href="#ollama-configuration" title="Permanent link">&para;</a></h3>
+<h3 id="llm-configuration">LLM Configuration<a class="headerlink" href="#llm-configuration" title="Permanent link">&para;</a></h3>
 <p>Additional constants in <code>config.py</code> (not overridable via env var):</p>
 <table>
 <thead>
@@ -3311,28 +3336,28 @@
 </thead>
 <tbody>
 <tr>
-<td><code>OLLAMA_TIMEOUT</code></td>
+<td><code>LLM_TIMEOUT</code></td>
 <td><code>300.0</code></td>
 <td>Per-request timeout in seconds</td>
 </tr>
 <tr>
-<td><code>OLLAMA_HEALTH_TIMEOUT</code></td>
+<td><code>LLM_HEALTH_TIMEOUT</code></td>
 <td><code>5.0</code></td>
 <td>Health check timeout</td>
 </tr>
 <tr>
-<td><code>OLLAMA_MAX_TEXT_CHARS</code></td>
+<td><code>LLM_MAX_TEXT_CHARS</code></td>
 <td><code>50000</code></td>
 <td>Max text length sent to LLM</td>
 </tr>
 <tr>
-<td><code>OLLAMA_VERBATIM_CHARS</code></td>
+<td><code>LLM_VERBATIM_CHARS</code></td>
 <td><code>40000</code></td>
 <td>Chars included verbatim (rest truncated)</td>
 </tr>
 </tbody>
 </table>
-<p>If Ollama is not running or unreachable, the system silently falls back to keyword-based classification.</p>
+<p>If the configured LLM is not running or unreachable, the system silently falls back to keyword-based classification.</p>
 <h2 id="vote-result-codes">Vote Result Codes<a class="headerlink" href="#vote-result-codes" title="Permanent link">&para;</a></h2>
 <h3 id="individual-mp-votes-hl_poslanecvysledek">Individual MP Votes (<code>hl_poslanec.vysledek</code>)<a class="headerlink" href="#individual-mp-votes-hl_poslanecvysledek" title="Permanent link">&para;</a></h3>
 <table>

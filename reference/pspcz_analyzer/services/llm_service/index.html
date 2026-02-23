@@ -3541,7 +3541,7 @@
 
 
 <h3 id="pspcz_analyzer.services.llm_service.OllamaClient" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">OllamaClient</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">OLLAMA_BASE_URL</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">OLLAMA_MODEL</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">OLLAMA_TIMEOUT</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">OLLAMA_API_KEY</span><span class="p">)</span></code>
+              <code class="highlight language-python"><span class="n">OllamaClient</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">OLLAMA_BASE_URL</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">OLLAMA_MODEL</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">LLM_TIMEOUT</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">OLLAMA_API_KEY</span><span class="p">)</span></code>
 
 <a href="#pspcz_analyzer.services.llm_service.OllamaClient" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -3581,7 +3581,7 @@
 <a id="__codelineno-0-491" name="__codelineno-0-491"></a>    <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-492" name="__codelineno-0-492"></a>    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">OLLAMA_BASE_URL</span><span class="p">,</span>
 <a id="__codelineno-0-493" name="__codelineno-0-493"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">OLLAMA_MODEL</span><span class="p">,</span>
-<a id="__codelineno-0-494" name="__codelineno-0-494"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">OLLAMA_TIMEOUT</span><span class="p">,</span>
+<a id="__codelineno-0-494" name="__codelineno-0-494"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">LLM_TIMEOUT</span><span class="p">,</span>
 <a id="__codelineno-0-495" name="__codelineno-0-495"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">OLLAMA_API_KEY</span><span class="p">,</span>
 <a id="__codelineno-0-496" name="__codelineno-0-496"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-497" name="__codelineno-0-497"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">base_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
@@ -3673,7 +3673,7 @@
 <a id="__codelineno-0-515" name="__codelineno-0-515"></a>        <span class="n">resp</span> <span class="o">=</span> <span class="n">httpx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
 <a id="__codelineno-0-516" name="__codelineno-0-516"></a>            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s2">/api/tags&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-517" name="__codelineno-0-517"></a>            <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
-<a id="__codelineno-0-518" name="__codelineno-0-518"></a>            <span class="n">timeout</span><span class="o">=</span><span class="n">OLLAMA_HEALTH_TIMEOUT</span><span class="p">,</span>
+<a id="__codelineno-0-518" name="__codelineno-0-518"></a>            <span class="n">timeout</span><span class="o">=</span><span class="n">LLM_HEALTH_TIMEOUT</span><span class="p">,</span>
 <a id="__codelineno-0-519" name="__codelineno-0-519"></a>        <span class="p">)</span>
 <a id="__codelineno-0-520" name="__codelineno-0-520"></a>        <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
 <a id="__codelineno-0-521" name="__codelineno-0-521"></a>        <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;models&quot;</span><span class="p">,</span> <span class="p">[])]</span>
@@ -3717,7 +3717,7 @@
 
 
 <h3 id="pspcz_analyzer.services.llm_service.OpenAIClient" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">OpenAIClient</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">OPENAI_BASE_URL</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">OPENAI_MODEL</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">OLLAMA_TIMEOUT</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">OPENAI_API_KEY</span><span class="p">)</span></code>
+              <code class="highlight language-python"><span class="n">OpenAIClient</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">OPENAI_BASE_URL</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">OPENAI_MODEL</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">LLM_TIMEOUT</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">OPENAI_API_KEY</span><span class="p">)</span></code>
 
 <a href="#pspcz_analyzer.services.llm_service.OpenAIClient" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -3757,7 +3757,7 @@
 <a id="__codelineno-0-577" name="__codelineno-0-577"></a>    <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-578" name="__codelineno-0-578"></a>    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">OPENAI_BASE_URL</span><span class="p">,</span>
 <a id="__codelineno-0-579" name="__codelineno-0-579"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">OPENAI_MODEL</span><span class="p">,</span>
-<a id="__codelineno-0-580" name="__codelineno-0-580"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">OLLAMA_TIMEOUT</span><span class="p">,</span>
+<a id="__codelineno-0-580" name="__codelineno-0-580"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">LLM_TIMEOUT</span><span class="p">,</span>
 <a id="__codelineno-0-581" name="__codelineno-0-581"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">OPENAI_API_KEY</span><span class="p">,</span>
 <a id="__codelineno-0-582" name="__codelineno-0-582"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-583" name="__codelineno-0-583"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">base_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
@@ -3834,7 +3834,7 @@
 <a id="__codelineno-0-601" name="__codelineno-0-601"></a>        <span class="n">resp</span> <span class="o">=</span> <span class="n">httpx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
 <a id="__codelineno-0-602" name="__codelineno-0-602"></a>            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s2">/models&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-603" name="__codelineno-0-603"></a>            <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
-<a id="__codelineno-0-604" name="__codelineno-0-604"></a>            <span class="n">timeout</span><span class="o">=</span><span class="n">OLLAMA_HEALTH_TIMEOUT</span><span class="p">,</span>
+<a id="__codelineno-0-604" name="__codelineno-0-604"></a>            <span class="n">timeout</span><span class="o">=</span><span class="n">LLM_HEALTH_TIMEOUT</span><span class="p">,</span>
 <a id="__codelineno-0-605" name="__codelineno-0-605"></a>        <span class="p">)</span>
 <a id="__codelineno-0-606" name="__codelineno-0-606"></a>        <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
 <a id="__codelineno-0-607" name="__codelineno-0-607"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_available</span> <span class="o">=</span> <span class="kc">True</span>
@@ -3863,7 +3863,7 @@
 
 
 <h3 id="pspcz_analyzer.services.llm_service.truncate_legislative_text" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">truncate_legislative_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">verbatim_chars</span><span class="o">=</span><span class="n">OLLAMA_VERBATIM_CHARS</span><span class="p">,</span> <span class="n">max_chars</span><span class="o">=</span><span class="n">OLLAMA_MAX_TEXT_CHARS</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">truncate_legislative_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">verbatim_chars</span><span class="o">=</span><span class="n">LLM_VERBATIM_CHARS</span><span class="p">,</span> <span class="n">max_chars</span><span class="o">=</span><span class="n">LLM_MAX_TEXT_CHARS</span><span class="p">)</span></code>
 
 <a href="#pspcz_analyzer.services.llm_service.truncate_legislative_text" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -3916,8 +3916,8 @@
 <span class="normal"><a href="#__codelineno-0-257">257</a></span>
 <span class="normal"><a href="#__codelineno-0-258">258</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="k">def</span><span class="w"> </span><span class="nf">truncate_legislative_text</span><span class="p">(</span>
 <a id="__codelineno-0-225" name="__codelineno-0-225"></a>    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226"></a>    <span class="n">verbatim_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">OLLAMA_VERBATIM_CHARS</span><span class="p">,</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227"></a>    <span class="n">max_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">OLLAMA_MAX_TEXT_CHARS</span><span class="p">,</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a>    <span class="n">verbatim_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LLM_VERBATIM_CHARS</span><span class="p">,</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a>    <span class="n">max_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LLM_MAX_TEXT_CHARS</span><span class="p">,</span>
 <a id="__codelineno-0-228" name="__codelineno-0-228"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Truncate Czech legislative text intelligently for LLM processing.</span>
 <a id="__codelineno-0-230" name="__codelineno-0-230"></a>
