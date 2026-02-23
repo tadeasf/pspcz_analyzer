@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, and visualizes open data from psp.cz (Czech Parliament). Built as a FastAPI web app with Jinja2/HTMX frontend and Polars for data processing. Supports Czech/English UI localization and bilingual AI summaries via Ollama.
+Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, and visualizes open data from psp.cz (Czech Parliament). Built as a FastAPI web app with Jinja2/HTMX frontend and Polars for data processing. Supports Czech/English UI localization and bilingual AI summaries via Ollama or any OpenAI-compatible API.
 
 ## Commands
 
@@ -29,9 +29,14 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `PSPCZ_CACHE_DIR` — data cache directory (default: `~/.cache/pspcz-analyzer/psp`)
 - `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`)
 - `PORT` — server port (default: `8000`)
+- `LLM_PROVIDER` — LLM backend: `ollama` (default) or `openai`
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
 - `OLLAMA_API_KEY` — Bearer token for remote HTTPS Ollama (default: empty)
-- `OLLAMA_MODEL` — model name (default: `qwen3:8b`)
+- `OLLAMA_MODEL` — model name for Ollama (default: `qwen3:8b`)
+- `OPENAI_BASE_URL` — OpenAI-compatible API endpoint (default: `https://api.openai.com/v1`)
+- `OPENAI_API_KEY` — API key for OpenAI-compatible backend (default: empty)
+- `OPENAI_MODEL` — model name for OpenAI-compatible backend (default: `gpt-4o-mini`)
+- `AI_PERIODS_LIMIT` — newest periods to process with AI, `0` = all (default: `3`)
 - `DAILY_REFRESH_ENABLED` — `1` to enable daily data refresh, `0` to disable (default: `1`)
 - `DAILY_REFRESH_HOUR` — hour (CET, 0-23) for daily refresh (default: `3`)
 - `GITHUB_FEEDBACK_ENABLED` — enable feedback form (`0` or `1`, default: `0`)
@@ -93,7 +98,7 @@ Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`.
 
 ### Configuration (`config.py`)
 
-Loads `.env` via `python-dotenv`. Contains psp.cz URLs, cache paths, period-to-year mappings, UNL format constants, and Ollama settings. The `PERIOD_ORGAN_IDS` map is critical — `id_obdobi` in the psp.cz database uses organ IDs, not period numbers.
+Loads `.env` via `python-dotenv`. Contains psp.cz URLs, cache paths, period-to-year mappings, UNL format constants, and LLM settings (provider-agnostic `LLM_*` constants plus per-provider `OLLAMA_*` / `OPENAI_*` env vars). The `PERIOD_ORGAN_IDS` map is critical — `id_obdobi` in the psp.cz database uses organ IDs, not period numbers.
 
 ### Domain Enums (`models/enums.py`)
 

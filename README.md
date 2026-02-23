@@ -15,7 +15,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Chart Endpoints** — server-rendered PNG charts (seaborn/matplotlib)
 - **Multi-period Support** — covers all 10 electoral periods (1993 to present)
 - **Tisk Pipeline** — background processing that downloads parliamentary print PDFs, extracts text, and classifies topics
-- **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
+- **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama or any OpenAI-compatible API (OpenAI, Azure, Together, Groq, vLLM)
 - **i18n** — full Czech/English UI localization with a header language switcher
 - **Feedback** — user feedback form on vote detail pages, submitted as GitHub Issues
 - **Rate Limiting & Security** — per-endpoint rate limits (slowapi), CSP/HSTS/Permissions-Policy headers, CSRF protection, and XSS sanitization (nh3)
@@ -46,34 +46,39 @@ The app starts on `http://localhost:8000`. On first launch it downloads ~50 MB o
 
 All configuration is via environment variables. Copy `.env.example` to `.env` for local development — `python-dotenv` loads it automatically.
 
-| Variable                  | Default                       | Description                                      |
-| ------------------------- | ----------------------------- | ------------------------------------------------ |
-| `PSPCZ_CACHE_DIR`         | `~/.cache/pspcz-analyzer/psp` | Data cache directory                             |
-| `PSPCZ_DEV`               | `1`                           | Set to `1` for hot reload, `0` for production    |
-| `PORT`                    | `8000`                        | Server port (used by both local dev and Docker)  |
-| `OLLAMA_BASE_URL`         | `http://localhost:11434`      | Ollama API endpoint                              |
-| `OLLAMA_API_KEY`          | _(empty)_                     | Bearer token for remote HTTPS Ollama             |
-| `OLLAMA_MODEL`            | `qwen3:8b`                    | Model for topic classification and summarization |
-| `DAILY_REFRESH_ENABLED`   | `1`                           | Enable daily re-download of psp.cz data          |
-| `DAILY_REFRESH_HOUR`      | `3`                           | Hour (CET, 0-23) for daily data refresh          |
-| `GITHUB_FEEDBACK_ENABLED` | `0`                           | Enable user feedback via GitHub Issues           |
-| `GITHUB_FEEDBACK_TOKEN`   | _(empty)_                     | GitHub PAT with `public_repo` scope              |
-| `GITHUB_FEEDBACK_REPO`    | `tadeasf/pspcz_analyzer`      | Repository for feedback issues                   |
-| `GITHUB_FEEDBACK_LABELS`  | `user-feedback`               | Labels applied to feedback issues                |
-| `TISK_SHORTENER`          | `0`                           | Truncate tisk text for LLM (`0` = full text)     |
+| Variable                  | Default                       | Description                                                    |
+| ------------------------- | ----------------------------- | -------------------------------------------------------------- |
+| `PSPCZ_CACHE_DIR`         | `~/.cache/pspcz-analyzer/psp` | Data cache directory                                           |
+| `PSPCZ_DEV`               | `1`                           | Set to `1` for hot reload, `0` for production                  |
+| `PORT`                    | `8000`                        | Server port (used by both local dev and Docker)                |
+| `LLM_PROVIDER`            | `ollama`                      | LLM backend: `ollama` or `openai`                              |
+| `OLLAMA_BASE_URL`         | `http://localhost:11434`      | Ollama API endpoint                                            |
+| `OLLAMA_API_KEY`          | _(empty)_                     | Bearer token for remote HTTPS Ollama                           |
+| `OLLAMA_MODEL`            | `qwen3:8b`                    | Model for Ollama inference                                     |
+| `OPENAI_BASE_URL`         | `https://api.openai.com/v1`   | OpenAI-compatible API endpoint                                 |
+| `OPENAI_API_KEY`          | _(empty)_                     | API key for OpenAI-compatible backend                          |
+| `OPENAI_MODEL`            | `gpt-4o-mini`                 | Model for OpenAI-compatible inference                          |
+| `AI_PERIODS_LIMIT`        | `3`                           | Newest periods to process with AI (0 = all)                    |
+| `TISK_SHORTENER`          | `0`                           | Truncate tisk text for LLM (`0` = full text)                   |
+| `DAILY_REFRESH_ENABLED`   | `1`                           | Enable daily re-download of psp.cz data                        |
+| `DAILY_REFRESH_HOUR`      | `3`                           | Hour (CET, 0-23) for daily data refresh                        |
+| `GITHUB_FEEDBACK_ENABLED` | `0`                           | Enable user feedback via GitHub Issues                         |
+| `GITHUB_FEEDBACK_TOKEN`   | _(empty)_                     | GitHub PAT with `public_repo` scope                            |
+| `GITHUB_FEEDBACK_REPO`    | `tadeasf/pspcz_analyzer`      | Repository for feedback issues                                 |
+| `GITHUB_FEEDBACK_LABELS`  | `user-feedback`               | Labels applied to feedback issues                              |
 
 ## Docker
 
 ```bash
-# Copy .env and configure Ollama connection
+# Copy .env and configure your LLM connection
 cp .env.example .env
-# Edit .env to set OLLAMA_BASE_URL and OLLAMA_API_KEY
+# Edit .env to set LLM_PROVIDER and the matching provider variables
 
 # Build and start
 docker compose up --build
 ```
 
-The app is available at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. Ollama runs separately on the local network — configure its address via `OLLAMA_BASE_URL` in `.env`.
+The app is available at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. The LLM runs separately — configure the connection via `OLLAMA_BASE_URL` (for Ollama) or `OPENAI_BASE_URL` + `OPENAI_API_KEY` (for OpenAI-compatible APIs) in `.env`.
 
 To use a custom port:
 
@@ -138,7 +143,7 @@ See [Testing & CI/CD](docs/testing.md) for full details on the test suite, CI pi
 | Charts                 | Seaborn + Matplotlib                 |
 | PDF extraction         | PyMuPDF                              |
 | HTML scraping          | BeautifulSoup4                       |
-| LLM integration        | Ollama (optional, bilingual)         |
+| LLM integration        | Ollama / OpenAI-compatible API (optional, bilingual) |
 | Documentation          | GitHub + MkDocs                      |
 | HTTP client            | httpx                                |
 | Configuration          | python-dotenv                        |
@@ -161,7 +166,7 @@ On startup, the app launches a background pipeline that enriches parliamentary p
 
 1. **Download** PDFs from psp.cz for each print
 2. **Extract** plain text using PyMuPDF
-3. **Classify** topics using Ollama LLM (falls back to keyword matching if Ollama is unavailable)
+3. **Classify** topics using the configured LLM (falls back to keyword matching if the LLM is unavailable)
 4. **Summarize** each print in both Czech and English (bilingual AI summaries)
 5. **Scrape** legislative process histories from psp.cz HTML pages
 6. **Discover** related bills via zakon.cz cross-references

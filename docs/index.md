@@ -14,7 +14,7 @@ Built with FastAPI, Polars, and HTMX.
 - **Chart Endpoints** — server-rendered PNG charts (seaborn/matplotlib)
 - **Multi-period Support** — covers all 10 electoral periods (1993 to present)
 - **Tisk Pipeline** — background processing that downloads parliamentary print PDFs, extracts text, and classifies topics
-- **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama
+- **AI Summaries** — optional LLM-based bilingual (Czech + English) summarization and topic classification via Ollama or any OpenAI-compatible API
 - **i18n** — full Czech/English UI localization with a header language switcher
 - **Docker** — containerized deployment with docker-compose
 - **Documentation** — project docs on [GitHub](https://tadeasf.github.io/pspcz_analyzer/)
@@ -45,9 +45,14 @@ All configuration is via environment variables loaded from `.env` by `python-dot
 | `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Data cache directory                            |
 | `PSPCZ_DEV`       | `1`                           | `1` for hot reload, `0` for production          |
 | `PORT`            | `8000`                        | Server port (used by both local dev and Docker) |
+| `LLM_PROVIDER`    | `ollama`                      | LLM backend: `ollama` or `openai`               |
 | `OLLAMA_BASE_URL` | `http://localhost:11434`      | Ollama API endpoint                             |
 | `OLLAMA_API_KEY`  | _(empty)_                     | Bearer token for remote HTTPS Ollama            |
-| `OLLAMA_MODEL`    | `qwen3:8b`                    | Model for classification and summarization      |
+| `OLLAMA_MODEL`    | `qwen3:8b`                    | Model for Ollama inference                      |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1`   | OpenAI-compatible API endpoint                  |
+| `OPENAI_API_KEY`  | _(empty)_                     | API key for OpenAI-compatible backend           |
+| `OPENAI_MODEL`    | `gpt-4o-mini`                 | Model for OpenAI-compatible inference           |
+| `AI_PERIODS_LIMIT`| `3`                           | Newest periods to process with AI (0 = all)     |
 
 See `.env.example` for a documented template.
 
@@ -57,7 +62,7 @@ See `.env.example` for a documented template.
 docker compose up --build
 ```
 
-The app runs at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. Configure `OLLAMA_BASE_URL` and `OLLAMA_API_KEY` in `.env` to connect to your Ollama instance on the local network.
+The app runs at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. Configure `LLM_PROVIDER` and the matching provider variables (`OLLAMA_BASE_URL` for Ollama, or `OPENAI_BASE_URL` + `OPENAI_API_KEY` for OpenAI-compatible APIs) in `.env`.
 
 ## Tech Stack
 
@@ -72,6 +77,7 @@ The app runs at `http://localhost:8000` (or the port set by `PORT`). Data cache 
 | Charts                 | Seaborn + Matplotlib                 |
 | PDF extraction         | PyMuPDF                              |
 | HTML scraping          | BeautifulSoup4                       |
+| LLM integration        | Ollama / OpenAI-compatible API (optional, bilingual) |
 | Documentation          | GitHub + MkDocs                      |
 | HTTP client            | httpx                                |
 | Configuration          | python-dotenv                        |

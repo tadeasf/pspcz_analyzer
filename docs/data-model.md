@@ -173,9 +173,14 @@ All configuration is via environment variables, loaded from `.env` by `python-do
 |----------|---------|-------------|
 | `PSPCZ_CACHE_DIR` | `~/.cache/pspcz-analyzer/psp` | Root cache directory for all data |
 | `PSPCZ_DEV` | `1` | `1` for hot reload (dev), `0` for production |
+| `LLM_PROVIDER` | `ollama` | LLM backend: `ollama` or `openai` |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
-| `OLLAMA_MODEL` | `qwen3:8b` | Model for inference |
+| `OLLAMA_MODEL` | `qwen3:8b` | Model for Ollama inference |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API endpoint |
+| `OPENAI_API_KEY` | *(empty)* | API key for OpenAI-compatible backend |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model for OpenAI-compatible inference |
+| `AI_PERIODS_LIMIT` | `3` | Number of newest periods to process with AI (0 = all) |
 | `DAILY_REFRESH_ENABLED` | `1` | `1` to enable daily data refresh, `0` to disable |
 | `DAILY_REFRESH_HOUR` | `3` | Hour (CET, 0-23) at which the daily refresh runs |
 | `GITHUB_FEEDBACK_ENABLED` | `0` | Enable user feedback via GitHub Issues |
@@ -184,18 +189,18 @@ All configuration is via environment variables, loaded from `.env` by `python-do
 | `GITHUB_FEEDBACK_LABELS` | `user-feedback` | Labels applied to feedback issues |
 | `TISK_SHORTENER` | `0` | Truncate tisk text for LLM (`0` = full, `1` = truncate) |
 
-### Ollama Configuration
+### LLM Configuration
 
 Additional constants in `config.py` (not overridable via env var):
 
 | Constant | Default | Description |
 |----------|---------|-------------|
-| `OLLAMA_TIMEOUT` | `300.0` | Per-request timeout in seconds |
-| `OLLAMA_HEALTH_TIMEOUT` | `5.0` | Health check timeout |
-| `OLLAMA_MAX_TEXT_CHARS` | `50000` | Max text length sent to LLM |
-| `OLLAMA_VERBATIM_CHARS` | `40000` | Chars included verbatim (rest truncated) |
+| `LLM_TIMEOUT` | `300.0` | Per-request timeout in seconds |
+| `LLM_HEALTH_TIMEOUT` | `5.0` | Health check timeout |
+| `LLM_MAX_TEXT_CHARS` | `50000` | Max text length sent to LLM |
+| `LLM_VERBATIM_CHARS` | `40000` | Chars included verbatim (rest truncated) |
 
-If Ollama is not running or unreachable, the system silently falls back to keyword-based classification.
+If the configured LLM is not running or unreachable, the system silently falls back to keyword-based classification.
 
 ## Vote Result Codes
 

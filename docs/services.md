@@ -153,8 +153,8 @@ Background processing orchestrator that coordinates the full tisk data enrichmen
 Pipeline stages per period:
 1. **Download** — fetch PDF documents from psp.cz for each print
 2. **Extract** — convert PDFs to plain text using PyMuPDF
-3. **Classify** — assign topic labels via Ollama LLM (or keyword fallback)
-4. **Summarize** — generate bilingual (Czech + English) summaries via Ollama
+3. **Classify** — assign topic labels via the configured LLM backend (or keyword fallback)
+4. **Summarize** — generate bilingual (Czech + English) summaries via the configured LLM backend
 5. **Consolidate** — merge per-tisk topic classifications into a single Parquet cache
 6. **Scrape histories** — fetch legislative process timelines from psp.cz HTML pages
 
@@ -179,7 +179,7 @@ Text files are stored at `~/.cache/pspcz-analyzer/psp/tisky_text/{period}/{ct}.t
 
 Keyword-based topic classifier — the fast, offline fallback when Ollama is unavailable.
 
-Uses a `TOPIC_TAXONOMY` dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords.
+Uses a `TOPIC_TAXONOMY` dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords. This is the offline fallback when the configured LLM is unavailable.
 
 Functions:
 - `classify_tisk(name, text)` — returns all matching topic IDs with match counts
@@ -210,16 +210,32 @@ Two JSON endpoints for verifying LLM connectivity without running the full tisk 
 
 Configuration (in `config.py`, overridable via `.env`):
 
+**Ollama backend** (`LLM_PROVIDER=ollama`):
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_API_KEY` | *(empty)* | Bearer token for remote HTTPS Ollama |
-| `OLLAMA_MODEL` | `qwen3:8b` | Model for inference |
-| `OLLAMA_TIMEOUT` | `300.0` | Per-request timeout in seconds |
-| `OLLAMA_MAX_TEXT_CHARS` | `50000` | Max text length sent to LLM |
-| `OLLAMA_VERBATIM_CHARS` | `40000` | Chars included verbatim (rest truncated) |
+| `OLLAMA_MODEL` | `qwen3:8b` | Model for Ollama inference |
 
-If Ollama is not running or unreachable, the system silently falls back to keyword-based classification.
+**OpenAI-compatible backend** (`LLM_PROVIDER=openai`):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API endpoint |
+| `OPENAI_API_KEY` | *(empty)* | API key (required) |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model name |
+
+**Shared constants** (not overridable via env var):
+
+| Constant | Default | Description |
+|----------|---------|-------------|
+| `LLM_TIMEOUT` | `300.0` | Per-request timeout in seconds |
+| `LLM_HEALTH_TIMEOUT` | `5.0` | Health check timeout |
+| `LLM_MAX_TEXT_CHARS` | `50000` | Max text length sent to LLM |
+| `LLM_VERBATIM_CHARS` | `40000` | Chars included verbatim (rest truncated) |
+
+If the configured LLM is not running or unreachable, the system silently falls back to keyword-based classification.
 
 ### Tisk Version Service (`services/tisk_version_service.py`)
 
