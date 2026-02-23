@@ -393,6 +393,14 @@ async def feedback_api(
     )
 
 
+@router.get("/pipeline/progress", response_class=JSONResponse, tags=["Pipeline"])
+@limiter.limit("60/minute")
+async def pipeline_progress(request: Request) -> dict:
+    """Return current tisk AI pipeline progress."""
+    data_svc = request.app.state.data
+    return data_svc.tisk_pipeline.progress.to_dict()
+
+
 @router.get("/health", response_class=JSONResponse, tags=["Health"])
 @limiter.limit("120/minute")
 async def health(request: Request):

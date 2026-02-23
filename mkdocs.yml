@@ -36,6 +36,7 @@ nav:
       - Services: services.md
       - Templates: templates.md
       - Testing & CI/CD: testing.md
+      - LLM (OpenAI): nastaveni-openai.md
   - API Reference: reference/
 
 plugins:

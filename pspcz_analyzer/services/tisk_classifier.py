@@ -1,5 +1,6 @@
 """Topic classification and consolidation for parliamentary prints."""
 
+from collections.abc import Callable
 from pathlib import Path
 
 import polars as pl
@@ -19,6 +20,7 @@ def classify_and_save(
     period: int,
     text_paths: dict[int, Path],
     cache_dir: Path,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run topic classification on extracted texts, save parquet, return maps.
 
@@ -75,6 +77,9 @@ def classify_and_save(
         # Save after every tisk so progress is never lost
         df = pl.DataFrame(records)
         df.write_parquet(parquet_path)
+
+        if progress_callback is not None:
+            progress_callback(i, total)
 
     # Build return maps from all records (existing + new)
     return _build_topic_summary_maps(records, period)

@@ -69,6 +69,9 @@ PERIOD_ORGAN_IDS: dict[int, int] = {
 
 DEFAULT_PERIOD = 10
 
+# Number of newest electoral periods to process with AI (0 = all)
+AI_PERIODS_LIMIT: int = int(os.environ.get("AI_PERIODS_LIMIT", "3"))
+
 # UNL format constants
 UNL_ENCODING = "windows-1250"
 UNL_SEPARATOR = "|"

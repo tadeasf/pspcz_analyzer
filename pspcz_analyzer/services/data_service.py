@@ -7,6 +7,7 @@ import polars as pl
 from loguru import logger
 
 from pspcz_analyzer.config import (
+    AI_PERIODS_LIMIT,
     DEFAULT_CACHE_DIR,
     DEFAULT_PERIOD,
     PERIOD_LABELS,
@@ -407,6 +408,15 @@ class DataService:
 
         if not period_ct:
             return
+
+        if AI_PERIODS_LIMIT > 0 and len(period_ct) > AI_PERIODS_LIMIT:
+            skipped = len(period_ct) - AI_PERIODS_LIMIT
+            period_ct = period_ct[:AI_PERIODS_LIMIT]
+            logger.info(
+                "[tisk pipeline] AI limited to {} newest periods ({} skipped)",
+                AI_PERIODS_LIMIT,
+                skipped,
+            )
 
         def _on_complete(
             p: int,

@@ -72,7 +72,6 @@ The app runs at `http://localhost:8000` (or the port set by `PORT`). Data cache 
 | Charts                 | Seaborn + Matplotlib                 |
 | PDF extraction         | PyMuPDF                              |
 | HTML scraping          | BeautifulSoup4                       |
-| LLM integration        | Ollama (optional, bilingual)         |
 | Documentation          | GitHub + MkDocs                      |
 | HTTP client            | httpx                                |
 | Configuration          | python-dotenv                        |
