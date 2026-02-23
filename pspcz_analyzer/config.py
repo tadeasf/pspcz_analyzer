@@ -107,7 +107,7 @@ TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "1") == "1"
 OLLAMA_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 OLLAMA_HEALTH_TIMEOUT = 5.0  # connectivity check
 OLLAMA_MAX_TEXT_CHARS = 50000
-OLLAMA_VERBATIM_CHARS = 40000
+OLLAMA_VERBATIM_CHARS = 50000
 
 # OpenAI-compatible API integration (OpenAI, Azure OpenAI, Together, Groq, vLLM, etc.)
 # Used when LLM_PROVIDER=openai
