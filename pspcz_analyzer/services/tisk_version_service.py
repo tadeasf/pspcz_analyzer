@@ -2,6 +2,7 @@
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
 
@@ -128,6 +129,7 @@ def analyze_version_diffs_sync(
     period: int,
     ct_numbers: list[int],
     cache_dir: Path,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> tuple[dict[str, str], dict[str, str]]:
     """Run LLM comparison on consecutive sub-tisk versions.
 
@@ -142,18 +144,27 @@ def analyze_version_diffs_sync(
     diff_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
     diff_dir.mkdir(parents=True, exist_ok=True)
 
-    result: dict[str, str] = {}
-    result_en: dict[str, str] = {}
-
+    # Phase 1 — collect version texts and count total pairs
+    ct_versions: list[tuple[int, list[tuple[int, Path]]]] = []
+    total_pairs = 0
     for ct in ct_numbers:
         if not text_dir.exists():
             continue
-
         versions = _collect_version_texts(text_dir, ct)
         if len(versions) < 2:
             continue
+        ct_versions.append((ct, versions))
+        total_pairs += len(versions) - 1
 
-        # Compare consecutive pairs
+    # Phase 2 — compare with per-pair progress tracking
+    result: dict[str, str] = {}
+    result_en: dict[str, str] = {}
+    pairs_done = 0
+
+    if progress_callback:
+        progress_callback(0, total_pairs)
+
+    for ct, versions in ct_versions:
         for j in range(len(versions) - 1):
             ct1_old, path_old = versions[j]
             ct1_new, path_new = versions[j + 1]
@@ -166,17 +177,20 @@ def analyze_version_diffs_sync(
                 result[diff_key] = diff_file.read_text(encoding="utf-8")
                 if diff_file_en.exists():
                     result_en[diff_key] = diff_file_en.read_text(encoding="utf-8")
-                continue
+            else:
+                summaries = _compare_version_pair_bilingual(
+                    llm, path_old, path_new, ct1_old, ct1_new, period, ct
+                )
+                if summaries["cs"]:
+                    diff_file.write_text(summaries["cs"], encoding="utf-8")
+                    result[diff_key] = summaries["cs"]
+                if summaries["en"]:
+                    diff_file_en.write_text(summaries["en"], encoding="utf-8")
+                    result_en[diff_key] = summaries["en"]
 
-            summaries = _compare_version_pair_bilingual(
-                llm, path_old, path_new, ct1_old, ct1_new, period, ct
-            )
-            if summaries["cs"]:
-                diff_file.write_text(summaries["cs"], encoding="utf-8")
-                result[diff_key] = summaries["cs"]
-            if summaries["en"]:
-                diff_file_en.write_text(summaries["en"], encoding="utf-8")
-                result_en[diff_key] = summaries["en"]
+            pairs_done += 1
+            if progress_callback:
+                progress_callback(pairs_done, total_pairs)
 
     logger.info(
         "[tisk pipeline] Version diffs for period {}: {} comparisons",

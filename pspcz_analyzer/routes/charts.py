@@ -37,7 +37,7 @@ def _fig_to_png(fig: Figure) -> io.BytesIO:
 
 
 @router.get("/loyalty.png")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")
 async def loyalty_chart(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -76,7 +76,7 @@ async def loyalty_chart(
 
 
 @router.get("/attendance.png")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")
 async def attendance_chart(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -136,7 +136,7 @@ async def attendance_chart(
 
 
 @router.get("/similarity.png")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")
 async def similarity_chart(request: Request, period: int = DEFAULT_PERIOD):
     validate_period(period)
     data_svc = request.app.state.data

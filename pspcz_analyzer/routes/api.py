@@ -46,7 +46,7 @@ def validate_period(period: int) -> int:
 
 
 @router.get("/loyalty", response_class=HTMLResponse)
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def loyalty_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -71,7 +71,7 @@ async def loyalty_api(
 
 
 @router.get("/attendance", response_class=HTMLResponse)
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def attendance_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -97,7 +97,7 @@ async def attendance_api(
 
 
 @router.get("/similarity", response_class=HTMLResponse)
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def similarity_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -121,7 +121,7 @@ async def similarity_api(
 
 
 @router.get("/votes", response_class=HTMLResponse)
-@limiter.limit("15/minute")
+@limiter.limit("120/minute")
 async def votes_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -156,7 +156,7 @@ async def votes_api(
 
 
 @router.get("/tisk-text", response_class=HTMLResponse)
-@limiter.limit("15/minute")
+@limiter.limit("120/minute")
 async def tisk_text_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -190,7 +190,7 @@ async def tisk_text_api(
 
 
 @router.get("/tisk-evolution", response_class=HTMLResponse)
-@limiter.limit("15/minute")
+@limiter.limit("120/minute")
 async def tisk_evolution_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
@@ -238,7 +238,7 @@ def _safe_url(url: str) -> str:
 
 
 @router.get("/related-bills", response_class=HTMLResponse)
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 async def related_bills_api(
     request: Request,
     idsb: int = Query(default=0, ge=0, le=999999),
@@ -391,6 +391,14 @@ async def feedback_api(
             "lang": lang,
         },
     )
+
+
+@router.get("/pipeline/progress", response_class=JSONResponse, tags=["Pipeline"])
+@limiter.limit("60/minute")
+async def pipeline_progress(request: Request) -> dict:
+    """Return current tisk AI pipeline progress."""
+    data_svc = request.app.state.data
+    return data_svc.tisk_pipeline.progress.to_dict()
 
 
 @router.get("/health", response_class=JSONResponse, tags=["Health"])
