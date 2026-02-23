@@ -546,6 +546,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../nastaveni-openai.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM (OpenAI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1294,6 +1322,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../models/pipeline_progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipeline_progress
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../models/schemas/" class="md-nav__link">
         
   
@@ -1552,6 +1608,17 @@
     <span class="md-ellipsis">
       
         feedback_api
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.routes.api.pipeline_progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pipeline_progress
       
     </span>
   </a>
@@ -2459,6 +2526,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pspcz_analyzer.routes.api.pipeline_progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pipeline_progress
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pspcz_analyzer.routes.api.health" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2605,7 +2683,7 @@
 <span class="normal"><a href="#__codelineno-0-187">187</a></span>
 <span class="normal"><a href="#__codelineno-0-188">188</a></span>
 <span class="normal"><a href="#__codelineno-0-189">189</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/tisk-text&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;15/minute&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;120/minute&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">tisk_text_api</span><span class="p">(</span>
 <a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_PERIOD</span><span class="p">,</span>
@@ -2695,7 +2773,7 @@
 <span class="normal"><a href="#__codelineno-0-222">222</a></span>
 <span class="normal"><a href="#__codelineno-0-223">223</a></span>
 <span class="normal"><a href="#__codelineno-0-224">224</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/tisk-evolution&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;15/minute&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;120/minute&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">tisk_evolution_api</span><span class="p">(</span>
 <a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
 <a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_PERIOD</span><span class="p">,</span>
@@ -2808,7 +2886,7 @@
 <span class="normal"><a href="#__codelineno-0-292">292</a></span>
 <span class="normal"><a href="#__codelineno-0-293">293</a></span>
 <span class="normal"><a href="#__codelineno-0-294">294</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-240" name="__codelineno-0-240"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/related-bills&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;5/minute&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;30/minute&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-242" name="__codelineno-0-242"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">related_bills_api</span><span class="p">(</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243"></a>    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>    <span class="n">idsb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">999999</span><span class="p">),</span>
@@ -3050,6 +3128,43 @@
 <div class="doc doc-object doc-function">
 
 
+<h3 id="pspcz_analyzer.routes.api.pipeline_progress" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">pipeline_progress</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.routes.api.pipeline_progress" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return current tisk AI pipeline progress.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/routes/api.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-396">396</a></span>
+<span class="normal"><a href="#__codelineno-0-397">397</a></span>
+<span class="normal"><a href="#__codelineno-0-398">398</a></span>
+<span class="normal"><a href="#__codelineno-0-399">399</a></span>
+<span class="normal"><a href="#__codelineno-0-400">400</a></span>
+<span class="normal"><a href="#__codelineno-0-401">401</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-396" name="__codelineno-0-396"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/pipeline/progress&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">JSONResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Pipeline&quot;</span><span class="p">])</span>
+<a id="__codelineno-0-397" name="__codelineno-0-397"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;60/minute&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">pipeline_progress</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-399" name="__codelineno-0-399"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return current tisk AI pipeline progress.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400"></a>    <span class="n">data_svc</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">data</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401"></a>    <span class="k">return</span> <span class="n">data_svc</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="pspcz_analyzer.routes.api.health" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">health</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></code>
 
@@ -3067,17 +3182,17 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/routes/api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-396">396</a></span>
-<span class="normal"><a href="#__codelineno-0-397">397</a></span>
-<span class="normal"><a href="#__codelineno-0-398">398</a></span>
-<span class="normal"><a href="#__codelineno-0-399">399</a></span>
-<span class="normal"><a href="#__codelineno-0-400">400</a></span>
-<span class="normal"><a href="#__codelineno-0-401">401</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-396" name="__codelineno-0-396"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/health&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">JSONResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Health&quot;</span><span class="p">])</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;120/minute&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">health</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">):</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Health check endpoint.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-400" name="__codelineno-0-400"></a>    <span class="n">data_svc</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">data</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="s2">&quot;periods_loaded&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_svc</span><span class="o">.</span><span class="n">loaded_periods</span><span class="p">)}</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-404">404</a></span>
+<span class="normal"><a href="#__codelineno-0-405">405</a></span>
+<span class="normal"><a href="#__codelineno-0-406">406</a></span>
+<span class="normal"><a href="#__codelineno-0-407">407</a></span>
+<span class="normal"><a href="#__codelineno-0-408">408</a></span>
+<span class="normal"><a href="#__codelineno-0-409">409</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-404" name="__codelineno-0-404"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/health&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">JSONResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Health&quot;</span><span class="p">])</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;120/minute&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">health</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">):</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Health check endpoint.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-408" name="__codelineno-0-408"></a>    <span class="n">data_svc</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">data</span>
+<a id="__codelineno-0-409" name="__codelineno-0-409"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="s2">&quot;periods_loaded&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_svc</span><span class="o">.</span><span class="n">loaded_periods</span><span class="p">)}</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3104,35 +3219,35 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/routes/api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-422">422</a></span>
-<span class="normal"><a href="#__codelineno-0-423">423</a></span>
-<span class="normal"><a href="#__codelineno-0-424">424</a></span>
-<span class="normal"><a href="#__codelineno-0-425">425</a></span>
-<span class="normal"><a href="#__codelineno-0-426">426</a></span>
-<span class="normal"><a href="#__codelineno-0-427">427</a></span>
-<span class="normal"><a href="#__codelineno-0-428">428</a></span>
-<span class="normal"><a href="#__codelineno-0-429">429</a></span>
-<span class="normal"><a href="#__codelineno-0-430">430</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-430">430</a></span>
 <span class="normal"><a href="#__codelineno-0-431">431</a></span>
 <span class="normal"><a href="#__codelineno-0-432">432</a></span>
 <span class="normal"><a href="#__codelineno-0-433">433</a></span>
 <span class="normal"><a href="#__codelineno-0-434">434</a></span>
 <span class="normal"><a href="#__codelineno-0-435">435</a></span>
-<span class="normal"><a href="#__codelineno-0-436">436</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-422" name="__codelineno-0-422"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/llm/health&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">JSONResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Health&quot;</span><span class="p">])</span>
-<a id="__codelineno-0-423" name="__codelineno-0-423"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;10/minute&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-424" name="__codelineno-0-424"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">llm_health</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-0-425" name="__codelineno-0-425"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check LLM connectivity and model availability.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-426" name="__codelineno-0-426"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-427" name="__codelineno-0-427"></a>        <span class="n">client</span> <span class="o">=</span> <span class="n">create_llm_client</span><span class="p">()</span>
-<a id="__codelineno-0-428" name="__codelineno-0-428"></a>    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-429" name="__codelineno-0-429"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;available&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">LLM_PROVIDER</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)}</span>
-<a id="__codelineno-0-430" name="__codelineno-0-430"></a>    <span class="n">available</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">is_available</span><span class="p">)</span>
-<a id="__codelineno-0-431" name="__codelineno-0-431"></a>    <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-432" name="__codelineno-0-432"></a>        <span class="s2">&quot;available&quot;</span><span class="p">:</span> <span class="n">available</span><span class="p">,</span>
-<a id="__codelineno-0-433" name="__codelineno-0-433"></a>        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">LLM_PROVIDER</span><span class="p">,</span>
-<a id="__codelineno-0-434" name="__codelineno-0-434"></a>        <span class="s2">&quot;base_url&quot;</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span>
-<a id="__codelineno-0-435" name="__codelineno-0-435"></a>        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-<a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="p">}</span>
+<span class="normal"><a href="#__codelineno-0-436">436</a></span>
+<span class="normal"><a href="#__codelineno-0-437">437</a></span>
+<span class="normal"><a href="#__codelineno-0-438">438</a></span>
+<span class="normal"><a href="#__codelineno-0-439">439</a></span>
+<span class="normal"><a href="#__codelineno-0-440">440</a></span>
+<span class="normal"><a href="#__codelineno-0-441">441</a></span>
+<span class="normal"><a href="#__codelineno-0-442">442</a></span>
+<span class="normal"><a href="#__codelineno-0-443">443</a></span>
+<span class="normal"><a href="#__codelineno-0-444">444</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-430" name="__codelineno-0-430"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/llm/health&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">JSONResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Health&quot;</span><span class="p">])</span>
+<a id="__codelineno-0-431" name="__codelineno-0-431"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;10/minute&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-432" name="__codelineno-0-432"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">llm_health</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check LLM connectivity and model availability.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-434" name="__codelineno-0-434"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-435" name="__codelineno-0-435"></a>        <span class="n">client</span> <span class="o">=</span> <span class="n">create_llm_client</span><span class="p">()</span>
+<a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-437" name="__codelineno-0-437"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;available&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">LLM_PROVIDER</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)}</span>
+<a id="__codelineno-0-438" name="__codelineno-0-438"></a>    <span class="n">available</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">is_available</span><span class="p">)</span>
+<a id="__codelineno-0-439" name="__codelineno-0-439"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-440" name="__codelineno-0-440"></a>        <span class="s2">&quot;available&quot;</span><span class="p">:</span> <span class="n">available</span><span class="p">,</span>
+<a id="__codelineno-0-441" name="__codelineno-0-441"></a>        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">LLM_PROVIDER</span><span class="p">,</span>
+<a id="__codelineno-0-442" name="__codelineno-0-442"></a>        <span class="s2">&quot;base_url&quot;</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span>
+<a id="__codelineno-0-443" name="__codelineno-0-443"></a>        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+<a id="__codelineno-0-444" name="__codelineno-0-444"></a>    <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3159,15 +3274,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/routes/api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-450">450</a></span>
-<span class="normal"><a href="#__codelineno-0-451">451</a></span>
-<span class="normal"><a href="#__codelineno-0-452">452</a></span>
-<span class="normal"><a href="#__codelineno-0-453">453</a></span>
-<span class="normal"><a href="#__codelineno-0-454">454</a></span>
-<span class="normal"><a href="#__codelineno-0-455">455</a></span>
-<span class="normal"><a href="#__codelineno-0-456">456</a></span>
-<span class="normal"><a href="#__codelineno-0-457">457</a></span>
-<span class="normal"><a href="#__codelineno-0-458">458</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-458">458</a></span>
 <span class="normal"><a href="#__codelineno-0-459">459</a></span>
 <span class="normal"><a href="#__codelineno-0-460">460</a></span>
 <span class="normal"><a href="#__codelineno-0-461">461</a></span>
@@ -3202,50 +3309,58 @@
 <span class="normal"><a href="#__codelineno-0-490">490</a></span>
 <span class="normal"><a href="#__codelineno-0-491">491</a></span>
 <span class="normal"><a href="#__codelineno-0-492">492</a></span>
-<span class="normal"><a href="#__codelineno-0-493">493</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-450" name="__codelineno-0-450"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/llm/smoke-test&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">JSONResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Health&quot;</span><span class="p">])</span>
-<a id="__codelineno-0-451" name="__codelineno-0-451"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;2/minute&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-452" name="__codelineno-0-452"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">llm_smoke_test</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-0-453" name="__codelineno-0-453"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run concurrent bilingual generation to verify LLM end-to-end.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-454" name="__codelineno-0-454"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-455" name="__codelineno-0-455"></a>        <span class="n">client</span> <span class="o">=</span> <span class="n">create_llm_client</span><span class="p">()</span>
-<a id="__codelineno-0-456" name="__codelineno-0-456"></a>    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-457" name="__codelineno-0-457"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
-<a id="__codelineno-0-458" name="__codelineno-0-458"></a>            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
-<a id="__codelineno-0-459" name="__codelineno-0-459"></a>            <span class="n">detail</span><span class="o">=</span><span class="n">_build_smoke_error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-460" name="__codelineno-0-460"></a>        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-<a id="__codelineno-0-461" name="__codelineno-0-461"></a>    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
-<a id="__codelineno-0-462" name="__codelineno-0-462"></a>
-<a id="__codelineno-0-463" name="__codelineno-0-463"></a>    <span class="n">available</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">is_available</span><span class="p">)</span>
-<a id="__codelineno-0-464" name="__codelineno-0-464"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">available</span><span class="p">:</span>
-<a id="__codelineno-0-465" name="__codelineno-0-465"></a>        <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-<a id="__codelineno-0-466" name="__codelineno-0-466"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
-<a id="__codelineno-0-467" name="__codelineno-0-467"></a>            <span class="n">status_code</span><span class="o">=</span><span class="mi">503</span><span class="p">,</span>
-<a id="__codelineno-0-468" name="__codelineno-0-468"></a>            <span class="n">detail</span><span class="o">=</span><span class="n">_build_smoke_error</span><span class="p">(</span><span class="s2">&quot;LLM is not available&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">),</span>
-<a id="__codelineno-0-469" name="__codelineno-0-469"></a>        <span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-493">493</a></span>
+<span class="normal"><a href="#__codelineno-0-494">494</a></span>
+<span class="normal"><a href="#__codelineno-0-495">495</a></span>
+<span class="normal"><a href="#__codelineno-0-496">496</a></span>
+<span class="normal"><a href="#__codelineno-0-497">497</a></span>
+<span class="normal"><a href="#__codelineno-0-498">498</a></span>
+<span class="normal"><a href="#__codelineno-0-499">499</a></span>
+<span class="normal"><a href="#__codelineno-0-500">500</a></span>
+<span class="normal"><a href="#__codelineno-0-501">501</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-458" name="__codelineno-0-458"></a><span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/llm/smoke-test&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">JSONResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Health&quot;</span><span class="p">])</span>
+<a id="__codelineno-0-459" name="__codelineno-0-459"></a><span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;2/minute&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-460" name="__codelineno-0-460"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">llm_smoke_test</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-461" name="__codelineno-0-461"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run concurrent bilingual generation to verify LLM end-to-end.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-462" name="__codelineno-0-462"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-463" name="__codelineno-0-463"></a>        <span class="n">client</span> <span class="o">=</span> <span class="n">create_llm_client</span><span class="p">()</span>
+<a id="__codelineno-0-464" name="__codelineno-0-464"></a>    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-465" name="__codelineno-0-465"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+<a id="__codelineno-0-466" name="__codelineno-0-466"></a>            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+<a id="__codelineno-0-467" name="__codelineno-0-467"></a>            <span class="n">detail</span><span class="o">=</span><span class="n">_build_smoke_error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-468" name="__codelineno-0-468"></a>        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+<a id="__codelineno-0-469" name="__codelineno-0-469"></a>    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
 <a id="__codelineno-0-470" name="__codelineno-0-470"></a>
-<a id="__codelineno-0-471" name="__codelineno-0-471"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-472" name="__codelineno-0-472"></a>        <span class="n">cs_result</span><span class="p">,</span> <span class="n">en_result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
-<a id="__codelineno-0-473" name="__codelineno-0-473"></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">summarize</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TEXT</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TITLE</span><span class="p">),</span>
-<a id="__codelineno-0-474" name="__codelineno-0-474"></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">summarize_en</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TEXT</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TITLE</span><span class="p">),</span>
-<a id="__codelineno-0-475" name="__codelineno-0-475"></a>        <span class="p">)</span>
-<a id="__codelineno-0-476" name="__codelineno-0-476"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-477" name="__codelineno-0-477"></a>        <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-<a id="__codelineno-0-478" name="__codelineno-0-478"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
-<a id="__codelineno-0-479" name="__codelineno-0-479"></a>            <span class="n">status_code</span><span class="o">=</span><span class="mi">502</span><span class="p">,</span>
-<a id="__codelineno-0-480" name="__codelineno-0-480"></a>            <span class="n">detail</span><span class="o">=</span><span class="n">_build_smoke_error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span> <span class="n">duration</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">),</span>
-<a id="__codelineno-0-481" name="__codelineno-0-481"></a>        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-<a id="__codelineno-0-482" name="__codelineno-0-482"></a>
-<a id="__codelineno-0-483" name="__codelineno-0-483"></a>    <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-<a id="__codelineno-0-484" name="__codelineno-0-484"></a>    <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-485" name="__codelineno-0-485"></a>        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-486" name="__codelineno-0-486"></a>        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">LLM_PROVIDER</span><span class="p">,</span>
-<a id="__codelineno-0-487" name="__codelineno-0-487"></a>        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-<a id="__codelineno-0-488" name="__codelineno-0-488"></a>        <span class="s2">&quot;duration_seconds&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-<a id="__codelineno-0-489" name="__codelineno-0-489"></a>        <span class="s2">&quot;summary_cs&quot;</span><span class="p">:</span> <span class="n">cs_result</span><span class="p">,</span>
-<a id="__codelineno-0-490" name="__codelineno-0-490"></a>        <span class="s2">&quot;summary_en&quot;</span><span class="p">:</span> <span class="n">en_result</span><span class="p">,</span>
-<a id="__codelineno-0-491" name="__codelineno-0-491"></a>        <span class="s2">&quot;summary_cs_length&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs_result</span><span class="p">),</span>
-<a id="__codelineno-0-492" name="__codelineno-0-492"></a>        <span class="s2">&quot;summary_en_length&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">en_result</span><span class="p">),</span>
-<a id="__codelineno-0-493" name="__codelineno-0-493"></a>    <span class="p">}</span>
+<a id="__codelineno-0-471" name="__codelineno-0-471"></a>    <span class="n">available</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">is_available</span><span class="p">)</span>
+<a id="__codelineno-0-472" name="__codelineno-0-472"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">available</span><span class="p">:</span>
+<a id="__codelineno-0-473" name="__codelineno-0-473"></a>        <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+<a id="__codelineno-0-474" name="__codelineno-0-474"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+<a id="__codelineno-0-475" name="__codelineno-0-475"></a>            <span class="n">status_code</span><span class="o">=</span><span class="mi">503</span><span class="p">,</span>
+<a id="__codelineno-0-476" name="__codelineno-0-476"></a>            <span class="n">detail</span><span class="o">=</span><span class="n">_build_smoke_error</span><span class="p">(</span><span class="s2">&quot;LLM is not available&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">),</span>
+<a id="__codelineno-0-477" name="__codelineno-0-477"></a>        <span class="p">)</span>
+<a id="__codelineno-0-478" name="__codelineno-0-478"></a>
+<a id="__codelineno-0-479" name="__codelineno-0-479"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-480" name="__codelineno-0-480"></a>        <span class="n">cs_result</span><span class="p">,</span> <span class="n">en_result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
+<a id="__codelineno-0-481" name="__codelineno-0-481"></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">summarize</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TEXT</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TITLE</span><span class="p">),</span>
+<a id="__codelineno-0-482" name="__codelineno-0-482"></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">summarize_en</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TEXT</span><span class="p">,</span> <span class="n">_SMOKE_TEST_TITLE</span><span class="p">),</span>
+<a id="__codelineno-0-483" name="__codelineno-0-483"></a>        <span class="p">)</span>
+<a id="__codelineno-0-484" name="__codelineno-0-484"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-485" name="__codelineno-0-485"></a>        <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+<a id="__codelineno-0-486" name="__codelineno-0-486"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+<a id="__codelineno-0-487" name="__codelineno-0-487"></a>            <span class="n">status_code</span><span class="o">=</span><span class="mi">502</span><span class="p">,</span>
+<a id="__codelineno-0-488" name="__codelineno-0-488"></a>            <span class="n">detail</span><span class="o">=</span><span class="n">_build_smoke_error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span> <span class="n">duration</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">),</span>
+<a id="__codelineno-0-489" name="__codelineno-0-489"></a>        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+<a id="__codelineno-0-490" name="__codelineno-0-490"></a>
+<a id="__codelineno-0-491" name="__codelineno-0-491"></a>    <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+<a id="__codelineno-0-492" name="__codelineno-0-492"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-493" name="__codelineno-0-493"></a>        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-494" name="__codelineno-0-494"></a>        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">LLM_PROVIDER</span><span class="p">,</span>
+<a id="__codelineno-0-495" name="__codelineno-0-495"></a>        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+<a id="__codelineno-0-496" name="__codelineno-0-496"></a>        <span class="s2">&quot;duration_seconds&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<a id="__codelineno-0-497" name="__codelineno-0-497"></a>        <span class="s2">&quot;summary_cs&quot;</span><span class="p">:</span> <span class="n">cs_result</span><span class="p">,</span>
+<a id="__codelineno-0-498" name="__codelineno-0-498"></a>        <span class="s2">&quot;summary_en&quot;</span><span class="p">:</span> <span class="n">en_result</span><span class="p">,</span>
+<a id="__codelineno-0-499" name="__codelineno-0-499"></a>        <span class="s2">&quot;summary_cs_length&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs_result</span><span class="p">),</span>
+<a id="__codelineno-0-500" name="__codelineno-0-500"></a>        <span class="s2">&quot;summary_en_length&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">en_result</span><span class="p">),</span>
+<a id="__codelineno-0-501" name="__codelineno-0-501"></a>    <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

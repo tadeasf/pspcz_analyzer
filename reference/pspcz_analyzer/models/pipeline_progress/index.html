@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/mp_builder/">
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/pipeline_progress/">
       
       
-        <link rel="prev" href="../loyalty_service/">
+        <link rel="prev" href="../enums/">
       
       
-        <link rel="next" href="../similarity_service/">
+        <link rel="next" href="../schemas/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>mp_builder - PSP.cz Analyzer</title>
+        <title>pipeline_progress - PSP.cz Analyzer</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pspcz_analyzer.services.mp_builder" class="md-skip">
+        <a href="#pspcz_analyzer.models.pipeline_progress" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              mp_builder
+              pipeline_progress
             
           </span>
         </div>
@@ -1232,8 +1232,10 @@
                 
   
   
+    
   
   
+  
     
     
     
@@ -1244,15 +1246,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_7" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../models/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -1276,7 +1278,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_1_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1294,7 +1296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/enums/" class="md-nav__link">
+      <a href="../enums/" class="md-nav__link">
         
   
   
@@ -1319,10 +1321,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../models/pipeline_progress/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipeline_progress
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1338,6 +1365,246 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pipeline_progress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="pipeline_progress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineStage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PipelineStage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PeriodStatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PeriodStatus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StageProgress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="StageProgress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.elapsed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        elapsed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.percent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        percent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.eta_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eta_seconds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PeriodProgress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PeriodProgress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PeriodProgress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PeriodProgress.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PipelineProgress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PipelineProgress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.current_period" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        current_period
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_completed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        periods_completed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        periods_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.elapsed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        elapsed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.eta_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eta_seconds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1350,7 +1617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/schemas/" class="md-nav__link">
+      <a href="../schemas/" class="md-nav__link">
         
   
   
@@ -1378,7 +1645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/tisk_models/" class="md-nav__link">
+      <a href="../tisk_models/" class="md-nav__link">
         
   
   
@@ -1590,8 +1857,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1604,15 +1869,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../services/" class="md-nav__link ">
               
   
   
@@ -1636,7 +1901,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_10_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_10_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_1_10">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1654,7 +1919,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../analysis_cache/" class="md-nav__link">
+      <a href="../../services/analysis_cache/" class="md-nav__link">
         
   
   
@@ -1682,7 +1947,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../attendance_service/" class="md-nav__link">
+      <a href="../../services/attendance_service/" class="md-nav__link">
         
   
   
@@ -1710,7 +1975,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../daily_refresh_service/" class="md-nav__link">
+      <a href="../../services/daily_refresh_service/" class="md-nav__link">
         
   
   
@@ -1738,7 +2003,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data_service/" class="md-nav__link">
+      <a href="../../services/data_service/" class="md-nav__link">
         
   
   
@@ -1766,7 +2031,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../feedback_service/" class="md-nav__link">
+      <a href="../../services/feedback_service/" class="md-nav__link">
         
   
   
@@ -1794,7 +2059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../llm_service/" class="md-nav__link">
+      <a href="../../services/llm_service/" class="md-nav__link">
         
   
   
@@ -1822,7 +2087,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../loyalty_service/" class="md-nav__link">
+      <a href="../../services/loyalty_service/" class="md-nav__link">
         
   
   
@@ -1847,35 +2112,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    mp_builder
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../services/mp_builder/" class="md-nav__link">
         
   
   
@@ -1891,52 +2131,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.mp_builder" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mp_builder
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="mp_builder">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.mp_builder.build_mp_info" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        build_mp_info
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1949,7 +2143,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../similarity_service/" class="md-nav__link">
+      <a href="../../services/similarity_service/" class="md-nav__link">
         
   
   
@@ -1977,7 +2171,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_cache_manager/" class="md-nav__link">
+      <a href="../../services/tisk_cache_manager/" class="md-nav__link">
         
   
   
@@ -2005,7 +2199,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_classifier/" class="md-nav__link">
+      <a href="../../services/tisk_classifier/" class="md-nav__link">
         
   
   
@@ -2033,7 +2227,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_downloader_pipeline/" class="md-nav__link">
+      <a href="../../services/tisk_downloader_pipeline/" class="md-nav__link">
         
   
   
@@ -2061,7 +2255,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_lookup_builder/" class="md-nav__link">
+      <a href="../../services/tisk_lookup_builder/" class="md-nav__link">
         
   
   
@@ -2089,7 +2283,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_metadata_scraper/" class="md-nav__link">
+      <a href="../../services/tisk_metadata_scraper/" class="md-nav__link">
         
   
   
@@ -2117,7 +2311,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_pipeline_service/" class="md-nav__link">
+      <a href="../../services/tisk_pipeline_service/" class="md-nav__link">
         
   
   
@@ -2145,7 +2339,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_text_service/" class="md-nav__link">
+      <a href="../../services/tisk_text_service/" class="md-nav__link">
         
   
   
@@ -2173,7 +2367,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_version_service/" class="md-nav__link">
+      <a href="../../services/tisk_version_service/" class="md-nav__link">
         
   
   
@@ -2201,7 +2395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../topic_service/" class="md-nav__link">
+      <a href="../../services/topic_service/" class="md-nav__link">
         
   
   
@@ -2229,7 +2423,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../votes_service/" class="md-nav__link">
+      <a href="../../services/votes_service/" class="md-nav__link">
         
   
   
@@ -2393,25 +2587,219 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.mp_builder" class="md-nav__link">
+  <a href="#pspcz_analyzer.models.pipeline_progress" class="md-nav__link">
     <span class="md-ellipsis">
       
-        mp_builder
+        pipeline_progress
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="mp_builder">
+    <nav class="md-nav" aria-label="pipeline_progress">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.mp_builder.build_mp_info" class="md-nav__link">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineStage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        build_mp_info
+        PipelineStage
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PeriodStatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PeriodStatus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StageProgress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="StageProgress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.elapsed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        elapsed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.percent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        percent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.eta_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eta_seconds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PeriodProgress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PeriodProgress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PeriodProgress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PeriodProgress.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PipelineProgress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PipelineProgress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.current_period" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        current_period
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_completed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        periods_completed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        periods_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.elapsed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        elapsed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.eta_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eta_seconds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2440,21 +2828,341 @@
   
 
 
-  <h1>mp_builder</h1>
+  <h1>pipeline_progress</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<h2 id="pspcz_analyzer.services.mp_builder" class="doc doc-heading">
-            <code>mp_builder</code>
+<h2 id="pspcz_analyzer.models.pipeline_progress" class="doc doc-heading">
+            <code>pipeline_progress</code>
 
 
-<a href="#pspcz_analyzer.services.mp_builder" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pspcz_analyzer.models.pipeline_progress" class="headerlink" title="Permanent link">&para;</a></h2>
 
     <div class="doc doc-contents first">
 
-        <p>Build MP info table: id_poslanec -&gt; name, party for a given period.</p>
+        <p>Progress tracking data model for the tisk AI pipeline.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.models.pipeline_progress.PipelineStage" class="doc doc-heading">
+            <code>PipelineStage</code>
+
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineStage" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="enum.StrEnum">StrEnum</span></code></p>
+
+
+
+        <p>Stages of the per-period tisk pipeline.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.models.pipeline_progress.PeriodStatus" class="doc doc-heading">
+            <code>PeriodStatus</code>
+
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PeriodStatus" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="enum.StrEnum">StrEnum</span></code></p>
+
+
+
+        <p>Status of a single period within the pipeline run.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.models.pipeline_progress.StageProgress" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">StageProgress</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="n">PipelineStage</span><span class="o">.</span><span class="n">IDLE</span><span class="p">,</span> <span class="n">items_done</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">items_total</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">started_at</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.StageProgress" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Progress for the currently-running pipeline stage.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.StageProgress.elapsed" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">elapsed</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.elapsed" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Seconds elapsed since stage started.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.StageProgress.rate" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">rate</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.rate" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Items processed per second (0 if no items done yet).</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.StageProgress.percent" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">percent</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.percent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Percentage of items completed, or None if total is unknown.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.StageProgress.eta_seconds" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">eta_seconds</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.eta_seconds" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Estimated seconds remaining for this stage, or None if unknown.</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.StageProgress.to_dict" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">to_dict</span><span class="p">()</span></code>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.StageProgress.to_dict" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Serialize to JSON-friendly dict.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/models/pipeline_progress.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize to JSON-friendly dict.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="n">eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_seconds</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="n">pct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">percent</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="s2">&quot;items_done&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">items_done</span><span class="p">,</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="s2">&quot;items_total&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">items_total</span><span class="p">,</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="s2">&quot;elapsed_seconds&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="s2">&quot;rate_per_second&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="s2">&quot;eta_seconds&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">eta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="s2">&quot;percent&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">pct</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">pct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.models.pipeline_progress.PeriodProgress" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">PeriodProgress</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="n">PeriodStatus</span><span class="o">.</span><span class="n">PENDING</span><span class="p">,</span> <span class="n">tisky_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">current_stage</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PeriodProgress" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Progress for a single electoral period.</p>
+
 
 
 
@@ -2479,105 +3187,253 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pspcz_analyzer.services.mp_builder.build_mp_info" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">build_mp_info</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">mps</span><span class="p">,</span> <span class="n">persons</span><span class="p">,</span> <span class="n">organs</span><span class="p">,</span> <span class="n">memberships</span><span class="p">)</span></code>
+<h4 id="pspcz_analyzer.models.pipeline_progress.PeriodProgress.to_dict" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">to_dict</span><span class="p">()</span></code>
 
-<a href="#pspcz_analyzer.services.mp_builder.build_mp_info" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.models.pipeline_progress.PeriodProgress.to_dict" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>Build MP lookup table: id_poslanec -&gt; name, party for a given period.</p>
+        <p>Serialize to JSON-friendly dict.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/mp_builder.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-0-10">10</a></span>
-<span class="normal"><a href="#__codelineno-0-11">11</a></span>
-<span class="normal"><a href="#__codelineno-0-12">12</a></span>
-<span class="normal"><a href="#__codelineno-0-13">13</a></span>
-<span class="normal"><a href="#__codelineno-0-14">14</a></span>
-<span class="normal"><a href="#__codelineno-0-15">15</a></span>
-<span class="normal"><a href="#__codelineno-0-16">16</a></span>
-<span class="normal"><a href="#__codelineno-0-17">17</a></span>
-<span class="normal"><a href="#__codelineno-0-18">18</a></span>
-<span class="normal"><a href="#__codelineno-0-19">19</a></span>
-<span class="normal"><a href="#__codelineno-0-20">20</a></span>
-<span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span>
-<span class="normal"><a href="#__codelineno-0-23">23</a></span>
-<span class="normal"><a href="#__codelineno-0-24">24</a></span>
-<span class="normal"><a href="#__codelineno-0-25">25</a></span>
-<span class="normal"><a href="#__codelineno-0-26">26</a></span>
-<span class="normal"><a href="#__codelineno-0-27">27</a></span>
-<span class="normal"><a href="#__codelineno-0-28">28</a></span>
-<span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_mp_info</span><span class="p">(</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9"></a>    <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10"></a>    <span class="n">mps</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11"></a>    <span class="n">persons</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12"></a>    <span class="n">organs</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13"></a>    <span class="n">memberships</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build MP lookup table: id_poslanec -&gt; name, party for a given period.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16"></a>    <span class="n">organ_id</span> <span class="o">=</span> <span class="n">PERIOD_ORGAN_IDS</span><span class="p">[</span><span class="n">period</span><span class="p">]</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17"></a>    <span class="n">period_mps</span> <span class="o">=</span> <span class="n">mps</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_obdobi&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">organ_id</span><span class="p">)</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">mp_persons</span> <span class="o">=</span> <span class="n">period_mps</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a>        <span class="n">persons</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id_osoba&quot;</span><span class="p">,</span> <span class="s2">&quot;jmeno&quot;</span><span class="p">,</span> <span class="s2">&quot;prijmeni&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a>        <span class="n">on</span><span class="o">=</span><span class="s2">&quot;id_osoba&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a>        <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="p">)</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="n">clubs</span> <span class="o">=</span> <span class="n">organs</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_typ_organu&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id_organ&quot;</span><span class="p">,</span> <span class="s2">&quot;zkratka&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="n">club_memberships</span> <span class="o">=</span> <span class="n">memberships</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>        <span class="n">clubs</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;id_of&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;id_organ&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a>    <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id_osoba&quot;</span><span class="p">,</span> <span class="s2">&quot;zkratka&quot;</span><span class="p">,</span> <span class="s2">&quot;od_o&quot;</span><span class="p">,</span> <span class="s2">&quot;do_o&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="n">club_memberships</span> <span class="o">=</span> <span class="n">club_memberships</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;od_o&quot;</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a>        <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id_osoba&quot;</span><span class="p">],</span> <span class="n">keep</span><span class="o">=</span><span class="s2">&quot;first&quot;</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="p">)</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="n">mp_info</span> <span class="o">=</span> <span class="n">mp_persons</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="n">club_memberships</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id_osoba&quot;</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;zkratka&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;party&quot;</span><span class="p">)),</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="n">on</span><span class="o">=</span><span class="s2">&quot;id_osoba&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;id_poslanec&quot;</span><span class="p">,</span> <span class="s2">&quot;id_osoba&quot;</span><span class="p">,</span> <span class="s2">&quot;jmeno&quot;</span><span class="p">,</span> <span class="s2">&quot;prijmeni&quot;</span><span class="p">,</span> <span class="s2">&quot;party&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="c1"># Normalize party abbreviations from psp.cz to commonly used names.</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="c1"># &quot;ANO2011&quot; is the official registration name but everyone calls it &quot;ANO&quot;.</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="c1"># &quot;Nezařaz&quot; is the truncated abbreviation for independent MPs (&quot;Nezařazení&quot;).</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">party_aliases</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>        <span class="s2">&quot;ANO2011&quot;</span><span class="p">:</span> <span class="s2">&quot;ANO&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="s2">&quot;Nezařaz&quot;</span><span class="p">:</span> <span class="s2">&quot;Nezařazení&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="p">}</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="k">return</span> <span class="n">mp_info</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;party&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">party_aliases</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;party&quot;</span><span class="p">))</span>
+              <summary>Source code in <code>pspcz_analyzer/models/pipeline_progress.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize to JSON-friendly dict.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="s2">&quot;period&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="s2">&quot;tisky_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisky_count</span><span class="p">,</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>        <span class="s2">&quot;current_stage&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_stage</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_stage</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
 
 </div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.models.pipeline_progress.PipelineProgress" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">PipelineProgress</span><span class="p">(</span><span class="n">running</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">started_at</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="nb">dict</span><span class="p">())</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Overall progress for the multi-period tisk pipeline.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.PipelineProgress.current_period" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">current_period</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.current_period" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Period number currently being processed, or None.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_completed" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">periods_completed</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_completed" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Number of periods that have finished processing.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_total" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">periods_total</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.periods_total" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Total number of periods in this pipeline run.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.PipelineProgress.elapsed" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">elapsed</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.elapsed" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Seconds since pipeline started.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.PipelineProgress.eta_seconds" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">eta_seconds</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.eta_seconds" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Estimated seconds remaining for the entire pipeline.</p>
+<p>Uses completed-period rate + current stage ETA for a rough estimate.</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.models.pipeline_progress.PipelineProgress.to_dict" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">to_dict</span><span class="p">()</span></code>
+
+<a href="#pspcz_analyzer.models.pipeline_progress.PipelineProgress.to_dict" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Serialize to JSON-friendly dict.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/models/pipeline_progress.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#__codelineno-0-186">186</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize to JSON-friendly dict.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="n">eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_seconds</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="s2">&quot;running&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">running</span><span class="p">,</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="s2">&quot;elapsed_seconds&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="s2">&quot;current_period&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_period</span><span class="p">,</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="s2">&quot;periods_completed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">periods_completed</span><span class="p">,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="s2">&quot;periods_total&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">periods_total</span><span class="p">,</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="s2">&quot;eta_seconds&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">eta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>        <span class="s2">&quot;periods&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">period</span><span class="p">):</span> <span class="n">pp</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">period</span><span class="p">,</span> <span class="n">pp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">periods</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
 
 
 
