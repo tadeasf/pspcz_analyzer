@@ -22,14 +22,14 @@ import httpx
 from loguru import logger
 
 from pspcz_analyzer.config import (
+    LLM_HEALTH_TIMEOUT,
+    LLM_MAX_TEXT_CHARS,
     LLM_PROVIDER,
+    LLM_TIMEOUT,
+    LLM_VERBATIM_CHARS,
     OLLAMA_API_KEY,
     OLLAMA_BASE_URL,
-    OLLAMA_HEALTH_TIMEOUT,
-    OLLAMA_MAX_TEXT_CHARS,
     OLLAMA_MODEL,
-    OLLAMA_TIMEOUT,
-    OLLAMA_VERBATIM_CHARS,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
     OPENAI_MODEL,
@@ -223,8 +223,8 @@ _HEADING_RE = re.compile(
 
 def truncate_legislative_text(
     text: str,
-    verbatim_chars: int = OLLAMA_VERBATIM_CHARS,
-    max_chars: int = OLLAMA_MAX_TEXT_CHARS,
+    verbatim_chars: int = LLM_VERBATIM_CHARS,
+    max_chars: int = LLM_MAX_TEXT_CHARS,
 ) -> str:
     """Truncate Czech legislative text intelligently for LLM processing.
 
@@ -491,7 +491,7 @@ class OllamaClient(BaseLLMClient):
         self,
         base_url: str = OLLAMA_BASE_URL,
         model: str = OLLAMA_MODEL,
-        timeout: float = OLLAMA_TIMEOUT,
+        timeout: float = LLM_TIMEOUT,
         api_key: str = OLLAMA_API_KEY,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -515,7 +515,7 @@ class OllamaClient(BaseLLMClient):
             resp = httpx.get(
                 f"{self.base_url}/api/tags",
                 headers=self._headers,
-                timeout=OLLAMA_HEALTH_TIMEOUT,
+                timeout=LLM_HEALTH_TIMEOUT,
             )
             resp.raise_for_status()
             models = [m.get("name", "") for m in resp.json().get("models", [])]
@@ -577,7 +577,7 @@ class OpenAIClient(BaseLLMClient):
         self,
         base_url: str = OPENAI_BASE_URL,
         model: str = OPENAI_MODEL,
-        timeout: float = OLLAMA_TIMEOUT,
+        timeout: float = LLM_TIMEOUT,
         api_key: str = OPENAI_API_KEY,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -601,7 +601,7 @@ class OpenAIClient(BaseLLMClient):
             resp = httpx.get(
                 f"{self.base_url}/models",
                 headers=self._headers,
-                timeout=OLLAMA_HEALTH_TIMEOUT,
+                timeout=LLM_HEALTH_TIMEOUT,
             )
             resp.raise_for_status()
             self._available = True
