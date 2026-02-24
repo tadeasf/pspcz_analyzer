@@ -106,8 +106,15 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:8b")
 TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "1") == "1"
 LLM_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 LLM_HEALTH_TIMEOUT = 5.0  # connectivity check
-LLM_MAX_TEXT_CHARS = 50000
-LLM_VERBATIM_CHARS = 40000
+LLM_MAX_TEXT_CHARS = int(
+    os.environ.get("LLM_MAX_TEXT_CHARS", "240000")
+)  # ~80k tokens @ 3 chars/tok (Czech text)
+LLM_VERBATIM_CHARS = int(
+    os.environ.get("LLM_VERBATIM_CHARS", "180000")
+)  # verbatim portion before structural extraction
+LLM_MAX_COMPARISON_CHARS = int(
+    os.environ.get("LLM_MAX_COMPARISON_CHARS", "120000")
+)  # per-text limit for version comparisons (~40k tok each)
 
 # OpenAI-compatible API integration (OpenAI, Azure OpenAI, Together, Groq, vLLM, etc.)
 # Used when LLM_PROVIDER=openai

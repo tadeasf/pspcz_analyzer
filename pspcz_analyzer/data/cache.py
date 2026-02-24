@@ -41,3 +41,21 @@ def get_or_parse(
     df.write_parquet(parquet_path)
     logger.info("Cached {} ({} rows)", table_name, df.height)
     return df
+
+
+def invalidate_parquet(table_name: str, cache_dir: Path = DEFAULT_CACHE_DIR) -> bool:
+    """Delete cached parquet for a table, forcing re-parse on next access.
+
+    Args:
+        table_name: The parquet filename stem (e.g. "hl_hlasovani_9").
+        cache_dir: Root cache directory.
+
+    Returns:
+        True if a cached file was deleted, False if none existed.
+    """
+    parquet_path = _parquet_dir(cache_dir) / f"{table_name}.parquet"
+    if parquet_path.exists():
+        parquet_path.unlink()
+        logger.info("Invalidated parquet cache for {}", table_name)
+        return True
+    return False

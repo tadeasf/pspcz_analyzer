@@ -14,7 +14,7 @@ from pspcz_analyzer.config import (
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
 )
-from pspcz_analyzer.data.cache import get_or_parse
+from pspcz_analyzer.data.cache import get_or_parse, invalidate_parquet
 from pspcz_analyzer.data.downloader import (
     download_poslanci_data,
     download_schuze_data,
@@ -446,6 +446,17 @@ class DataService:
         self._bod_schuze = None
         self._tisky = None
 
+        for table in (
+            "osoby",
+            "poslanec",
+            "organy",
+            "zarazeni",
+            "schuze",
+            "bod_schuze",
+            "tisky",
+        ):
+            invalidate_parquet(table, self.cache_dir)
+
         download_poslanci_data(self.cache_dir, force=True)
         download_schuze_data(self.cache_dir, force=True)
         download_tisky_data(self.cache_dir, force=True)
@@ -453,8 +464,16 @@ class DataService:
 
     def _force_reload_period(self, period: int) -> None:
         """Re-download and re-parse voting data for a single period."""
+        for table in (
+            f"hl_hlasovani_{period}",
+            f"hl_poslanec_{period}",
+            f"zmatecne_{period}",
+        ):
+            invalidate_parquet(table, self.cache_dir)
+
         download_voting_data(period, self.cache_dir, force=True)
-        self._load_period(period)
+        if period in self._periods:
+            self._load_period(period)
 
     async def refresh_all_data(self) -> None:
         """Re-download all data from psp.cz and reload in-memory state.
@@ -479,15 +498,14 @@ class DataService:
             except Exception:
                 logger.opt(exception=True).error("[daily-refresh] Failed to reload shared tables")
 
-            # 3. Re-download and reload each loaded period
-            for period in list(self._periods.keys()):
-                try:
-                    await asyncio.to_thread(self._force_reload_period, period)
-                    logger.info("[daily-refresh] Period {} reloaded", period)
-                except Exception:
-                    logger.opt(exception=True).error(
-                        "[daily-refresh] Failed to reload period {}", period
-                    )
+            # 3. Re-download and reload current period only
+            try:
+                await asyncio.to_thread(self._force_reload_period, DEFAULT_PERIOD)
+                logger.info("[daily-refresh] Period {} reloaded", DEFAULT_PERIOD)
+            except Exception:
+                logger.opt(exception=True).error(
+                    "[daily-refresh] Failed to reload period {}", DEFAULT_PERIOD
+                )
 
             # 4. Invalidate analysis caches
             analysis_cache.invalidate()
