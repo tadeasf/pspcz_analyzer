@@ -586,3 +586,275 @@ class TestParseConsolidationJson:
         data = {"mappings": []}
         result = _parse_consolidation_json(data, ["X", "Y"])
         assert result == {"X": "X", "Y": "Y"}
+
+
+# ── Combined classify + summarize tests ──────────────────────────────────
+
+
+class TestParseCombinedResponse:
+    """Tests for BaseLLMClient._parse_combined_response."""
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def test_parses_all_fields(self):
+        client = self._make_client()
+        response = (
+            "TOPICS: Dane a poplatky, Socialni pojisteni\n"
+            "CHANGES: Mění sazby DPH z 21% na 19%.\n"
+            "IMPACT: Prospívá firmám, škodí rozpočtu.\n"
+            "RISKS: Riziko poklesu příjmů státu."
+        )
+        topics, summary_data = client._parse_combined_response(response)
+        assert topics == ["Dane a poplatky", "Socialni pojisteni"]
+        assert summary_data["changes"] == "Mění sazby DPH z 21% na 19%."
+        assert summary_data["impact"] == "Prospívá firmám, škodí rozpočtu."
+        assert summary_data["risks"] == "Riziko poklesu příjmů státu."
+
+    def test_handles_think_blocks(self):
+        client = self._make_client()
+        response = (
+            "<think>Let me analyze this...</think>"
+            "TOPICS: Trestní právo\n"
+            "CHANGES: Zpřísňuje tresty.\n"
+            "IMPACT: Dopad na odsouzené.\n"
+            "RISKS: Přeplnění věznic."
+        )
+        topics, summary_data = client._parse_combined_response(response)
+        assert topics == ["Trestní právo"]
+        assert "Zpřísňuje tresty" in summary_data["changes"]
+
+    def test_partial_success_topics_only(self):
+        client = self._make_client()
+        response = "TOPICS: Zdravotnictví, Pojištění\nSome random text without fields"
+        topics, summary_data = client._parse_combined_response(response)
+        assert topics == ["Zdravotnictví", "Pojištění"]
+        # Summary fields should be empty strings
+        assert summary_data["changes"] == ""
+        assert summary_data["impact"] == ""
+
+    def test_empty_on_garbage(self):
+        client = self._make_client()
+        response = "I don't understand the question."
+        topics, summary_data = client._parse_combined_response(response)
+        assert topics == []
+        assert summary_data["changes"] == ""
+
+    def test_caps_topics_at_3(self):
+        client = self._make_client()
+        response = "TOPICS: A, B, C, D, E\nCHANGES: x\nIMPACT: y\nRISKS: z"
+        topics, _ = client._parse_combined_response(response)
+        assert len(topics) == 3
+
+    def test_multiline_field_values(self):
+        client = self._make_client()
+        response = (
+            "TOPICS: Dane\n"
+            "CHANGES: Mění sazby.\nPřidává nové kategorie.\n"
+            "IMPACT: Dopad na firmy.\n"
+            "RISKS: Riziko."
+        )
+        topics, summary_data = client._parse_combined_response(response)
+        assert topics == ["Dane"]
+        assert "Mění sazby" in summary_data["changes"]
+        assert "Přidává nové kategorie" in summary_data["changes"]
+
+
+class TestOpenAIStructuredClassifyAndSummarize:
+    """Tests for OpenAI combined classify_and_summarize with structured output."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+
+    def _make_client(self) -> OpenAIClient:
+        return OpenAIClient(
+            base_url="https://api.example.com/v1",
+            model="gpt-4o-mini",
+            timeout=30.0,
+            api_key="sk-test",
+        )
+
+    def _ok_response(self, content: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_combined_parses_json_cs(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "topics": ["Dane a poplatky", "Rozpočet"],
+                "changes": "Mění sazby.",
+                "impact": "Dopad na firmy.",
+                "risks": "Riziko poklesu.",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics, summary = client.classify_and_summarize("text", "title")
+        assert topics == ["Dane a poplatky", "Rozpočet"]
+        assert "**Co se mění:** Mění sazby." in summary
+        assert "**Dopady:** Dopad na firmy." in summary
+        assert "**Rizika:** Riziko poklesu." in summary
+
+    def test_combined_parses_json_en(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "topics": ["Taxes", "Budget"],
+                "changes": "Changes rates.",
+                "impact": "Impacts firms.",
+                "risks": "Revenue risk.",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics, summary = client.classify_and_summarize_en("text", "title")
+        assert topics == ["Taxes", "Budget"]
+        assert "**Changes:** Changes rates." in summary
+        assert "**Impact:** Impacts firms." in summary
+        assert "**Risks:** Revenue risk." in summary
+
+    def test_combined_caps_topics_at_3(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "topics": ["A", "B", "C", "D"],
+                "changes": "x",
+                "impact": "y",
+                "risks": "z",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics, _ = client.classify_and_summarize("text", "title")
+        assert len(topics) == 3
+
+    def test_combined_returns_empty_on_failure(self):
+        client = self._make_client()
+        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
+            topics, summary = client.classify_and_summarize("text", "title")
+        assert topics == []
+        assert summary == ""
+
+    def test_combined_sends_response_format(self):
+        """Verify that response_format includes the combined schema."""
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "topics": ["Dane"],
+                "changes": "x",
+                "impact": "y",
+                "risks": "z",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client.classify_and_summarize("text", "title")
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert "response_format" in payload
+        schema = payload["response_format"]["json_schema"]["schema"]
+        assert "topics" in schema["properties"]
+        assert "changes" in schema["properties"]
+        assert "impact" in schema["properties"]
+        assert "risks" in schema["properties"]
+
+    def test_bilingual_returns_four_values(self):
+        client = self._make_client()
+        json_content_cs = json.dumps(
+            {
+                "topics": ["Dane"],
+                "changes": "Mění.",
+                "impact": "Dopad.",
+                "risks": "Riziko.",
+            }
+        )
+        json_content_en = json.dumps(
+            {
+                "topics": ["Taxes"],
+                "changes": "Changes.",
+                "impact": "Impact.",
+                "risks": "Risk.",
+            }
+        )
+        responses = [
+            self._ok_response(json_content_cs),
+            self._ok_response(json_content_en),
+        ]
+        with patch("httpx.post", side_effect=responses):
+            topics_cs, topics_en, summary_cs, summary_en = client.classify_and_summarize_bilingual(
+                "text", "title"
+            )
+        assert topics_cs == ["Dane"]
+        assert topics_en == ["Taxes"]
+        assert "**Co se mění:**" in summary_cs
+        assert "**Changes:**" in summary_en
+
+
+class TestOllamaFallbackCombined:
+    """Tests that OllamaClient uses the free-text combined parsing path."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def _ok_response(self, text: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"response": text})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_combined_cs_parses_response(self):
+        client = self._make_client()
+        mock_response = self._ok_response(
+            "TOPICS: Dane a poplatky\n"
+            "CHANGES: Mění sazby DPH.\n"
+            "IMPACT: Dopad na firmy.\n"
+            "RISKS: Riziko poklesu."
+        )
+        with patch("httpx.post", return_value=mock_response):
+            topics, summary = client.classify_and_summarize("text", "title")
+        assert topics == ["Dane a poplatky"]
+        assert "**Co se mění:** Mění sazby DPH." in summary
+
+    def test_combined_en_parses_response(self):
+        client = self._make_client()
+        mock_response = self._ok_response(
+            "TOPICS: Taxes\n"
+            "CHANGES: Changes VAT rates.\n"
+            "IMPACT: Impacts businesses.\n"
+            "RISKS: Revenue decline risk."
+        )
+        with patch("httpx.post", return_value=mock_response):
+            topics, summary = client.classify_and_summarize_en("text", "title")
+        assert topics == ["Taxes"]
+        assert "**Changes:** Changes VAT rates." in summary
+
+    def test_combined_handles_think_blocks(self):
+        client = self._make_client()
+        mock_response = self._ok_response(
+            "<think>hmm...</think>"
+            "TOPICS: Pravo\n"
+            "CHANGES: Zpřísňuje tresty.\n"
+            "IMPACT: Dopad.\n"
+            "RISKS: Riziko."
+        )
+        with patch("httpx.post", return_value=mock_response):
+            topics, summary = client.classify_and_summarize("text", "title")
+        assert topics == ["Pravo"]
+        assert "Zpřísňuje tresty" in summary
+
+    def test_combined_returns_empty_on_failure(self):
+        client = self._make_client()
+        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
+            topics, summary = client.classify_and_summarize("text", "title")
+        assert topics == []
+        assert summary == ""
