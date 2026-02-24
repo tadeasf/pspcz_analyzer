@@ -1,5 +1,6 @@
-"""Tests for OpenAIClient, BaseLLMClient, and create_llm_client factory."""
+"""Tests for OpenAIClient, OllamaClient, BaseLLMClient, and create_llm_client factory."""
 
+import json
 from unittest.mock import patch
 
 import httpx
@@ -9,6 +10,11 @@ from pspcz_analyzer.services.llm_service import (
     BaseLLMClient,
     OllamaClient,
     OpenAIClient,
+    _parse_consolidation_json,
+    _render_comparison_markdown_cs,
+    _render_comparison_markdown_en,
+    _render_summary_markdown_cs,
+    _render_summary_markdown_en,
     create_llm_client,
 )
 
@@ -51,6 +57,27 @@ class TestCreateLLMClientFactory:
         with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"):
             client = create_llm_client()
         assert isinstance(client, BaseLLMClient)
+
+
+class TestSupportsStructuredOutput:
+    """Tests for the supports_structured_output property."""
+
+    def test_openai_supports_structured_output(self):
+        client = OpenAIClient(
+            base_url="https://api.example.com/v1",
+            model="gpt-4o-mini",
+            timeout=30.0,
+            api_key="sk-test",
+        )
+        assert client.supports_structured_output is True
+
+    def test_ollama_does_not_support_structured_output(self):
+        client = OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+        assert client.supports_structured_output is False
 
 
 class TestOpenAIClientGenerate:
@@ -105,6 +132,25 @@ class TestOpenAIClientGenerate:
 
         payload = mock_post.call_args.kwargs["json"]
         assert "reasoning_effort" not in payload
+
+    def test_generate_passes_response_format(self):
+        client = self._make_client()
+        mock_response = self._ok_response({"choices": [{"message": {"content": "{}"}}]})
+        rf = {"type": "json_schema", "json_schema": {"name": "test", "schema": {}}}
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client._generate("prompt", "system", response_format=rf)
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert payload["response_format"] == rf
+
+    def test_generate_omits_response_format_when_none(self):
+        client = self._make_client()
+        mock_response = self._ok_response({"choices": [{"message": {"content": "result"}}]})
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client._generate("prompt", "system")
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert "response_format" not in payload
 
     def test_generate_returns_none_on_http_error(self):
         client = self._make_client()
@@ -179,8 +225,11 @@ class TestOpenAIClientIsAvailable:
         assert mock_get.call_count == 1
 
 
-class TestOpenAIClientClassifyTopics:
-    """Tests for OpenAIClient topic classification."""
+# ── Structured output tests (OpenAI path) ────────────────────────────────
+
+
+class TestOpenAIStructuredClassification:
+    """Tests for OpenAI classify_topics with structured output."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
 
@@ -192,22 +241,348 @@ class TestOpenAIClientClassifyTopics:
             api_key="sk-test",
         )
 
-    def _ok_response(self, json_data: dict) -> httpx.Response:
-        resp = httpx.Response(200, json=json_data)
+    def _ok_response(self, content: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
         resp.request = self._DUMMY_REQUEST
         return resp
 
-    def test_classify_topics_parses_response(self):
+    def test_classify_topics_structured_parses_json(self):
         client = self._make_client()
-        mock_response = self._ok_response(
-            {"choices": [{"message": {"content": "TOPICS: Dane a poplatky, Socialni pojisteni"}}]}
-        )
+        json_content = json.dumps({"topics": ["Dane a poplatky", "Socialni pojisteni"]})
+        mock_response = self._ok_response(json_content)
         with patch("httpx.post", return_value=mock_response):
             topics = client.classify_topics("some law text", "Novela zakona")
         assert topics == ["Dane a poplatky", "Socialni pojisteni"]
 
-    def test_classify_returns_empty_on_failure(self):
+    def test_classify_topics_structured_caps_at_3(self):
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["A", "B", "C", "D"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("text", "title")
+        assert len(topics) == 3
+
+    def test_classify_topics_structured_filters_empty(self):
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["Dane", "", "  ", "Pravo"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("text", "title")
+        assert topics == ["Dane", "Pravo"]
+
+    def test_classify_topics_structured_returns_empty_on_failure(self):
         client = self._make_client()
         with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
             topics = client.classify_topics("text", "title")
         assert topics == []
+
+    def test_classify_topics_en_structured(self):
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["Taxes & Fees", "Social Insurance"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics_en("text", "title")
+        assert topics == ["Taxes & Fees", "Social Insurance"]
+
+    def test_classify_sends_response_format(self):
+        """Verify that response_format is included in the API request."""
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["Dane"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client.classify_topics("text", "title")
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert "response_format" in payload
+        assert payload["response_format"]["type"] == "json_schema"
+
+
+class TestOpenAIStructuredSummary:
+    """Tests for OpenAI summarize with structured output."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+
+    def _make_client(self) -> OpenAIClient:
+        return OpenAIClient(
+            base_url="https://api.example.com/v1",
+            model="gpt-4o-mini",
+            timeout=30.0,
+            api_key="sk-test",
+        )
+
+    def _ok_response(self, content: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_summarize_structured_renders_markdown_cs(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "changes": "Mění sazby DPH.",
+                "impact": "Prospívá podnikatelům.",
+                "risks": "Může vést ke snížení příjmů.",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            result = client.summarize("text", "title")
+        assert "**Co se mění:**" in result
+        assert "**Dopady:**" in result
+        assert "**Rizika:**" in result
+
+    def test_summarize_en_structured_renders_markdown_en(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "changes": "Changes VAT rates.",
+                "impact": "Benefits businesses.",
+                "risks": "May reduce revenue.",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            result = client.summarize_en("text", "title")
+        assert "**Changes:**" in result
+        assert "**Impact:**" in result
+        assert "**Risks:**" in result
+
+    def test_summarize_returns_empty_on_failure(self):
+        client = self._make_client()
+        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
+            result = client.summarize("text", "title")
+        assert result == ""
+
+
+class TestOpenAIStructuredConsolidation:
+    """Tests for OpenAI consolidate_topics with structured output."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+
+    def _make_client(self) -> OpenAIClient:
+        return OpenAIClient(
+            base_url="https://api.example.com/v1",
+            model="gpt-4o-mini",
+            timeout=30.0,
+            api_key="sk-test",
+        )
+
+    def _ok_response(self, content: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_consolidate_structured_parses_mappings(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "mappings": [
+                    {"old": "Dane", "canonical": "Dane a poplatky"},
+                    {"old": "Poplatky", "canonical": "Dane a poplatky"},
+                ]
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            mapping = client.consolidate_topics(["Dane", "Poplatky", "Pravo"])
+        assert mapping["Dane"] == "Dane a poplatky"
+        assert mapping["Poplatky"] == "Dane a poplatky"
+        assert mapping["Pravo"] == "Pravo"  # fallback identity
+
+    def test_consolidate_returns_identity_on_failure(self):
+        client = self._make_client()
+        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
+            mapping = client.consolidate_topics(["A", "B"])
+        assert mapping == {"A": "A", "B": "B"}
+
+
+class TestOpenAIStructuredComparison:
+    """Tests for OpenAI compare_versions with structured output."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+
+    def _make_client(self) -> OpenAIClient:
+        return OpenAIClient(
+            base_url="https://api.example.com/v1",
+            model="gpt-4o-mini",
+            timeout=30.0,
+            api_key="sk-test",
+        )
+
+    def _ok_response(self, content: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_compare_structured_renders_markdown(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "changed_paragraphs": "§ 5 upraven.",
+                "additions_removals": "Přidán § 6a.",
+                "overall_character": "Zpřísnění.",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            result = client.compare_versions("old text", "new text", 100, 200)
+        assert "**Změněné paragrafy:**" in result
+        assert "**Přidáno/odebráno:**" in result
+        assert "**Charakter změn:**" in result
+
+    def test_compare_returns_empty_on_failure(self):
+        client = self._make_client()
+        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
+            result = client.compare_versions("old", "new", 1, 2)
+        assert result == ""
+
+
+# ── Ollama fallback tests (free-text regex parsing) ──────────────────────
+
+
+class TestOllamaFallbackClassification:
+    """Tests that OllamaClient uses the free-text regex parsing path."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def _ok_response(self, text: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"response": text})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_classify_topics_uses_regex_parsing(self):
+        client = self._make_client()
+        mock_response = self._ok_response("TOPICS: Dane a poplatky, Socialni pojisteni")
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("some law text", "Novela zakona")
+        assert topics == ["Dane a poplatky", "Socialni pojisteni"]
+
+    def test_classify_topics_handles_think_blocks(self):
+        client = self._make_client()
+        mock_response = self._ok_response("<think>hmm...</think>TOPICS: Dane, Pravo")
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("text", "title")
+        assert topics == ["Dane", "Pravo"]
+
+    def test_classify_returns_empty_on_unparseable(self):
+        client = self._make_client()
+        mock_response = self._ok_response("I don't understand the question")
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("text", "title")
+        assert topics == []
+
+
+class TestOllamaFallbackSummary:
+    """Tests that OllamaClient uses free-text summary path."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def _ok_response(self, text: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"response": text})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_summarize_strips_think_blocks(self):
+        client = self._make_client()
+        mock_response = self._ok_response("<think>let me think</think>Novela mění sazby DPH.")
+        with patch("httpx.post", return_value=mock_response):
+            result = client.summarize("text", "title")
+        assert result == "Novela mění sazby DPH."
+        assert "<think>" not in result
+
+
+# ── Markdown rendering helper tests ──────────────────────────────────────
+
+
+class TestRenderHelpers:
+    """Tests for markdown rendering helper functions."""
+
+    def test_render_summary_cs(self):
+        data = {
+            "changes": "Mění sazby.",
+            "impact": "Dopad na firmy.",
+            "risks": "Žádné riziko.",
+        }
+        result = _render_summary_markdown_cs(data)
+        assert "**Co se mění:** Mění sazby." in result
+        assert "**Dopady:** Dopad na firmy." in result
+        assert "**Rizika:** Žádné riziko." in result
+
+    def test_render_summary_en(self):
+        data = {
+            "changes": "Changes rates.",
+            "impact": "Impacts firms.",
+            "risks": "No risks.",
+        }
+        result = _render_summary_markdown_en(data)
+        assert "**Changes:** Changes rates." in result
+        assert "**Impact:** Impacts firms." in result
+        assert "**Risks:** No risks." in result
+
+    def test_render_summary_skips_empty_fields(self):
+        data = {"changes": "Something changes.", "impact": "", "risks": ""}
+        result = _render_summary_markdown_cs(data)
+        assert "**Co se mění:**" in result
+        assert "**Dopady:**" not in result
+        assert "**Rizika:**" not in result
+
+    def test_render_comparison_cs(self):
+        data = {
+            "changed_paragraphs": "§ 5",
+            "additions_removals": "Přidán § 6",
+            "overall_character": "Zpřísnění",
+        }
+        result = _render_comparison_markdown_cs(data)
+        assert "**Změněné paragrafy:**" in result
+        assert "**Přidáno/odebráno:**" in result
+        assert "**Charakter změn:**" in result
+
+    def test_render_comparison_en(self):
+        data = {
+            "changed_paragraphs": "§ 5",
+            "additions_removals": "Added § 6",
+            "overall_character": "Tightening",
+        }
+        result = _render_comparison_markdown_en(data)
+        assert "**Changed paragraphs:**" in result
+        assert "**Additions/removals:**" in result
+        assert "**Overall character:**" in result
+
+
+class TestParseConsolidationJson:
+    """Tests for _parse_consolidation_json helper."""
+
+    def test_parses_valid_mappings(self):
+        data = {
+            "mappings": [
+                {"old": "Dane", "canonical": "Dane a poplatky"},
+                {"old": "Pravo", "canonical": "Pravo"},
+            ]
+        }
+        result = _parse_consolidation_json(data, ["Dane", "Pravo"])
+        assert result == {"Dane": "Dane a poplatky", "Pravo": "Pravo"}
+
+    def test_fills_missing_topics_with_identity(self):
+        data = {"mappings": [{"old": "A", "canonical": "B"}]}
+        result = _parse_consolidation_json(data, ["A", "C"])
+        assert result["A"] == "B"
+        assert result["C"] == "C"
+
+    def test_handles_empty_mappings(self):
+        data = {"mappings": []}
+        result = _parse_consolidation_json(data, ["X", "Y"])
+        assert result == {"X": "X", "Y": "Y"}

@@ -190,6 +190,190 @@ _COMPARISON_PROMPT_TEMPLATE_EN = (
 
 # ── Security & text processing ───────────────────────────────────────────
 
+
+# ── JSON schemas for structured output (OpenAI-compatible) ──────────────
+
+_CLASSIFICATION_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "topics": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "1-3 short topic labels",
+        }
+    },
+    "required": ["topics"],
+    "additionalProperties": False,
+}
+
+_SUMMARY_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "changes": {"type": "string", "description": "What specifically changes"},
+        "impact": {"type": "string", "description": "Who benefits and who is harmed"},
+        "risks": {"type": "string", "description": "Risk of abuse or unintended consequences"},
+    },
+    "required": ["changes", "impact", "risks"],
+    "additionalProperties": False,
+}
+
+_COMPARISON_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "changed_paragraphs": {
+            "type": "string",
+            "description": "Which paragraphs/articles changed and how",
+        },
+        "additions_removals": {
+            "type": "string",
+            "description": "What was added or removed",
+        },
+        "overall_character": {
+            "type": "string",
+            "description": "Overall character: tightening/loosening/technical",
+        },
+    },
+    "required": ["changed_paragraphs", "additions_removals", "overall_character"],
+    "additionalProperties": False,
+}
+
+_CONSOLIDATION_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "mappings": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "old": {"type": "string"},
+                    "canonical": {"type": "string"},
+                },
+                "required": ["old", "canonical"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["mappings"],
+    "additionalProperties": False,
+}
+
+# ── Structured output prompts (no format instructions) ──────────────────
+
+_STRUCTURED_CLASSIFICATION_SYSTEM_CS = (
+    "Jsi analytik českého parlamentu. Analyzuješ parlamentní tisky a přiřazuješ jim tematické štítky. "
+    "Používej stručné a konkrétní české názvy tematických oblastí." + _LANG_CS
+)
+
+_STRUCTURED_CLASSIFICATION_PROMPT_CS = (
+    "Urči 1–3 hlavní témata následujícího parlamentního tisku. "
+    "Použij krátké české názvy témat (2–4 slova). "
+    "Buď konkrétní – např. místo 'Právo' napiš 'Trestní právo' nebo 'Občanské právo'.\n\n"
+    "Název tisku:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text tisku:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
+)
+
+_STRUCTURED_CLASSIFICATION_SYSTEM_EN = (
+    "You are a Czech Parliament analyst. You analyze parliamentary bills and assign topic labels. "
+    "Use concise and specific English topic names." + _LANG_EN
+)
+
+_STRUCTURED_CLASSIFICATION_PROMPT_EN = (
+    "Identify 1-3 main topics of the following Czech parliamentary bill. "
+    "Use short English topic names (2-4 words). "
+    "Be specific — e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
+    "Bill title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Bill text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
+)
+
+_STRUCTURED_SUMMARY_SYSTEM_CS = (
+    "Jsi kriticko-analytický komentátor českého parlamentu. Píšeš ostře, věcně a bez přikrašlování. "
+    "Odhaluješ skryté dopady zákonů, rizika zneužití, a kdo z novely skutečně profituje. "
+    "Neboj se pojmenovat problémy přímo — např. oslabení nezávislosti úředníků, rozšíření pravomocí "
+    "bez kontroly, skryté privatizace, nebo omezení občanských práv." + _LANG_CS
+)
+
+_STRUCTURED_SUMMARY_PROMPT_CS = (
+    "Analyzuj následující parlamentní tisk KRITICKY.\n"
+    "Pro pole 'changes': Co KONKRÉTNĚ se mění (žádné vágní formulace)\n"
+    "Pro pole 'impact': Komu to prospívá a komu škodí\n"
+    "Pro pole 'risks': Jaké je RIZIKO zneužití nebo nezamýšlený důsledek\n"
+    "Buď přímý a kriticko-analytický. 1–2 věty na pole.\n\n"
+    "Název:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
+)
+
+_STRUCTURED_SUMMARY_SYSTEM_EN = (
+    "You are a critical analyst of the Czech Parliament. You write sharp, factual assessments "
+    "without embellishment. You expose hidden impacts of laws, risks of abuse, and who truly "
+    "benefits from amendments. Don't hesitate to name problems directly." + _LANG_EN
+)
+
+_STRUCTURED_SUMMARY_PROMPT_EN = (
+    "Analyze the following Czech parliamentary bill CRITICALLY.\n"
+    "For 'changes': What SPECIFICALLY changes (no vague formulations)\n"
+    "For 'impact': Who benefits and who is harmed\n"
+    "For 'risks': What is the RISK of abuse or unintended consequence\n"
+    "Be direct and critical. 1-2 sentences per field.\n\n"
+    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
+)
+
+_STRUCTURED_CONSOLIDATION_SYSTEM_CS = (
+    "Jsi analytik českého parlamentu. Dostaneš seznam tematických štítků. "
+    "Sjednoť podobná/překrývající se témata pod jeden kanonický název." + _LANG_CS
+)
+
+_STRUCTURED_CONSOLIDATION_PROMPT_CS = (
+    "Zde je seznam {n} témat z parlamentních tisků. Sjednoť podobná a překrývající se témata.\n"
+    "Pro každé téma vrať mapování z původního názvu na kanonický název.\n"
+    "Pokud je téma už trefné, mapuj ho samo na sebe.\n\n"
+    "Témata:\n{topics_list}"
+)
+
+_STRUCTURED_CONSOLIDATION_SYSTEM_EN = (
+    "You are a Czech Parliament analyst. You will receive a list of topic labels. "
+    "Unify similar/overlapping topics under one canonical English name." + _LANG_EN
+)
+
+_STRUCTURED_CONSOLIDATION_PROMPT_EN = (
+    "Here is a list of {n} topics from parliamentary bills. Unify similar and overlapping topics.\n"
+    "For each topic return a mapping from original name to canonical name.\n"
+    "If a topic is already good, map it to itself.\n\n"
+    "Topics:\n{topics_list}"
+)
+
+_STRUCTURED_COMPARISON_SYSTEM_CS = (
+    "Jsi analyticko-právní expert na českou legislativu. Srovnáváš verze parlamentních tisků "
+    "a identifikuješ KONKRÉTNÍ změny mezi nimi — čísla paragrafů, co bylo přidáno, odebráno či změněno."
+    + _LANG_CS
+)
+
+_STRUCTURED_COMPARISON_PROMPT_CS = (
+    "Porovnej následující dvě verze parlamentního tisku a popiš KONKRÉTNÍ rozdíly.\n"
+    "Pro pole 'changed_paragraphs': Které paragrafy/články se změnily a jak\n"
+    "Pro pole 'additions_removals': Co bylo přidáno nebo odebráno\n"
+    "Pro pole 'overall_character': Celkový charakter změn (zpřísnění/zmírnění/technická úprava)\n"
+    "Buď konkrétní — cituj čísla paragrafů. 1–2 věty na pole.\n\n"
+    "VERZE {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
+    "VERZE {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
+)
+
+_STRUCTURED_COMPARISON_SYSTEM_EN = (
+    "You are a legal expert on Czech legislation. You compare versions of parliamentary bills "
+    "and identify SPECIFIC changes between them — paragraph numbers, what was added, removed, or modified."
+    + _LANG_EN
+)
+
+_STRUCTURED_COMPARISON_PROMPT_EN = (
+    "Compare the following two versions of a Czech parliamentary bill and describe SPECIFIC differences.\n"
+    "For 'changed_paragraphs': Which paragraphs/articles changed and how\n"
+    "For 'additions_removals': What was added or removed\n"
+    "For 'overall_character': Overall character of changes (tightening/loosening/technical adjustment)\n"
+    "Be specific — cite paragraph numbers. 1-2 sentences per field.\n\n"
+    "VERSION {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
+    "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
+)
+
 _INJECTION_PHRASES_RE = re.compile(
     r"(?:ignore (?:all )?(?:previous|above|prior) instructions"
     r"|you are now"
@@ -265,6 +449,71 @@ def truncate_legislative_text(
 # ── Base class ───────────────────────────────────────────────────────────
 
 
+# ── Markdown rendering helpers for structured output ────────────────────
+
+
+def _render_summary_markdown_cs(data: dict[str, Any]) -> str:
+    """Render structured summary JSON to Czech markdown."""
+    parts: list[str] = []
+    if data.get("changes"):
+        parts.append(f"**Co se mění:** {data['changes']}")
+    if data.get("impact"):
+        parts.append(f"**Dopady:** {data['impact']}")
+    if data.get("risks"):
+        parts.append(f"**Rizika:** {data['risks']}")
+    return "\n\n".join(parts)
+
+
+def _render_summary_markdown_en(data: dict[str, Any]) -> str:
+    """Render structured summary JSON to English markdown."""
+    parts: list[str] = []
+    if data.get("changes"):
+        parts.append(f"**Changes:** {data['changes']}")
+    if data.get("impact"):
+        parts.append(f"**Impact:** {data['impact']}")
+    if data.get("risks"):
+        parts.append(f"**Risks:** {data['risks']}")
+    return "\n\n".join(parts)
+
+
+def _render_comparison_markdown_cs(data: dict[str, Any]) -> str:
+    """Render structured comparison JSON to Czech markdown."""
+    parts: list[str] = []
+    if data.get("changed_paragraphs"):
+        parts.append(f"**Změněné paragrafy:** {data['changed_paragraphs']}")
+    if data.get("additions_removals"):
+        parts.append(f"**Přidáno/odebráno:** {data['additions_removals']}")
+    if data.get("overall_character"):
+        parts.append(f"**Charakter změn:** {data['overall_character']}")
+    return "\n\n".join(parts)
+
+
+def _render_comparison_markdown_en(data: dict[str, Any]) -> str:
+    """Render structured comparison JSON to English markdown."""
+    parts: list[str] = []
+    if data.get("changed_paragraphs"):
+        parts.append(f"**Changed paragraphs:** {data['changed_paragraphs']}")
+    if data.get("additions_removals"):
+        parts.append(f"**Additions/removals:** {data['additions_removals']}")
+    if data.get("overall_character"):
+        parts.append(f"**Overall character:** {data['overall_character']}")
+    return "\n\n".join(parts)
+
+
+def _parse_consolidation_json(data: dict[str, Any], all_topics: list[str]) -> dict[str, str]:
+    """Parse structured consolidation JSON into a topic mapping dict."""
+    mapping: dict[str, str] = {}
+    for item in data.get("mappings", []):
+        old = item.get("old", "").strip()
+        canonical = item.get("canonical", "").strip()
+        if old and canonical:
+            mapping[old] = canonical
+    for t in all_topics:
+        if t not in mapping:
+            mapping[t] = t
+    return mapping
+
+
 class BaseLLMClient(ABC):
     """Abstract base class for LLM backend clients."""
 
@@ -279,18 +528,80 @@ class BaseLLMClient(ABC):
 
     @abstractmethod
     def _generate(
-        self, prompt: str, system: str, *, reasoning_effort: str | None = None
+        self,
+        prompt: str,
+        system: str,
+        *,
+        reasoning_effort: str | None = None,
+        response_format: dict[str, Any] | None = None,
     ) -> str | None:
         """Send a generation request to the LLM. Returns response text or None."""
         ...
 
+    @property
+    def supports_structured_output(self) -> bool:
+        """Whether this backend supports structured output (JSON schema constraint)."""
+        return False
+
+    def _generate_json(
+        self,
+        prompt: str,
+        system: str,
+        schema: dict[str, Any],
+        *,
+        reasoning_effort: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Generate a structured JSON response using response_format.
+
+        Args:
+            prompt: The user prompt.
+            system: The system prompt.
+            schema: JSON schema dict for the response format.
+            reasoning_effort: Optional reasoning effort level.
+
+        Returns:
+            Parsed dict on success, None on failure.
+        """
+        response_format = {
+            "type": "json_schema",
+            "json_schema": {"name": "response", "strict": True, "schema": schema},
+        }
+        raw = self._generate(
+            prompt,
+            system,
+            reasoning_effort=reasoning_effort,
+            response_format=response_format,
+        )
+        if raw is None:
+            return None
+        try:
+            return json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            logger.debug("{} Failed to parse JSON response: {}", self._log_prefix, raw[:200])
+            return None
+
     def classify_topics(self, text: str, title: str, *, _truncated: bool = False) -> list[str]:
         """Classify a tisk into 1-3 free-form Czech topic labels using the LLM."""
         truncated = text if _truncated else truncate_legislative_text(text)
-        prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(
-            title=_sanitize_llm_input(title or "(bez názvu)"),
-            text=_sanitize_llm_input(truncated),
-        )
+        sanitized_title = _sanitize_llm_input(title or "(bez názvu)")
+        sanitized_text = _sanitize_llm_input(truncated)
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_CLASSIFICATION_PROMPT_CS.format(
+                title=sanitized_title, text=sanitized_text
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_CLASSIFICATION_SYSTEM_CS,
+                _CLASSIFICATION_SCHEMA,
+                reasoning_effort="low",
+            )
+            if data is None:
+                return []
+            topics = [t.strip() for t in data.get("topics", []) if isinstance(t, str) and t.strip()]
+            return topics[:3]
+
+        prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(title=sanitized_title, text=sanitized_text)
         response = self._generate(prompt, _CLASSIFICATION_SYSTEM, reasoning_effort="low")
         if response is None:
             return []
@@ -299,10 +610,24 @@ class BaseLLMClient(ABC):
     def summarize(self, text: str, title: str, *, _truncated: bool = False) -> str:
         """Generate a Czech-language summary of what a proposed law changes."""
         truncated = text if _truncated else truncate_legislative_text(text)
-        prompt = _SUMMARY_PROMPT_TEMPLATE.format(
-            title=_sanitize_llm_input(title or "(bez názvu)"),
-            text=_sanitize_llm_input(truncated),
-        )
+        sanitized_title = _sanitize_llm_input(title or "(bez názvu)")
+        sanitized_text = _sanitize_llm_input(truncated)
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_SUMMARY_PROMPT_CS.format(
+                title=sanitized_title, text=sanitized_text
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_SUMMARY_SYSTEM_CS,
+                _SUMMARY_SCHEMA,
+                reasoning_effort="medium",
+            )
+            if data is None:
+                return ""
+            return _render_summary_markdown_cs(data)
+
+        prompt = _SUMMARY_PROMPT_TEMPLATE.format(title=sanitized_title, text=sanitized_text)
         response = self._generate(prompt, _SUMMARY_SYSTEM, reasoning_effort="medium")
         if not response:
             return ""
@@ -311,10 +636,24 @@ class BaseLLMClient(ABC):
     def summarize_en(self, text: str, title: str, *, _truncated: bool = False) -> str:
         """Generate an English-language critical summary of a proposed law."""
         truncated = text if _truncated else truncate_legislative_text(text)
-        prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(
-            title=_sanitize_llm_input(title or "(no title)"),
-            text=_sanitize_llm_input(truncated),
-        )
+        sanitized_title = _sanitize_llm_input(title or "(no title)")
+        sanitized_text = _sanitize_llm_input(truncated)
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_SUMMARY_PROMPT_EN.format(
+                title=sanitized_title, text=sanitized_text
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_SUMMARY_SYSTEM_EN,
+                _SUMMARY_SCHEMA,
+                reasoning_effort="medium",
+            )
+            if data is None:
+                return ""
+            return _render_summary_markdown_en(data)
+
+        prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(title=sanitized_title, text=sanitized_text)
         response = self._generate(prompt, _SUMMARY_SYSTEM_EN, reasoning_effort="medium")
         if not response:
             return ""
@@ -323,10 +662,22 @@ class BaseLLMClient(ABC):
     def consolidate_topics(self, all_topics: list[str]) -> dict[str, str]:
         """Consolidate/deduplicate topic labels via the LLM."""
         topics_list = "\n".join(f"- {t}" for t in all_topics)
-        prompt = _CONSOLIDATION_PROMPT_TEMPLATE.format(
-            n=len(all_topics),
-            topics_list=topics_list,
-        )
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_CONSOLIDATION_PROMPT_CS.format(
+                n=len(all_topics), topics_list=topics_list
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_CONSOLIDATION_SYSTEM_CS,
+                _CONSOLIDATION_SCHEMA,
+                reasoning_effort="low",
+            )
+            if data is None:
+                return {t: t for t in all_topics}
+            return _parse_consolidation_json(data, all_topics)
+
+        prompt = _CONSOLIDATION_PROMPT_TEMPLATE.format(n=len(all_topics), topics_list=topics_list)
         response = self._generate(prompt, _CONSOLIDATION_SYSTEM, reasoning_effort="low")
         if not response:
             return {t: t for t in all_topics}
@@ -335,9 +686,26 @@ class BaseLLMClient(ABC):
     def classify_topics_en(self, text: str, title: str, *, _truncated: bool = False) -> list[str]:
         """Classify a tisk into 1-3 free-form English topic labels using the LLM."""
         truncated = text if _truncated else truncate_legislative_text(text)
+        sanitized_title = _sanitize_llm_input(title or "(no title)")
+        sanitized_text = _sanitize_llm_input(truncated)
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_CLASSIFICATION_PROMPT_EN.format(
+                title=sanitized_title, text=sanitized_text
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_CLASSIFICATION_SYSTEM_EN,
+                _CLASSIFICATION_SCHEMA,
+                reasoning_effort="low",
+            )
+            if data is None:
+                return []
+            topics = [t.strip() for t in data.get("topics", []) if isinstance(t, str) and t.strip()]
+            return topics[:3]
+
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE_EN.format(
-            title=_sanitize_llm_input(title or "(no title)"),
-            text=_sanitize_llm_input(truncated),
+            title=sanitized_title, text=sanitized_text
         )
         response = self._generate(prompt, _CLASSIFICATION_SYSTEM_EN, reasoning_effort="low")
         if response is None:
@@ -354,9 +722,23 @@ class BaseLLMClient(ABC):
     def consolidate_topics_en(self, all_topics: list[str]) -> dict[str, str]:
         """Consolidate/deduplicate English topic labels via the LLM."""
         topics_list = "\n".join(f"- {t}" for t in all_topics)
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_CONSOLIDATION_PROMPT_EN.format(
+                n=len(all_topics), topics_list=topics_list
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_CONSOLIDATION_SYSTEM_EN,
+                _CONSOLIDATION_SCHEMA,
+                reasoning_effort="low",
+            )
+            if data is None:
+                return {t: t for t in all_topics}
+            return _parse_consolidation_json(data, all_topics)
+
         prompt = _CONSOLIDATION_PROMPT_TEMPLATE_EN.format(
-            n=len(all_topics),
-            topics_list=topics_list,
+            n=len(all_topics), topics_list=topics_list
         )
         response = self._generate(prompt, _CONSOLIDATION_SYSTEM_EN, reasoning_effort="low")
         if not response:
@@ -395,14 +777,28 @@ class BaseLLMClient(ABC):
             if _truncated
             else truncate_legislative_text(text_new, max_chars=LLM_MAX_COMPARISON_CHARS)
         )
-        prompt = _COMPARISON_PROMPT_TEMPLATE.format(
-            ct1_old=ct1_old,
-            ct1_new=ct1_new,
-            label_old=label_old or f"CT1={ct1_old}",
-            label_new=label_new or f"CT1={ct1_new}",
-            text_old=_sanitize_llm_input(trunc_old),
-            text_new=_sanitize_llm_input(trunc_new),
-        )
+        fmt_kwargs = {
+            "ct1_old": ct1_old,
+            "ct1_new": ct1_new,
+            "label_old": label_old or f"CT1={ct1_old}",
+            "label_new": label_new or f"CT1={ct1_new}",
+            "text_old": _sanitize_llm_input(trunc_old),
+            "text_new": _sanitize_llm_input(trunc_new),
+        }
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_COMPARISON_PROMPT_CS.format(**fmt_kwargs)
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_COMPARISON_SYSTEM_CS,
+                _COMPARISON_SCHEMA,
+                reasoning_effort="medium",
+            )
+            if data is None:
+                return ""
+            return _render_comparison_markdown_cs(data)
+
+        prompt = _COMPARISON_PROMPT_TEMPLATE.format(**fmt_kwargs)
         response = self._generate(prompt, _COMPARISON_SYSTEM, reasoning_effort="medium")
         if not response:
             return ""
@@ -430,16 +826,29 @@ class BaseLLMClient(ABC):
         cs = self.compare_versions(
             trunc_old, trunc_new, ct1_old, ct1_new, label_old, label_new, _truncated=True
         )
-        prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(
-            ct1_old=ct1_old,
-            ct1_new=ct1_new,
-            label_old=label_old or f"CT1={ct1_old}",
-            label_new=label_new or f"CT1={ct1_new}",
-            text_old=_sanitize_llm_input(trunc_old),
-            text_new=_sanitize_llm_input(trunc_new),
-        )
-        response = self._generate(prompt, _COMPARISON_SYSTEM_EN, reasoning_effort="medium")
-        en = self._strip_think(response) if response else ""
+        fmt_kwargs = {
+            "ct1_old": ct1_old,
+            "ct1_new": ct1_new,
+            "label_old": label_old or f"CT1={ct1_old}",
+            "label_new": label_new or f"CT1={ct1_new}",
+            "text_old": _sanitize_llm_input(trunc_old),
+            "text_new": _sanitize_llm_input(trunc_new),
+        }
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_COMPARISON_PROMPT_EN.format(**fmt_kwargs)
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_COMPARISON_SYSTEM_EN,
+                _COMPARISON_SCHEMA,
+                reasoning_effort="medium",
+            )
+            en = _render_comparison_markdown_en(data) if data else ""
+        else:
+            prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(**fmt_kwargs)
+            response = self._generate(prompt, _COMPARISON_SYSTEM_EN, reasoning_effort="medium")
+            en = self._strip_think(response) if response else ""
+
         return {"cs": cs, "en": en}
 
     @staticmethod
@@ -560,11 +969,17 @@ class OllamaClient(BaseLLMClient):
         return self._available
 
     def _generate(
-        self, prompt: str, system: str, *, reasoning_effort: str | None = None
+        self,
+        prompt: str,
+        system: str,
+        *,
+        reasoning_effort: str | None = None,
+        response_format: dict[str, Any] | None = None,
     ) -> str | None:
         """Send a generation request to Ollama. Returns response text or None.
 
-        The reasoning_effort parameter is accepted but ignored (Ollama doesn't support it).
+        The reasoning_effort and response_format parameters are accepted but ignored
+        (Ollama uses free-text prompts with regex parsing).
         """
         try:
             resp = httpx.post(
@@ -630,13 +1045,24 @@ class OpenAIClient(BaseLLMClient):
 
         return self._available
 
+    @property
+    def supports_structured_output(self) -> bool:
+        """OpenAI-compatible APIs support structured output via response_format."""
+        return True
+
     def _generate(
-        self, prompt: str, system: str, *, reasoning_effort: str | None = None
+        self,
+        prompt: str,
+        system: str,
+        *,
+        reasoning_effort: str | None = None,
+        response_format: dict[str, Any] | None = None,
     ) -> str | None:
         """Send a chat completion request. Returns response text or None.
 
         When reasoning_effort is provided, includes it in the request payload
         for models that support it (e.g. gpt-oss-120b).
+        When response_format is provided, constrains the output to the given JSON schema.
         """
         payload: dict[str, Any] = {
             "model": self.model,
@@ -648,6 +1074,8 @@ class OpenAIClient(BaseLLMClient):
         }
         if reasoning_effort is not None:
             payload["reasoning_effort"] = reasoning_effort
+        if response_format is not None:
+            payload["response_format"] = response_format
 
         try:
             resp = httpx.post(
