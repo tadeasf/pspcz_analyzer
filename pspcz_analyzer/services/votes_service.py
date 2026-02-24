@@ -172,7 +172,7 @@ def list_votes(
     total_pages = max(1, (total + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
 
-    votes = votes.sort("datum", "cas", descending=[True, True])
+    votes = votes.sort("id_hlasovani", descending=True)
     offset = (page - 1) * per_page
     page_rows = votes.slice(offset, per_page)
 
