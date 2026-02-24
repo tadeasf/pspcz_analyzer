@@ -11,7 +11,7 @@ class PipelineStage(StrEnum):
     IDLE = "idle"
     SCRAPE_HISTORIES = "scrape_histories"
     DOWNLOAD_PDFS = "download_pdfs"
-    CLASSIFY = "classify"
+    CLASSIFY = "classify_and_summarize"
     CONSOLIDATE_TOPICS = "consolidate_topics"
     SCRAPE_LAW_CHANGES = "scrape_law_changes"
     DOWNLOAD_VERSIONS = "download_versions"
