@@ -284,9 +284,9 @@ class BaseLLMClient(ABC):
         """Send a generation request to the LLM. Returns response text or None."""
         ...
 
-    def classify_topics(self, text: str, title: str) -> list[str]:
+    def classify_topics(self, text: str, title: str, *, _truncated: bool = False) -> list[str]:
         """Classify a tisk into 1-3 free-form Czech topic labels using the LLM."""
-        truncated = truncate_legislative_text(text)
+        truncated = text if _truncated else truncate_legislative_text(text)
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(
             title=_sanitize_llm_input(title or "(bez názvu)"),
             text=_sanitize_llm_input(truncated),
@@ -296,9 +296,9 @@ class BaseLLMClient(ABC):
             return []
         return self._parse_topics_response(response)
 
-    def summarize(self, text: str, title: str) -> str:
+    def summarize(self, text: str, title: str, *, _truncated: bool = False) -> str:
         """Generate a Czech-language summary of what a proposed law changes."""
-        truncated = truncate_legislative_text(text)
+        truncated = text if _truncated else truncate_legislative_text(text)
         prompt = _SUMMARY_PROMPT_TEMPLATE.format(
             title=_sanitize_llm_input(title or "(bez názvu)"),
             text=_sanitize_llm_input(truncated),
@@ -308,9 +308,9 @@ class BaseLLMClient(ABC):
             return ""
         return self._strip_think(response)
 
-    def summarize_en(self, text: str, title: str) -> str:
+    def summarize_en(self, text: str, title: str, *, _truncated: bool = False) -> str:
         """Generate an English-language critical summary of a proposed law."""
-        truncated = truncate_legislative_text(text)
+        truncated = text if _truncated else truncate_legislative_text(text)
         prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(
             title=_sanitize_llm_input(title or "(no title)"),
             text=_sanitize_llm_input(truncated),
@@ -332,9 +332,9 @@ class BaseLLMClient(ABC):
             return {t: t for t in all_topics}
         return self._parse_consolidation_response(response, all_topics)
 
-    def classify_topics_en(self, text: str, title: str) -> list[str]:
+    def classify_topics_en(self, text: str, title: str, *, _truncated: bool = False) -> list[str]:
         """Classify a tisk into 1-3 free-form English topic labels using the LLM."""
-        truncated = truncate_legislative_text(text)
+        truncated = text if _truncated else truncate_legislative_text(text)
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE_EN.format(
             title=_sanitize_llm_input(title or "(no title)"),
             text=_sanitize_llm_input(truncated),
@@ -346,8 +346,9 @@ class BaseLLMClient(ABC):
 
     def classify_topics_bilingual(self, text: str, title: str) -> tuple[list[str], list[str]]:
         """Classify a tisk into topic labels in both Czech and English."""
-        topics_cs = self.classify_topics(text, title)
-        topics_en = self.classify_topics_en(text, title)
+        truncated = truncate_legislative_text(text)
+        topics_cs = self.classify_topics(truncated, title, _truncated=True)
+        topics_en = self.classify_topics_en(truncated, title, _truncated=True)
         return topics_cs, topics_en
 
     def consolidate_topics_en(self, all_topics: list[str]) -> dict[str, str]:
@@ -380,10 +381,20 @@ class BaseLLMClient(ABC):
         ct1_new: int,
         label_old: str = "",
         label_new: str = "",
+        *,
+        _truncated: bool = False,
     ) -> str:
         """Compare two versions of a tisk and return a Czech-language diff summary."""
-        trunc_old = truncate_legislative_text(text_old, max_chars=LLM_MAX_COMPARISON_CHARS)
-        trunc_new = truncate_legislative_text(text_new, max_chars=LLM_MAX_COMPARISON_CHARS)
+        trunc_old = (
+            text_old
+            if _truncated
+            else truncate_legislative_text(text_old, max_chars=LLM_MAX_COMPARISON_CHARS)
+        )
+        trunc_new = (
+            text_new
+            if _truncated
+            else truncate_legislative_text(text_new, max_chars=LLM_MAX_COMPARISON_CHARS)
+        )
         prompt = _COMPARISON_PROMPT_TEMPLATE.format(
             ct1_old=ct1_old,
             ct1_new=ct1_new,
@@ -399,8 +410,9 @@ class BaseLLMClient(ABC):
 
     def summarize_bilingual(self, text: str, title: str) -> dict[str, str]:
         """Generate both Czech and English summaries."""
-        cs = self.summarize(text, title)
-        en = self.summarize_en(text, title)
+        truncated = truncate_legislative_text(text)
+        cs = self.summarize(truncated, title, _truncated=True)
+        en = self.summarize_en(truncated, title, _truncated=True)
         return {"cs": cs, "en": en}
 
     def compare_versions_bilingual(
@@ -413,9 +425,11 @@ class BaseLLMClient(ABC):
         label_new: str = "",
     ) -> dict[str, str]:
         """Compare two versions and return bilingual diff summaries."""
-        cs = self.compare_versions(text_old, text_new, ct1_old, ct1_new, label_old, label_new)
         trunc_old = truncate_legislative_text(text_old, max_chars=LLM_MAX_COMPARISON_CHARS)
         trunc_new = truncate_legislative_text(text_new, max_chars=LLM_MAX_COMPARISON_CHARS)
+        cs = self.compare_versions(
+            trunc_old, trunc_new, ct1_old, ct1_new, label_old, label_new, _truncated=True
+        )
         prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(
             ct1_old=ct1_old,
             ct1_new=ct1_new,
