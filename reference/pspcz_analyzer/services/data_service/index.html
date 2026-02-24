@@ -3033,26 +3033,7 @@ Safe for concurrent HTTP requests — old data stays valid until swapped.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/data_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-459">459</a></span>
-<span class="normal"><a href="#__codelineno-0-460">460</a></span>
-<span class="normal"><a href="#__codelineno-0-461">461</a></span>
-<span class="normal"><a href="#__codelineno-0-462">462</a></span>
-<span class="normal"><a href="#__codelineno-0-463">463</a></span>
-<span class="normal"><a href="#__codelineno-0-464">464</a></span>
-<span class="normal"><a href="#__codelineno-0-465">465</a></span>
-<span class="normal"><a href="#__codelineno-0-466">466</a></span>
-<span class="normal"><a href="#__codelineno-0-467">467</a></span>
-<span class="normal"><a href="#__codelineno-0-468">468</a></span>
-<span class="normal"><a href="#__codelineno-0-469">469</a></span>
-<span class="normal"><a href="#__codelineno-0-470">470</a></span>
-<span class="normal"><a href="#__codelineno-0-471">471</a></span>
-<span class="normal"><a href="#__codelineno-0-472">472</a></span>
-<span class="normal"><a href="#__codelineno-0-473">473</a></span>
-<span class="normal"><a href="#__codelineno-0-474">474</a></span>
-<span class="normal"><a href="#__codelineno-0-475">475</a></span>
-<span class="normal"><a href="#__codelineno-0-476">476</a></span>
-<span class="normal"><a href="#__codelineno-0-477">477</a></span>
-<span class="normal"><a href="#__codelineno-0-478">478</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-478">478</a></span>
 <span class="normal"><a href="#__codelineno-0-479">479</a></span>
 <span class="normal"><a href="#__codelineno-0-480">480</a></span>
 <span class="normal"><a href="#__codelineno-0-481">481</a></span>
@@ -3074,48 +3055,65 @@ Safe for concurrent HTTP requests — old data stays valid until swapped.</p>
 <span class="normal"><a href="#__codelineno-0-497">497</a></span>
 <span class="normal"><a href="#__codelineno-0-498">498</a></span>
 <span class="normal"><a href="#__codelineno-0-499">499</a></span>
-<span class="normal"><a href="#__codelineno-0-500">500</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-459" name="__codelineno-0-459"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">refresh_all_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-460" name="__codelineno-0-460"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Re-download all data from psp.cz and reload in-memory state.</span>
-<a id="__codelineno-0-461" name="__codelineno-0-461"></a>
-<a id="__codelineno-0-462" name="__codelineno-0-462"></a><span class="sd">    Pauses the tisk AI pipeline, refreshes data, then restarts the pipeline.</span>
-<a id="__codelineno-0-463" name="__codelineno-0-463"></a><span class="sd">    Safe for concurrent HTTP requests — old data stays valid until swapped.</span>
-<a id="__codelineno-0-464" name="__codelineno-0-464"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-465" name="__codelineno-0-465"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="o">.</span><span class="n">locked</span><span class="p">():</span>
-<a id="__codelineno-0-466" name="__codelineno-0-466"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Refresh already in progress, skipping&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-467" name="__codelineno-0-467"></a>        <span class="k">return</span>
-<a id="__codelineno-0-468" name="__codelineno-0-468"></a>
-<a id="__codelineno-0-469" name="__codelineno-0-469"></a>    <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="p">:</span>
-<a id="__codelineno-0-470" name="__codelineno-0-470"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Starting full data refresh ...&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-471" name="__codelineno-0-471"></a>
-<a id="__codelineno-0-472" name="__codelineno-0-472"></a>        <span class="c1"># 1. Cancel tisk pipeline</span>
-<a id="__codelineno-0-473" name="__codelineno-0-473"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">cancel_all</span><span class="p">()</span>
-<a id="__codelineno-0-474" name="__codelineno-0-474"></a>
-<a id="__codelineno-0-475" name="__codelineno-0-475"></a>        <span class="c1"># 2. Re-download and reload shared tables</span>
-<a id="__codelineno-0-476" name="__codelineno-0-476"></a>        <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-477" name="__codelineno-0-477"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_shared_tables</span><span class="p">)</span>
-<a id="__codelineno-0-478" name="__codelineno-0-478"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Shared tables reloaded&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-479" name="__codelineno-0-479"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-0-480" name="__codelineno-0-480"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Failed to reload shared tables&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-481" name="__codelineno-0-481"></a>
-<a id="__codelineno-0-482" name="__codelineno-0-482"></a>        <span class="c1"># 3. Re-download and reload each loaded period</span>
-<a id="__codelineno-0-483" name="__codelineno-0-483"></a>        <span class="k">for</span> <span class="n">period</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
-<a id="__codelineno-0-484" name="__codelineno-0-484"></a>            <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-485" name="__codelineno-0-485"></a>                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_period</span><span class="p">,</span> <span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-486" name="__codelineno-0-486"></a>                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Period </span><span class="si">{}</span><span class="s2"> reloaded&quot;</span><span class="p">,</span> <span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-487" name="__codelineno-0-487"></a>            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-0-488" name="__codelineno-0-488"></a>                <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-<a id="__codelineno-0-489" name="__codelineno-0-489"></a>                    <span class="s2">&quot;[daily-refresh] Failed to reload period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">period</span>
-<a id="__codelineno-0-490" name="__codelineno-0-490"></a>                <span class="p">)</span>
-<a id="__codelineno-0-491" name="__codelineno-0-491"></a>
-<a id="__codelineno-0-492" name="__codelineno-0-492"></a>        <span class="c1"># 4. Invalidate analysis caches</span>
-<a id="__codelineno-0-493" name="__codelineno-0-493"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
-<a id="__codelineno-0-494" name="__codelineno-0-494"></a>        <span class="k">for</span> <span class="n">period</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="p">:</span>
-<a id="__codelineno-0-495" name="__codelineno-0-495"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mgr</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-496" name="__codelineno-0-496"></a>
-<a id="__codelineno-0-497" name="__codelineno-0-497"></a>        <span class="c1"># 5. Restart tisk pipeline with fresh data</span>
-<a id="__codelineno-0-498" name="__codelineno-0-498"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">start_all_tisk_pipelines</span><span class="p">()</span>
-<a id="__codelineno-0-499" name="__codelineno-0-499"></a>
-<a id="__codelineno-0-500" name="__codelineno-0-500"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Full data refresh complete&quot;</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-500">500</a></span>
+<span class="normal"><a href="#__codelineno-0-501">501</a></span>
+<span class="normal"><a href="#__codelineno-0-502">502</a></span>
+<span class="normal"><a href="#__codelineno-0-503">503</a></span>
+<span class="normal"><a href="#__codelineno-0-504">504</a></span>
+<span class="normal"><a href="#__codelineno-0-505">505</a></span>
+<span class="normal"><a href="#__codelineno-0-506">506</a></span>
+<span class="normal"><a href="#__codelineno-0-507">507</a></span>
+<span class="normal"><a href="#__codelineno-0-508">508</a></span>
+<span class="normal"><a href="#__codelineno-0-509">509</a></span>
+<span class="normal"><a href="#__codelineno-0-510">510</a></span>
+<span class="normal"><a href="#__codelineno-0-511">511</a></span>
+<span class="normal"><a href="#__codelineno-0-512">512</a></span>
+<span class="normal"><a href="#__codelineno-0-513">513</a></span>
+<span class="normal"><a href="#__codelineno-0-514">514</a></span>
+<span class="normal"><a href="#__codelineno-0-515">515</a></span>
+<span class="normal"><a href="#__codelineno-0-516">516</a></span>
+<span class="normal"><a href="#__codelineno-0-517">517</a></span>
+<span class="normal"><a href="#__codelineno-0-518">518</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-478" name="__codelineno-0-478"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">refresh_all_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-479" name="__codelineno-0-479"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Re-download all data from psp.cz and reload in-memory state.</span>
+<a id="__codelineno-0-480" name="__codelineno-0-480"></a>
+<a id="__codelineno-0-481" name="__codelineno-0-481"></a><span class="sd">    Pauses the tisk AI pipeline, refreshes data, then restarts the pipeline.</span>
+<a id="__codelineno-0-482" name="__codelineno-0-482"></a><span class="sd">    Safe for concurrent HTTP requests — old data stays valid until swapped.</span>
+<a id="__codelineno-0-483" name="__codelineno-0-483"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-484" name="__codelineno-0-484"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="o">.</span><span class="n">locked</span><span class="p">():</span>
+<a id="__codelineno-0-485" name="__codelineno-0-485"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Refresh already in progress, skipping&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-486" name="__codelineno-0-486"></a>        <span class="k">return</span>
+<a id="__codelineno-0-487" name="__codelineno-0-487"></a>
+<a id="__codelineno-0-488" name="__codelineno-0-488"></a>    <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="p">:</span>
+<a id="__codelineno-0-489" name="__codelineno-0-489"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Starting full data refresh ...&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-490" name="__codelineno-0-490"></a>
+<a id="__codelineno-0-491" name="__codelineno-0-491"></a>        <span class="c1"># 1. Cancel tisk pipeline</span>
+<a id="__codelineno-0-492" name="__codelineno-0-492"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">cancel_all</span><span class="p">()</span>
+<a id="__codelineno-0-493" name="__codelineno-0-493"></a>
+<a id="__codelineno-0-494" name="__codelineno-0-494"></a>        <span class="c1"># 2. Re-download and reload shared tables</span>
+<a id="__codelineno-0-495" name="__codelineno-0-495"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-496" name="__codelineno-0-496"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_shared_tables</span><span class="p">)</span>
+<a id="__codelineno-0-497" name="__codelineno-0-497"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Shared tables reloaded&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-498" name="__codelineno-0-498"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-499" name="__codelineno-0-499"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Failed to reload shared tables&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-500" name="__codelineno-0-500"></a>
+<a id="__codelineno-0-501" name="__codelineno-0-501"></a>        <span class="c1"># 3. Re-download and reload current period only</span>
+<a id="__codelineno-0-502" name="__codelineno-0-502"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-503" name="__codelineno-0-503"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_period</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span><span class="p">)</span>
+<a id="__codelineno-0-504" name="__codelineno-0-504"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Period </span><span class="si">{}</span><span class="s2"> reloaded&quot;</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span><span class="p">)</span>
+<a id="__codelineno-0-505" name="__codelineno-0-505"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-506" name="__codelineno-0-506"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+<a id="__codelineno-0-507" name="__codelineno-0-507"></a>                <span class="s2">&quot;[daily-refresh] Failed to reload period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span>
+<a id="__codelineno-0-508" name="__codelineno-0-508"></a>            <span class="p">)</span>
+<a id="__codelineno-0-509" name="__codelineno-0-509"></a>
+<a id="__codelineno-0-510" name="__codelineno-0-510"></a>        <span class="c1"># 4. Invalidate analysis caches</span>
+<a id="__codelineno-0-511" name="__codelineno-0-511"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+<a id="__codelineno-0-512" name="__codelineno-0-512"></a>        <span class="k">for</span> <span class="n">period</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="p">:</span>
+<a id="__codelineno-0-513" name="__codelineno-0-513"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mgr</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-514" name="__codelineno-0-514"></a>
+<a id="__codelineno-0-515" name="__codelineno-0-515"></a>        <span class="c1"># 5. Restart tisk pipeline with fresh data</span>
+<a id="__codelineno-0-516" name="__codelineno-0-516"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">start_all_tisk_pipelines</span><span class="p">()</span>
+<a id="__codelineno-0-517" name="__codelineno-0-517"></a>
+<a id="__codelineno-0-518" name="__codelineno-0-518"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Full data refresh complete&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
