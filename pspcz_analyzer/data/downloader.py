@@ -1,5 +1,6 @@
 """Download and extract ZIP files from psp.cz open data."""
 
+import os
 import zipfile
 from pathlib import Path
 
@@ -57,6 +58,10 @@ def _extract_zip(zip_path: Path, dest_dir: Path) -> Path:
     extract_to.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(extract_to)
+
+    # Touch directory mtime so the parquet cache layer detects fresh data.
+    # On Linux, extractall() over existing files does NOT update dir mtime.
+    os.utime(extract_to)
 
     logger.info("Extracted to {}", extract_to)
     return extract_to

@@ -216,6 +216,7 @@ _HEADING_RE = re.compile(
     r"|DŮVODOVÁ ZPRÁVA"
     r"|ZVLÁŠTNÍ ČÁST"
     r"|OBECNÁ ČÁST"
+    r"|§\s*\d+"  # Paragraph markers (§ 1, § 123a)
     r")",
     re.MULTILINE,
 )
@@ -226,13 +227,13 @@ def truncate_legislative_text(
     verbatim_chars: int = LLM_VERBATIM_CHARS,
     max_chars: int = LLM_MAX_TEXT_CHARS,
 ) -> str:
-    """Truncate Czech legislative text intelligently for LLM processing.
+    """Truncate Czech legislative text via structural extraction for LLM processing.
 
     When TISK_SHORTENER is disabled (0), returns the full text unmodified.
 
-    Strategy (when enabled):
-    1. First `verbatim_chars` characters verbatim (captures explanatory report)
-    2. From remainder: extract heading lines + first 200 chars after each heading
+    Strategy (when enabled and text exceeds max_chars):
+    1. First `verbatim_chars` kept verbatim (covers explanatory report + most content)
+    2. From remainder: extract section headings + first 500 chars of each section
     3. Hard cap at `max_chars` total
     """
     if not TISK_SHORTENER:
@@ -248,8 +249,7 @@ def truncate_legislative_text(
     highlights: list[str] = []
     for match in _HEADING_RE.finditer(remainder):
         start = match.start()
-        # Grab heading + 200 chars after it
-        snippet = remainder[start : start + 200 + len(match.group())]
+        snippet = remainder[start : start + 500 + len(match.group())]
         highlights.append(snippet.strip())
 
     if highlights:

@@ -14,7 +14,7 @@ from pspcz_analyzer.config import (
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
 )
-from pspcz_analyzer.data.cache import get_or_parse
+from pspcz_analyzer.data.cache import get_or_parse, invalidate_parquet
 from pspcz_analyzer.data.downloader import (
     download_poslanci_data,
     download_schuze_data,
@@ -446,6 +446,17 @@ class DataService:
         self._bod_schuze = None
         self._tisky = None
 
+        for table in (
+            "osoby",
+            "poslanec",
+            "organy",
+            "zarazeni",
+            "schuze",
+            "bod_schuze",
+            "tisky",
+        ):
+            invalidate_parquet(table, self.cache_dir)
+
         download_poslanci_data(self.cache_dir, force=True)
         download_schuze_data(self.cache_dir, force=True)
         download_tisky_data(self.cache_dir, force=True)
@@ -453,6 +464,13 @@ class DataService:
 
     def _force_reload_period(self, period: int) -> None:
         """Re-download and re-parse voting data for a single period."""
+        for table in (
+            f"hl_hlasovani_{period}",
+            f"hl_poslanec_{period}",
+            f"zmatecne_{period}",
+        ):
+            invalidate_parquet(table, self.cache_dir)
+
         download_voting_data(period, self.cache_dir, force=True)
         self._load_period(period)
 

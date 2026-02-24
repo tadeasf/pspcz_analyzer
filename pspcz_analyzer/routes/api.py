@@ -477,9 +477,9 @@ async def llm_smoke_test(request: Request) -> dict:
         )
 
     try:
-        cs_result, en_result = await asyncio.gather(
-            asyncio.to_thread(client.summarize, _SMOKE_TEST_TEXT, _SMOKE_TEST_TITLE),
-            asyncio.to_thread(client.summarize_en, _SMOKE_TEST_TEXT, _SMOKE_TEST_TITLE),
+        cs_result = await asyncio.to_thread(client.summarize, _SMOKE_TEST_TEXT, _SMOKE_TEST_TITLE)
+        en_result = await asyncio.to_thread(
+            client.summarize_en, _SMOKE_TEST_TEXT, _SMOKE_TEST_TITLE
         )
     except Exception as exc:
         duration = time.monotonic() - start
