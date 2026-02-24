@@ -69,14 +69,21 @@ class PeriodData:
     def stats(self) -> dict:
         date_col = self.votes.get_column("datum")
         dates = date_col.drop_nulls().str.strip_chars()
+        parsed = dates.str.to_date("%d.%m.%Y", strict=False).drop_nulls()
+        if parsed.len() > 0:
+            date_min = parsed.min().strftime("%d.%m.%Y")
+            date_max = parsed.max().strftime("%d.%m.%Y")
+        else:
+            date_min = "N/A"
+            date_max = "N/A"
         return {
             "period": self.period,
             "label": PERIOD_LABELS.get(self.period, PERIOD_YEARS.get(self.period, "?")),
             "total_votes": self.votes.height,
             "total_mp_records": self.mp_votes.height,
             "total_mps": self.mp_info.height,
-            "date_min": dates.sort().head(1).to_list()[0] if dates.len() > 0 else "N/A",
-            "date_max": dates.sort().tail(1).to_list()[0] if dates.len() > 0 else "N/A",
+            "date_min": date_min,
+            "date_max": date_max,
             "void_votes": self.void_votes.height,
         }
 

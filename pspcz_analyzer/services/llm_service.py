@@ -23,6 +23,7 @@ from loguru import logger
 
 from pspcz_analyzer.config import (
     LLM_HEALTH_TIMEOUT,
+    LLM_MAX_COMPARISON_CHARS,
     LLM_MAX_TEXT_CHARS,
     LLM_PROVIDER,
     LLM_TIMEOUT,
@@ -242,6 +243,9 @@ def truncate_legislative_text(
     if len(text) <= max_chars:
         return text
 
+    # Clamp verbatim to not exceed max (defensive for comparison calls)
+    verbatim_chars = min(verbatim_chars, max_chars)
+
     result = text[:verbatim_chars]
     remainder = text[verbatim_chars:]
 
@@ -378,8 +382,8 @@ class BaseLLMClient(ABC):
         label_new: str = "",
     ) -> str:
         """Compare two versions of a tisk and return a Czech-language diff summary."""
-        trunc_old = truncate_legislative_text(text_old)
-        trunc_new = truncate_legislative_text(text_new)
+        trunc_old = truncate_legislative_text(text_old, max_chars=LLM_MAX_COMPARISON_CHARS)
+        trunc_new = truncate_legislative_text(text_new, max_chars=LLM_MAX_COMPARISON_CHARS)
         prompt = _COMPARISON_PROMPT_TEMPLATE.format(
             ct1_old=ct1_old,
             ct1_new=ct1_new,
@@ -410,8 +414,8 @@ class BaseLLMClient(ABC):
     ) -> dict[str, str]:
         """Compare two versions and return bilingual diff summaries."""
         cs = self.compare_versions(text_old, text_new, ct1_old, ct1_new, label_old, label_new)
-        trunc_old = truncate_legislative_text(text_old)
-        trunc_new = truncate_legislative_text(text_new)
+        trunc_old = truncate_legislative_text(text_old, max_chars=LLM_MAX_COMPARISON_CHARS)
+        trunc_new = truncate_legislative_text(text_new, max_chars=LLM_MAX_COMPARISON_CHARS)
         prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(
             ct1_old=ct1_old,
             ct1_new=ct1_new,
