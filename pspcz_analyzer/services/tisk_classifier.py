@@ -26,6 +26,8 @@ def classify_and_save(
 
     Uses LLM when available (free-form topics), falls back to keyword matching.
     Saves incrementally after each tisk and resumes from where it left off.
+    Smart caching: tisks with topics but no summary are re-processed for
+    summaries only (2 LLM calls instead of 4).
     Returns (topic_map, summary_map, summary_en_map).
     """
     meta_dir = cache_dir / TISKY_META_DIR / str(period)
@@ -39,19 +41,30 @@ def classify_and_save(
         for row in df.iter_rows(named=True):
             existing[row["ct"]] = row
 
-    # Figure out which tisky still need processing
-    remaining = {ct: p for ct, p in text_paths.items() if ct not in existing}
+    # Figure out which tisky still need processing:
+    # - completely new (not in existing)
+    # - partially done (has topics but no summary)
+    remaining: dict[int, Path] = {}
+    incomplete: dict[int, dict] = {}
+    for ct, p in text_paths.items():
+        if ct not in existing:
+            remaining[ct] = p
+        elif not existing[ct].get("summary"):
+            # Has record but missing summary — needs re-processing
+            remaining[ct] = p
+            incomplete[ct] = existing[ct]
 
     llm = create_llm_client()
     use_ai = llm.is_available()
     total = len(text_paths)
-    already = len(existing)
+    fully_done = len(existing) - len(incomplete)
 
-    if already:
+    if fully_done > 0 or incomplete:
         logger.info(
-            "[tisk pipeline] Resuming: {} already done, {} remaining out of {} total",
-            already,
-            len(remaining),
+            "[tisk pipeline] Resuming: {} fully done, {} need summaries, {} new — {} total",
+            fully_done,
+            len(incomplete),
+            len(remaining) - len(incomplete),
             total,
         )
 
@@ -67,11 +80,19 @@ def classify_and_save(
             len(remaining),
         )
 
-    # Start from existing records
-    records = list(existing.values())
+    # Start from fully-done existing records
+    records = [row for ct, row in existing.items() if ct not in incomplete]
 
-    for i, (ct, text_path) in enumerate(sorted(remaining.items()), already + 1):
-        record = _classify_single_tisk(ct, text_path, llm, use_ai, i, total)
+    for i, (ct, text_path) in enumerate(sorted(remaining.items()), fully_done + 1):
+        record = _classify_single_tisk(
+            ct,
+            text_path,
+            llm,
+            use_ai,
+            i,
+            total,
+            existing_record=incomplete.get(ct),
+        )
         records.append(record)
 
         # Save after every tisk so progress is never lost
@@ -92,30 +113,52 @@ def _classify_single_tisk(
     use_ai: bool,
     i: int,
     total: int,
+    existing_record: dict | None = None,
 ) -> dict:
-    """Classify a single tisk and return its record dict."""
+    """Classify a single tisk and return its record dict.
+
+    Smart caching: if existing_record has topics but no summary, only
+    generates the summary (2 LLM calls). If nothing exists, does a
+    combined classify+summarize call (2 LLM calls instead of 4).
+    """
     text = text_path.read_text(encoding="utf-8")
-    topics: list[str] = []
-    topics_en: list[str] = []
-    summary = ""
     source = "keyword"
 
-    summary_en = ""
+    # Check what we already have from a previous run
+    has_topics = bool(
+        existing_record and existing_record.get("topic") and existing_record["topic"] != "[]"
+    )
+    has_summary = bool(existing_record and existing_record.get("summary"))
+
     if use_ai:
+        if has_topics and not has_summary:
+            # Topics already cached — only generate summaries
+            topics = deserialize_topics(existing_record["topic"])  # type: ignore[index]
+            topics_en = deserialize_topics(existing_record.get("topic_en", "[]"))  # type: ignore[arg-type]
+            source = existing_record.get("source", f"llm:{llm.model}")  # type: ignore[union-attr]
+            logger.info(
+                "[tisk pipeline] [{}/{}] tisk ct={} has topics, generating summaries only ...",
+                i,
+                total,
+                ct,
+            )
+            summaries = llm.summarize_bilingual(text, "")
+            summary = summaries["cs"]
+            summary_en = summaries["en"]
+        else:
+            # No cached data — do combined classify+summarize (2 calls instead of 4)
+            logger.info(
+                "[tisk pipeline] [{}/{}] AI classify+summarize tisk ct={} (bilingual) ...",
+                i,
+                total,
+                ct,
+            )
+            topics, topics_en, summary, summary_en = llm.classify_and_summarize_bilingual(text, "")
+            if topics:
+                source = f"llm:{llm.model}"
         logger.info(
-            "[tisk pipeline] [{}/{}] AI classifying tisk ct={} (bilingual) ...", i, total, ct
-        )
-        topics, topics_en = llm.classify_topics_bilingual(text, "")
-        if topics:
-            source = f"llm:{llm.model}"
-        logger.info(
-            "[tisk pipeline] [{}/{}] AI summarizing tisk ct={} (bilingual) ...", i, total, ct
-        )
-        summaries = llm.summarize_bilingual(text, "")
-        summary = summaries["cs"]
-        summary_en = summaries["en"]
-        logger.info(
-            "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} topics_en={} summary={}chars summary_en={}chars ({})",
+            "[tisk pipeline] [{}/{}] tisk ct={} -> topics={} topics_en={} "
+            "summary={}chars summary_en={}chars ({})",
             i,
             total,
             ct,
@@ -126,6 +169,10 @@ def _classify_single_tisk(
             source,
         )
     else:
+        topics: list[str] = []
+        topics_en: list[str] = []
+        summary = ""
+        summary_en = ""
         kw_result = classify_tisk_primary_label(text, "")
         if kw_result:
             topics = [kw_result[0]]

@@ -188,6 +188,56 @@ _COMPARISON_PROMPT_TEMPLATE_EN = (
     "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
 )
 
+# ── Combined classify + summarize free-text prompts (Ollama fallback) ────
+
+_COMBINED_SYSTEM_CS = (
+    "Jsi kriticko-analytický komentátor českého parlamentu. Analyzuješ parlamentní tisky, "
+    "přiřazuješ jim tematické štítky a píšeš ostré, věcné komentáře. "
+    "Odpověz PŘESNĚ ve formátu:\n"
+    "TOPICS: téma1, téma2, téma3\n"
+    "CHANGES: co se konkrétně mění\n"
+    "IMPACT: komu to prospívá a komu škodí\n"
+    "RISKS: riziko zneužití nebo nezamýšlený důsledek\n"
+    "Žádný další text." + _LANG_CS + _FORMAT_CS
+)
+
+_COMBINED_PROMPT_TEMPLATE_CS = (
+    "Analyzuj následující parlamentní tisk.\n\n"
+    "1. Urči 1–3 hlavní témata (krátké české názvy, 2–4 slova, konkrétní).\n"
+    "2. Napiš kritickou analýzu: co se mění, komu to prospívá/škodí, jaká jsou rizika.\n\n"
+    "Název:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
+    "Odpověz PŘESNĚ v tomto formátu:\n"
+    "TOPICS: téma1, téma2, téma3\n"
+    "CHANGES: co se konkrétně mění (1–2 věty)\n"
+    "IMPACT: komu to prospívá a komu škodí (1–2 věty)\n"
+    "RISKS: riziko zneužití (1–2 věty)"
+)
+
+_COMBINED_SYSTEM_EN = (
+    "You are a critical analyst of the Czech Parliament. You analyze parliamentary bills, "
+    "assign topic labels, and write sharp, factual assessments. "
+    "Respond EXACTLY in this format:\n"
+    "TOPICS: topic1, topic2, topic3\n"
+    "CHANGES: what specifically changes\n"
+    "IMPACT: who benefits and who is harmed\n"
+    "RISKS: risk of abuse or unintended consequence\n"
+    "No other text." + _LANG_EN + _FORMAT_EN
+)
+
+_COMBINED_PROMPT_TEMPLATE_EN = (
+    "Analyze the following Czech parliamentary bill.\n\n"
+    "1. Identify 1-3 main topics (short English names, 2-4 words, specific).\n"
+    "2. Write a critical analysis: what changes, who benefits/is harmed, what are the risks.\n\n"
+    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
+    "Respond EXACTLY in this format:\n"
+    "TOPICS: topic1, topic2, topic3\n"
+    "CHANGES: what specifically changes (1-2 sentences)\n"
+    "IMPACT: who benefits and who is harmed (1-2 sentences)\n"
+    "RISKS: risk of abuse (1-2 sentences)"
+)
+
 # ── Security & text processing ───────────────────────────────────────────
 
 
@@ -254,6 +304,22 @@ _CONSOLIDATION_SCHEMA: dict[str, Any] = {
         }
     },
     "required": ["mappings"],
+    "additionalProperties": False,
+}
+
+_CLASSIFY_AND_SUMMARIZE_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "topics": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "1-3 short topic labels",
+        },
+        "changes": {"type": "string", "description": "What specifically changes"},
+        "impact": {"type": "string", "description": "Who benefits and who is harmed"},
+        "risks": {"type": "string", "description": "Risk of abuse or unintended consequences"},
+    },
+    "required": ["topics", "changes", "impact", "risks"],
     "additionalProperties": False,
 }
 
@@ -372,6 +438,48 @@ _STRUCTURED_COMPARISON_PROMPT_EN = (
     "Be specific — cite paragraph numbers. 1-2 sentences per field.\n\n"
     "VERSION {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
     "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
+)
+
+# ── Combined classify + summarize structured prompts ─────────────────────
+
+_STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_CS = (
+    "Jsi kriticko-analytický komentátor českého parlamentu. Analyzuješ parlamentní tisky, "
+    "přiřazuješ jim tematické štítky a píšeš ostré, věcné komentáře bez přikrašlování. "
+    "Odhaluješ skryté dopady zákonů, rizika zneužití, a kdo z novely skutečně profituje. "
+    "Neboj se pojmenovat problémy přímo." + _LANG_CS
+)
+
+_STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_CS = (
+    "Analyzuj následující parlamentní tisk.\n\n"
+    "ÚKOL 1 — TÉMATA: Urči 1–3 hlavní témata. Použij krátké české názvy (2–4 slova). "
+    "Buď konkrétní — např. 'Trestní právo', ne 'Právo'.\n\n"
+    "ÚKOL 2 — KRITICKÁ ANALÝZA:\n"
+    "Pro pole 'changes': Co KONKRÉTNĚ se mění (žádné vágní formulace)\n"
+    "Pro pole 'impact': Komu to prospívá a komu škodí\n"
+    "Pro pole 'risks': Jaké je RIZIKO zneužití nebo nezamýšlený důsledek\n"
+    "Buď přímý a kriticko-analytický. 1–2 věty na pole.\n\n"
+    "Název:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
+)
+
+_STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_EN = (
+    "You are a critical analyst of the Czech Parliament. You analyze parliamentary bills, "
+    "assign topic labels, and write sharp, factual assessments without embellishment. "
+    "You expose hidden impacts of laws, risks of abuse, and who truly benefits from amendments. "
+    "Don't hesitate to name problems directly." + _LANG_EN
+)
+
+_STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_EN = (
+    "Analyze the following Czech parliamentary bill.\n\n"
+    "TASK 1 — TOPICS: Identify 1-3 main topics. Use short English names (2-4 words). "
+    "Be specific — e.g. 'Criminal Law', not 'Law'.\n\n"
+    "TASK 2 — CRITICAL ANALYSIS:\n"
+    "For 'changes': What SPECIFICALLY changes (no vague formulations)\n"
+    "For 'impact': Who benefits and who is harmed\n"
+    "For 'risks': What is the RISK of abuse or unintended consequence\n"
+    "Be direct and critical. 1-2 sentences per field.\n\n"
+    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
+    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
 )
 
 _INJECTION_PHRASES_RE = re.compile(
@@ -810,6 +918,133 @@ class BaseLLMClient(ABC):
         cs = self.summarize(truncated, title, _truncated=True)
         en = self.summarize_en(truncated, title, _truncated=True)
         return {"cs": cs, "en": en}
+
+    def _parse_combined_response(self, response: str) -> tuple[list[str], str]:
+        """Parse combined classify+summarize free-text response.
+
+        Expects format:
+            TOPICS: topic1, topic2, topic3
+            CHANGES: ...
+            IMPACT: ...
+            RISKS: ...
+
+        Returns:
+            (topics, summary_markdown) — partial success is acceptable.
+        """
+        response = self._strip_think(response)
+
+        # Extract topics
+        topics: list[str] = []
+        topics_match = re.search(r"TOPICS?:\s*(.+)", response, re.IGNORECASE)
+        if topics_match:
+            raw = topics_match.group(1).strip()
+            topics = [t.strip().strip(".,;:-–") for t in raw.split(",")]
+            topics = [t for t in topics if t and t.lower() != "none"]
+            topics = topics[:3]
+
+        # Extract summary fields
+        changes = ""
+        impact = ""
+        risks = ""
+
+        changes_match = re.search(
+            r"CHANGES?:\s*(.+?)(?=\n(?:IMPACT|RISKS?)\s*:|$)", response, re.IGNORECASE | re.DOTALL
+        )
+        if changes_match:
+            changes = changes_match.group(1).strip()
+
+        impact_match = re.search(
+            r"IMPACT:\s*(.+?)(?=\n(?:RISKS?)\s*:|$)", response, re.IGNORECASE | re.DOTALL
+        )
+        if impact_match:
+            impact = impact_match.group(1).strip()
+
+        risks_match = re.search(r"RISKS?:\s*(.+)", response, re.IGNORECASE | re.DOTALL)
+        if risks_match:
+            risks = risks_match.group(1).strip()
+
+        return topics, {"changes": changes, "impact": impact, "risks": risks}
+
+    def classify_and_summarize(
+        self, text: str, title: str, *, _truncated: bool = False
+    ) -> tuple[list[str], str]:
+        """Classify topics + summarize in a single LLM call (Czech).
+
+        Returns:
+            (topics, summary_markdown) — ([], "") on failure.
+        """
+        truncated = text if _truncated else truncate_legislative_text(text)
+        sanitized_title = _sanitize_llm_input(title or "(bez názvu)")
+        sanitized_text = _sanitize_llm_input(truncated)
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_CS.format(
+                title=sanitized_title, text=sanitized_text
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_CS,
+                _CLASSIFY_AND_SUMMARIZE_SCHEMA,
+                reasoning_effort="medium",
+            )
+            if data is None:
+                return [], ""
+            topics = [t.strip() for t in data.get("topics", []) if isinstance(t, str) and t.strip()]
+            return topics[:3], _render_summary_markdown_cs(data)
+
+        prompt = _COMBINED_PROMPT_TEMPLATE_CS.format(title=sanitized_title, text=sanitized_text)
+        response = self._generate(prompt, _COMBINED_SYSTEM_CS, reasoning_effort="medium")
+        if response is None:
+            return [], ""
+        topics, summary_data = self._parse_combined_response(response)
+        return topics, _render_summary_markdown_cs(summary_data)
+
+    def classify_and_summarize_en(
+        self, text: str, title: str, *, _truncated: bool = False
+    ) -> tuple[list[str], str]:
+        """Classify topics + summarize in a single LLM call (English).
+
+        Returns:
+            (topics, summary_markdown) — ([], "") on failure.
+        """
+        truncated = text if _truncated else truncate_legislative_text(text)
+        sanitized_title = _sanitize_llm_input(title or "(no title)")
+        sanitized_text = _sanitize_llm_input(truncated)
+
+        if self.supports_structured_output:
+            prompt = _STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_EN.format(
+                title=sanitized_title, text=sanitized_text
+            )
+            data = self._generate_json(
+                prompt,
+                _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_EN,
+                _CLASSIFY_AND_SUMMARIZE_SCHEMA,
+                reasoning_effort="medium",
+            )
+            if data is None:
+                return [], ""
+            topics = [t.strip() for t in data.get("topics", []) if isinstance(t, str) and t.strip()]
+            return topics[:3], _render_summary_markdown_en(data)
+
+        prompt = _COMBINED_PROMPT_TEMPLATE_EN.format(title=sanitized_title, text=sanitized_text)
+        response = self._generate(prompt, _COMBINED_SYSTEM_EN, reasoning_effort="medium")
+        if response is None:
+            return [], ""
+        topics, summary_data = self._parse_combined_response(response)
+        return topics, _render_summary_markdown_en(summary_data)
+
+    def classify_and_summarize_bilingual(
+        self, text: str, title: str
+    ) -> tuple[list[str], list[str], str, str]:
+        """Classify + summarize in both languages (2 LLM calls instead of 4).
+
+        Returns:
+            (topics_cs, topics_en, summary_cs, summary_en)
+        """
+        truncated = truncate_legislative_text(text)
+        topics_cs, summary_cs = self.classify_and_summarize(truncated, title, _truncated=True)
+        topics_en, summary_en = self.classify_and_summarize_en(truncated, title, _truncated=True)
+        return topics_cs, topics_en, summary_cs, summary_en
 
     def compare_versions_bilingual(
         self,
