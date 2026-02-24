@@ -134,7 +134,7 @@ def compute_loyalty(
     # Attach rebellion vote details to each row
     for row in rows:
         votes = rebellion_map.get(row["id_poslanec"], [])
-        votes.sort(key=lambda v: v["datum"], reverse=True)
+        votes.sort(key=lambda v: v["id_hlasovani"], reverse=True)
         row["rebellion_votes"] = votes
         del row["id_poslanec"]
 
