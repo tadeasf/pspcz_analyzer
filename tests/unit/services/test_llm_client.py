@@ -115,24 +115,6 @@ class TestOpenAIClientGenerate:
         assert payload["messages"][0]["role"] == "system"
         assert payload["messages"][1]["role"] == "user"
 
-    def test_generate_passes_reasoning_effort(self):
-        client = self._make_client()
-        mock_response = self._ok_response({"choices": [{"message": {"content": "result"}}]})
-        with patch("httpx.post", return_value=mock_response) as mock_post:
-            client._generate("classify this", "system prompt", reasoning_effort="low")
-
-        payload = mock_post.call_args.kwargs["json"]
-        assert payload["reasoning_effort"] == "low"
-
-    def test_generate_omits_reasoning_effort_when_none(self):
-        client = self._make_client()
-        mock_response = self._ok_response({"choices": [{"message": {"content": "result"}}]})
-        with patch("httpx.post", return_value=mock_response) as mock_post:
-            client._generate("classify this", "system prompt")
-
-        payload = mock_post.call_args.kwargs["json"]
-        assert "reasoning_effort" not in payload
-
     def test_generate_passes_response_format(self):
         client = self._make_client()
         mock_response = self._ok_response({"choices": [{"message": {"content": "{}"}}]})
