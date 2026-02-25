@@ -33,6 +33,7 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
 - `OLLAMA_API_KEY` — Bearer token for remote HTTPS Ollama (default: empty)
 - `OLLAMA_MODEL` — model name for Ollama (default: `qwen3:8b`)
+- `OLLAMA_STRUCTURED_OUTPUT` — JSON schema structured output for Ollama, requires v0.5+ (`0` or `1`, default: `1`)
 - `OPENAI_BASE_URL` — OpenAI-compatible API endpoint (default: `https://api.openai.com/v1`)
 - `OPENAI_API_KEY` — API key for OpenAI-compatible backend (default: empty)
 - `OPENAI_MODEL` — model name for OpenAI-compatible backend (default: `gpt-4o-mini`)

@@ -71,7 +71,17 @@ class TestSupportsStructuredOutput:
         )
         assert client.supports_structured_output is True
 
-    def test_ollama_does_not_support_structured_output(self):
+    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
+    def test_ollama_supports_structured_output_when_enabled(self):
+        client = OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+        assert client.supports_structured_output is True
+
+    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
+    def test_ollama_no_structured_output_when_disabled(self):
         client = OllamaClient(
             base_url="http://localhost:11434",
             model="llama3",
@@ -422,6 +432,7 @@ class TestOpenAIStructuredComparison:
 # ── Ollama fallback tests (free-text regex parsing) ──────────────────────
 
 
+@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
 class TestOllamaFallbackClassification:
     """Tests that OllamaClient uses the free-text regex parsing path."""
 
@@ -461,6 +472,7 @@ class TestOllamaFallbackClassification:
         assert topics == []
 
 
+@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
 class TestOllamaFallbackSummary:
     """Tests that OllamaClient uses free-text summary path."""
 
@@ -485,6 +497,132 @@ class TestOllamaFallbackSummary:
             result = client.summarize("text", "title")
         assert result == "Novela mění sazby DPH."
         assert "<think>" not in result
+
+
+# ── Ollama structured output tests ────────────────────────────────────────
+
+
+@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
+class TestOllamaStructuredClassification:
+    """Tests that OllamaClient uses JSON structured output when enabled."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def _ok_response(self, text: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"response": text})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_classify_topics_structured_parses_json(self):
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["Dane a poplatky", "Socialni pojisteni"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("some law text", "Novela zakona")
+        assert topics == ["Dane a poplatky", "Socialni pojisteni"]
+
+    def test_classify_sends_format_in_payload(self):
+        """Verify that format (raw JSON schema) is included in the Ollama payload."""
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["Dane"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client.classify_topics("text", "title")
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert "format" in payload
+        assert "properties" in payload["format"]
+        assert "topics" in payload["format"]["properties"]
+
+    def test_classify_topics_structured_caps_at_3(self):
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["A", "B", "C", "D"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("text", "title")
+        assert len(topics) == 3
+
+    def test_classify_topics_structured_filters_empty(self):
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["Dane", "", "  ", "Pravo"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics = client.classify_topics("text", "title")
+        assert topics == ["Dane", "Pravo"]
+
+
+@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
+class TestOllamaStructuredCombined:
+    """Tests that OllamaClient uses JSON structured classify-and-summarize when enabled."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def _ok_response(self, text: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"response": text})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_combined_parses_json_cs(self):
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "topics": ["Dane a poplatky", "Rozpočet"],
+                "changes": "Mění sazby.",
+                "impact": "Dopad na firmy.",
+                "risks": "Riziko poklesu.",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            topics, summary = client.classify_and_summarize("text", "title")
+        assert topics == ["Dane a poplatky", "Rozpočet"]
+        assert "**Co se mění:** Mění sazby." in summary
+        assert "**Dopady:** Dopad na firmy." in summary
+        assert "**Rizika:** Riziko poklesu." in summary
+
+    def test_combined_sends_format_in_payload(self):
+        """Verify that format includes the combined schema in the Ollama payload."""
+        client = self._make_client()
+        json_content = json.dumps(
+            {
+                "topics": ["Dane"],
+                "changes": "x",
+                "impact": "y",
+                "risks": "z",
+            }
+        )
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client.classify_and_summarize("text", "title")
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert "format" in payload
+        schema = payload["format"]
+        assert "topics" in schema["properties"]
+        assert "changes" in schema["properties"]
+        assert "impact" in schema["properties"]
+        assert "risks" in schema["properties"]
+
+    def test_combined_returns_empty_on_failure(self):
+        client = self._make_client()
+        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
+            topics, summary = client.classify_and_summarize("text", "title")
+        assert topics == []
+        assert summary == ""
 
 
 # ── Markdown rendering helper tests ──────────────────────────────────────
@@ -777,6 +915,7 @@ class TestOpenAIStructuredClassifyAndSummarize:
         assert "**Changes:**" in summary_en
 
 
+@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
 class TestOllamaFallbackCombined:
     """Tests that OllamaClient uses the free-text combined parsing path."""
 
@@ -840,3 +979,249 @@ class TestOllamaFallbackCombined:
             topics, summary = client.classify_and_summarize("text", "title")
         assert topics == []
         assert summary == ""
+
+
+# ── Ollama OpenAI-compat auto-detection tests ─────────────────────────────
+
+
+class TestOllamaCompatDetection:
+    """Tests for OllamaClient auto-detection of native vs OpenAI-compatible mode."""
+
+    _DUMMY_TAGS_REQUEST = httpx.Request("GET", "http://localhost:11434/api/tags")
+    _DUMMY_MODELS_REQUEST = httpx.Request("GET", "http://localhost:11434/models")
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def test_native_mode_when_api_tags_succeeds(self):
+        """Native Ollama detected when /api/tags returns the model."""
+        client = self._make_client()
+        tags_resp = httpx.Response(200, json={"models": [{"name": "llama3:latest"}]})
+        tags_resp.request = self._DUMMY_TAGS_REQUEST
+        with patch("httpx.get", return_value=tags_resp):
+            assert client.is_available() is True
+        assert client._openai_compat is False
+        assert client._log_prefix == "[ollama]"
+
+    def test_compat_mode_when_api_tags_fails_but_models_succeeds(self):
+        """OpenAI-compat detected when /api/tags fails but /models succeeds."""
+        client = self._make_client()
+        tags_resp = httpx.Response(404, text="Not Found")
+        tags_resp.request = self._DUMMY_TAGS_REQUEST
+        models_resp = httpx.Response(200, json={"data": [{"id": "llama3"}]})
+        models_resp.request = self._DUMMY_MODELS_REQUEST
+
+        def mock_get(url: str, **kwargs):
+            if "/api/tags" in url:
+                return tags_resp
+            return models_resp
+
+        with patch("httpx.get", side_effect=mock_get):
+            assert client.is_available() is True
+        assert client._openai_compat is True
+        assert client._log_prefix == "[ollama/openai-compat]"
+
+    def test_unavailable_when_both_fail(self):
+        """Not available when both /api/tags and /models fail."""
+        client = self._make_client()
+        with patch("httpx.get", side_effect=httpx.ConnectError("Connection refused")):
+            assert client.is_available() is False
+        assert client._openai_compat is False
+
+    def test_caches_result(self):
+        """is_available() caches result after first call."""
+        client = self._make_client()
+        tags_resp = httpx.Response(200, json={"models": [{"name": "llama3:latest"}]})
+        tags_resp.request = self._DUMMY_TAGS_REQUEST
+        with patch("httpx.get", return_value=tags_resp) as mock_get:
+            client.is_available()
+            client.is_available()
+        assert mock_get.call_count == 1
+
+    def test_native_mode_model_not_found_falls_to_compat(self):
+        """When /api/tags works but model not found, tries /models."""
+        client = self._make_client()
+        tags_resp = httpx.Response(200, json={"models": [{"name": "qwen3:8b"}]})
+        tags_resp.request = self._DUMMY_TAGS_REQUEST
+        models_resp = httpx.Response(200, json={"data": [{"id": "llama3"}]})
+        models_resp.request = self._DUMMY_MODELS_REQUEST
+
+        def mock_get(url: str, **kwargs):
+            if "/api/tags" in url:
+                return tags_resp
+            return models_resp
+
+        with patch("httpx.get", side_effect=mock_get):
+            assert client.is_available() is True
+        assert client._openai_compat is True
+
+
+# ── Ollama OpenAI-compat generation tests ─────────────────────────────────
+
+
+class TestOllamaCompatGeneration:
+    """Tests for OllamaClient._generate() in OpenAI-compat mode."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/chat/completions")
+
+    def _make_compat_client(self) -> OllamaClient:
+        client = OllamaClient(
+            base_url="http://localhost:11434",
+            model="gpt-oss-lite",
+            timeout=30.0,
+        )
+        client._openai_compat = True
+        client._log_prefix = "[ollama/openai-compat]"
+        return client
+
+    def _ok_response(self, content: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    def test_compat_generate_success(self):
+        client = self._make_compat_client()
+        mock_response = self._ok_response("TOPICS: Dane, Pravo")
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            result = client._generate("classify this", "system prompt")
+
+        assert result == "TOPICS: Dane, Pravo"
+        call_kwargs = mock_post.call_args
+        assert "chat/completions" in call_kwargs.args[0]
+        payload = call_kwargs.kwargs["json"]
+        assert payload["model"] == "gpt-oss-lite"
+        assert len(payload["messages"]) == 2
+
+    def test_compat_generate_passes_response_format(self):
+        client = self._make_compat_client()
+        mock_response = self._ok_response("{}")
+        rf = {"type": "json_schema", "json_schema": {"name": "test", "schema": {}}}
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            client._generate("prompt", "system", response_format=rf)
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert payload["response_format"] == rf
+
+    def test_compat_generate_returns_none_on_error(self):
+        client = self._make_compat_client()
+        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
+            result = client._generate("test", "system")
+        assert result is None
+
+    def test_native_mode_uses_api_generate(self):
+        """Verify that native mode still uses /api/generate."""
+        client = OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+        # _openai_compat defaults to False
+        mock_response = httpx.Response(200, json={"response": "TOPICS: Dane"})
+        mock_response.request = httpx.Request("POST", "http://localhost:11434/api/generate")
+        with patch("httpx.post", return_value=mock_response) as mock_post:
+            result = client._generate("prompt", "system")
+
+        assert result == "TOPICS: Dane"
+        assert "/api/generate" in mock_post.call_args.args[0]
+
+
+# ── Ollama structured output fallback tests ───────────────────────────────
+
+
+class TestOllamaStructuredOutputFallback:
+    """Tests for OllamaClient._generate_json() with prompt-based fallback."""
+
+    _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
+
+    def _make_client(self) -> OllamaClient:
+        return OllamaClient(
+            base_url="http://localhost:11434",
+            model="llama3",
+            timeout=30.0,
+        )
+
+    def _ok_response(self, text: str) -> httpx.Response:
+        resp = httpx.Response(200, json={"response": text})
+        resp.request = self._DUMMY_REQUEST
+        return resp
+
+    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
+    def test_returns_structured_when_first_try_succeeds(self):
+        """When schema-constrained generation works, return it directly."""
+        client = self._make_client()
+        json_content = json.dumps({"topics": ["Dane"]})
+        mock_response = self._ok_response(json_content)
+        with patch("httpx.post", return_value=mock_response):
+            result = client._generate_json("classify", "system", {"properties": {"topics": {}}})
+        assert result == {"topics": ["Dane"]}
+
+    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
+    def test_fallback_on_first_failure(self):
+        """When schema-constrained generation fails, fallback succeeds."""
+        client = self._make_client()
+        # First call (structured) fails, second call (prompt-based) succeeds
+        responses = [
+            None,  # _generate returns None for structured attempt
+            '{"topics": ["Dane a poplatky"]}',  # prompt-based succeeds
+        ]
+        with patch.object(client, "_generate", side_effect=responses):
+            result = client._generate_json(
+                "classify",
+                "system",
+                {"properties": {"topics": {"type": "array"}}},
+            )
+        assert result == {"topics": ["Dane a poplatky"]}
+
+    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
+    def test_returns_none_when_both_fail(self):
+        """When both structured and fallback fail, return None."""
+        client = self._make_client()
+        with patch.object(client, "_generate", return_value=None):
+            result = client._generate_json(
+                "classify",
+                "system",
+                {"properties": {"topics": {}}},
+            )
+        assert result is None
+
+
+# ── JSON extraction helper tests ──────────────────────────────────────────
+
+
+class TestExtractJsonFromText:
+    """Tests for OllamaClient._extract_json_from_text() static method."""
+
+    def test_parses_clean_json(self):
+        result = OllamaClient._extract_json_from_text('{"topics": ["Dane"]}')
+        assert result == {"topics": ["Dane"]}
+
+    def test_parses_json_with_think_blocks(self):
+        text = '<think>Let me think...</think>{"topics": ["Dane"]}'
+        result = OllamaClient._extract_json_from_text(text)
+        assert result == {"topics": ["Dane"]}
+
+    def test_extracts_json_from_surrounding_text(self):
+        text = 'Here is the answer: {"topics": ["Dane"]} hope this helps!'
+        result = OllamaClient._extract_json_from_text(text)
+        assert result == {"topics": ["Dane"]}
+
+    def test_returns_none_on_no_json(self):
+        result = OllamaClient._extract_json_from_text("no json here")
+        assert result is None
+
+    def test_returns_none_on_invalid_json(self):
+        result = OllamaClient._extract_json_from_text("{invalid json}")
+        assert result is None
+
+    def test_handles_nested_json(self):
+        text = '{"mappings": [{"old": "A", "canonical": "B"}]}'
+        result = OllamaClient._extract_json_from_text(text)
+        assert result == {"mappings": [{"old": "A", "canonical": "B"}]}
+
+    def test_handles_empty_string(self):
+        result = OllamaClient._extract_json_from_text("")
+        assert result is None

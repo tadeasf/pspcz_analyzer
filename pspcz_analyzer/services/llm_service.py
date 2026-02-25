@@ -1,7 +1,8 @@
 """LLM integration for AI topic classification and tisk summarization.
 
 Supports two backends:
-- Ollama (local/remote, default) — uses /api/generate endpoint
+- Ollama (local/remote, default) — auto-detects native /api/generate vs
+  OpenAI-compatible /chat/completions (e.g. vLLM, llama-server, LiteLLM proxy)
 - OpenAI-compatible (OpenAI, Azure, Together, Groq, vLLM) — uses /chat/completions
 
 When the configured LLM is available, provides:
@@ -31,6 +32,7 @@ from pspcz_analyzer.config import (
     OLLAMA_API_KEY,
     OLLAMA_BASE_URL,
     OLLAMA_MODEL,
+    OLLAMA_STRUCTURED_OUTPUT,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
     OPENAI_MODEL,
@@ -1132,7 +1134,11 @@ class BaseLLMClient(ABC):
 
 
 class OllamaClient(BaseLLMClient):
-    """Client for local Ollama LLM integration."""
+    """Client for Ollama LLM integration.
+
+    Auto-detects whether the server speaks native Ollama API (/api/generate)
+    or OpenAI-compatible API (/chat/completions) and dispatches accordingly.
+    """
 
     def __init__(
         self,
@@ -1145,19 +1151,21 @@ class OllamaClient(BaseLLMClient):
         self.model = model
         self.timeout = timeout
         self._available: bool | None = None
+        self._openai_compat: bool = False
         self._headers: dict[str, str] = {}
         self._log_prefix = "[ollama]"
         if api_key:
             self._headers["Authorization"] = f"Bearer {api_key}"
 
-    def is_available(self) -> bool:
-        """Check if Ollama is running and the model is available.
+    @property
+    def supports_structured_output(self) -> bool:
+        """Ollama v0.5+ supports structured output via the format parameter."""
+        return OLLAMA_STRUCTURED_OUTPUT
 
-        Caches result after first call.
-        """
-        if self._available is not None:
-            return self._available
+    # ── Availability detection ────────────────────────────────────────
 
+    def _check_native_ollama(self) -> bool:
+        """Try native Ollama ``GET /api/tags``. Returns True if reachable."""
         try:
             resp = httpx.get(
                 f"{self.base_url}/api/tags",
@@ -1166,27 +1174,137 @@ class OllamaClient(BaseLLMClient):
             )
             resp.raise_for_status()
             models = [m.get("name", "") for m in resp.json().get("models", [])]
-            # Match model name with or without tag suffix
-            self._available = any(
+            found = any(
                 m == self.model
                 or m.startswith(f"{self.model}:")
                 or self.model.startswith(f"{m}:")
                 or m == self.model.split(":")[0]
                 for m in models
             )
-            if self._available:
-                logger.info("[ollama] Available with model {}", self.model)
+            if found:
+                logger.info("[ollama] Available (native) with model {}", self.model)
             else:
                 logger.info(
-                    "[ollama] Running but model {} not found (available: {})",
+                    "[ollama] Running (native) but model {} not found (available: {})",
                     self.model,
                     ", ".join(models),
                 )
+            return found
         except Exception:
-            self._available = False
-            logger.info("[ollama] Not available (connection failed)")
+            return False
 
-        return self._available
+    def _check_openai_compat(self) -> bool:
+        """Try OpenAI-compatible ``GET /models``. Returns True if reachable."""
+        try:
+            resp = httpx.get(
+                f"{self.base_url}/models",
+                headers=self._headers,
+                timeout=LLM_HEALTH_TIMEOUT,
+            )
+            resp.raise_for_status()
+            return True
+        except Exception:
+            return False
+
+    def is_available(self) -> bool:
+        """Check if the Ollama server is running.
+
+        Tries native ``/api/tags`` first, then falls back to OpenAI-compatible
+        ``/models``. Sets ``_openai_compat`` flag accordingly.
+        Caches result after first call.
+        """
+        if self._available is not None:
+            return self._available
+
+        if self._check_native_ollama():
+            self._openai_compat = False
+            self._available = True
+            return True
+
+        if self._check_openai_compat():
+            self._openai_compat = True
+            self._log_prefix = "[ollama/openai-compat]"
+            self._available = True
+            logger.info(
+                "[ollama/openai-compat] Available at {} with model {}",
+                self.base_url,
+                self.model,
+            )
+            return True
+
+        self._available = False
+        logger.info("[ollama] Not available (connection failed)")
+        return False
+
+    # ── Generation dispatch ───────────────────────────────────────────
+
+    def _generate_native(
+        self,
+        prompt: str,
+        system: str,
+        *,
+        response_format: dict[str, Any] | None = None,
+    ) -> str | None:
+        """Send a generation request via native Ollama ``/api/generate``."""
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "prompt": prompt,
+            "system": system,
+            "stream": False,
+        }
+        if response_format is not None:
+            raw_schema = response_format.get("json_schema", {}).get("schema")
+            if raw_schema is not None:
+                payload["format"] = raw_schema
+        try:
+            resp = httpx.post(
+                f"{self.base_url}/api/generate",
+                headers=self._headers,
+                json=payload,
+                timeout=self.timeout,
+            )
+            resp.raise_for_status()
+            return resp.json().get("response")
+        except Exception:
+            logger.opt(exception=True).debug("[ollama] Native generation request failed")
+            return None
+
+    def _generate_openai_compat(
+        self,
+        prompt: str,
+        system: str,
+        *,
+        response_format: dict[str, Any] | None = None,
+    ) -> str | None:
+        """Send a generation request via OpenAI-compatible ``/chat/completions``."""
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            "stream": False,
+        }
+        if response_format is not None:
+            payload["response_format"] = response_format
+        try:
+            resp = httpx.post(
+                f"{self.base_url}/chat/completions",
+                headers=self._headers,
+                json=payload,
+                timeout=self.timeout,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            choices = data.get("choices", [])
+            if choices:
+                return choices[0].get("message", {}).get("content")
+            return None
+        except Exception:
+            logger.opt(exception=True).debug(
+                "[ollama/openai-compat] Chat completion request failed"
+            )
+            return None
 
     def _generate(
         self,
@@ -1195,28 +1313,76 @@ class OllamaClient(BaseLLMClient):
         *,
         response_format: dict[str, Any] | None = None,
     ) -> str | None:
-        """Send a generation request to Ollama. Returns response text or None.
+        """Dispatch generation to native or OpenAI-compatible backend."""
+        if self._openai_compat:
+            return self._generate_openai_compat(prompt, system, response_format=response_format)
+        return self._generate_native(prompt, system, response_format=response_format)
 
-        The response_format parameter is accepted but ignored
-        (Ollama uses free-text prompts with regex parsing).
+    # ── Structured output fallback ────────────────────────────────────
+
+    @staticmethod
+    def _extract_json_from_text(text: str) -> dict[str, Any] | None:
+        """Extract a JSON object from free-form text.
+
+        Tries ``json.loads`` on the full text first.  Falls back to extracting
+        the substring between the first ``{`` and the last ``}``.
         """
+        text = _THINK_RE.sub("", text).strip()
         try:
-            resp = httpx.post(
-                f"{self.base_url}/api/generate",
-                headers=self._headers,
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "system": system,
-                    "stream": False,
-                },
-                timeout=self.timeout,
-            )
-            resp.raise_for_status()
-            return resp.json().get("response")
-        except Exception:
-            logger.opt(exception=True).debug("[ollama] Generation request failed")
+            return json.loads(text)
+        except (json.JSONDecodeError, TypeError):
+            pass
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end > start:
+            try:
+                return json.loads(text[start : end + 1])
+            except (json.JSONDecodeError, TypeError):
+                pass
+        return None
+
+    def _generate_json_via_prompt(
+        self,
+        prompt: str,
+        system: str,
+        schema: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        """Fallback: append JSON instructions to the prompt and parse the result.
+
+        Called when schema-constrained generation fails.  Does NOT pass
+        ``response_format`` so the model generates freely.
+        """
+        required_keys = list(schema.get("properties", {}).keys())
+        keys_hint = ", ".join(f'"{k}"' for k in required_keys)
+        json_instruction = (
+            "\n\nIMPORTANT: Respond with valid JSON only.  "
+            "Do NOT include any text before or after the JSON object.  "
+            f"The JSON object MUST contain these keys: {keys_hint}"
+        )
+        raw = self._generate(prompt + json_instruction, system)
+        if raw is None:
             return None
+        return self._extract_json_from_text(raw)
+
+    def _generate_json(
+        self,
+        prompt: str,
+        system: str,
+        schema: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        """Generate structured JSON with fallback.
+
+        1. Try schema-constrained generation via ``super()._generate_json()``.
+        2. On failure, retry with prompt-based JSON instructions (no schema constraint).
+        """
+        result = super()._generate_json(prompt, system, schema)
+        if result is not None:
+            return result
+        logger.debug(
+            "{} Structured output failed, trying prompt-based JSON fallback",
+            self._log_prefix,
+        )
+        return self._generate_json_via_prompt(prompt, system, schema)
 
 
 # ── OpenAI-compatible backend ────────────────────────────────────────────
