@@ -640,7 +640,6 @@ class BaseLLMClient(ABC):
         prompt: str,
         system: str,
         *,
-        reasoning_effort: str | None = None,
         response_format: dict[str, Any] | None = None,
     ) -> str | None:
         """Send a generation request to the LLM. Returns response text or None."""
@@ -656,8 +655,6 @@ class BaseLLMClient(ABC):
         prompt: str,
         system: str,
         schema: dict[str, Any],
-        *,
-        reasoning_effort: str | None = None,
     ) -> dict[str, Any] | None:
         """Generate a structured JSON response using response_format.
 
@@ -665,7 +662,6 @@ class BaseLLMClient(ABC):
             prompt: The user prompt.
             system: The system prompt.
             schema: JSON schema dict for the response format.
-            reasoning_effort: Optional reasoning effort level.
 
         Returns:
             Parsed dict on success, None on failure.
@@ -677,7 +673,6 @@ class BaseLLMClient(ABC):
         raw = self._generate(
             prompt,
             system,
-            reasoning_effort=reasoning_effort,
             response_format=response_format,
         )
         if raw is None:
@@ -702,7 +697,6 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_CLASSIFICATION_SYSTEM_CS,
                 _CLASSIFICATION_SCHEMA,
-                reasoning_effort="low",
             )
             if data is None:
                 return []
@@ -710,7 +704,7 @@ class BaseLLMClient(ABC):
             return topics[:3]
 
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _CLASSIFICATION_SYSTEM, reasoning_effort="low")
+        response = self._generate(prompt, _CLASSIFICATION_SYSTEM)
         if response is None:
             return []
         return self._parse_topics_response(response)
@@ -729,14 +723,13 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_SUMMARY_SYSTEM_CS,
                 _SUMMARY_SCHEMA,
-                reasoning_effort="medium",
             )
             if data is None:
                 return ""
             return _render_summary_markdown_cs(data)
 
         prompt = _SUMMARY_PROMPT_TEMPLATE.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _SUMMARY_SYSTEM, reasoning_effort="medium")
+        response = self._generate(prompt, _SUMMARY_SYSTEM)
         if not response:
             return ""
         return self._strip_think(response)
@@ -755,14 +748,13 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_SUMMARY_SYSTEM_EN,
                 _SUMMARY_SCHEMA,
-                reasoning_effort="medium",
             )
             if data is None:
                 return ""
             return _render_summary_markdown_en(data)
 
         prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _SUMMARY_SYSTEM_EN, reasoning_effort="medium")
+        response = self._generate(prompt, _SUMMARY_SYSTEM_EN)
         if not response:
             return ""
         return self._strip_think(response)
@@ -779,14 +771,13 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_CONSOLIDATION_SYSTEM_CS,
                 _CONSOLIDATION_SCHEMA,
-                reasoning_effort="low",
             )
             if data is None:
                 return {t: t for t in all_topics}
             return _parse_consolidation_json(data, all_topics)
 
         prompt = _CONSOLIDATION_PROMPT_TEMPLATE.format(n=len(all_topics), topics_list=topics_list)
-        response = self._generate(prompt, _CONSOLIDATION_SYSTEM, reasoning_effort="low")
+        response = self._generate(prompt, _CONSOLIDATION_SYSTEM)
         if not response:
             return {t: t for t in all_topics}
         return self._parse_consolidation_response(response, all_topics)
@@ -805,7 +796,6 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_CLASSIFICATION_SYSTEM_EN,
                 _CLASSIFICATION_SCHEMA,
-                reasoning_effort="low",
             )
             if data is None:
                 return []
@@ -815,7 +805,7 @@ class BaseLLMClient(ABC):
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE_EN.format(
             title=sanitized_title, text=sanitized_text
         )
-        response = self._generate(prompt, _CLASSIFICATION_SYSTEM_EN, reasoning_effort="low")
+        response = self._generate(prompt, _CLASSIFICATION_SYSTEM_EN)
         if response is None:
             return []
         return self._parse_topics_response(response)
@@ -839,7 +829,6 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_CONSOLIDATION_SYSTEM_EN,
                 _CONSOLIDATION_SCHEMA,
-                reasoning_effort="low",
             )
             if data is None:
                 return {t: t for t in all_topics}
@@ -848,7 +837,7 @@ class BaseLLMClient(ABC):
         prompt = _CONSOLIDATION_PROMPT_TEMPLATE_EN.format(
             n=len(all_topics), topics_list=topics_list
         )
-        response = self._generate(prompt, _CONSOLIDATION_SYSTEM_EN, reasoning_effort="low")
+        response = self._generate(prompt, _CONSOLIDATION_SYSTEM_EN)
         if not response:
             return {t: t for t in all_topics}
         return self._parse_consolidation_response(response, all_topics)
@@ -900,14 +889,13 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_COMPARISON_SYSTEM_CS,
                 _COMPARISON_SCHEMA,
-                reasoning_effort="medium",
             )
             if data is None:
                 return ""
             return _render_comparison_markdown_cs(data)
 
         prompt = _COMPARISON_PROMPT_TEMPLATE.format(**fmt_kwargs)
-        response = self._generate(prompt, _COMPARISON_SYSTEM, reasoning_effort="medium")
+        response = self._generate(prompt, _COMPARISON_SYSTEM)
         if not response:
             return ""
         return self._strip_think(response)
@@ -985,7 +973,6 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_CS,
                 _CLASSIFY_AND_SUMMARIZE_SCHEMA,
-                reasoning_effort="medium",
             )
             if data is None:
                 return [], ""
@@ -993,7 +980,7 @@ class BaseLLMClient(ABC):
             return topics[:3], _render_summary_markdown_cs(data)
 
         prompt = _COMBINED_PROMPT_TEMPLATE_CS.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _COMBINED_SYSTEM_CS, reasoning_effort="medium")
+        response = self._generate(prompt, _COMBINED_SYSTEM_CS)
         if response is None:
             return [], ""
         topics, summary_data = self._parse_combined_response(response)
@@ -1019,7 +1006,6 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_EN,
                 _CLASSIFY_AND_SUMMARIZE_SCHEMA,
-                reasoning_effort="medium",
             )
             if data is None:
                 return [], ""
@@ -1027,7 +1013,7 @@ class BaseLLMClient(ABC):
             return topics[:3], _render_summary_markdown_en(data)
 
         prompt = _COMBINED_PROMPT_TEMPLATE_EN.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _COMBINED_SYSTEM_EN, reasoning_effort="medium")
+        response = self._generate(prompt, _COMBINED_SYSTEM_EN)
         if response is None:
             return [], ""
         topics, summary_data = self._parse_combined_response(response)
@@ -1076,12 +1062,11 @@ class BaseLLMClient(ABC):
                 prompt,
                 _STRUCTURED_COMPARISON_SYSTEM_EN,
                 _COMPARISON_SCHEMA,
-                reasoning_effort="medium",
             )
             en = _render_comparison_markdown_en(data) if data else ""
         else:
             prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(**fmt_kwargs)
-            response = self._generate(prompt, _COMPARISON_SYSTEM_EN, reasoning_effort="medium")
+            response = self._generate(prompt, _COMPARISON_SYSTEM_EN)
             en = self._strip_think(response) if response else ""
 
         return {"cs": cs, "en": en}
@@ -1208,12 +1193,11 @@ class OllamaClient(BaseLLMClient):
         prompt: str,
         system: str,
         *,
-        reasoning_effort: str | None = None,
         response_format: dict[str, Any] | None = None,
     ) -> str | None:
         """Send a generation request to Ollama. Returns response text or None.
 
-        The reasoning_effort and response_format parameters are accepted but ignored
+        The response_format parameter is accepted but ignored
         (Ollama uses free-text prompts with regex parsing).
         """
         try:
@@ -1290,13 +1274,10 @@ class OpenAIClient(BaseLLMClient):
         prompt: str,
         system: str,
         *,
-        reasoning_effort: str | None = None,
         response_format: dict[str, Any] | None = None,
     ) -> str | None:
         """Send a chat completion request. Returns response text or None.
 
-        When reasoning_effort is provided, includes it in the request payload
-        for models that support it (e.g. gpt-oss-120b).
         When response_format is provided, constrains the output to the given JSON schema.
         """
         payload: dict[str, Any] = {
@@ -1307,8 +1288,6 @@ class OpenAIClient(BaseLLMClient):
             ],
             "stream": False,
         }
-        if reasoning_effort is not None:
-            payload["reasoning_effort"] = reasoning_effort
         if response_format is not None:
             payload["response_format"] = response_format
 
