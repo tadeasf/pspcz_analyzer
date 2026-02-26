@@ -19,6 +19,9 @@ from pspcz_analyzer.data.tisk_downloader import download_subtisk_pdf
 from pspcz_analyzer.data.tisk_scraper import SubTiskVersion, scrape_all_subtisk_documents
 from pspcz_analyzer.services.llm_service import LLMClient, create_llm_client
 
+pymupdf.TOOLS.mupdf_display_warnings(False)
+pymupdf.TOOLS.mupdf_display_errors(False)
+
 
 def download_subtisk_versions_sync(
     period: int,
