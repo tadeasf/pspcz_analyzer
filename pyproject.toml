@@ -68,6 +68,7 @@ pythonVersion = "3.12"
 typeCheckingMode = "basic"
 reportMissingImports = true
 reportMissingTypeStubs = false
+exclude = ["scripts/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

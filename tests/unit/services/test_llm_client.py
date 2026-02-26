@@ -1,4 +1,4 @@
-"""Tests for OpenAIClient, OllamaClient, BaseLLMClient, and create_llm_client factory."""
+"""Tests for unified LLMClient and create_llm_client factory."""
 
 import json
 from unittest.mock import patch
@@ -7,9 +7,7 @@ import httpx
 import pytest
 
 from pspcz_analyzer.services.llm_service import (
-    BaseLLMClient,
-    OllamaClient,
-    OpenAIClient,
+    LLMClient,
     _parse_consolidation_json,
     _render_comparison_markdown_cs,
     _render_comparison_markdown_en,
@@ -18,14 +16,17 @@ from pspcz_analyzer.services.llm_service import (
     create_llm_client,
 )
 
+# ── Factory tests ────────────────────────────────────────────────────────
+
 
 class TestCreateLLMClientFactory:
     """Tests for the create_llm_client() factory function."""
 
-    def test_default_returns_ollama(self):
+    def test_default_returns_ollama_provider(self):
         with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"):
             client = create_llm_client()
-        assert isinstance(client, OllamaClient)
+        assert isinstance(client, LLMClient)
+        assert client.provider == "ollama"
 
     def test_openai_provider_returns_openai_client(self):
         with (
@@ -33,7 +34,8 @@ class TestCreateLLMClientFactory:
             patch("pspcz_analyzer.services.llm_service.OPENAI_API_KEY", "sk-test-key"),
         ):
             client = create_llm_client()
-        assert isinstance(client, OpenAIClient)
+        assert isinstance(client, LLMClient)
+        assert client.provider == "openai"
 
     def test_openai_provider_without_key_raises(self):
         with (
@@ -51,52 +53,78 @@ class TestCreateLLMClientFactory:
     def test_case_insensitive_provider(self):
         with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "OLLAMA"):
             client = create_llm_client()
-        assert isinstance(client, OllamaClient)
+        assert isinstance(client, LLMClient)
+        assert client.provider == "ollama"
 
-    def test_factory_returns_base_llm_client(self):
-        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"):
+    def test_factory_passes_structured_output_flag(self):
+        with (
+            patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"),
+            patch("pspcz_analyzer.services.llm_service.LLM_STRUCTURED_OUTPUT", False),
+        ):
             client = create_llm_client()
-        assert isinstance(client, BaseLLMClient)
+        assert client.supports_structured_output is False
+
+
+# ── supports_structured_output tests ─────────────────────────────────────
 
 
 class TestSupportsStructuredOutput:
     """Tests for the supports_structured_output property."""
 
-    def test_openai_supports_structured_output(self):
-        client = OpenAIClient(
+    def test_openai_supports_structured_output_when_enabled(self):
+        client = LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
             api_key="sk-test",
+            structured_output=True,
         )
         assert client.supports_structured_output is True
 
-    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
     def test_ollama_supports_structured_output_when_enabled(self):
-        client = OllamaClient(
+        client = LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=True,
         )
         assert client.supports_structured_output is True
 
-    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
     def test_ollama_no_structured_output_when_disabled(self):
-        client = OllamaClient(
+        client = LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=False,
+        )
+        assert client.supports_structured_output is False
+
+    def test_openai_no_structured_output_when_disabled(self):
+        client = LLMClient(
+            provider="openai",
+            base_url="https://api.example.com/v1",
+            model="gpt-4o-mini",
+            timeout=30.0,
+            api_key="sk-test",
+            structured_output=False,
         )
         assert client.supports_structured_output is False
 
 
-class TestOpenAIClientGenerate:
-    """Tests for OpenAIClient._generate() with mocked httpx."""
+# ── OpenAI provider _generate tests ──────────────────────────────────────
+
+
+class TestOpenAIProviderGenerate:
+    """Tests for LLMClient._generate() with provider='openai'."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
 
-    def _make_client(self) -> OpenAIClient:
-        return OpenAIClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -170,7 +198,8 @@ class TestOpenAIClientGenerate:
         assert client._headers["Authorization"] == "Bearer sk-test"
 
     def test_no_authorization_header_when_no_key(self):
-        client = OpenAIClient(
+        client = LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -179,13 +208,17 @@ class TestOpenAIClientGenerate:
         assert "Authorization" not in client._headers
 
 
-class TestOpenAIClientIsAvailable:
-    """Tests for OpenAIClient.is_available()."""
+# ── OpenAI provider is_available tests ───────────────────────────────────
+
+
+class TestOpenAIProviderIsAvailable:
+    """Tests for LLMClient.is_available() with provider='openai'."""
 
     _DUMMY_GET_REQUEST = httpx.Request("GET", "https://api.example.com/v1/models")
 
-    def _make_client(self) -> OpenAIClient:
-        return OpenAIClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -217,16 +250,17 @@ class TestOpenAIClientIsAvailable:
         assert mock_get.call_count == 1
 
 
-# ── Structured output tests (OpenAI path) ────────────────────────────────
+# ── Structured output tests (OpenAI provider) ────────────────────────────
 
 
 class TestOpenAIStructuredClassification:
-    """Tests for OpenAI classify_topics with structured output."""
+    """Tests for classify_topics with structured output (provider='openai')."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
 
-    def _make_client(self) -> OpenAIClient:
-        return OpenAIClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -290,12 +324,13 @@ class TestOpenAIStructuredClassification:
 
 
 class TestOpenAIStructuredSummary:
-    """Tests for OpenAI summarize with structured output."""
+    """Tests for summarize with structured output (provider='openai')."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
 
-    def _make_client(self) -> OpenAIClient:
-        return OpenAIClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -347,12 +382,13 @@ class TestOpenAIStructuredSummary:
 
 
 class TestOpenAIStructuredConsolidation:
-    """Tests for OpenAI consolidate_topics with structured output."""
+    """Tests for consolidate_topics with structured output (provider='openai')."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
 
-    def _make_client(self) -> OpenAIClient:
-        return OpenAIClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -389,12 +425,13 @@ class TestOpenAIStructuredConsolidation:
 
 
 class TestOpenAIStructuredComparison:
-    """Tests for OpenAI compare_versions with structured output."""
+    """Tests for compare_versions with structured output (provider='openai')."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
 
-    def _make_client(self) -> OpenAIClient:
-        return OpenAIClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -429,20 +466,21 @@ class TestOpenAIStructuredComparison:
         assert result == ""
 
 
-# ── Ollama fallback tests (free-text regex parsing) ──────────────────────
+# ── Ollama fallback tests (structured_output=False, free-text regex) ─────
 
 
-@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
 class TestOllamaFallbackClassification:
-    """Tests that OllamaClient uses the free-text regex parsing path."""
+    """Tests that LLMClient(provider='ollama', structured_output=False) uses free-text regex."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=False,
         )
 
     def _ok_response(self, text: str) -> httpx.Response:
@@ -472,17 +510,18 @@ class TestOllamaFallbackClassification:
         assert topics == []
 
 
-@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
 class TestOllamaFallbackSummary:
-    """Tests that OllamaClient uses free-text summary path."""
+    """Tests that LLMClient(provider='ollama', structured_output=False) uses free-text summary."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=False,
         )
 
     def _ok_response(self, text: str) -> httpx.Response:
@@ -502,17 +541,18 @@ class TestOllamaFallbackSummary:
 # ── Ollama structured output tests ────────────────────────────────────────
 
 
-@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
 class TestOllamaStructuredClassification:
-    """Tests that OllamaClient uses JSON structured output when enabled."""
+    """Tests that LLMClient(provider='ollama', structured_output=True) uses JSON output."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=True,
         )
 
     def _ok_response(self, text: str) -> httpx.Response:
@@ -558,17 +598,18 @@ class TestOllamaStructuredClassification:
         assert topics == ["Dane", "Pravo"]
 
 
-@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
 class TestOllamaStructuredCombined:
-    """Tests that OllamaClient uses JSON structured classify-and-summarize when enabled."""
+    """Tests that LLMClient(provider='ollama', structured_output=True) uses JSON classify-and-summarize."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=True,
         )
 
     def _ok_response(self, text: str) -> httpx.Response:
@@ -712,13 +753,15 @@ class TestParseConsolidationJson:
 
 
 class TestParseCombinedResponse:
-    """Tests for BaseLLMClient._parse_combined_response."""
+    """Tests for LLMClient._parse_combined_response."""
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=False,
         )
 
     def test_parses_all_fields(self):
@@ -785,12 +828,13 @@ class TestParseCombinedResponse:
 
 
 class TestOpenAIStructuredClassifyAndSummarize:
-    """Tests for OpenAI combined classify_and_summarize with structured output."""
+    """Tests for combined classify_and_summarize with structured output (provider='openai')."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
 
-    def _make_client(self) -> OpenAIClient:
-        return OpenAIClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="openai",
             base_url="https://api.example.com/v1",
             model="gpt-4o-mini",
             timeout=30.0,
@@ -915,17 +959,18 @@ class TestOpenAIStructuredClassifyAndSummarize:
         assert "**Changes:**" in summary_en
 
 
-@patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", False)
 class TestOllamaFallbackCombined:
-    """Tests that OllamaClient uses the free-text combined parsing path."""
+    """Tests that LLMClient(provider='ollama', structured_output=False) uses free-text combined parsing."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=False,
         )
 
     def _ok_response(self, text: str) -> httpx.Response:
@@ -985,13 +1030,14 @@ class TestOllamaFallbackCombined:
 
 
 class TestOllamaCompatDetection:
-    """Tests for OllamaClient auto-detection of native vs OpenAI-compatible mode."""
+    """Tests for LLMClient(provider='ollama') auto-detection of native vs OpenAI-compat."""
 
     _DUMMY_TAGS_REQUEST = httpx.Request("GET", "http://localhost:11434/api/tags")
     _DUMMY_MODELS_REQUEST = httpx.Request("GET", "http://localhost:11434/models")
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
@@ -1064,12 +1110,13 @@ class TestOllamaCompatDetection:
 
 
 class TestOllamaCompatGeneration:
-    """Tests for OllamaClient._generate() in OpenAI-compat mode."""
+    """Tests for LLMClient._generate() in Ollama OpenAI-compat mode."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/chat/completions")
 
-    def _make_compat_client(self) -> OllamaClient:
-        client = OllamaClient(
+    def _make_compat_client(self) -> LLMClient:
+        client = LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="gpt-oss-lite",
             timeout=30.0,
@@ -1114,7 +1161,8 @@ class TestOllamaCompatGeneration:
 
     def test_native_mode_uses_api_generate(self):
         """Verify that native mode still uses /api/generate."""
-        client = OllamaClient(
+        client = LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
@@ -1129,19 +1177,21 @@ class TestOllamaCompatGeneration:
         assert "/api/generate" in mock_post.call_args.args[0]
 
 
-# ── Ollama structured output fallback tests ───────────────────────────────
+# ── Structured output fallback tests ───────────────────────────────────
 
 
-class TestOllamaStructuredOutputFallback:
-    """Tests for OllamaClient._generate_json() with prompt-based fallback."""
+class TestStructuredOutputFallback:
+    """Tests for LLMClient._generate_json() with prompt-based fallback."""
 
     _DUMMY_REQUEST = httpx.Request("POST", "http://localhost:11434/api/generate")
 
-    def _make_client(self) -> OllamaClient:
-        return OllamaClient(
+    def _make_client(self) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
             base_url="http://localhost:11434",
             model="llama3",
             timeout=30.0,
+            structured_output=True,
         )
 
     def _ok_response(self, text: str) -> httpx.Response:
@@ -1149,7 +1199,6 @@ class TestOllamaStructuredOutputFallback:
         resp.request = self._DUMMY_REQUEST
         return resp
 
-    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
     def test_returns_structured_when_first_try_succeeds(self):
         """When schema-constrained generation works, return it directly."""
         client = self._make_client()
@@ -1159,7 +1208,6 @@ class TestOllamaStructuredOutputFallback:
             result = client._generate_json("classify", "system", {"properties": {"topics": {}}})
         assert result == {"topics": ["Dane"]}
 
-    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
     def test_fallback_on_first_failure(self):
         """When schema-constrained generation fails, fallback succeeds."""
         client = self._make_client()
@@ -1176,7 +1224,6 @@ class TestOllamaStructuredOutputFallback:
             )
         assert result == {"topics": ["Dane a poplatky"]}
 
-    @patch("pspcz_analyzer.services.llm_service.OLLAMA_STRUCTURED_OUTPUT", True)
     def test_returns_none_when_both_fail(self):
         """When both structured and fallback fail, return None."""
         client = self._make_client()
@@ -1193,35 +1240,141 @@ class TestOllamaStructuredOutputFallback:
 
 
 class TestExtractJsonFromText:
-    """Tests for OllamaClient._extract_json_from_text() static method."""
+    """Tests for LLMClient._extract_json_from_text() static method."""
 
     def test_parses_clean_json(self):
-        result = OllamaClient._extract_json_from_text('{"topics": ["Dane"]}')
+        result = LLMClient._extract_json_from_text('{"topics": ["Dane"]}')
         assert result == {"topics": ["Dane"]}
 
     def test_parses_json_with_think_blocks(self):
         text = '<think>Let me think...</think>{"topics": ["Dane"]}'
-        result = OllamaClient._extract_json_from_text(text)
+        result = LLMClient._extract_json_from_text(text)
         assert result == {"topics": ["Dane"]}
 
     def test_extracts_json_from_surrounding_text(self):
         text = 'Here is the answer: {"topics": ["Dane"]} hope this helps!'
-        result = OllamaClient._extract_json_from_text(text)
+        result = LLMClient._extract_json_from_text(text)
         assert result == {"topics": ["Dane"]}
 
     def test_returns_none_on_no_json(self):
-        result = OllamaClient._extract_json_from_text("no json here")
+        result = LLMClient._extract_json_from_text("no json here")
         assert result is None
 
     def test_returns_none_on_invalid_json(self):
-        result = OllamaClient._extract_json_from_text("{invalid json}")
+        result = LLMClient._extract_json_from_text("{invalid json}")
         assert result is None
 
     def test_handles_nested_json(self):
         text = '{"mappings": [{"old": "A", "canonical": "B"}]}'
-        result = OllamaClient._extract_json_from_text(text)
+        result = LLMClient._extract_json_from_text(text)
         assert result == {"mappings": [{"old": "A", "canonical": "B"}]}
 
     def test_handles_empty_string(self):
-        result = OllamaClient._extract_json_from_text("")
+        result = LLMClient._extract_json_from_text("")
         assert result is None
+
+
+# ── _generate_with_retry tests ───────────────────────────────────────────
+
+
+class TestGenerateWithRetry:
+    """Tests for LLMClient._generate_with_retry() retry logic."""
+
+    @staticmethod
+    def _make_client(structured: bool = False) -> LLMClient:
+        return LLMClient(
+            provider="ollama",
+            base_url="http://localhost:11434",
+            model="test-model",
+            structured_output=structured,
+        )
+
+    def test_returns_immediately_on_first_success(self):
+        """When validator passes on first attempt, no retries happen."""
+        client = self._make_client()
+        with patch.object(client, "_generate", return_value="TOPICS: Budget") as mock_gen:
+            result = client._generate_with_retry(
+                "prompt", "system", validator=lambda r: "TOPICS" in r
+            )
+        assert result == "TOPICS: Budget"
+        assert mock_gen.call_count == 1
+
+    def test_retries_on_validator_failure_then_succeeds(self):
+        """When first attempt fails validation, retry succeeds."""
+        client = self._make_client()
+        responses = ["garbage output", "TOPICS: Budget, Health"]
+        with (
+            patch.object(client, "_generate", side_effect=responses),
+            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+        ):
+            result = client._generate_with_retry(
+                "prompt",
+                "system",
+                validator=lambda r: "TOPICS" in r,
+            )
+        assert result == "TOPICS: Budget, Health"
+
+    def test_retries_on_none_response_then_succeeds(self):
+        """When _generate returns None, retry continues."""
+        client = self._make_client()
+        responses = [None, "TOPICS: Finance"]
+        with (
+            patch.object(client, "_generate", side_effect=responses),
+            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+        ):
+            result = client._generate_with_retry(
+                "prompt",
+                "system",
+                validator=lambda r: "TOPICS" in r,
+            )
+        assert result == "TOPICS: Finance"
+
+    def test_returns_none_after_exhausting_retries(self):
+        """When all attempts fail validation, returns None."""
+        client = self._make_client()
+        with (
+            patch.object(client, "_generate", return_value="bad output"),
+            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+        ):
+            result = client._generate_with_retry(
+                "prompt",
+                "system",
+                validator=lambda _r: False,
+            )
+        assert result is None
+
+    def test_respects_retry_count_zero(self):
+        """When LLM_EMPTY_RETRIES=0, no retries happen (single attempt)."""
+        client = self._make_client()
+        with (
+            patch.object(client, "_generate", return_value="bad") as mock_gen,
+            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 0),
+        ):
+            result = client._generate_with_retry(
+                "prompt",
+                "system",
+                validator=lambda _r: False,
+            )
+        assert result is None
+        assert mock_gen.call_count == 1
+
+    def test_total_attempts_equals_one_plus_retries(self):
+        """With LLM_EMPTY_RETRIES=2, makes exactly 3 attempts total."""
+        client = self._make_client()
+        with (
+            patch.object(client, "_generate", return_value="bad") as mock_gen,
+            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+        ):
+            client._generate_with_retry("prompt", "system", validator=lambda _r: False)
+        assert mock_gen.call_count == 3
+
+    def test_classify_topics_retries_on_empty_parse(self):
+        """Integration: classify_topics with structured_output=False retries on empty parse."""
+        client = self._make_client(structured=False)
+        responses = ["no topics here", "TOPICS: Rozpočet, Zdraví"]
+        with (
+            patch.object(client, "_generate", side_effect=responses),
+            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+        ):
+            result = client.classify_topics("text about budget", "Budget Act")
+        assert result == ["Rozpočet", "Zdraví"]
