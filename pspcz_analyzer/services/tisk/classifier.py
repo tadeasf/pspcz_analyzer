@@ -8,7 +8,7 @@ from loguru import logger
 
 from pspcz_analyzer.config import TISKY_META_DIR
 from pspcz_analyzer.services.llm_service import (
-    BaseLLMClient,
+    LLMClient,
     create_llm_client,
     deserialize_topics,
     serialize_topics,
@@ -109,7 +109,7 @@ def classify_and_save(
 def _classify_single_tisk(
     ct: int,
     text_path: Path,
-    llm: BaseLLMClient,
+    llm: LLMClient,
     use_ai: bool,
     i: int,
     total: int,

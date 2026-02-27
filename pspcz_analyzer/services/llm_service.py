@@ -1,8 +1,9 @@
 """LLM integration for AI topic classification and tisk summarization.
 
-Supports two backends:
-- Ollama (local/remote, default) — uses /api/generate endpoint
-- OpenAI-compatible (OpenAI, Azure, Together, Groq, vLLM) — uses /chat/completions
+Unified LLMClient supports two providers:
+- ``ollama`` (default) — auto-detects native /api/generate vs
+  OpenAI-compatible /chat/completions (e.g. vLLM, llama-server, LiteLLM proxy)
+- ``openai`` — uses /chat/completions (OpenAI, Azure, Together, Groq, vLLM)
 
 When the configured LLM is available, provides:
 - Free-form topic classification (1-3 Czech topic labels per tisk)
@@ -15,17 +16,19 @@ from __future__ import annotations
 
 import json
 import re
-from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import Any
 
 import httpx
 from loguru import logger
 
 from pspcz_analyzer.config import (
+    LLM_EMPTY_RETRIES,
     LLM_HEALTH_TIMEOUT,
     LLM_MAX_COMPARISON_CHARS,
     LLM_MAX_TEXT_CHARS,
     LLM_PROVIDER,
+    LLM_STRUCTURED_OUTPUT,
     LLM_TIMEOUT,
     LLM_VERBATIM_CHARS,
     OLLAMA_API_KEY,
@@ -622,19 +625,145 @@ def _parse_consolidation_json(data: dict[str, Any], all_topics: list[str]) -> di
     return mapping
 
 
-class BaseLLMClient(ABC):
-    """Abstract base class for LLM backend clients."""
+class LLMClient:
+    """Unified LLM client supporting ollama and openai providers.
 
-    base_url: str
-    model: str
-    _log_prefix: str
+    Args:
+        provider: ``"ollama"`` or ``"openai"`` — controls which protocol is used.
+        base_url: LLM API base URL.
+        model: Model name/identifier.
+        timeout: Per-request timeout in seconds.
+        api_key: Bearer token for API authentication (empty = no auth).
+        structured_output: Whether to use JSON schema–constrained output.
+    """
 
-    @abstractmethod
+    def __init__(
+        self,
+        *,
+        provider: str,
+        base_url: str,
+        model: str,
+        timeout: float = LLM_TIMEOUT,
+        api_key: str = "",
+        structured_output: bool = True,
+    ) -> None:
+        self.provider = provider
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+        self.timeout = timeout
+        self._structured_output = structured_output
+        self._available: bool | None = None
+        self._openai_compat: bool = False
+        self._headers: dict[str, str] = {}
+        self._log_prefix = f"[{provider}]"
+        if api_key:
+            self._headers["Authorization"] = f"Bearer {api_key}"
+        if provider == "openai":
+            self._headers.setdefault("Content-Type", "application/json")
+
+    @property
+    def supports_structured_output(self) -> bool:
+        """Whether this client uses JSON schema–constrained output."""
+        return self._structured_output
+
+    # ── Availability detection ────────────────────────────────────────
+
     def is_available(self) -> bool:
-        """Check if the LLM backend is reachable."""
-        ...
+        """Check if the LLM backend is reachable. Caches after first call."""
+        if self._available is not None:
+            return self._available
 
-    @abstractmethod
+        match self.provider:
+            case "ollama":
+                return self._check_ollama_availability()
+            case "openai":
+                return self._check_openai_availability()
+            case _:
+                self._available = False
+                return False
+
+    def _check_ollama_availability(self) -> bool:
+        """Try native Ollama, then fall back to OpenAI-compatible endpoint."""
+        if self._check_native_ollama():
+            self._openai_compat = False
+            self._available = True
+            return True
+
+        if self._check_openai_compat():
+            self._openai_compat = True
+            self._log_prefix = "[ollama/openai-compat]"
+            self._available = True
+            logger.info(
+                "[ollama/openai-compat] Available at {} with model {}",
+                self.base_url,
+                self.model,
+            )
+            return True
+
+        self._available = False
+        logger.info("[ollama] Not available (connection failed)")
+        return False
+
+    def _check_openai_availability(self) -> bool:
+        """Check if the OpenAI-compatible API is reachable."""
+        try:
+            resp = httpx.get(
+                f"{self.base_url}/models",
+                headers=self._headers,
+                timeout=LLM_HEALTH_TIMEOUT,
+            )
+            resp.raise_for_status()
+            self._available = True
+            logger.info("[openai] Available at {} with model {}", self.base_url, self.model)
+        except Exception:
+            self._available = False
+            logger.info("[openai] Not available (connection to {} failed)", self.base_url)
+        return self._available
+
+    def _check_native_ollama(self) -> bool:
+        """Try native Ollama ``GET /api/tags``. Returns True if reachable."""
+        try:
+            resp = httpx.get(
+                f"{self.base_url}/api/tags",
+                headers=self._headers,
+                timeout=LLM_HEALTH_TIMEOUT,
+            )
+            resp.raise_for_status()
+            models = [m.get("name", "") for m in resp.json().get("models", [])]
+            found = any(
+                m == self.model
+                or m.startswith(f"{self.model}:")
+                or self.model.startswith(f"{m}:")
+                or m == self.model.split(":")[0]
+                for m in models
+            )
+            if found:
+                logger.info("[ollama] Available (native) with model {}", self.model)
+            else:
+                logger.info(
+                    "[ollama] Running (native) but model {} not found (available: {})",
+                    self.model,
+                    ", ".join(models),
+                )
+            return found
+        except Exception:
+            return False
+
+    def _check_openai_compat(self) -> bool:
+        """Try OpenAI-compatible ``GET /models``. Returns True if reachable."""
+        try:
+            resp = httpx.get(
+                f"{self.base_url}/models",
+                headers=self._headers,
+                timeout=LLM_HEALTH_TIMEOUT,
+            )
+            resp.raise_for_status()
+            return True
+        except Exception:
+            return False
+
+    # ── Generation dispatch ───────────────────────────────────────────
+
     def _generate(
         self,
         prompt: str,
@@ -642,13 +771,116 @@ class BaseLLMClient(ABC):
         *,
         response_format: dict[str, Any] | None = None,
     ) -> str | None:
-        """Send a generation request to the LLM. Returns response text or None."""
-        ...
+        """Dispatch generation to the appropriate backend."""
+        match self.provider:
+            case "ollama":
+                if self._openai_compat:
+                    return self._generate_openai_compat(
+                        prompt, system, response_format=response_format
+                    )
+                return self._generate_native_ollama(prompt, system, response_format=response_format)
+            case "openai":
+                return self._generate_openai_compat(prompt, system, response_format=response_format)
+            case _:
+                return None
 
-    @property
-    def supports_structured_output(self) -> bool:
-        """Whether this backend supports structured output (JSON schema constraint)."""
-        return False
+    def _generate_with_retry(
+        self,
+        prompt: str,
+        system: str,
+        *,
+        validator: Callable[[str], bool],
+    ) -> str | None:
+        """Generate with retries when validator rejects the response.
+
+        Used for the free-text (non-structured) path where regex parsing
+        may fail on weaker models. Retries up to LLM_EMPTY_RETRIES times.
+        """
+        for attempt in range(1 + LLM_EMPTY_RETRIES):
+            response = self._generate(prompt, system)
+            if response is not None and validator(response):
+                return response
+            if attempt < LLM_EMPTY_RETRIES:
+                logger.debug(
+                    "{} Attempt {}/{} returned empty/invalid, retrying",
+                    self._log_prefix,
+                    attempt + 1,
+                    1 + LLM_EMPTY_RETRIES,
+                )
+        logger.warning(
+            "{} All {} attempts returned empty/invalid",
+            self._log_prefix,
+            1 + LLM_EMPTY_RETRIES,
+        )
+        return None
+
+    def _generate_native_ollama(
+        self,
+        prompt: str,
+        system: str,
+        *,
+        response_format: dict[str, Any] | None = None,
+    ) -> str | None:
+        """Send a generation request via native Ollama ``/api/generate``."""
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "prompt": prompt,
+            "system": system,
+            "stream": False,
+        }
+        if response_format is not None:
+            raw_schema = response_format.get("json_schema", {}).get("schema")
+            if raw_schema is not None:
+                payload["format"] = raw_schema
+        try:
+            resp = httpx.post(
+                f"{self.base_url}/api/generate",
+                headers=self._headers,
+                json=payload,
+                timeout=self.timeout,
+            )
+            resp.raise_for_status()
+            return resp.json().get("response")
+        except Exception:
+            logger.opt(exception=True).debug("[ollama] Native generation request failed")
+            return None
+
+    def _generate_openai_compat(
+        self,
+        prompt: str,
+        system: str,
+        *,
+        response_format: dict[str, Any] | None = None,
+    ) -> str | None:
+        """Send a generation request via OpenAI-compatible ``/chat/completions``."""
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            "stream": False,
+        }
+        if response_format is not None:
+            payload["response_format"] = response_format
+        try:
+            resp = httpx.post(
+                f"{self.base_url}/chat/completions",
+                headers=self._headers,
+                json=payload,
+                timeout=self.timeout,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            choices = data.get("choices", [])
+            if choices:
+                return choices[0].get("message", {}).get("content")
+            return None
+        except Exception:
+            logger.opt(exception=True).debug("{} Chat completion request failed", self._log_prefix)
+            return None
+
+    # ── Structured JSON generation with fallback ─────────────────────
 
     def _generate_json(
         self,
@@ -656,25 +888,32 @@ class BaseLLMClient(ABC):
         system: str,
         schema: dict[str, Any],
     ) -> dict[str, Any] | None:
-        """Generate a structured JSON response using response_format.
+        """Generate structured JSON with schema-constrained output + prompt fallback.
 
-        Args:
-            prompt: The user prompt.
-            system: The system prompt.
-            schema: JSON schema dict for the response format.
-
-        Returns:
-            Parsed dict on success, None on failure.
+        1. Try schema-constrained generation via response_format.
+        2. On failure, retry with prompt-based JSON instructions (no schema constraint).
         """
+        result = self._generate_json_schema_constrained(prompt, system, schema)
+        if result is not None:
+            return result
+        logger.debug(
+            "{} Structured output failed, trying prompt-based JSON fallback",
+            self._log_prefix,
+        )
+        return self._generate_json_via_prompt(prompt, system, schema)
+
+    def _generate_json_schema_constrained(
+        self,
+        prompt: str,
+        system: str,
+        schema: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        """Try schema-constrained JSON generation via response_format."""
         response_format = {
             "type": "json_schema",
             "json_schema": {"name": "response", "strict": True, "schema": schema},
         }
-        raw = self._generate(
-            prompt,
-            system,
-            response_format=response_format,
-        )
+        raw = self._generate(prompt, system, response_format=response_format)
         if raw is None:
             return None
         try:
@@ -682,6 +921,51 @@ class BaseLLMClient(ABC):
         except (json.JSONDecodeError, TypeError):
             logger.debug("{} Failed to parse JSON response: {}", self._log_prefix, raw[:200])
             return None
+
+    @staticmethod
+    def _extract_json_from_text(text: str) -> dict[str, Any] | None:
+        """Extract a JSON object from free-form text.
+
+        Tries ``json.loads`` on the full text first.  Falls back to extracting
+        the substring between the first ``{`` and the last ``}``.
+        """
+        text = _THINK_RE.sub("", text).strip()
+        try:
+            return json.loads(text)
+        except (json.JSONDecodeError, TypeError):
+            pass
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end > start:
+            try:
+                return json.loads(text[start : end + 1])
+            except (json.JSONDecodeError, TypeError):
+                pass
+        return None
+
+    def _generate_json_via_prompt(
+        self,
+        prompt: str,
+        system: str,
+        schema: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        """Fallback: append JSON instructions to the prompt and parse the result.
+
+        Does NOT pass ``response_format`` so the model generates freely.
+        """
+        required_keys = list(schema.get("properties", {}).keys())
+        keys_hint = ", ".join(f'"{k}"' for k in required_keys)
+        json_instruction = (
+            "\n\nIMPORTANT: Respond with valid JSON only.  "
+            "Do NOT include any text before or after the JSON object.  "
+            f"The JSON object MUST contain these keys: {keys_hint}"
+        )
+        raw = self._generate(prompt + json_instruction, system)
+        if raw is None:
+            return None
+        return self._extract_json_from_text(raw)
+
+    # ── Business methods ────────────────────────────────────────────
 
     def classify_topics(self, text: str, title: str, *, _truncated: bool = False) -> list[str]:
         """Classify a tisk into 1-3 free-form Czech topic labels using the LLM."""
@@ -704,7 +988,11 @@ class BaseLLMClient(ABC):
             return topics[:3]
 
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _CLASSIFICATION_SYSTEM)
+        response = self._generate_with_retry(
+            prompt,
+            _CLASSIFICATION_SYSTEM,
+            validator=lambda r: bool(self._parse_topics_response(r)),
+        )
         if response is None:
             return []
         return self._parse_topics_response(response)
@@ -729,7 +1017,11 @@ class BaseLLMClient(ABC):
             return _render_summary_markdown_cs(data)
 
         prompt = _SUMMARY_PROMPT_TEMPLATE.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _SUMMARY_SYSTEM)
+        response = self._generate_with_retry(
+            prompt,
+            _SUMMARY_SYSTEM,
+            validator=lambda r: bool(self._strip_think(r).strip()),
+        )
         if not response:
             return ""
         return self._strip_think(response)
@@ -754,7 +1046,11 @@ class BaseLLMClient(ABC):
             return _render_summary_markdown_en(data)
 
         prompt = _SUMMARY_PROMPT_TEMPLATE_EN.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _SUMMARY_SYSTEM_EN)
+        response = self._generate_with_retry(
+            prompt,
+            _SUMMARY_SYSTEM_EN,
+            validator=lambda r: bool(self._strip_think(r).strip()),
+        )
         if not response:
             return ""
         return self._strip_think(response)
@@ -805,7 +1101,11 @@ class BaseLLMClient(ABC):
         prompt = _CLASSIFICATION_PROMPT_TEMPLATE_EN.format(
             title=sanitized_title, text=sanitized_text
         )
-        response = self._generate(prompt, _CLASSIFICATION_SYSTEM_EN)
+        response = self._generate_with_retry(
+            prompt,
+            _CLASSIFICATION_SYSTEM_EN,
+            validator=lambda r: bool(self._parse_topics_response(r)),
+        )
         if response is None:
             return []
         return self._parse_topics_response(response)
@@ -895,7 +1195,11 @@ class BaseLLMClient(ABC):
             return _render_comparison_markdown_cs(data)
 
         prompt = _COMPARISON_PROMPT_TEMPLATE.format(**fmt_kwargs)
-        response = self._generate(prompt, _COMPARISON_SYSTEM)
+        response = self._generate_with_retry(
+            prompt,
+            _COMPARISON_SYSTEM,
+            validator=lambda r: bool(self._strip_think(r).strip()),
+        )
         if not response:
             return ""
         return self._strip_think(response)
@@ -907,7 +1211,7 @@ class BaseLLMClient(ABC):
         en = self.summarize_en(truncated, title, _truncated=True)
         return {"cs": cs, "en": en}
 
-    def _parse_combined_response(self, response: str) -> tuple[list[str], str]:
+    def _parse_combined_response(self, response: str) -> tuple[list[str], dict[str, str]]:
         """Parse combined classify+summarize free-text response.
 
         Expects format:
@@ -917,7 +1221,7 @@ class BaseLLMClient(ABC):
             RISKS: ...
 
         Returns:
-            (topics, summary_markdown) — partial success is acceptable.
+            (topics, summary_data_dict) — partial success is acceptable.
         """
         response = self._strip_think(response)
 
@@ -926,8 +1230,8 @@ class BaseLLMClient(ABC):
         topics_match = re.search(r"TOPICS?:\s*(.+)", response, re.IGNORECASE)
         if topics_match:
             raw = topics_match.group(1).strip()
-            topics = [t.strip().strip(".,;:-–") for t in raw.split(",")]
-            topics = [t for t in topics if t and t.lower() != "none"]
+            topics = [t.strip().strip(".,;:-–*#") for t in raw.split(",")]
+            topics = [t for t in topics if t and t.lower() != "none" and re.search(r"\w", t)]
             topics = topics[:3]
 
         # Extract summary fields
@@ -980,7 +1284,14 @@ class BaseLLMClient(ABC):
             return topics[:3], _render_summary_markdown_cs(data)
 
         prompt = _COMBINED_PROMPT_TEMPLATE_CS.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _COMBINED_SYSTEM_CS)
+
+        def _validate_combined(r: str) -> bool:
+            topics, data = self._parse_combined_response(r)
+            return bool(topics) or bool(data.get("changes"))
+
+        response = self._generate_with_retry(
+            prompt, _COMBINED_SYSTEM_CS, validator=_validate_combined
+        )
         if response is None:
             return [], ""
         topics, summary_data = self._parse_combined_response(response)
@@ -1013,7 +1324,14 @@ class BaseLLMClient(ABC):
             return topics[:3], _render_summary_markdown_en(data)
 
         prompt = _COMBINED_PROMPT_TEMPLATE_EN.format(title=sanitized_title, text=sanitized_text)
-        response = self._generate(prompt, _COMBINED_SYSTEM_EN)
+
+        def _validate_combined(r: str) -> bool:
+            topics, data = self._parse_combined_response(r)
+            return bool(topics) or bool(data.get("changes"))
+
+        response = self._generate_with_retry(
+            prompt, _COMBINED_SYSTEM_EN, validator=_validate_combined
+        )
         if response is None:
             return [], ""
         topics, summary_data = self._parse_combined_response(response)
@@ -1092,10 +1410,10 @@ class BaseLLMClient(ABC):
             return []
 
         raw = match.group(1).strip()
-        # Split on comma, clean up each topic
-        topics = [t.strip().strip(".,;:-–") for t in raw.split(",")]
-        # Filter empty strings and "none"
-        topics = [t for t in topics if t and t.lower() != "none"]
+        # Split on comma, clean up each topic (strip markdown bold markers too)
+        topics = [t.strip().strip(".,;:-–*#") for t in raw.split(",")]
+        # Filter empty strings, "none", and topics with no alphanumeric content
+        topics = [t for t in topics if t and t.lower() != "none" and re.search(r"\w", t)]
 
         if not topics:
             logger.debug(
@@ -1128,187 +1446,6 @@ class BaseLLMClient(ABC):
         return mapping
 
 
-# ── Ollama backend ───────────────────────────────────────────────────────
-
-
-class OllamaClient(BaseLLMClient):
-    """Client for local Ollama LLM integration."""
-
-    def __init__(
-        self,
-        base_url: str = OLLAMA_BASE_URL,
-        model: str = OLLAMA_MODEL,
-        timeout: float = LLM_TIMEOUT,
-        api_key: str = OLLAMA_API_KEY,
-    ) -> None:
-        self.base_url = base_url.rstrip("/")
-        self.model = model
-        self.timeout = timeout
-        self._available: bool | None = None
-        self._headers: dict[str, str] = {}
-        self._log_prefix = "[ollama]"
-        if api_key:
-            self._headers["Authorization"] = f"Bearer {api_key}"
-
-    def is_available(self) -> bool:
-        """Check if Ollama is running and the model is available.
-
-        Caches result after first call.
-        """
-        if self._available is not None:
-            return self._available
-
-        try:
-            resp = httpx.get(
-                f"{self.base_url}/api/tags",
-                headers=self._headers,
-                timeout=LLM_HEALTH_TIMEOUT,
-            )
-            resp.raise_for_status()
-            models = [m.get("name", "") for m in resp.json().get("models", [])]
-            # Match model name with or without tag suffix
-            self._available = any(
-                m == self.model
-                or m.startswith(f"{self.model}:")
-                or self.model.startswith(f"{m}:")
-                or m == self.model.split(":")[0]
-                for m in models
-            )
-            if self._available:
-                logger.info("[ollama] Available with model {}", self.model)
-            else:
-                logger.info(
-                    "[ollama] Running but model {} not found (available: {})",
-                    self.model,
-                    ", ".join(models),
-                )
-        except Exception:
-            self._available = False
-            logger.info("[ollama] Not available (connection failed)")
-
-        return self._available
-
-    def _generate(
-        self,
-        prompt: str,
-        system: str,
-        *,
-        response_format: dict[str, Any] | None = None,
-    ) -> str | None:
-        """Send a generation request to Ollama. Returns response text or None.
-
-        The response_format parameter is accepted but ignored
-        (Ollama uses free-text prompts with regex parsing).
-        """
-        try:
-            resp = httpx.post(
-                f"{self.base_url}/api/generate",
-                headers=self._headers,
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "system": system,
-                    "stream": False,
-                },
-                timeout=self.timeout,
-            )
-            resp.raise_for_status()
-            return resp.json().get("response")
-        except Exception:
-            logger.opt(exception=True).debug("[ollama] Generation request failed")
-            return None
-
-
-# ── OpenAI-compatible backend ────────────────────────────────────────────
-
-
-class OpenAIClient(BaseLLMClient):
-    """Client for OpenAI-compatible LLM APIs (OpenAI, Azure, Together, Groq, vLLM, etc.)."""
-
-    def __init__(
-        self,
-        base_url: str = OPENAI_BASE_URL,
-        model: str = OPENAI_MODEL,
-        timeout: float = LLM_TIMEOUT,
-        api_key: str = OPENAI_API_KEY,
-    ) -> None:
-        self.base_url = base_url.rstrip("/")
-        self.model = model
-        self.timeout = timeout
-        self._available: bool | None = None
-        self._headers: dict[str, str] = {"Content-Type": "application/json"}
-        self._log_prefix = "[openai]"
-        if api_key:
-            self._headers["Authorization"] = f"Bearer {api_key}"
-
-    def is_available(self) -> bool:
-        """Check if the OpenAI-compatible API is reachable.
-
-        Caches result after first call.
-        """
-        if self._available is not None:
-            return self._available
-
-        try:
-            resp = httpx.get(
-                f"{self.base_url}/models",
-                headers=self._headers,
-                timeout=LLM_HEALTH_TIMEOUT,
-            )
-            resp.raise_for_status()
-            self._available = True
-            logger.info("[openai] Available at {} with model {}", self.base_url, self.model)
-        except Exception:
-            self._available = False
-            logger.info("[openai] Not available (connection to {} failed)", self.base_url)
-
-        return self._available
-
-    @property
-    def supports_structured_output(self) -> bool:
-        """OpenAI-compatible APIs support structured output via response_format."""
-        return True
-
-    def _generate(
-        self,
-        prompt: str,
-        system: str,
-        *,
-        response_format: dict[str, Any] | None = None,
-    ) -> str | None:
-        """Send a chat completion request. Returns response text or None.
-
-        When response_format is provided, constrains the output to the given JSON schema.
-        """
-        payload: dict[str, Any] = {
-            "model": self.model,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": prompt},
-            ],
-            "stream": False,
-        }
-        if response_format is not None:
-            payload["response_format"] = response_format
-
-        try:
-            resp = httpx.post(
-                f"{self.base_url}/chat/completions",
-                headers=self._headers,
-                json=payload,
-                timeout=self.timeout,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            choices = data.get("choices", [])
-            if choices:
-                return choices[0].get("message", {}).get("content")
-            return None
-        except Exception:
-            logger.opt(exception=True).debug("[openai] Chat completion request failed")
-            return None
-
-
 # ── Serialization helpers ────────────────────────────────────────────────
 
 
@@ -1338,18 +1475,24 @@ def deserialize_topics(raw: str) -> list[str]:
 # ── Factory ──────────────────────────────────────────────────────────────
 
 
-def create_llm_client() -> BaseLLMClient:
+def create_llm_client() -> LLMClient:
     """Factory: return the configured LLM backend client.
 
     Reads LLM_PROVIDER from config:
-    - "ollama" (default) -> OllamaClient
-    - "openai" -> OpenAIClient (fails fast if OPENAI_API_KEY is empty)
+    - "ollama" (default) -> LLMClient(provider="ollama", ...)
+    - "openai" -> LLMClient(provider="openai", ...) (fails fast if OPENAI_API_KEY is empty)
 
     Raises ValueError for unknown provider.
     """
     match LLM_PROVIDER.lower().strip():
         case "ollama":
-            return OllamaClient()
+            return LLMClient(
+                provider="ollama",
+                base_url=OLLAMA_BASE_URL,
+                model=OLLAMA_MODEL,
+                api_key=OLLAMA_API_KEY,
+                structured_output=LLM_STRUCTURED_OUTPUT,
+            )
         case "openai":
             if not OPENAI_API_KEY:
                 msg = (
@@ -1357,7 +1500,13 @@ def create_llm_client() -> BaseLLMClient:
                     "Set OPENAI_API_KEY in your .env or environment."
                 )
                 raise ValueError(msg)
-            return OpenAIClient()
+            return LLMClient(
+                provider="openai",
+                base_url=OPENAI_BASE_URL,
+                model=OPENAI_MODEL,
+                api_key=OPENAI_API_KEY,
+                structured_output=LLM_STRUCTURED_OUTPUT,
+            )
         case _:
             msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
             raise ValueError(msg)

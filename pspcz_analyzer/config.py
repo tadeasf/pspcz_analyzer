@@ -103,9 +103,13 @@ LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY", "")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:8b")
+LLM_STRUCTURED_OUTPUT = (
+    os.environ.get("LLM_STRUCTURED_OUTPUT", os.environ.get("OLLAMA_STRUCTURED_OUTPUT", "1")) == "1"
+)
 TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "1") == "1"
 LLM_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 LLM_HEALTH_TIMEOUT = 5.0  # connectivity check
+LLM_EMPTY_RETRIES = int(os.environ.get("LLM_EMPTY_RETRIES", "2"))
 LLM_MAX_TEXT_CHARS = int(
     os.environ.get("LLM_MAX_TEXT_CHARS", "240000")
 )  # ~80k tokens @ 3 chars/tok (Czech text)

@@ -1494,6 +1494,7 @@ dependencies = [
     { name = "pymupdf" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
+    { name = "ruff" },
     { name = "seaborn" },
     { name = "slowapi" },
     { name = "uvicorn" },
@@ -1517,6 +1518,11 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocs-section-index" },
     { name = "mkdocstrings", extra = ["python"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "rich" },
 ]
 
 [package.metadata]
@@ -1546,12 +1552,16 @@ requires-dist = [
     { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.3" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "python-multipart" },
+    { name = "ruff", specifier = ">=0.15.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11" },
     { name = "seaborn", specifier = ">=0.13" },
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "uvicorn", specifier = ">=0.34" },
 ]
 provides-extras = ["dev", "docs"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "rich", specifier = ">=14.3.2" }]
 
 [[package]]
 name = "pydantic"

@@ -15,6 +15,9 @@ from pspcz_analyzer.config import (
 )
 from pspcz_analyzer.data.tisk_scraper import get_best_pdf
 
+pymupdf.TOOLS.mupdf_display_warnings(False)
+pymupdf.TOOLS.mupdf_display_errors(False)
+
 
 def download_one(period: int, ct: int, idd: int, cache_dir: Path, force: bool) -> Path | None:
     """Download a single PDF by its idd. Returns path or None."""

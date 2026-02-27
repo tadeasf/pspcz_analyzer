@@ -33,6 +33,8 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
 - `OLLAMA_API_KEY` — Bearer token for remote HTTPS Ollama (default: empty)
 - `OLLAMA_MODEL` — model name for Ollama (default: `qwen3:8b`)
+- `LLM_STRUCTURED_OUTPUT` — JSON schema structured output for all providers (`0` or `1`, default: `1`; backward-compat: reads `OLLAMA_STRUCTURED_OUTPUT` as fallback)
+- `LLM_EMPTY_RETRIES` — extra attempts when free-text LLM path returns empty/unparseable results (default: `2`, `0` = no retries)
 - `OPENAI_BASE_URL` — OpenAI-compatible API endpoint (default: `https://api.openai.com/v1`)
 - `OPENAI_API_KEY` — API key for OpenAI-compatible backend (default: empty)
 - `OPENAI_MODEL` — model name for OpenAI-compatible backend (default: `gpt-4o-mini`)
@@ -78,6 +80,20 @@ Each in `services/`, each takes a `PeriodData` and returns `list[dict]`:
 - **`attendance_service`** — Attendance %, vote breakdown (YES/NO/ABSTAINED), activity ranking
 - **`similarity_service`** — Cosine similarity + SVD-based PCA on vote matrix (MPs × votes, +1/-1/0)
 - **`votes_service`** — Vote search/list with pagination, vote detail with per-party breakdown
+
+### Tisk Pipeline (`services/tisk/`)
+
+Background pipeline for parliamentary print (tisk) enrichment. Runs as asyncio tasks, coordinated by `TiskPipelineService`:
+- **`pipeline.py`** — Orchestrator: download → extract → classify → summarize → consolidate → scrape histories
+- **`classifier.py`** — LLM-based topic classification + consolidation, with keyword fallback via `topic_service`
+- **`downloader_pipeline.py`** — Batch PDF download + text extraction per period
+- **`metadata_scraper.py`** — Scrapes legislative histories + law changes from psp.cz HTML
+- **`version_service.py`** — Downloads sub-tisk versions, generates bilingual LLM diff summaries
+- **`cache_manager.py`** — Loads/caches topic classifications, summaries, version diffs, histories from Parquet/JSON/text files
+- **`lookup_builder.py`** — Builds `(schuze, bod) → TiskInfo` lookup dicts linking votes to prints
+- **`text_service.py`** — Cache/retrieval layer for extracted PDF text
+
+Low-level I/O helpers remain in `data/`: `tisk_downloader.py`, `tisk_extractor.py`, `tisk_scraper.py`, `history_scraper.py`, `law_changes_scraper.py`.
 
 ### Feedback Service (`services/feedback_service.py`)
 

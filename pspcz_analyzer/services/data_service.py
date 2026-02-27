@@ -47,10 +47,12 @@ from pspcz_analyzer.models.schemas import (
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.mp_builder import build_mp_info
-from pspcz_analyzer.services.tisk_cache_manager import TiskCacheManager
-from pspcz_analyzer.services.tisk_lookup_builder import build_tisk_lookup
-from pspcz_analyzer.services.tisk_pipeline_service import TiskPipelineService
-from pspcz_analyzer.services.tisk_text_service import TiskTextService
+from pspcz_analyzer.services.tisk import (
+    TiskCacheManager,
+    TiskPipelineService,
+    TiskTextService,
+    build_tisk_lookup,
+)
 
 
 class DataService:

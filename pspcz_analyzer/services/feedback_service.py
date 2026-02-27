@@ -31,7 +31,7 @@ def _build_issue_body(body: str, vote_id: int, period: int, page_url: str, lang:
 
 
 class GitHubFeedbackClient:
-    """Creates GitHub issues from user feedback, modeled after OllamaClient."""
+    """Creates GitHub issues from user feedback, modeled after LLMClient."""
 
     def __init__(self) -> None:
         self.enabled = GITHUB_FEEDBACK_ENABLED

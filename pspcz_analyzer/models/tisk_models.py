@@ -1,6 +1,7 @@
 """Data models for parliamentary prints (tisky) and period data."""
 
 from dataclasses import dataclass, field
+from datetime import date
 
 import polars as pl
 
@@ -71,8 +72,10 @@ class PeriodData:
         dates = date_col.drop_nulls().str.strip_chars()
         parsed = dates.str.to_date("%d.%m.%Y", strict=False).drop_nulls()
         if parsed.len() > 0:
-            date_min = parsed.min().strftime("%d.%m.%Y")
-            date_max = parsed.max().strftime("%d.%m.%Y")
+            min_val: date = parsed.min()  # type: ignore[assignment]
+            max_val: date = parsed.max()  # type: ignore[assignment]
+            date_min = min_val.strftime("%d.%m.%Y")
+            date_max = max_val.strftime("%d.%m.%Y")
         else:
             date_min = "N/A"
             date_max = "N/A"

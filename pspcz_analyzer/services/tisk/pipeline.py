@@ -19,13 +19,13 @@ from pspcz_analyzer.models.pipeline_progress import (
     PipelineStage,
     StageProgress,
 )
-from pspcz_analyzer.services.tisk_classifier import classify_and_save, consolidate_topics
-from pspcz_analyzer.services.tisk_downloader_pipeline import process_period_sync
-from pspcz_analyzer.services.tisk_metadata_scraper import (
+from pspcz_analyzer.services.tisk.classifier import classify_and_save, consolidate_topics
+from pspcz_analyzer.services.tisk.downloader_pipeline import process_period_sync
+from pspcz_analyzer.services.tisk.metadata_scraper import (
     scrape_histories_sync,
     scrape_law_changes_sync,
 )
-from pspcz_analyzer.services.tisk_version_service import (
+from pspcz_analyzer.services.tisk.version_service import (
     analyze_version_diffs_sync,
     download_subtisk_versions_sync,
 )

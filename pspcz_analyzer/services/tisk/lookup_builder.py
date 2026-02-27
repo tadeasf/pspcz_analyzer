@@ -5,7 +5,7 @@ from loguru import logger
 
 from pspcz_analyzer.config import PERIOD_ORGAN_IDS
 from pspcz_analyzer.models.tisk_models import TiskInfo
-from pspcz_analyzer.services.tisk_text_service import TiskTextService
+from pspcz_analyzer.services.tisk.text_service import TiskTextService
 
 
 def build_tisk_lookup(
