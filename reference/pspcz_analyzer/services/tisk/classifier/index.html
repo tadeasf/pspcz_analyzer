@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk_classifier/">
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/classifier/">
       
       
-        <link rel="prev" href="../tisk_cache_manager/">
+        <link rel="prev" href="../cache_manager/">
       
       
-        <link rel="next" href="../tisk_downloader_pipeline/">
+        <link rel="next" href="../downloader_pipeline/">
       
       
         
       
       
-      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
     
     
       
-        <title>tisk_classifier - PSP.cz Analyzer</title>
+        <title>classifier - PSP.cz Analyzer</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,9 +53,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pspcz_analyzer.services.tisk_classifier" class="md-skip">
+        <a href="#pspcz_analyzer.services.tisk.classifier" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../../.." title="PSP.cz Analyzer" class="md-header__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+    <a href="../../../../.." title="PSP.cz Analyzer" class="md-header__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              tisk_classifier
+              classifier
             
           </span>
         </div>
@@ -221,7 +221,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../.." class="md-tabs__link">
+      <a href="../../../../.." class="md-tabs__link">
         
   
   
@@ -242,7 +242,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../data-model/" class="md-tabs__link">
+        <a href="../../../../../data-model/" class="md-tabs__link">
           
   
   
@@ -264,7 +264,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../" class="md-tabs__link">
+        <a href="../../../" class="md-tabs__link">
           
   
   
@@ -304,7 +304,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="PSP.cz Analyzer" class="md-nav__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+    <a href="../../../../.." title="PSP.cz Analyzer" class="md-nav__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -334,7 +334,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../.." class="md-nav__link">
+      <a href="../../../../.." class="md-nav__link">
         
   
   
@@ -413,7 +413,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../data-model/" class="md-nav__link">
+      <a href="../../../../../data-model/" class="md-nav__link">
         
   
   
@@ -441,7 +441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../routes/" class="md-nav__link">
+      <a href="../../../../../routes/" class="md-nav__link">
         
   
   
@@ -469,7 +469,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../services/" class="md-nav__link">
+      <a href="../../../../../services/" class="md-nav__link">
         
   
   
@@ -497,7 +497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../templates/" class="md-nav__link">
+      <a href="../../../../../templates/" class="md-nav__link">
         
   
   
@@ -525,7 +525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../testing/" class="md-nav__link">
+      <a href="../../../../../testing/" class="md-nav__link">
         
   
   
@@ -533,34 +533,6 @@
     
   
     Testing & CI/CD
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../nastaveni-openai.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    LLM (OpenAI)
   
 
     
@@ -667,7 +639,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../" class="md-nav__link ">
+            <a href="../../../" class="md-nav__link ">
               
   
   
@@ -709,7 +681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../config/" class="md-nav__link">
+      <a href="../../../config/" class="md-nav__link">
         
   
   
@@ -754,7 +726,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../data/" class="md-nav__link ">
+            <a href="../../../data/" class="md-nav__link ">
               
   
   
@@ -796,7 +768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/cache/" class="md-nav__link">
+      <a href="../../../data/cache/" class="md-nav__link">
         
   
   
@@ -824,7 +796,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/downloader/" class="md-nav__link">
+      <a href="../../../data/downloader/" class="md-nav__link">
         
   
   
@@ -852,7 +824,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/history_scraper/" class="md-nav__link">
+      <a href="../../../data/history_scraper/" class="md-nav__link">
         
   
   
@@ -880,7 +852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/law_changes_scraper/" class="md-nav__link">
+      <a href="../../../data/law_changes_scraper/" class="md-nav__link">
         
   
   
@@ -908,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/parser/" class="md-nav__link">
+      <a href="../../../data/parser/" class="md-nav__link">
         
   
   
@@ -936,7 +908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/tisk_downloader/" class="md-nav__link">
+      <a href="../../../data/tisk_downloader/" class="md-nav__link">
         
   
   
@@ -964,7 +936,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/tisk_extractor/" class="md-nav__link">
+      <a href="../../../data/tisk_extractor/" class="md-nav__link">
         
   
   
@@ -992,7 +964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../data/tisk_scraper/" class="md-nav__link">
+      <a href="../../../data/tisk_scraper/" class="md-nav__link">
         
   
   
@@ -1045,7 +1017,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../i18n/" class="md-nav__link ">
+            <a href="../../../i18n/" class="md-nav__link ">
               
   
   
@@ -1087,7 +1059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../i18n/middleware/" class="md-nav__link">
+      <a href="../../../i18n/middleware/" class="md-nav__link">
         
   
   
@@ -1115,7 +1087,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../i18n/translations/" class="md-nav__link">
+      <a href="../../../i18n/translations/" class="md-nav__link">
         
   
   
@@ -1151,7 +1123,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../logging_config/" class="md-nav__link">
+      <a href="../../../logging_config/" class="md-nav__link">
         
   
   
@@ -1179,7 +1151,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../main/" class="md-nav__link">
+      <a href="../../../main/" class="md-nav__link">
         
   
   
@@ -1207,7 +1179,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../middleware/" class="md-nav__link">
+      <a href="../../../middleware/" class="md-nav__link">
         
   
   
@@ -1252,7 +1224,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../models/" class="md-nav__link ">
+            <a href="../../../models/" class="md-nav__link ">
               
   
   
@@ -1294,7 +1266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/enums/" class="md-nav__link">
+      <a href="../../../models/enums/" class="md-nav__link">
         
   
   
@@ -1322,7 +1294,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/pipeline_progress/" class="md-nav__link">
+      <a href="../../../models/pipeline_progress/" class="md-nav__link">
         
   
   
@@ -1350,7 +1322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/schemas/" class="md-nav__link">
+      <a href="../../../models/schemas/" class="md-nav__link">
         
   
   
@@ -1378,7 +1350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/tisk_models/" class="md-nav__link">
+      <a href="../../../models/tisk_models/" class="md-nav__link">
         
   
   
@@ -1414,7 +1386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../rate_limit/" class="md-nav__link">
+      <a href="../../../rate_limit/" class="md-nav__link">
         
   
   
@@ -1459,7 +1431,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../routes/" class="md-nav__link ">
+            <a href="../../../routes/" class="md-nav__link ">
               
   
   
@@ -1501,7 +1473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../routes/api/" class="md-nav__link">
+      <a href="../../../routes/api/" class="md-nav__link">
         
   
   
@@ -1529,7 +1501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../routes/charts/" class="md-nav__link">
+      <a href="../../../routes/charts/" class="md-nav__link">
         
   
   
@@ -1557,7 +1529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../routes/pages/" class="md-nav__link">
+      <a href="../../../routes/pages/" class="md-nav__link">
         
   
   
@@ -1612,7 +1584,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../" class="md-nav__link ">
               
   
   
@@ -1654,7 +1626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../analysis_cache/" class="md-nav__link">
+      <a href="../../analysis_cache/" class="md-nav__link">
         
   
   
@@ -1682,7 +1654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../attendance_service/" class="md-nav__link">
+      <a href="../../attendance_service/" class="md-nav__link">
         
   
   
@@ -1710,7 +1682,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../daily_refresh_service/" class="md-nav__link">
+      <a href="../../daily_refresh_service/" class="md-nav__link">
         
   
   
@@ -1738,7 +1710,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data_service/" class="md-nav__link">
+      <a href="../../data_service/" class="md-nav__link">
         
   
   
@@ -1766,7 +1738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../feedback_service/" class="md-nav__link">
+      <a href="../../feedback_service/" class="md-nav__link">
         
   
   
@@ -1794,7 +1766,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../llm_service/" class="md-nav__link">
+      <a href="../../llm_service/" class="md-nav__link">
         
   
   
@@ -1822,7 +1794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../loyalty_service/" class="md-nav__link">
+      <a href="../../loyalty_service/" class="md-nav__link">
         
   
   
@@ -1850,7 +1822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../mp_builder/" class="md-nav__link">
+      <a href="../../mp_builder/" class="md-nav__link">
         
   
   
@@ -1878,7 +1850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../similarity_service/" class="md-nav__link">
+      <a href="../../similarity_service/" class="md-nav__link">
         
   
   
@@ -1903,17 +1875,78 @@
                 
   
   
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10_10" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_10_10" id="__nav_3_1_10_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_10_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1_10_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    tisk
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
-      <a href="../tisk_cache_manager/" class="md-nav__link">
+      <a href="../cache_manager/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_cache_manager
+    cache_manager
   
 
     
@@ -1948,7 +1981,7 @@
   <span class="md-ellipsis">
     
   
-    tisk_classifier
+    classifier
   
 
     
@@ -1966,7 +1999,7 @@
   <span class="md-ellipsis">
     
   
-    tisk_classifier
+    classifier
   
 
     
@@ -1990,19 +2023,19 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier" class="md-nav__link">
     <span class="md-ellipsis">
       
-        tisk_classifier
+        classifier
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="tisk_classifier">
+    <nav class="md-nav" aria-label="classifier">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier.classify_and_save" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier.classify_and_save" class="md-nav__link">
     <span class="md-ellipsis">
       
         classify_and_save
@@ -2013,7 +2046,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier.consolidate_topics" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier.consolidate_topics" class="md-nav__link">
     <span class="md-ellipsis">
       
         consolidate_topics
@@ -2024,7 +2057,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier.get_topic_en_map" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier.get_topic_en_map" class="md-nav__link">
     <span class="md-ellipsis">
       
         get_topic_en_map
@@ -2055,14 +2088,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_downloader_pipeline/" class="md-nav__link">
+      <a href="../downloader_pipeline/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_downloader_pipeline
+    downloader_pipeline
   
 
     
@@ -2083,14 +2116,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_lookup_builder/" class="md-nav__link">
+      <a href="../lookup_builder/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_lookup_builder
+    lookup_builder
   
 
     
@@ -2111,14 +2144,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_metadata_scraper/" class="md-nav__link">
+      <a href="../metadata_scraper/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_metadata_scraper
+    metadata_scraper
   
 
     
@@ -2139,14 +2172,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_pipeline_service/" class="md-nav__link">
+      <a href="../pipeline/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_pipeline_service
+    pipeline
   
 
     
@@ -2167,14 +2200,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_text_service/" class="md-nav__link">
+      <a href="../text_service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_text_service
+    text_service
   
 
     
@@ -2195,14 +2228,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_version_service/" class="md-nav__link">
+      <a href="../version_service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_version_service
+    version_service
   
 
     
@@ -2216,6 +2249,14 @@
 
               
             
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
               
                 
   
@@ -2223,7 +2264,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../topic_service/" class="md-nav__link">
+      <a href="../../topic_service/" class="md-nav__link">
         
   
   
@@ -2251,7 +2292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../votes_service/" class="md-nav__link">
+      <a href="../../votes_service/" class="md-nav__link">
         
   
   
@@ -2304,7 +2345,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../utils/" class="md-nav__link ">
+            <a href="../../../utils/" class="md-nav__link ">
               
   
   
@@ -2346,7 +2387,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/text/" class="md-nav__link">
+      <a href="../../../utils/text/" class="md-nav__link">
         
   
   
@@ -2415,19 +2456,19 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier" class="md-nav__link">
     <span class="md-ellipsis">
       
-        tisk_classifier
+        classifier
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="tisk_classifier">
+    <nav class="md-nav" aria-label="classifier">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier.classify_and_save" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier.classify_and_save" class="md-nav__link">
     <span class="md-ellipsis">
       
         classify_and_save
@@ -2438,7 +2479,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier.consolidate_topics" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier.consolidate_topics" class="md-nav__link">
     <span class="md-ellipsis">
       
         consolidate_topics
@@ -2449,7 +2490,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_classifier.get_topic_en_map" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.classifier.get_topic_en_map" class="md-nav__link">
     <span class="md-ellipsis">
       
         get_topic_en_map
@@ -2484,17 +2525,17 @@
   
 
 
-  <h1>tisk_classifier</h1>
+  <h1>classifier</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<h2 id="pspcz_analyzer.services.tisk_classifier" class="doc doc-heading">
-            <code>tisk_classifier</code>
+<h2 id="pspcz_analyzer.services.tisk.classifier" class="doc doc-heading">
+            <code>classifier</code>
 
 
-<a href="#pspcz_analyzer.services.tisk_classifier" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pspcz_analyzer.services.tisk.classifier" class="headerlink" title="Permanent link">&para;</a></h2>
 
     <div class="doc doc-contents first">
 
@@ -2523,10 +2564,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pspcz_analyzer.services.tisk_classifier.classify_and_save" class="doc doc-heading">
+<h3 id="pspcz_analyzer.services.tisk.classifier.classify_and_save" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">classify_and_save</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">text_paths</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">progress_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_classifier.classify_and_save" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.services.tisk.classifier.classify_and_save" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
@@ -2540,7 +2581,7 @@ Returns (topic_map, summary_map, summary_en_map).</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_classifier.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/classifier.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-19"> 19</a></span>
 <span class="normal"><a href="#__codelineno-0-20"> 20</a></span>
 <span class="normal"><a href="#__codelineno-0-21"> 21</a></span>
@@ -2725,10 +2766,10 @@ Returns (topic_map, summary_map, summary_en_map).</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pspcz_analyzer.services.tisk_classifier.consolidate_topics" class="doc doc-heading">
+<h3 id="pspcz_analyzer.services.tisk.classifier.consolidate_topics" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">consolidate_topics</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_classifier.consolidate_topics" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.services.tisk.classifier.consolidate_topics" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
@@ -2740,7 +2781,7 @@ consolidate similar ones, applies the mapping, and re-writes the parquet.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_classifier.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/classifier.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-206">206</a></span>
 <span class="normal"><a href="#__codelineno-0-207">207</a></span>
 <span class="normal"><a href="#__codelineno-0-208">208</a></span>
@@ -2943,10 +2984,10 @@ consolidate similar ones, applies the mapping, and re-writes the parquet.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pspcz_analyzer.services.tisk_classifier.get_topic_en_map" class="doc doc-heading">
+<h3 id="pspcz_analyzer.services.tisk.classifier.get_topic_en_map" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">get_topic_en_map</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_classifier.get_topic_en_map" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.services.tisk.classifier.get_topic_en_map" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
@@ -2955,7 +2996,7 @@ consolidate similar ones, applies the mapping, and re-writes the parquet.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_classifier.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/classifier.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-365">365</a></span>
 <span class="normal"><a href="#__codelineno-0-366">366</a></span>
 <span class="normal"><a href="#__codelineno-0-367">367</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-365" name="__codelineno-0-365"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_topic_en_map</span><span class="p">(</span><span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
@@ -3029,10 +3070,10 @@ consolidate similar ones, applies the mapping, and re-writes the parquet.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.instant", "search.highlight", "content.code.copy"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.instant", "search.highlight", "content.code.copy"], "search": "../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

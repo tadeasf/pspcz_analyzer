@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk_cache_manager/">
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/">
       
       
         <link rel="prev" href="../similarity_service/">
       
       
-        <link rel="next" href="../tisk_classifier/">
+        <link rel="next" href="cache_manager/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>tisk_cache_manager - PSP.cz Analyzer</title>
+        <title>tisk - PSP.cz Analyzer</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pspcz_analyzer.services.tisk_cache_manager" class="md-skip">
+        <a href="#pspcz_analyzer.services.tisk" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              tisk_cache_manager
+              tisk
             
           </span>
         </div>
@@ -533,34 +533,6 @@
     
   
     Testing & CI/CD
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../nastaveni-openai.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    LLM (OpenAI)
   
 
     
@@ -1907,168 +1879,58 @@
   
   
   
-    <li class="md-nav__item md-nav__item--active">
+    
+    
+    
+    
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
+        
       
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10_10" checked>
+        
           
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    tisk_cache_manager
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    tisk_cache_manager
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        tisk_cache_manager
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="tisk_cache_manager">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TiskCacheManager
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="TiskCacheManager">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.invalidate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        invalidate
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_topic_cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        load_topic_cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_history_cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        load_history_cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_law_changes_cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        load_law_changes_cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_subtisk_versions_cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        load_subtisk_versions_cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_version_diffs_cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        load_version_diffs_cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
               
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_3_1_10_10" id="__nav_3_1_10_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_10_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1_10_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    tisk
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -2077,14 +1939,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_classifier/" class="md-nav__link">
+      <a href="cache_manager/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_classifier
+    cache_manager
   
 
     
@@ -2105,14 +1967,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_downloader_pipeline/" class="md-nav__link">
+      <a href="classifier/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_downloader_pipeline
+    classifier
   
 
     
@@ -2133,14 +1995,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_lookup_builder/" class="md-nav__link">
+      <a href="downloader_pipeline/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_lookup_builder
+    downloader_pipeline
   
 
     
@@ -2161,14 +2023,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_metadata_scraper/" class="md-nav__link">
+      <a href="lookup_builder/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_metadata_scraper
+    lookup_builder
   
 
     
@@ -2189,14 +2051,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_pipeline_service/" class="md-nav__link">
+      <a href="metadata_scraper/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_pipeline_service
+    metadata_scraper
   
 
     
@@ -2217,14 +2079,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_text_service/" class="md-nav__link">
+      <a href="pipeline/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_text_service
+    pipeline
   
 
     
@@ -2245,14 +2107,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../tisk_version_service/" class="md-nav__link">
+      <a href="text_service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    tisk_version_service
+    text_service
   
 
     
@@ -2261,6 +2123,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="version_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    version_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2465,19 +2363,19 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk" class="md-nav__link">
     <span class="md-ellipsis">
       
-        tisk_cache_manager
+        tisk
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="tisk_cache_manager">
+    <nav class="md-nav" aria-label="tisk">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.TiskCacheManager" class="md-nav__link">
     <span class="md-ellipsis">
       
         TiskCacheManager
@@ -2489,7 +2387,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.invalidate" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.TiskCacheManager.invalidate" class="md-nav__link">
     <span class="md-ellipsis">
       
         invalidate
@@ -2500,7 +2398,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_topic_cache" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_topic_cache" class="md-nav__link">
     <span class="md-ellipsis">
       
         load_topic_cache
@@ -2511,7 +2409,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_history_cache" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_history_cache" class="md-nav__link">
     <span class="md-ellipsis">
       
         load_history_cache
@@ -2522,7 +2420,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_law_changes_cache" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_law_changes_cache" class="md-nav__link">
     <span class="md-ellipsis">
       
         load_law_changes_cache
@@ -2533,7 +2431,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_subtisk_versions_cache" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_subtisk_versions_cache" class="md-nav__link">
     <span class="md-ellipsis">
       
         load_subtisk_versions_cache
@@ -2544,7 +2442,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_version_diffs_cache" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_version_diffs_cache" class="md-nav__link">
     <span class="md-ellipsis">
       
         load_version_diffs_cache
@@ -2556,6 +2454,139 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskPipelineService" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TiskPipelineService
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TiskPipelineService">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskPipelineService.progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        progress
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskPipelineService.start_period" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start_period
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskPipelineService.start_all_periods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start_all_periods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskPipelineService.is_running" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_running
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskPipelineService.cancel_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancel_all
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskTextService" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TiskTextService
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TiskTextService">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskTextService.get_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_text
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskTextService.has_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        has_text
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.TiskTextService.available_tisky" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        available_tisky
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.tisk.build_tisk_lookup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_tisk_lookup
+      
+    </span>
+  </a>
   
 </li>
         
@@ -2584,21 +2615,22 @@
   
 
 
-  <h1>tisk_cache_manager</h1>
+  <h1>tisk</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<h2 id="pspcz_analyzer.services.tisk_cache_manager" class="doc doc-heading">
-            <code>tisk_cache_manager</code>
+<h2 id="pspcz_analyzer.services.tisk" class="doc doc-heading">
+            <code>tisk</code>
 
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pspcz_analyzer.services.tisk" class="headerlink" title="Permanent link">&para;</a></h2>
 
     <div class="doc doc-contents first">
 
-        <p>Cache manager for tisk metadata: topics, histories, law changes, versions.</p>
+        <p>Tisk (parliamentary print) processing subpackage.</p>
+<p>Public API re-exports for use by data_service and other consumers.</p>
 
 
 
@@ -2623,10 +2655,10 @@
 
 
 
-<h3 id="pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager" class="doc doc-heading">
+<h3 id="pspcz_analyzer.services.tisk.TiskCacheManager" class="doc doc-heading">
               <code class="highlight language-python"><span class="n">TiskCacheManager</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.services.tisk.TiskCacheManager" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
@@ -2643,7 +2675,7 @@
 
 
                   <details class="mkdocstrings-source">
-                    <summary>Source code in <code>pspcz_analyzer/services/tisk_cache_manager.py</code></summary>
+                    <summary>Source code in <code>pspcz_analyzer/services/tisk/cache_manager.py</code></summary>
                     <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-22">22</a></span>
 <span class="normal"><a href="#__codelineno-0-23">23</a></span>
 <span class="normal"><a href="#__codelineno-0-24">24</a></span>
@@ -2690,10 +2722,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.invalidate" class="doc doc-heading">
+<h4 id="pspcz_analyzer.services.tisk.TiskCacheManager.invalidate" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">invalidate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.invalidate" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#pspcz_analyzer.services.tisk.TiskCacheManager.invalidate" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
@@ -2702,7 +2734,7 @@
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_cache_manager.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/cache_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-53">53</a></span>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
@@ -2725,10 +2757,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_topic_cache" class="doc doc-heading">
+<h4 id="pspcz_analyzer.services.tisk.TiskCacheManager.load_topic_cache" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">load_topic_cache</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_topic_cache" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_topic_cache" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
@@ -2739,7 +2771,7 @@ incremental pipeline updates).</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_cache_manager.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/cache_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-61"> 61</a></span>
 <span class="normal"><a href="#__codelineno-0-62"> 62</a></span>
 <span class="normal"><a href="#__codelineno-0-63"> 63</a></span>
@@ -2860,10 +2892,10 @@ incremental pipeline updates).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_history_cache" class="doc doc-heading">
+<h4 id="pspcz_analyzer.services.tisk.TiskCacheManager.load_history_cache" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">load_history_cache</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_history_cache" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_history_cache" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
@@ -2873,7 +2905,7 @@ incremental pipeline updates).</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_cache_manager.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/cache_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-118">118</a></span>
 <span class="normal"><a href="#__codelineno-0-119">119</a></span>
 <span class="normal"><a href="#__codelineno-0-120">120</a></span>
@@ -2944,10 +2976,10 @@ incremental pipeline updates).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_law_changes_cache" class="doc doc-heading">
+<h4 id="pspcz_analyzer.services.tisk.TiskCacheManager.load_law_changes_cache" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">load_law_changes_cache</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_law_changes_cache" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_law_changes_cache" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
@@ -2959,7 +2991,7 @@ Returns {ct: [law_change_dicts]}.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_cache_manager.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/cache_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-150">150</a></span>
 <span class="normal"><a href="#__codelineno-0-151">151</a></span>
 <span class="normal"><a href="#__codelineno-0-152">152</a></span>
@@ -3024,10 +3056,10 @@ Returns {ct: [law_change_dicts]}.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_subtisk_versions_cache" class="doc doc-heading">
+<h4 id="pspcz_analyzer.services.tisk.TiskCacheManager.load_subtisk_versions_cache" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">load_subtisk_versions_cache</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_subtisk_versions_cache" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_subtisk_versions_cache" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
@@ -3039,7 +3071,7 @@ Returns {ct: [version_dicts]}.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_cache_manager.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/cache_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-179">179</a></span>
 <span class="normal"><a href="#__codelineno-0-180">180</a></span>
 <span class="normal"><a href="#__codelineno-0-181">181</a></span>
@@ -3106,10 +3138,10 @@ Returns {ct: [version_dicts]}.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_version_diffs_cache" class="doc doc-heading">
+<h4 id="pspcz_analyzer.services.tisk.TiskCacheManager.load_version_diffs_cache" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">load_version_diffs_cache</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.tisk_cache_manager.TiskCacheManager.load_version_diffs_cache" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#pspcz_analyzer.services.tisk.TiskCacheManager.load_version_diffs_cache" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
@@ -3121,7 +3153,7 @@ Returns ({"{ct}<em ct1="ct1">{ct1}": summary_cs}, {"{ct}</em>).}": summary_en</p
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/tisk_cache_manager.py</code></summary>
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/cache_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-209">209</a></span>
 <span class="normal"><a href="#__codelineno-0-210">210</a></span>
 <span class="normal"><a href="#__codelineno-0-211">211</a></span>
@@ -3205,6 +3237,651 @@ Returns ({"{ct}<em ct1="ct1">{ct1}": summary_cs}, {"{ct}</em>).}": summary_en</p
 
 </div>
 
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.services.tisk.TiskPipelineService" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">TiskPipelineService</span><span class="p">(</span><span class="n">cache_dir</span><span class="o">=</span><span class="n">DEFAULT_CACHE_DIR</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskPipelineService" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Manages background tisk processing for loaded periods.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_CACHE_DIR</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="o">=</span> <span class="n">cache_dir</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span> <span class="o">=</span> <span class="n">PipelineProgress</span><span class="p">()</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_progress_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskPipelineService.progress" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">progress</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.services.tisk.TiskPipelineService.progress" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Current pipeline progress (thread-safe read).</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskPipelineService.start_period" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">start_period</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">ct_numbers</span><span class="p">,</span> <span class="n">on_complete</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskPipelineService.start_period" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Start background processing for a period. Idempotent — skips if already running.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_period</span><span class="p">(</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">ct_numbers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="n">on_complete</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Start background processing for a period. Idempotent — skips if already running.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">if</span> <span class="n">period</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="p">[</span><span class="n">period</span><span class="p">]</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tisk pipeline already running for period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="k">return</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_run_period</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">ct_numbers</span><span class="p">,</span> <span class="n">on_complete</span><span class="p">),</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;tisk-pipeline-</span><span class="si">{</span><span class="n">period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="p">)</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="p">[</span><span class="n">period</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="s2">&quot;[tisk pipeline] Started background processing for period </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2"> tisky)&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="nb">len</span><span class="p">(</span><span class="n">ct_numbers</span><span class="p">),</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskPipelineService.start_all_periods" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">start_all_periods</span><span class="p">(</span><span class="n">period_ct_numbers</span><span class="p">,</span> <span class="n">on_complete</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskPipelineService.start_all_periods" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Process all periods sequentially in one background task (newest first).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>period_ct_numbers</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="tuple">tuple</span>[<span title="int">int</span>, <span title="list">list</span>[<span title="int">int</span>]]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of (period, ct_numbers) tuples, ordered by priority.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>on_complete</code>
+            </td>
+            <td>
+                  <code><span title="collections.abc.Callable">Callable</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Callback invoked after each period finishes.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_all_periods</span><span class="p">(</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">period_ct_numbers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]],</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">on_complete</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process all periods sequentially in one background task (newest first).</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        period_ct_numbers: List of (period, ct_numbers) tuples, ordered by priority.</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        on_complete: Callback invoked after each period finishes.</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;All-periods pipeline already running&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="k">return</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_init_progress</span><span class="p">(</span><span class="n">period_ct_numbers</span><span class="p">)</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_run_all_periods</span><span class="p">(</span><span class="n">period_ct_numbers</span><span class="p">,</span> <span class="n">on_complete</span><span class="p">),</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;tisk-pipeline-all&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="n">total_tisky</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cts</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">cts</span> <span class="ow">in</span> <span class="n">period_ct_numbers</span><span class="p">)</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="s2">&quot;[tisk pipeline] Started sequential processing of </span><span class="si">{}</span><span class="s2"> periods (</span><span class="si">{}</span><span class="s2"> tisky total)&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="nb">len</span><span class="p">(</span><span class="n">period_ct_numbers</span><span class="p">),</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="n">total_tisky</span><span class="p">,</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskPipelineService.is_running" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">is_running</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskPipelineService.is_running" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Check whether the pipeline is running for a given period.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-267">267</a></span>
+<span class="normal"><a href="#__codelineno-0-268">268</a></span>
+<span class="normal"><a href="#__codelineno-0-269">269</a></span>
+<span class="normal"><a href="#__codelineno-0-270">270</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-267" name="__codelineno-0-267"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_running</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check whether the pipeline is running for a given period.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>    <span class="k">return</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskPipelineService.cancel_all" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">cancel_all</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.services.tisk.TiskPipelineService.cancel_all" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Cancel all running pipeline tasks and wait for them to finish.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#__codelineno-0-287">287</a></span>
+<span class="normal"><a href="#__codelineno-0-288">288</a></span>
+<span class="normal"><a href="#__codelineno-0-289">289</a></span>
+<span class="normal"><a href="#__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#__codelineno-0-294">294</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">cancel_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Cancel all running pipeline tasks and wait for them to finish.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>    <span class="n">tasks_to_cancel</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a>        <span class="n">tasks_to_cancel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="p">)</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a>    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a>            <span class="n">task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>            <span class="n">tasks_to_cancel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a>    <span class="k">if</span> <span class="n">tasks_to_cancel</span><span class="p">:</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[tisk pipeline] Cancelling </span><span class="si">{}</span><span class="s2"> tasks ...&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks_to_cancel</span><span class="p">))</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a>        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">tasks_to_cancel</span><span class="p">,</span> <span class="n">return_exceptions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[tisk pipeline] All tasks cancelled&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a>    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_progress_lock</span><span class="p">:</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.services.tisk.TiskTextService" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">TiskTextService</span><span class="p">(</span><span class="n">cache_dir</span><span class="o">=</span><span class="n">DEFAULT_CACHE_DIR</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskTextService" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Lightweight service to query cached extracted text from tisk PDFs.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>pspcz_analyzer/services/tisk/text_service.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_CACHE_DIR</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="o">=</span> <span class="n">cache_dir</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskTextService.get_text" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_text</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">ct</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskTextService.get_text" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Read cached text for a tisk, or None if not available.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/text_service.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ct</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Read cached text for a tisk, or None if not available.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_text_dir</span><span class="p">(</span><span class="n">period</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ct</span><span class="si">}</span><span class="s2">.txt&quot;</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskTextService.has_text" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">has_text</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">ct</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskTextService.has_text" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Check whether extracted text exists for a tisk.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/text_service.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">def</span><span class="w"> </span><span class="nf">has_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ct</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check whether extracted text exists for a tisk.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a>    <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_text_dir</span><span class="p">(</span><span class="n">period</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ct</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.tisk.TiskTextService.available_tisky" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">available_tisky</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.TiskTextService.available_tisky" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>List all ct numbers that have extracted text for a period.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/text_service.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="k">def</span><span class="w"> </span><span class="nf">available_tisky</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;List all ct numbers that have extracted text for a period.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="n">text_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_text_dir</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">text_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>        <span class="k">return</span> <span class="p">[]</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">text_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.txt&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">isdigit</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pspcz_analyzer.services.tisk.build_tisk_lookup" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">build_tisk_lookup</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">votes</span><span class="p">,</span> <span class="n">schuze</span><span class="p">,</span> <span class="n">bod_schuze</span><span class="p">,</span> <span class="n">tisky</span><span class="p">,</span> <span class="n">tisk_text</span><span class="p">,</span> <span class="n">topic_cache</span><span class="p">,</span> <span class="n">summary_cache</span><span class="p">,</span> <span class="n">summary_en_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">topic_en_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.tisk.build_tisk_lookup" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Build a mapping from (schuze_num, bod_num) -&gt; TiskInfo for a given period.</p>
+<p>Primary path: schuze -&gt; bod_schuze -&gt; tisky (reliable, full coverage).
+Fallback: if schuze data is missing for this period, match vote
+descriptions directly to tisk names (covers new periods where
+schuze.zip hasn't been updated yet).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/tisk/lookup_builder.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_tisk_lookup</span><span class="p">(</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a>    <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a>    <span class="n">votes</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a>    <span class="n">schuze</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a>    <span class="n">bod_schuze</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a>    <span class="n">tisky</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a>    <span class="n">tisk_text</span><span class="p">:</span> <span class="n">TiskTextService</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a>    <span class="n">topic_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]],</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">summary_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">summary_en_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">topic_en_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">TiskInfo</span><span class="p">]:</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a mapping from (schuze_num, bod_num) -&gt; TiskInfo for a given period.</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">    Primary path: schuze -&gt; bod_schuze -&gt; tisky (reliable, full coverage).</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    Fallback: if schuze data is missing for this period, match vote</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    descriptions directly to tisk names (covers new periods where</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    schuze.zip hasn&#39;t been updated yet).</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="n">organ_id</span> <span class="o">=</span> <span class="n">PERIOD_ORGAN_IDS</span><span class="p">[</span><span class="n">period</span><span class="p">]</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="n">en_cache</span> <span class="o">=</span> <span class="n">summary_en_cache</span> <span class="ow">or</span> <span class="p">{}</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="n">en_topic_cache</span> <span class="o">=</span> <span class="n">topic_en_cache</span> <span class="ow">or</span> <span class="p">{}</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="c1"># Try primary path via schuze -&gt; bod_schuze</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="n">sessions</span> <span class="o">=</span> <span class="n">schuze</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_org&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">organ_id</span><span class="p">)</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="k">if</span> <span class="n">sessions</span><span class="o">.</span><span class="n">height</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="k">return</span> <span class="n">build_tisk_lookup_via_schuze</span><span class="p">(</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>            <span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>            <span class="n">sessions</span><span class="p">,</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>            <span class="n">bod_schuze</span><span class="p">,</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>            <span class="n">tisky</span><span class="p">,</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>            <span class="n">tisk_text</span><span class="p">,</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>            <span class="n">topic_cache</span><span class="p">,</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>            <span class="n">summary_cache</span><span class="p">,</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>            <span class="n">en_cache</span><span class="p">,</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>            <span class="n">en_topic_cache</span><span class="p">,</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="p">)</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="c1"># Fallback: text matching for periods without schuze data</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="s2">&quot;No session data for period </span><span class="si">{}</span><span class="s2"> (organ </span><span class="si">{}</span><span class="s2">), using text-match fallback&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="n">organ_id</span><span class="p">,</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="p">)</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">return</span> <span class="n">build_tisk_lookup_via_text</span><span class="p">(</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="n">votes</span><span class="p">,</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="n">tisky</span><span class="p">,</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="n">tisk_text</span><span class="p">,</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">topic_cache</span><span class="p">,</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="n">summary_cache</span><span class="p">,</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="n">en_cache</span><span class="p">,</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="n">en_topic_cache</span><span class="p">,</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
