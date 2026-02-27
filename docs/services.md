@@ -146,7 +146,7 @@ Two outputs from the same vote matrix (MPs x votes, values: +1 YES, -1 NO, 0 oth
 
 The tisk (parliamentary print) pipeline runs as a background process, downloading PDFs, extracting text, classifying topics, generating bilingual summaries, and scraping legislative histories.
 
-### Tisk Pipeline Service (`services/tisk_pipeline_service.py`)
+### Tisk Pipeline Service (`services/tisk/pipeline.py`)
 
 Background processing orchestrator that coordinates the full tisk data enrichment pipeline. Started automatically at app startup for all periods (newest first).
 
@@ -164,7 +164,7 @@ Key class: `TiskPipelineService`
 - `is_running(period)` — check if a period's pipeline is still running
 - `cancel_all()` — cancel all running pipeline tasks (used by the daily refresh service)
 
-### Tisk Text Service (`services/tisk_text_service.py`)
+### Tisk Text Service (`services/tisk/text_service.py`)
 
 Cache and retrieval layer for extracted tisk PDF text. Used by the `/api/tisk-text` endpoint for lazy-loading on vote detail pages.
 
@@ -237,11 +237,11 @@ Configuration (in `config.py`, overridable via `.env`):
 
 If the configured LLM is not running or unreachable, the system silently falls back to keyword-based classification.
 
-### Tisk Version Service (`services/tisk_version_service.py`)
+### Tisk Version Service (`services/tisk/version_service.py`)
 
 Compares different versions (sub-tisky) of the same parliamentary print using LLM-generated diff summaries. Produces bilingual (Czech + English) comparison summaries stored as separate text files.
 
-### Tisk Cache Manager (`services/tisk_cache_manager.py`)
+### Tisk Cache Manager (`services/tisk/cache_manager.py`)
 
 Manages loading and caching of tisk enrichment data (topic classifications, summaries, English summaries, version diffs, legislative histories) from the file-based cache.
 

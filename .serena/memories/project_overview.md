@@ -102,20 +102,22 @@ pspcz_analyzer/
 ├── services/
 │   ├── data_service.py              — Central orchestrator (~420 lines)
 │   ├── mp_builder.py                — MP info builder
-│   ├── tisk_lookup_builder.py       — Tisk lookup table builder
-│   ├── tisk_cache_manager.py        — TiskCacheManager class
-│   ├── tisk_pipeline_service.py     — Pipeline orchestrator (~170 lines)
-│   ├── tisk_downloader_pipeline.py  — PDF download + text extraction
-│   ├── tisk_classifier.py           — Topic classification + consolidation
-│   ├── tisk_metadata_scraper.py     — History + law changes scraping
-│   ├── tisk_version_service.py      — Sub-tisk versions + diffs
+│   ├── tisk/                        — Tisk (parliamentary print) subpackage
+│   │   ├── __init__.py              — Public API re-exports
+│   │   ├── pipeline.py              — Pipeline orchestrator (~170 lines)
+│   │   ├── classifier.py            — Topic classification + consolidation
+│   │   ├── downloader_pipeline.py   — PDF download + text extraction
+│   │   ├── metadata_scraper.py      — History + law changes scraping
+│   │   ├── version_service.py       — Sub-tisk versions + diffs
+│   │   ├── cache_manager.py         — TiskCacheManager class
+│   │   ├── lookup_builder.py        — Tisk lookup table builder
+│   │   └── text_service.py          — Text cache + retrieval
 │   ├── loyalty_service.py
 │   ├── attendance_service.py
 │   ├── similarity_service.py
 │   ├── votes_service.py
 │   ├── llm_service.py
-│   ├── topic_service.py
-│   └── tisk_text_service.py
+│   └── topic_service.py
 ├── routes/
 │   ├── pages.py
 │   ├── api.py

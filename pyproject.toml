@@ -20,6 +20,7 @@ dependencies = [
     "slowapi>=0.1.9",
     "python-dotenv>=1.2.1",
     "nh3>=0.3.3",
+    "ruff>=0.15.1",
 ]
 
 [project.optional-dependencies]
@@ -68,7 +69,18 @@ pythonVersion = "3.12"
 typeCheckingMode = "basic"
 reportMissingImports = true
 reportMissingTypeStubs = false
-exclude = ["scripts/"]
+exclude = [
+    "scripts/",
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    "**/venv",
+    "**/.venv",
+    "**/dist",
+    "**/build",
+    "**/*.egg-info",
+    "site/",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -95,3 +107,8 @@ current_version = "0.1.0"
 filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
+
+[dependency-groups]
+dev = [
+    "rich>=14.3.2",
+]

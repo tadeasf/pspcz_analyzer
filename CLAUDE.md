@@ -81,6 +81,20 @@ Each in `services/`, each takes a `PeriodData` and returns `list[dict]`:
 - **`similarity_service`** — Cosine similarity + SVD-based PCA on vote matrix (MPs × votes, +1/-1/0)
 - **`votes_service`** — Vote search/list with pagination, vote detail with per-party breakdown
 
+### Tisk Pipeline (`services/tisk/`)
+
+Background pipeline for parliamentary print (tisk) enrichment. Runs as asyncio tasks, coordinated by `TiskPipelineService`:
+- **`pipeline.py`** — Orchestrator: download → extract → classify → summarize → consolidate → scrape histories
+- **`classifier.py`** — LLM-based topic classification + consolidation, with keyword fallback via `topic_service`
+- **`downloader_pipeline.py`** — Batch PDF download + text extraction per period
+- **`metadata_scraper.py`** — Scrapes legislative histories + law changes from psp.cz HTML
+- **`version_service.py`** — Downloads sub-tisk versions, generates bilingual LLM diff summaries
+- **`cache_manager.py`** — Loads/caches topic classifications, summaries, version diffs, histories from Parquet/JSON/text files
+- **`lookup_builder.py`** — Builds `(schuze, bod) → TiskInfo` lookup dicts linking votes to prints
+- **`text_service.py`** — Cache/retrieval layer for extracted PDF text
+
+Low-level I/O helpers remain in `data/`: `tisk_downloader.py`, `tisk_extractor.py`, `tisk_scraper.py`, `history_scraper.py`, `law_changes_scraper.py`.
+
 ### Feedback Service (`services/feedback_service.py`)
 
 Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`. Requires a `GITHUB_FEEDBACK_TOKEN` with `public_repo` scope.
