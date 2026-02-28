@@ -8,8 +8,10 @@ from loguru import logger
 
 from pspcz_analyzer.config import (
     AI_PERIODS_LIMIT,
+    AMENDMENTS_ENABLED,
     DEFAULT_CACHE_DIR,
     DEFAULT_PERIOD,
+    DEV_SKIP_AMENDMENTS,
     PERIOD_LABELS,
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
@@ -45,6 +47,8 @@ from pspcz_analyzer.models.schemas import (
     ZMATECNE_DTYPES,
 )
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.amendments.cache_manager import load_amendments
+from pspcz_analyzer.services.amendments.pipeline import AmendmentPipelineService
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.mp_builder import build_mp_info
 from pspcz_analyzer.services.tisk import (
@@ -63,6 +67,7 @@ class DataService:
         self._periods: dict[int, PeriodData] = {}
         self.tisk_text = TiskTextService(cache_dir)
         self.tisk_pipeline = TiskPipelineService(cache_dir)
+        self.amendment_pipeline = AmendmentPipelineService(cache_dir=cache_dir)
         self._cache_mgr = TiskCacheManager(cache_dir)
         self._refresh_lock = asyncio.Lock()
 
@@ -320,6 +325,9 @@ class DataService:
             self._cache_mgr.topic_en_cache,
         )
 
+        # Load cached amendment data
+        amendment_data = load_amendments(self.cache_dir, period) if AMENDMENTS_ENABLED else {}
+
         pd = PeriodData(
             period=period,
             votes=votes,
@@ -327,16 +335,18 @@ class DataService:
             void_votes=void_votes,
             mp_info=mp_info,
             tisk_lookup=tisk_lookup,
+            amendment_data=amendment_data,
         )
         self._periods[period] = pd
 
         logger.info(
-            "Period {} ready: {} votes, {} vote records, {} MPs, {} tisk links",
+            "Period {} ready: {} votes, {} vote records, {} MPs, {} tisk links, {} amendment bills",
             period,
             votes.height,
             mp_votes.height,
             mp_info.height,
             len(tisk_lookup),
+            len(amendment_data),
         )
 
     def _find_file(self, directory: Path, filename: str) -> Path:
@@ -369,24 +379,77 @@ class DataService:
 
         def _on_complete(
             p: int,
-            text_paths: dict,
-            topic_map: dict,
-            summary_map: dict,
+            _text_paths: dict,
+            _topic_map: dict,
+            _summary_map: dict,
             *_args: object,
             **_kwargs: object,
         ) -> None:
             """Callback: refresh in-memory tisk data after pipeline finishes."""
             self._cache_mgr.invalidate(p)
-            pd = self._periods.get(p)
-            if pd is None:
+            period_data = self._periods.get(p)
+            if period_data is None:
                 return
             self._refresh_tisk_data(p)
             logger.info(
                 "[tisk pipeline] Updated in-memory tisk data for period {}",
                 p,
             )
+            # Start amendment pipeline after tisk completes
+            self.start_amendment_pipeline(p)
 
         self.tisk_pipeline.start_period(period, ct_numbers, on_complete=_on_complete)
+
+    def start_amendment_pipeline(self, period: int) -> None:
+        """Kick off background amendment parsing for a period.
+
+        Should be called after tisk pipeline completes (needs tisk_lookup).
+        """
+        if not AMENDMENTS_ENABLED:
+            logger.info(
+                "[amendment pipeline] Skipped for period {} (AMENDMENTS_ENABLED=0)",
+                period,
+            )
+            return
+        if DEV_SKIP_AMENDMENTS:
+            logger.info(
+                "[amendment pipeline] Skipped for period {} (DEV_SKIP_AMENDMENTS=1)",
+                period,
+            )
+            return
+        pd = self._periods.get(period)
+        if pd is None:
+            return
+
+        def _on_progress(p: int, _bills: list) -> None:
+            """Callback: reload in-memory amendment data on incremental saves."""
+            period_data = self._periods.get(p)
+            if period_data is None:
+                return
+            period_data.amendment_data = load_amendments(self.cache_dir, p)
+            analysis_cache.invalidate(f"amendments:{p}:")
+            analysis_cache.invalidate(f"amendment-coalitions:{p}:")
+
+        def _on_complete(
+            p: int,
+            bills: list,
+        ) -> None:
+            """Callback: refresh in-memory amendment data after pipeline finishes."""
+            period_data = self._periods.get(p)
+            if period_data is None:
+                return
+            period_data.amendment_data = load_amendments(self.cache_dir, p)
+            analysis_cache.invalidate(f"amendments:{p}:")
+            analysis_cache.invalidate(f"amendment-coalitions:{p}:")
+            logger.info(
+                "[amendment pipeline] Updated in-memory amendment data for period {}: {} bills",
+                p,
+                len(period_data.amendment_data),
+            )
+
+        self.amendment_pipeline.start_period(
+            period, pd, on_complete=_on_complete, on_progress=_on_progress
+        )
 
     def start_all_tisk_pipelines(self) -> None:
         """Kick off sequential background tisk processing for ALL periods (newest first).
@@ -422,18 +485,19 @@ class DataService:
 
         def _on_complete(
             p: int,
-            text_paths: dict,
-            topic_map: dict,
-            summary_map: dict,
+            _text_paths: dict,
+            _topic_map: dict,
+            _summary_map: dict,
             *_args: object,
             **_kwargs: object,
         ) -> None:
             self._cache_mgr.invalidate(p)
-            pd = self._periods.get(p)
-            if pd is None:
-                return
+            if p not in self._periods:
+                self._load_period(p)
             self._refresh_tisk_data(p)
             logger.info("[tisk pipeline] Updated in-memory tisk data for period {}", p)
+            # Start amendment pipeline after tisk completes
+            self.start_amendment_pipeline(p)
 
         self.tisk_pipeline.start_all_periods(period_ct, on_complete=_on_complete)
 
@@ -490,8 +554,9 @@ class DataService:
         async with self._refresh_lock:
             logger.info("[daily-refresh] Starting full data refresh ...")
 
-            # 1. Cancel tisk pipeline
+            # 1. Cancel tisk and amendment pipelines
             await self.tisk_pipeline.cancel_all()
+            self.amendment_pipeline.cancel_all()
 
             # 2. Re-download and reload shared tables
             try:

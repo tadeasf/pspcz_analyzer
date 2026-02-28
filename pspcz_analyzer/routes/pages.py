@@ -13,6 +13,7 @@ from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
 from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.api import validate_period
+from pspcz_analyzer.services.amendment_service import amendment_detail
 from pspcz_analyzer.services.votes_service import vote_detail
 
 router = APIRouter(tags=["Pages"])
@@ -146,4 +147,35 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
             active_page="votes",
             feedback_enabled=GITHUB_FEEDBACK_ENABLED,
         ),
+    )
+
+
+@router.get("/amendments")
+@limiter.limit("60/minute")
+async def amendments_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    return templates.TemplateResponse(
+        "amendments.html",
+        _ctx(request, period, active_page="amendments"),
+    )
+
+
+@router.get("/amendments/{schuze}/{bod}")
+@limiter.limit("60/minute")
+async def amendment_detail_page(
+    request: Request, schuze: int, bod: int, period: int = DEFAULT_PERIOD
+):
+    validate_period(period)
+    data_svc = request.app.state.data
+    pd = data_svc.get_period(period)
+    lang = getattr(request.state, "lang", "cs")
+    detail = amendment_detail(pd, schuze, bod, lang)
+    if detail is None:
+        return templates.TemplateResponse(
+            "amendments.html",
+            _ctx(request, period, active_page="amendments"),
+        )
+    return templates.TemplateResponse(
+        "amendment_detail.html",
+        _ctx(request, period, detail=detail, active_page="amendments"),
     )

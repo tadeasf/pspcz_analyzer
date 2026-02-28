@@ -1,12 +1,18 @@
 """Data models for parliamentary prints (tisky) and period data."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import date
+from typing import TYPE_CHECKING
 
 import polars as pl
 
 from pspcz_analyzer.config import PERIOD_LABELS, PERIOD_YEARS
 from pspcz_analyzer.data.history_scraper import TiskHistory
+
+if TYPE_CHECKING:
+    from pspcz_analyzer.models.amendment_models import BillAmendmentData
 
 
 @dataclass
@@ -65,6 +71,12 @@ class PeriodData:
     mp_info: pl.DataFrame
     # Lookup: (schuze_num, bod_num) -> TiskInfo
     tisk_lookup: dict[tuple[int, int], TiskInfo] = field(default_factory=dict)
+    # Amendment data: (schuze, bod) -> BillAmendmentData
+    amendment_data: dict[tuple[int, int], BillAmendmentData] = field(default_factory=dict)
+
+    def get_amendments(self, schuze: int, bod: int) -> BillAmendmentData | None:
+        """Get amendment data for a vote given its session and agenda item."""
+        return self.amendment_data.get((schuze, bod))
 
     @property
     def stats(self) -> dict:

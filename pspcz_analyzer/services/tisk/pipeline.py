@@ -9,9 +9,15 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+import polars as pl
 from loguru import logger
 
-from pspcz_analyzer.config import DEFAULT_CACHE_DIR
+from pspcz_analyzer.config import (
+    DEFAULT_CACHE_DIR,
+    DEV_SKIP_CLASSIFY_AND_SUMMARIZE,
+    DEV_SKIP_VERSION_DIFFS,
+    TISKY_META_DIR,
+)
 from pspcz_analyzer.models.pipeline_progress import (
     PeriodProgress,
     PeriodStatus,
@@ -19,6 +25,7 @@ from pspcz_analyzer.models.pipeline_progress import (
     PipelineStage,
     StageProgress,
 )
+from pspcz_analyzer.services.llm_service import deserialize_topics
 from pspcz_analyzer.services.tisk.classifier import classify_and_save, consolidate_topics
 from pspcz_analyzer.services.tisk.downloader_pipeline import process_period_sync
 from pspcz_analyzer.services.tisk.metadata_scraper import (
@@ -165,6 +172,35 @@ class TiskPipelineService:
             with self._progress_lock:
                 self._progress.running = False
 
+    def _load_cached_topic_data(
+        self,
+        period: int,
+    ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
+        """Load previously cached topic/summary data from parquet (no LLM).
+
+        Returns (topic_map, summary_map, summary_en_map) — empty dicts if
+        no cache exists yet.
+        """
+        parquet_path = (
+            self.cache_dir / TISKY_META_DIR / str(period) / "topic_classifications.parquet"
+        )
+        if not parquet_path.exists():
+            return {}, {}, {}
+        df = pl.read_parquet(parquet_path)
+        topic_map: dict[int, list[str]] = {}
+        summary_map: dict[int, str] = {}
+        summary_en_map: dict[int, str] = {}
+        for row in df.iter_rows(named=True):
+            ct = row["ct"]
+            parsed = deserialize_topics(row.get("topic", ""))
+            if parsed:
+                topic_map[ct] = parsed
+            if row.get("summary"):
+                summary_map[ct] = row["summary"]
+            if row.get("summary_en"):
+                summary_en_map[ct] = row["summary_en"]
+        return topic_map, summary_map, summary_en_map
+
     async def _run_period(
         self,
         period: int,
@@ -189,24 +225,32 @@ class TiskPipelineService:
                 self.cache_dir,
             )
 
-            # Build a progress callback for classify stage
-            def _classify_cb(done: int, total: int) -> None:
-                self._update_stage_items(period, done, total)
+            if not DEV_SKIP_CLASSIFY_AND_SUMMARIZE:
+                # Build a progress callback for classify stage
+                def _classify_cb(done: int, total: int) -> None:
+                    self._update_stage_items(period, done, total)
 
-            self._set_stage(period, PipelineStage.CLASSIFY, len(text_paths))
-            topic_map, summary_map, summary_en_map = await asyncio.to_thread(
-                classify_and_save,
-                period,
-                text_paths,
-                self.cache_dir,
-                progress_callback=_classify_cb,
-            )
-            self._set_stage(period, PipelineStage.CONSOLIDATE_TOPICS)
-            topic_map, summary_map, summary_en_map = await asyncio.to_thread(
-                consolidate_topics,
-                period,
-                self.cache_dir,
-            )
+                self._set_stage(period, PipelineStage.CLASSIFY, len(text_paths))
+                topic_map, summary_map, summary_en_map = await asyncio.to_thread(
+                    classify_and_save,
+                    period,
+                    text_paths,
+                    self.cache_dir,
+                    progress_callback=_classify_cb,
+                )
+                self._set_stage(period, PipelineStage.CONSOLIDATE_TOPICS)
+                topic_map, summary_map, summary_en_map = await asyncio.to_thread(
+                    consolidate_topics,
+                    period,
+                    self.cache_dir,
+                )
+            else:
+                logger.info(
+                    "[tisk pipeline] DEV_SKIP: skipping CLASSIFY + CONSOLIDATE for period {}",
+                    period,
+                )
+                topic_map, summary_map, summary_en_map = self._load_cached_topic_data(period)
+
             self._set_stage(period, PipelineStage.SCRAPE_LAW_CHANGES, n)
             law_changes_map = await asyncio.to_thread(
                 scrape_law_changes_sync,
@@ -214,25 +258,35 @@ class TiskPipelineService:
                 ct_numbers,
                 self.cache_dir,
             )
-            self._set_stage(period, PipelineStage.DOWNLOAD_VERSIONS, n)
-            subtisk_map = await asyncio.to_thread(
-                download_subtisk_versions_sync,
-                period,
-                ct_numbers,
-                self.cache_dir,
-            )
 
-            def _diffs_cb(done: int, total: int) -> None:
-                self._update_stage_items(period, done, total)
+            if not DEV_SKIP_VERSION_DIFFS:
+                self._set_stage(period, PipelineStage.DOWNLOAD_VERSIONS, n)
+                subtisk_map = await asyncio.to_thread(
+                    download_subtisk_versions_sync,
+                    period,
+                    ct_numbers,
+                    self.cache_dir,
+                )
 
-            self._set_stage(period, PipelineStage.ANALYZE_DIFFS, 0)
-            version_diffs, version_diffs_en = await asyncio.to_thread(
-                analyze_version_diffs_sync,
-                period,
-                ct_numbers,
-                self.cache_dir,
-                progress_callback=_diffs_cb,
-            )
+                def _diffs_cb(done: int, total: int) -> None:
+                    self._update_stage_items(period, done, total)
+
+                self._set_stage(period, PipelineStage.ANALYZE_DIFFS, 0)
+                version_diffs, version_diffs_en = await asyncio.to_thread(
+                    analyze_version_diffs_sync,
+                    period,
+                    ct_numbers,
+                    self.cache_dir,
+                    progress_callback=_diffs_cb,
+                )
+            else:
+                logger.info(
+                    "[tisk pipeline] DEV_SKIP: skipping VERSION_DIFFS for period {}",
+                    period,
+                )
+                subtisk_map = {}
+                version_diffs: dict = {}
+
             self._set_period_status(period, PeriodStatus.COMPLETED)
             logger.info(
                 "[tisk pipeline] Period {} complete: {} histories, {} PDFs, {} texts, "

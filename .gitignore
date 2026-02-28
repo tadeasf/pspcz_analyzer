@@ -15,3 +15,4 @@ wheels/
 .playwright-mcp
 .coverage
 site/
+scripts/test_llm_curl.sh

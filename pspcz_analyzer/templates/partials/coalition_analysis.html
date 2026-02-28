@@ -1,0 +1,98 @@
+{% if total_bills == 0 %}
+<p>{{ _("amendments.no_data") }}</p>
+{% else %}
+<div class="stat-grid">
+    <article class="stat-card stat-card-blue">
+        <h3>{{ total_bills }}</h3>
+        <p>{{ _("coalition.total_bills") }}</p>
+    </article>
+    <article class="stat-card stat-card-blue">
+        <h3>{{ total_amendments }}</h3>
+        <p>{{ _("coalition.total_amendments") }}</p>
+    </article>
+</div>
+
+{% if party_cohesion %}
+<h3>{{ _("coalition.cohesion_title") }}</h3>
+<p><small>{{ _("coalition.cohesion_desc") }}</small></p>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _("th.party") }}</th>
+                <th>{{ _("coalition.amend_cohesion") }}</th>
+                <th>{{ _("coalition.overall_cohesion") }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in party_cohesion %}
+            <tr>
+                <td><strong>{{ row.party }}</strong></td>
+                <td>{% if row.amend_cohesion %}{{ "{:.1f}%".format(row.amend_cohesion * 100) }}{% else %}—{% endif %}</td>
+                <td>{{ "{:.1f}%".format(row.overall_cohesion * 100) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if party_agreement %}
+<h3>{{ _("coalition.party_agreement") }}</h3>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _("coalition.party_a") }}</th>
+                <th>{{ _("coalition.party_b") }}</th>
+                <th>{{ _("coalition.agreement_rate") }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in party_agreement[:15] %}
+            <tr>
+                <td><strong>{{ row.party_a }}</strong></td>
+                <td><strong>{{ row.party_b }}</strong></td>
+                <td>{{ "{:.1f}%".format(row.agreement_rate * 100) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if rebels %}
+<h3>{{ _("coalition.rebels_title") }}</h3>
+<p><small>{{ _("coalition.rebels_desc") }}</small></p>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _("th.mp") }}</th>
+                <th>{{ _("th.party") }}</th>
+                <th>{{ _("coalition.amend_rebellion_pct") }}</th>
+                <th>{{ _("coalition.overall_rebellion_pct") }}</th>
+                <th>{{ _("coalition.rebellion_diff") }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rebels %}
+            <tr>
+                <td>{{ row.jmeno }} {{ row.prijmeni }}</td>
+                <td>{{ row.party }}</td>
+                <td>{{ "{:.1f}%".format(row.amend_rebellion_pct) }}</td>
+                <td>{{ "{:.1f}%".format(row.overall_rebellion_pct) }}</td>
+                <td>
+                    {% if row.rebellion_diff > 0 %}
+                    <span class="vote-no">+{{ "{:.1f}".format(row.rebellion_diff) }}pp</span>
+                    {% else %}
+                    {{ "{:.1f}".format(row.rebellion_diff) }}pp
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endif %}

@@ -133,6 +133,15 @@ DAILY_REFRESH_HOUR = int(os.environ.get("DAILY_REFRESH_HOUR", "3"))
 # Server port (overridable for Docker and deployment)
 PORT = int(os.environ.get("PORT", "8000"))
 
+# Amendment voting analysis — steno record parsing
+AMENDMENTS_ENABLED = os.environ.get("AMENDMENTS_ENABLED", "1") == "1"
+AMENDMENT_CACHE_SUBDIR = "amendments"
+
+# Dev pipeline skip flags — skip expensive stages during development
+DEV_SKIP_CLASSIFY_AND_SUMMARIZE = os.environ.get("DEV_SKIP_CLASSIFY_AND_SUMMARIZE", "0") == "1"
+DEV_SKIP_VERSION_DIFFS = os.environ.get("DEV_SKIP_VERSION_DIFFS", "0") == "1"
+DEV_SKIP_AMENDMENTS = os.environ.get("DEV_SKIP_AMENDMENTS", "0") == "1"
+
 # GitHub feedback — user feedback creates GitHub issues
 GITHUB_FEEDBACK_ENABLED = os.environ.get("GITHUB_FEEDBACK_ENABLED", "0") == "1"
 GITHUB_FEEDBACK_TOKEN = os.environ.get("GITHUB_FEEDBACK_TOKEN", "")
