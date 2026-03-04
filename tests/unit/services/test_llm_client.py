@@ -10,7 +10,7 @@ from pspcz_analyzer.services.llm import (
     LLMClient,
     create_llm_client,
 )
-from pspcz_analyzer.services.llm.client import (
+from pspcz_analyzer.services.llm.parsers import (
     _parse_consolidation_json,
     _render_comparison_markdown_cs,
     _render_comparison_markdown_en,
@@ -25,15 +25,15 @@ class TestCreateLLMClientFactory:
     """Tests for the create_llm_client() factory function."""
 
     def test_default_returns_ollama_provider(self):
-        with patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "ollama"):
+        with patch("pspcz_analyzer.services.llm.helpers.LLM_PROVIDER", "ollama"):
             client = create_llm_client()
         assert isinstance(client, LLMClient)
         assert client.provider == "ollama"
 
     def test_openai_provider_returns_openai_client(self):
         with (
-            patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "openai"),
-            patch("pspcz_analyzer.services.llm.client.OPENAI_API_KEY", "sk-test-key"),
+            patch("pspcz_analyzer.services.llm.helpers.LLM_PROVIDER", "openai"),
+            patch("pspcz_analyzer.services.llm.helpers.OPENAI_API_KEY", "sk-test-key"),
         ):
             client = create_llm_client()
         assert isinstance(client, LLMClient)
@@ -41,27 +41,27 @@ class TestCreateLLMClientFactory:
 
     def test_openai_provider_without_key_raises(self):
         with (
-            patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "openai"),
-            patch("pspcz_analyzer.services.llm.client.OPENAI_API_KEY", ""),
+            patch("pspcz_analyzer.services.llm.helpers.LLM_PROVIDER", "openai"),
+            patch("pspcz_analyzer.services.llm.helpers.OPENAI_API_KEY", ""),
         ):
             with pytest.raises(ValueError, match="OPENAI_API_KEY is not set"):
                 create_llm_client()
 
     def test_unknown_provider_raises(self):
-        with patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "bogus"):
+        with patch("pspcz_analyzer.services.llm.helpers.LLM_PROVIDER", "bogus"):
             with pytest.raises(ValueError, match="Unknown LLM_PROVIDER"):
                 create_llm_client()
 
     def test_case_insensitive_provider(self):
-        with patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "OLLAMA"):
+        with patch("pspcz_analyzer.services.llm.helpers.LLM_PROVIDER", "OLLAMA"):
             client = create_llm_client()
         assert isinstance(client, LLMClient)
         assert client.provider == "ollama"
 
     def test_factory_passes_structured_output_flag(self):
         with (
-            patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "ollama"),
-            patch("pspcz_analyzer.services.llm.client.LLM_STRUCTURED_OUTPUT", False),
+            patch("pspcz_analyzer.services.llm.helpers.LLM_PROVIDER", "ollama"),
+            patch("pspcz_analyzer.services.llm.helpers.LLM_STRUCTURED_OUTPUT", False),
         ):
             client = create_llm_client()
         assert client.supports_structured_output is False

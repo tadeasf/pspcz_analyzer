@@ -1,4 +1,4 @@
-"""LLM client implementation and helper utilities."""
+"""LLM client implementation — LLMClient class."""
 
 from __future__ import annotations
 
@@ -14,18 +14,22 @@ from pspcz_analyzer.config import (
     LLM_EMPTY_RETRIES,
     LLM_HEALTH_TIMEOUT,
     LLM_MAX_COMPARISON_CHARS,
-    LLM_MAX_TEXT_CHARS,
-    LLM_PROVIDER,
-    LLM_STRUCTURED_OUTPUT,
     LLM_TIMEOUT,
-    LLM_VERBATIM_CHARS,
-    OLLAMA_API_KEY,
-    OLLAMA_BASE_URL,
-    OLLAMA_MODEL,
-    OPENAI_API_KEY,
-    OPENAI_BASE_URL,
-    OPENAI_MODEL,
-    TISK_SHORTENER,
+)
+from pspcz_analyzer.services.llm.helpers import (
+    _THINK_RE,
+    _sanitize_llm_input,
+    truncate_legislative_text,
+)
+from pspcz_analyzer.services.llm.parsers import (
+    _format_amendments_list,
+    _parse_amendment_summaries_json,
+    _parse_amendment_summaries_text,
+    _parse_consolidation_json,
+    _render_comparison_markdown_cs,
+    _render_comparison_markdown_en,
+    _render_summary_markdown_cs,
+    _render_summary_markdown_en,
 )
 from pspcz_analyzer.services.llm.prompts import (
     _AMENDMENT_SUMMARIES_PROMPT_CS,
@@ -83,211 +87,6 @@ from pspcz_analyzer.services.llm.prompts import (
     _SUMMARY_SYSTEM,
     _SUMMARY_SYSTEM_EN,
 )
-
-_INJECTION_PHRASES_RE = re.compile(
-    r"(?:ignore (?:all )?(?:previous|above|prior) instructions"
-    r"|you are now"
-    r"|new instructions:"
-    r"|system prompt:"
-    r"|---END USER TEXT---)",
-    re.IGNORECASE,
-)
-
-
-def _sanitize_llm_input(text: str) -> str:
-    """Strip common prompt injection phrases from user-supplied text."""
-    return _INJECTION_PHRASES_RE.sub("[REDACTED]", text)
-
-
-# Strip <think>...</think> blocks from responses (defensive — models with chain-of-thought)
-_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
-
-# Pattern for heading lines in Czech legislative texts
-_HEADING_RE = re.compile(
-    r"^(?:"
-    r"[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ\s]{10,}"  # ALL CAPS lines (10+ chars)
-    r"|(?:Část|ČÁST|Hlava|HLAVA|Článek|ČLÁNEK|Díl|DÍL)\s"  # Section markers
-    r"|(?:I{1,3}V?|VI{0,3}|IX|X{1,3})\.\s"  # Roman numerals
-    r"|DŮVODOVÁ ZPRÁVA"
-    r"|ZVLÁŠTNÍ ČÁST"
-    r"|OBECNÁ ČÁST"
-    r"|§\s*\d+"  # Paragraph markers (§ 1, § 123a)
-    r")",
-    re.MULTILINE,
-)
-
-
-def truncate_legislative_text(
-    text: str,
-    verbatim_chars: int = LLM_VERBATIM_CHARS,
-    max_chars: int = LLM_MAX_TEXT_CHARS,
-) -> str:
-    """Truncate Czech legislative text via structural extraction for LLM processing.
-
-    When TISK_SHORTENER is disabled (0), returns the full text unmodified.
-
-    Strategy (when enabled and text exceeds max_chars):
-    1. First `verbatim_chars` kept verbatim (covers explanatory report + most content)
-    2. From remainder: extract section headings + first 500 chars of each section
-    3. Hard cap at `max_chars` total
-    """
-    if not TISK_SHORTENER:
-        return text
-
-    if len(text) <= max_chars:
-        return text
-
-    # Clamp verbatim to not exceed max (defensive for comparison calls)
-    verbatim_chars = min(verbatim_chars, max_chars)
-
-    result = text[:verbatim_chars]
-    remainder = text[verbatim_chars:]
-
-    # Extract structural highlights from the remainder
-    highlights: list[str] = []
-    for match in _HEADING_RE.finditer(remainder):
-        start = match.start()
-        snippet = remainder[start : start + 500 + len(match.group())]
-        highlights.append(snippet.strip())
-
-    if highlights:
-        result += "\n\n[...]\n\n" + "\n\n".join(highlights)
-
-    return result[:max_chars]
-
-
-# ── Base class ───────────────────────────────────────────────────────────
-
-
-# ── Markdown rendering helpers for structured output ────────────────────
-
-
-def _render_summary_markdown_cs(data: dict[str, Any]) -> str:
-    """Render structured summary JSON to Czech markdown."""
-    parts: list[str] = []
-    if data.get("changes"):
-        parts.append(f"**Co se mění:** {data['changes']}")
-    if data.get("impact"):
-        parts.append(f"**Dopady:** {data['impact']}")
-    if data.get("risks"):
-        parts.append(f"**Rizika:** {data['risks']}")
-    return "\n\n".join(parts)
-
-
-def _render_summary_markdown_en(data: dict[str, Any]) -> str:
-    """Render structured summary JSON to English markdown."""
-    parts: list[str] = []
-    if data.get("changes"):
-        parts.append(f"**Changes:** {data['changes']}")
-    if data.get("impact"):
-        parts.append(f"**Impact:** {data['impact']}")
-    if data.get("risks"):
-        parts.append(f"**Risks:** {data['risks']}")
-    return "\n\n".join(parts)
-
-
-def _render_comparison_markdown_cs(data: dict[str, Any]) -> str:
-    """Render structured comparison JSON to Czech markdown."""
-    parts: list[str] = []
-    if data.get("changed_paragraphs"):
-        parts.append(f"**Změněné paragrafy:** {data['changed_paragraphs']}")
-    if data.get("additions_removals"):
-        parts.append(f"**Přidáno/odebráno:** {data['additions_removals']}")
-    if data.get("overall_character"):
-        parts.append(f"**Charakter změn:** {data['overall_character']}")
-    return "\n\n".join(parts)
-
-
-def _render_comparison_markdown_en(data: dict[str, Any]) -> str:
-    """Render structured comparison JSON to English markdown."""
-    parts: list[str] = []
-    if data.get("changed_paragraphs"):
-        parts.append(f"**Changed paragraphs:** {data['changed_paragraphs']}")
-    if data.get("additions_removals"):
-        parts.append(f"**Additions/removals:** {data['additions_removals']}")
-    if data.get("overall_character"):
-        parts.append(f"**Overall character:** {data['overall_character']}")
-    return "\n\n".join(parts)
-
-
-def _format_amendments_list(amendments: list[dict[str, str]]) -> str:
-    """Format amendment metadata into a prompt-friendly list.
-
-    Args:
-        amendments: List of dicts with 'letter', 'submitter', 'description' keys.
-
-    Returns:
-        Formatted string like "- A (Berkovce): legislativně-technická oprava".
-    """
-    lines: list[str] = []
-    for a in amendments:
-        letter = a.get("letter", "?")
-        submitter = a.get("submitter", "")
-        description = a.get("description", "")
-        parts = [f"- {letter}"]
-        if submitter:
-            parts.append(f"({submitter})")
-        if description:
-            parts.append(f": {description}")
-        lines.append(" ".join(parts))
-    return "\n".join(lines)
-
-
-def _parse_amendment_summaries_json(data: dict[str, Any]) -> dict[str, str]:
-    """Extract {letter: summary} from structured JSON response.
-
-    Args:
-        data: Parsed JSON matching _AMENDMENT_SUMMARIES_SCHEMA.
-
-    Returns:
-        Dict mapping normalized (uppercase stripped) amendment letter to summary text.
-    """
-    result: dict[str, str] = {}
-    for item in data.get("amendments", []):
-        letter = item.get("letter", "").strip().upper()
-        summary = item.get("summary", "").strip()
-        if letter and summary:
-            result[letter] = summary
-    return result
-
-
-def _parse_amendment_summaries_text(response: str) -> dict[str, str]:
-    """Parse 'LETTER: summary' lines from free-text response.
-
-    Args:
-        response: Raw LLM response text.
-
-    Returns:
-        Dict mapping normalized (uppercase stripped) amendment letter to summary text.
-    """
-    response = _THINK_RE.sub("", response).strip()
-    result: dict[str, str] = {}
-    for line in response.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        # Match patterns like "A: summary", "B1: summary", "- A: summary", "* b2 – summary"
-        match = re.match(r"^[-*•]?\s*([A-Za-z]\d*(?:\s*[aA]\s*[A-Za-z]\d*)?)\s*[:–—-]\s*(.+)", line)
-        if match:
-            letter = match.group(1).strip().upper()
-            summary = match.group(2).strip()
-            if letter and summary:
-                result[letter] = summary
-    return result
-
-
-def _parse_consolidation_json(data: dict[str, Any], all_topics: list[str]) -> dict[str, str]:
-    """Parse structured consolidation JSON into a topic mapping dict."""
-    mapping: dict[str, str] = {}
-    for item in data.get("mappings", []):
-        old = item.get("old", "").strip()
-        canonical = item.get("canonical", "").strip()
-        if old and canonical:
-            mapping[old] = canonical
-    for t in all_topics:
-        if t not in mapping:
-            mapping[t] = t
-    return mapping
 
 
 class LLMClient:
@@ -1259,69 +1058,3 @@ class LLMClient:
             if t not in mapping:
                 mapping[t] = t
         return mapping
-
-
-# ── Serialization helpers ────────────────────────────────────────────────
-
-
-def serialize_topics(topics: list[str]) -> str:
-    """Serialize topic list for parquet storage."""
-    return json.dumps(topics, ensure_ascii=False)
-
-
-def deserialize_topics(raw: str) -> list[str]:
-    """Deserialize topic list from parquet storage.
-
-    Handles both new JSON format and old single-topic-ID format.
-    """
-    if not raw:
-        return []
-    # Try JSON first (new format: '["topic1", "topic2"]')
-    if raw.startswith("["):
-        try:
-            topics = json.loads(raw)
-            return [t for t in topics if isinstance(t, str) and t]
-        except (json.JSONDecodeError, TypeError):
-            logger.debug("Failed to parse topics JSON: {}", raw)
-    # Old format: single topic ID like "finance" or "justice"
-    return [raw]
-
-
-# ── Factory ──────────────────────────────────────────────────────────────
-
-
-def create_llm_client() -> LLMClient:
-    """Factory: return the configured LLM backend client.
-
-    Reads LLM_PROVIDER from config:
-    - "ollama" (default) -> LLMClient(provider="ollama", ...)
-    - "openai" -> LLMClient(provider="openai", ...) (fails fast if OPENAI_API_KEY is empty)
-
-    Raises ValueError for unknown provider.
-    """
-    match LLM_PROVIDER.lower().strip():
-        case "ollama":
-            return LLMClient(
-                provider="ollama",
-                base_url=OLLAMA_BASE_URL,
-                model=OLLAMA_MODEL,
-                api_key=OLLAMA_API_KEY,
-                structured_output=LLM_STRUCTURED_OUTPUT,
-            )
-        case "openai":
-            if not OPENAI_API_KEY:
-                msg = (
-                    "LLM_PROVIDER=openai but OPENAI_API_KEY is not set. "
-                    "Set OPENAI_API_KEY in your .env or environment."
-                )
-                raise ValueError(msg)
-            return LLMClient(
-                provider="openai",
-                base_url=OPENAI_BASE_URL,
-                model=OPENAI_MODEL,
-                api_key=OPENAI_API_KEY,
-                structured_output=LLM_STRUCTURED_OUTPUT,
-            )
-        case _:
-            msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
-            raise ValueError(msg)
