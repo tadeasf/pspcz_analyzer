@@ -18,6 +18,17 @@
     <p><small>{{ detail.info.nazev_kratky }}</small></p>
     {% endif %}
 
+    {% if detail.info.amendment_link %}
+    <p>
+        {% if detail.info.amendment_link.is_final_vote %}
+        <span class="badge-info">{{ _("amendments.vote_about_final") }}</span>
+        {% elif detail.info.amendment_link.letter %}
+        <span class="badge-info">{{ _("amendments.vote_about_amendment").format(letter=detail.info.amendment_link.letter) }}</span>
+        {% endif %}
+        <a href="/amendments/{{ detail.info.amendment_link.schuze }}/{{ detail.info.amendment_link.bod }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_amendment_detail") }}</a>
+    </p>
+    {% endif %}
+
     {% if detail.info.tisk_topics %}
     <p>
         <strong>{{ _("detail.topics") }}</strong>

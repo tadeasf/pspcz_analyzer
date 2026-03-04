@@ -29,6 +29,9 @@
         {% if detail.tisk_url %}
         <a href="{{ detail.tisk_url }}" target="_blank" class="btn-explore btn-small">{{ _("detail.document").format(ct=detail.ct, name=detail.tisk_nazev) }} &nearr;</a>
         {% endif %}
+        {% if detail.amendment_pdf_url %}
+        <a href="{{ detail.amendment_pdf_url }}" target="_blank" class="btn-outline btn-small">{{ _("amendments.view_pdf") }} &nearr;</a>
+        {% endif %}
     </p>
     {% endif %}
 
@@ -44,6 +47,16 @@
     {% endif %}
 </article>
 
+{% if detail.bill_summary %}
+<div class="info-box">
+    <div class="info-box-header">
+        {{ _("detail.ai_summary") }}
+        <small>{{ _("detail.ai_generated") }}</small>
+    </div>
+    {{ detail.bill_summary | markdown }}
+</div>
+{% endif %}
+
 <h2>{{ _("amendments.amendments_for") }}</h2>
 <div class="overflow-auto">
     <table>
@@ -54,25 +67,26 @@
                 <th>{{ _("th.result") }}</th>
                 <th>{{ _("amendments.stance.committee") }}</th>
                 <th>{{ _("amendments.stance.proposer") }}</th>
-                <th></th>
                 <th>{{ _("th.links") }}</th>
             </tr>
         </thead>
         <tbody>
-            {% for a in detail.amendments %}
+            {% for a in detail.grouped_amendments %}
+            {# ── Primary amendment row ── #}
             <tr>
                 <td>
                     <strong>{{ a.letter }}</strong>
                     {% if a.is_leg_tech %}<small class="badge-info">§95</small>{% endif %}
-                    {% if a.is_revote %}<small class="badge-warn">{{ _("amendments.revote") }}</small>{% endif %}
                     {% if a.grouped_with %}<br><small>{{ _("amendments.grouped_with") }}: {{ a.grouped_with | join(", ") }}</small>{% endif %}
                 </td>
                 <td>
-                    {% if a.submitter_names %}
+                    {% if a.pdf_submitter_name %}
+                    {{ a.pdf_submitter_name }}
+                    {% elif a.submitter_names %}
                     {{ a.submitter_names | join(", ") }}
+                    {% endif %}
                     {% if a.submitter_party %}
                     <br><small class="badge-info">{{ a.submitter_party }}</small>
-                    {% endif %}
                     {% endif %}
                 </td>
                 <td>
@@ -88,7 +102,7 @@
                 </td>
                 <td>
                     {% if a.committee_stance %}
-                    {{ _("amendments.stance." + a.committee_stance.replace(" ", "_")) }}
+                    {{ _("amendments.stance." + a.committee_stance) }}
                     {% endif %}
                 </td>
                 <td>
@@ -97,19 +111,52 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if a.summary %}
-                    <details>
-                        <summary>AI</summary>
-                        <p>{{ a.summary }}</p>
-                    </details>
-                    {% endif %}
-                </td>
-                <td>
                     {% if a.id_hlasovani %}
                     <a href="/votes/{{ a.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_vote") }}</a>
                     {% endif %}
                 </td>
             </tr>
+            {% if a.amendment_summary %}
+            <tr class="amendment-summary-row">
+                <td colspan="6">
+                    <details>
+                        <summary><small>{{ _("amendments.ai_amendment_summary") }}</small></summary>
+                        <div class="info-box-compact">
+                            {{ a.amendment_summary }}
+                        </div>
+                    </details>
+                </td>
+            </tr>
+            {% endif %}
+            {# ── Revote sub-rows (indented, no repeated summary) ── #}
+            {% for rv in a.revotes %}
+            <tr class="revote-row" style="background: var(--pico-card-background-color, #f8f8f8);">
+                <td style="padding-left: 2rem;">
+                    <small class="badge-warn">{{ _("amendments.revote") }}</small>
+                    {{ rv.letter }}
+                </td>
+                <td></td>
+                <td>
+                    {% if rv.result == "accepted" %}
+                    <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
+                    {% elif rv.result == "rejected" %}
+                    <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
+                    {% else %}
+                    <span class="vote-passive">{{ _("amendments.result.unknown") }}</span>
+                    {% endif %}
+                    {% if rv.original_result %}
+                    <br><small>{{ _("amendments.revote_context").format(original_result=_("amendments.result." + rv.original_result)) }}</small>
+                    {% endif %}
+                </td>
+                <td></td>
+                <td></td>
+                <td>
+                    {% if rv.id_hlasovani %}
+                    <a href="/votes/{{ rv.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_vote") }}</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
             {% endfor %}
         </tbody>
     </table>
