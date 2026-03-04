@@ -163,6 +163,55 @@ Scraped from psp.cz HTML, stored as JSON:
 
 Contains the full legislative process timeline (readings, committee reports, Senate, President).
 
+## Amendment Data
+
+Amendment voting data is computed by the amendment pipeline and cached as Parquet files.
+
+### AmendmentVote
+
+Represents a single amendment's voting record within a third-reading bill.
+
+| Field              | Type       | Description                                           |
+| ------------------ | ---------- | ----------------------------------------------------- |
+| `amendment_number` | int        | Amendment number within the bill                      |
+| `submitter`        | str        | Amendment author name(s)                              |
+| `submitter_party`  | str \| None| Party affiliation of submitter (if resolved)          |
+| `description`      | str        | Amendment text / proposed change                      |
+| `result`           | str        | Vote outcome: "A" (accepted) or "N" (rejected)       |
+| `vote_id`          | int \| None| Matched `id_hlasovani` from `hl_hlasovani`            |
+| `yes_count`        | int        | Total YES votes                                       |
+| `no_count`         | int        | Total NO votes                                        |
+| `abstained_count`  | int        | Total abstained                                       |
+| `absent_count`     | int        | Total absent/excused                                  |
+| `summary_cs`       | str \| None| Czech AI summary                                      |
+| `summary_en`       | str \| None| English AI summary                                    |
+
+### BillAmendmentData
+
+Container for all amendments of a single bill (one session + agenda point).
+
+| Field              | Type                | Description                                    |
+| ------------------ | ------------------- | ---------------------------------------------- |
+| `period`           | int                 | Electoral period number                        |
+| `schuze`           | int                 | Session number                                 |
+| `bod`              | int                 | Agenda point number                            |
+| `tisk_id`          | int \| None         | Associated parliamentary print (tisk) number   |
+| `bill_title`       | str                 | Bill title from legislative history             |
+| `amendments`       | list[AmendmentVote] | All amendments for this bill                   |
+| `coalitions`       | dict \| None        | Coalition analysis results                     |
+
+### Amendment Cache
+
+Amendment data is cached under `{PSPCZ_CACHE_DIR}/amendments/`:
+
+```
+amendments/
+├── {period}/
+│   ├── amendments_{period}.parquet    # Parsed amendment records
+│   ├── vote_mappings_{period}.json    # Amendment → vote ID mappings
+│   └── coalitions_{period}.json       # Coalition analysis results
+```
+
 ## Configuration
 
 All configuration is via environment variables, loaded from `.env` by `python-dotenv`. Constants are defined in `config.py`.
@@ -188,6 +237,13 @@ All configuration is via environment variables, loaded from `.env` by `python-do
 | `GITHUB_FEEDBACK_REPO` | `tadeasf/pspcz_analyzer` | Repository for feedback issues |
 | `GITHUB_FEEDBACK_LABELS` | `user-feedback` | Labels applied to feedback issues |
 | `TISK_SHORTENER` | `0` | Truncate tisk text for LLM (`0` = full, `1` = truncate) |
+| `LLM_STRUCTURED_OUTPUT` | `1` | JSON schema structured output (`0` = regex fallback) |
+| `LLM_EMPTY_RETRIES` | `2` | Extra LLM attempts on empty free-text results |
+| `ADMIN_PORT` | `8001` | Admin backend server port |
+| `ADMIN_USERNAME` | `admin` | Admin dashboard login username |
+| `ADMIN_PASSWORD_HASH` | *(empty)* | bcrypt hash of admin password |
+| `ADMIN_SESSION_SECRET` | *(auto-generated)* | HMAC secret for admin session cookies |
+| `ADMIN_ALLOWED_IPS` | `127.0.0.1,::1,172.16.0.0/12` | IP/CIDR whitelist for admin access |
 
 ### LLM Configuration
 
@@ -242,6 +298,7 @@ Votes in the `zmatecne` table are void and are always filtered out before any an
     tisky_historie/   # Legislative history JSON files
     tisky_version_diffs/  # LLM diff summaries (Czech + English)
     tisky_related_bills/  # Related bills JSON files (from zakon.cz)
+    amendments/       # Amendment data (parsed amendments, vote mappings, coalitions) — Parquet + JSON under amendments/{period}/
 ```
 
 The Parquet cache uses file modification times: if the Parquet file is newer than the source UNL directory, it's loaded directly. Otherwise the UNL files are re-parsed and the Parquet is regenerated.

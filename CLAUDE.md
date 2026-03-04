@@ -47,6 +47,11 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `GITHUB_FEEDBACK_REPO` — target repository (default: `tadeasf/pspcz_analyzer`)
 - `GITHUB_FEEDBACK_LABELS` — labels for feedback issues (default: `user-feedback`)
 - `TISK_SHORTENER` — truncate tisk text for LLM (`0` = full text, `1` = truncate, default: `0`)
+- `ADMIN_PORT` — admin backend server port (default: `8001`)
+- `ADMIN_USERNAME` — admin dashboard login username (default: `admin`)
+- `ADMIN_PASSWORD_HASH` — bcrypt hash of the admin password (default: empty — login rejects all)
+- `ADMIN_SESSION_SECRET` — HMAC secret for signing admin session cookies (default: auto-generated)
+- `ADMIN_ALLOWED_IPS` — comma-separated IP/CIDR whitelist for admin access (default: `127.0.0.1,::1,172.16.0.0/12`)
 
 ## Architecture
 
@@ -112,6 +117,25 @@ Background pipeline for parliamentary print (tisk) enrichment. Runs as asyncio t
 - **`text_service.py`** — Cache/retrieval layer for extracted PDF text
 - **`io/`** — Low-level I/O subpackage: `scraper.py` (tisk page scraping), `downloader.py` (PDF download), `extractor.py` (PDF text extraction), `history_scraper.py` (legislative history), `law_changes_scraper.py` (proposed law changes)
 
+### Amendment Pipeline (`services/amendments/`)
+
+Background pipeline for third-reading amendment voting analysis. Runs as asyncio tasks, coordinated by `AmendmentPipelineService`:
+- **`pipeline.py`** — Orchestrator: identify → download PDFs → scrape steno → merge → resolve votes → resolve submitters → summarize → cache
+- **`pdf_parser.py`** — Downloads and parses amendment PDFs, extracts amendment number, proposed changes, justification
+- **`steno_scraper.py`** — Scrapes stenographic record pages from psp.cz for third-reading sessions
+- **`steno_parser.py`** — Parses steno HTML into structured data: speakers, speech text, amendment references
+- **`submitter_resolver.py`** — Resolves amendment submitter names to MP records, handles name variations
+- **`coalition_service.py`** — Analyzes voting coalitions: which parties voted together per amendment
+- **`cache_manager.py`** — Loads/saves amendment pipeline outputs as Parquet and JSON files
+
+### Law Service (`services/law_service.py`)
+
+Provides data for the laws browser. Loads tisk metadata and legislative histories, returns paginated/filterable bill lists.
+
+### Amendment Service (`services/amendment_service.py`)
+
+High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point).
+
 ### LLM Integration (`services/llm/`)
 
 Unified LLM client supporting Ollama and OpenAI-compatible providers:
@@ -133,6 +157,7 @@ Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`.
 - **`routes/pages.py`** — Full HTML page renders (Jinja2 templates) + `/set-lang/{lang}` endpoint
 - **`routes/voting.py`** — HTMX partials for loyalty, attendance, similarity, votes
 - **`routes/amendments.py`** — HTMX partials for amendment bills and coalitions
+- **`routes/laws.py`** — HTMX partials for laws browser and law detail
 - **`routes/tisk.py`** — HTMX partials for tisk text, evolution, related bills
 - **`routes/feedback.py`** — Feedback submission endpoint (POST /api/feedback)
 - **`routes/health.py`** — Health check, LLM health, LLM smoke test

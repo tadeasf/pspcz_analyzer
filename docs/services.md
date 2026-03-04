@@ -337,6 +337,96 @@ Configuration:
 | `GITHUB_FEEDBACK_REPO` | `tadeasf/pspcz_analyzer` | Target repository |
 | `GITHUB_FEEDBACK_LABELS` | `user-feedback` | Labels for issues |
 
+## Law Service (`services/law_service.py`)
+
+Provides data for the laws browser. Loads tisk metadata and legislative histories to present a filterable list of parliamentary bills.
+
+### Key Functions
+
+- `get_laws()` — returns a paginated, filterable list of bills for a period
+- Filters: full-text search, topic classification, legislative status
+- Integrates with tisk cache for topic tags, AI summaries, and legislative histories
+
+## Amendment Pipeline Services (`services/amendments/`)
+
+Background pipeline for third-reading amendment voting analysis. Orchestrated by `AmendmentPipelineService`.
+
+### Pipeline Orchestrator (`services/amendments/pipeline.py`)
+
+Coordinates the full amendment analysis pipeline:
+
+1. **Identify** third-reading agenda points from tisk legislative histories
+2. **Download & parse** amendment PDFs from psp.cz
+3. **Scrape & parse** stenographic records
+4. **Merge** PDF and steno data for each amendment
+5. **Resolve** vote IDs (matching amendments to `hl_hlasovani` records)
+6. **Resolve** submitters (matching amendment authors to MP records)
+7. **Summarize** with bilingual LLM summaries
+8. **Cache** results as Parquet files
+
+### PDF Parser (`services/amendments/pdf_parser.py`)
+
+Downloads and parses amendment PDFs from psp.cz. Extracts structured amendment data (amendment number, proposed changes, justification) from the PDF text.
+
+### Steno Scraper (`services/amendments/steno_scraper.py`)
+
+Scrapes stenographic record pages from psp.cz for third-reading sessions. Downloads HTML pages containing spoken-word records of amendment debates.
+
+### Steno Parser (`services/amendments/steno_parser.py`)
+
+Parses scraped steno HTML into structured data: speaker names, speech text, amendment references, and voting contexts.
+
+### Submitter Resolver (`services/amendments/submitter_resolver.py`)
+
+Resolves amendment submitter names (from PDF text) to MP records in the shared persons/MP tables. Handles name variations, party affiliations, and group submissions.
+
+### Coalition Service (`services/amendments/coalition_service.py`)
+
+Analyzes voting coalitions for amendment votes: which parties voted together, cross-party alliances, and coalition stability metrics.
+
+### Cache Manager (`services/amendments/cache_manager.py`)
+
+Loads and saves amendment pipeline outputs (parsed amendments, vote mappings, coalition analyses) as Parquet and JSON files.
+
+## Amendment Service (`services/amendment_service.py`)
+
+High-level service used by the web routes. Provides:
+
+- `get_amendment_bills()` — list of bills with third-reading amendments for a period
+- `get_amendment_detail()` — detailed amendment data for a specific session/agenda point
+- Integrates parsed amendments, vote results, coalition analysis, and AI summaries
+
+## Admin Dashboard (`admin/`)
+
+Password-protected admin interface running on a separate port (default 8001).
+
+### Authentication (`admin/auth.py`)
+
+- `AdminAuthMiddleware` — FastAPI middleware for IP whitelist + session cookie validation
+- bcrypt password verification against `ADMIN_PASSWORD_HASH` env var
+- Session cookies signed with HMAC (`ADMIN_SESSION_SECRET`)
+- IP whitelist via `ADMIN_ALLOWED_IPS` (supports CIDR notation)
+
+### Routes (`admin/routes.py`)
+
+Dashboard, pipeline management, runtime config editor, and log viewer. See [Routes](routes.md#admin-routes-port-8001) for full endpoint listing.
+
+### Log Streaming (`admin/log_stream.py`)
+
+Real-time log broadcasting via Server-Sent Events (SSE). The `LogBroadcaster` captures loguru output and streams it to connected admin clients.
+
+### Pipeline History (`admin/pipeline_history.py`)
+
+Tracks pipeline run history (start time, duration, status, errors). Stored on `app.state.pipeline_history` and accessible via the admin API.
+
+### Runtime Config (`services/runtime_config.py`)
+
+Dataclass-based runtime configuration that can be edited via the admin UI without restart. Persisted as JSON in the cache directory. Includes LLM provider/model settings, processing toggles, and feature flags.
+
+### Pipeline Lock (`services/pipeline_lock.py`)
+
+Global asyncio lock ensuring only one pipeline runs at a time. Tracks the current pipeline's type, period, and start time.
+
 ## Security & Middleware
 
 ### Security Headers (`middleware.py`)

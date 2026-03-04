@@ -73,6 +73,18 @@ Hit real psp.cz infrastructure — marked with `@pytest.mark.integration` and ex
 - Session-scoped fixtures download data once per test run, shared across all integration tests
 - Uses the real cache directory (`~/.cache/pspcz-analyzer/psp/`) so downloads persist across runs
 
+### Coverage Threshold
+
+The project enforces a minimum coverage threshold via `pytest-cov`:
+
+```toml
+# pyproject.toml
+[tool.coverage.report]
+fail_under = 50
+```
+
+This threshold is ratcheted up over time. When adding new features, ensure tests maintain coverage above this level. Run `uv run pytest -m "not integration" --cov -q` to check.
+
 ## Test Fixtures
 
 ### `tests/fixtures/sample_data.py`
@@ -199,3 +211,30 @@ When adding a new route:
 1. Add a page test in `tests/api/test_pages.py` (returns 200 + HTML)
 2. If it's an HTMX partial, add to `tests/api/test_api_endpoints.py`
 3. If it's a chart, add to `tests/api/test_charts.py` (returns PNG)
+
+### Testing Amendment & Law Features
+
+Amendment and law services depend on tisk pipeline outputs. For unit tests:
+
+- **Mock `AmendmentCacheManager`** — avoid filesystem access by mocking cache reads
+- **Use fixture data** — create small Polars DataFrames matching the amendment schema
+- **Mock LLM calls** — patch `LLMClient` methods to return canned summaries
+
+Example fixture pattern:
+
+```python
+@pytest.fixture
+def sample_amendment_data():
+    """Minimal amendment data for testing."""
+    return {
+        "period": 9,
+        "schuze": 10,
+        "bod": 5,
+        "amendments": [
+            {"amendment_number": 1, "submitter": "Jan Novák", "result": "A"},
+            {"amendment_number": 2, "submitter": "Eva Dvořáková", "result": "N"},
+        ],
+    }
+```
+
+For API tests, use `TestClient` with a mocked `DataReader` that returns pre-built amendment data.

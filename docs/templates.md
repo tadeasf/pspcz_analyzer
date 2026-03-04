@@ -38,6 +38,10 @@ Each page template renders a full page with controls and a `#results` div that H
 | `similarity.html` | Similarity | Top N slider |
 | `votes.html` | Votes Browser | Search input, outcome filter, topic filter, pagination |
 | `vote_detail.html` | Vote Detail | None (static detail view) |
+| `laws.html` | Laws Browser | Search input, category filter, status filter, pagination |
+| `law_detail.html` | Law Detail | None (static detail: sponsors, status, legislative timeline, AI summary) |
+| `amendments.html` | Amendments | None (lists bills with third-reading amendments for a period) |
+| `amendment_detail.html` | Amendment Detail | None (per-amendment vote breakdown, coalition analysis, submitter info, AI summary) |
 
 ### Vote Detail Template (`vote_detail.html`)
 
@@ -69,6 +73,8 @@ HTML fragments returned by `/api/*` endpoints for HTMX swaps:
 | `tisk_evolution.html` | `/api/tisk-evolution` | Sub-version comparison with bilingual diff summaries |
 | `feedback_form.html` | `/api/feedback` (form) | Feedback submission form with title/body fields |
 | `feedback_result.html` | `/api/feedback` (result) | Success/error message after feedback submission |
+| `amendments_list.html` | `/api/amendments` | Paginated list of bills with third-reading amendments |
+| `laws_list.html` | `/api/laws` | Paginated list of laws/bills with search and filter results |
 
 ## HTMX Pattern
 
@@ -129,3 +135,26 @@ All custom CSS lives in `/static/style.css` (external file). Pico CSS v2 light t
 ## Methodology Sections
 
 Each analysis page includes a collapsible `<details>` element explaining the calculation methodology — this serves as inline documentation for users. Methodology text is fully localized.
+
+## Admin Templates (`admin/templates/`)
+
+The admin backend uses a separate Jinja2 template directory (`pspcz_analyzer/admin/templates/`).
+
+### Base Layout (`admin_base.html`)
+
+Admin-specific base template with sidebar navigation (Dashboard, Pipelines, Config, Logout).
+
+### Admin Pages
+
+| Template                     | Description                                                    |
+| ---------------------------- | -------------------------------------------------------------- |
+| `login.html`                 | Admin login form (username + password)                         |
+| `dashboard.html`             | System overview: loaded periods, cache size, disk space, LLM   |
+| `pipelines.html`             | Pipeline management: start/stop, progress bars, run history    |
+| `config.html`                | Runtime config editor: LLM provider, model, feature toggles    |
+
+### Admin Partials
+
+| Template                               | Description                                        |
+| -------------------------------------- | -------------------------------------------------- |
+| `partials/pipeline_status.html`        | HTMX-polled progress bars for tisk + amendments    |

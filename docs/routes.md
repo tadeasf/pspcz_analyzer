@@ -16,6 +16,10 @@ Full HTML pages rendered with Jinja2. Defined in `pspcz_analyzer/routes/pages.py
 | GET    | `/similarity`      | Cross-party voting similarity page                                    |
 | GET    | `/votes`           | Votes browser (searchable, paginated)                                 |
 | GET    | `/votes/{vote_id}` | Single vote detail — per-party and per-MP breakdown                   |
+| GET    | `/laws`                      | Laws browser — filterable list of parliamentary bills                 |
+| GET    | `/laws/{ct}`                 | Law detail — bill sponsors, status, legislative history               |
+| GET    | `/amendments`                | Amendment voting — third-reading amendment analysis overview          |
+| GET    | `/amendments/{schuze}/{bod}` | Amendment detail — per-amendment votes, coalitions, AI summary        |
 | GET    | `/set-lang/{lang}` | Set UI language (`cs` or `en`) via cookie and redirect back           |
 
 ## API Routes (HTMX Partials)
@@ -147,6 +151,74 @@ Health check endpoint returning JSON.
 { "status": "ok", "periods_loaded": [10, 9] }
 ```
 
+### GET /api/laws
+
+Returns an HTMX partial with filtered laws list.
+
+| Parameter     | Type   | Default | Description                                 |
+| ------------- | ------ | ------- | ------------------------------------------- |
+| `period`      | int    | latest  | Electoral period                             |
+| `page`        | int    | 1       | Page number                                 |
+| `q`           | str    | —       | Full-text search query                       |
+| `topic`       | str    | —       | Filter by topic classification               |
+| `status`      | str    | —       | Filter by legislative status                 |
+
+### GET /api/amendments
+
+Returns an HTMX partial with amendment bills for a period.
+
+| Parameter     | Type   | Default | Description                                 |
+| ------------- | ------ | ------- | ------------------------------------------- |
+| `period`      | int    | latest  | Electoral period                             |
+| `page`        | int    | 1       | Page number                                 |
+
+### GET /api/amendment-coalitions
+
+Returns coalition analysis for a specific amendment vote.
+
+| Parameter     | Type   | Default | Description                                 |
+| ------------- | ------ | ------- | ------------------------------------------- |
+| `period`      | int    | required| Electoral period                             |
+| `schuze`      | int    | required| Session number                               |
+| `bod`         | int    | required| Agenda point number                          |
+
+## Admin Routes (Port 8001)
+
+The admin backend runs on a separate port (default 8001) with IP whitelist + password authentication.
+
+### Authentication
+
+| Route                 | Method | Description                              |
+| --------------------- | ------ | ---------------------------------------- |
+| `/admin/login`        | GET    | Login page                               |
+| `/admin/login`        | POST   | Authenticate (username + bcrypt password) |
+| `/admin/logout`       | POST   | Clear session cookie                     |
+
+### Admin Pages
+
+| Route                 | Description                                       |
+| --------------------- | ------------------------------------------------- |
+| `/admin/`             | Dashboard — system overview, cache size, LLM info |
+| `/admin/pipelines`    | Pipeline management — start, stop, monitor        |
+| `/admin/config`       | Runtime config editor — LLM settings, toggles     |
+
+### Admin API
+
+| Route                                  | Method | Description                                 |
+| -------------------------------------- | ------ | ------------------------------------------- |
+| `/admin/api/pipeline/start`            | POST   | Start a pipeline (type + period via form)   |
+| `/admin/api/pipeline/stop`             | POST   | Stop the currently running pipeline         |
+| `/admin/api/pipeline/cancel/{period}`  | POST   | Cancel a single period's pipeline           |
+| `/admin/api/pipeline/remove/{period}`  | POST   | Remove a pending period from the queue      |
+| `/admin/api/pipeline/status`           | GET    | Current pipeline status as JSON             |
+| `/admin/api/pipeline/history`          | GET    | Recent pipeline run history                 |
+| `/admin/api/pipeline/logs`             | GET    | SSE endpoint for real-time log streaming    |
+| `/admin/api/config`                    | GET    | Read runtime config (secrets masked)        |
+| `/admin/api/config`                    | POST   | Update runtime config                       |
+| `/admin/api/refresh`                   | POST   | Trigger manual data refresh                 |
+| `/admin/api/health`                    | GET    | Admin backend health check                  |
+| `/admin/partials/pipeline-status`      | GET    | HTMX partial for pipeline progress polling  |
+
 ## Chart Routes
 
 Return PNG images via `StreamingResponse`. Defined in `pspcz_analyzer/routes/charts.py`. Mounted under `/charts`.
@@ -167,12 +239,13 @@ The full OpenAPI schema is available at `/openapi.json`. Default Swagger UI and 
 
 Per-endpoint rate limits (via slowapi/limits):
 
-| Endpoint                             | Limit     |
-| ------------------------------------ | --------- |
-| Page routes                          | 60/minute |
-| Analysis APIs (`/api/loyalty`, etc.) | 15/minute |
-| `/api/related-bills`                 | 5/minute  |
-| `/api/feedback`                      | 3/hour    |
-| `/api/llm/health`                    | 10/minute |
-| `/api/llm/smoke-test`               | 2/minute  |
-| Chart routes                         | 30/minute |
+| Endpoint                             | Limit                              |
+| ------------------------------------ | ---------------------------------- |
+| Page routes (incl. laws, amendments) | 60/minute                          |
+| Analysis APIs (`/api/loyalty`, etc.) | 15/minute                          |
+| `/api/related-bills`                 | 5/minute                           |
+| `/api/feedback`                      | 3/hour                             |
+| `/api/llm/health`                    | 10/minute                          |
+| `/api/llm/smoke-test`               | 2/minute                           |
+| Chart routes                         | 30/minute                          |
+| Admin API routes                     | No limit (auth-protected)          |
