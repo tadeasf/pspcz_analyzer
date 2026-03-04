@@ -27,6 +27,8 @@ from pspcz_analyzer.routes.charts import router as charts_router
 from pspcz_analyzer.routes.feedback import router as feedback_router
 from pspcz_analyzer.routes.feedback import templates as feedback_templates
 from pspcz_analyzer.routes.health import router as health_router
+from pspcz_analyzer.routes.laws import router as laws_router
+from pspcz_analyzer.routes.laws import templates as laws_templates
 from pspcz_analyzer.routes.pages import router as pages_router
 from pspcz_analyzer.routes.pages import templates as pages_templates
 from pspcz_analyzer.routes.tisk import router as tisk_router
@@ -86,6 +88,7 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.include_router(pages_router)
 app.include_router(voting_router, prefix="/api")
 app.include_router(amendments_router, prefix="/api")
+app.include_router(laws_router, prefix="/api")
 app.include_router(tisk_router, prefix="/api")
 app.include_router(feedback_router, prefix="/api")
 app.include_router(health_router, prefix="/api")
@@ -107,6 +110,7 @@ for t in (
     pages_templates,
     voting_templates,
     amendments_templates,
+    laws_templates,
     tisk_templates,
     feedback_templates,
 ):

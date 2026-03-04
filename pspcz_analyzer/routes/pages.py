@@ -14,6 +14,8 @@ from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.utils import validate_period
 from pspcz_analyzer.services.amendment_service import amendment_detail
+from pspcz_analyzer.services.law_service import get_all_status_labels
+from pspcz_analyzer.services.law_service import law_detail as get_law_detail
 from pspcz_analyzer.services.votes_service import vote_detail
 
 router = APIRouter(tags=["Pages"])
@@ -147,6 +149,44 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
             active_page="votes",
             feedback_enabled=GITHUB_FEEDBACK_ENABLED,
         ),
+    )
+
+
+@router.get("/laws")
+@limiter.limit("60/minute")
+async def laws_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    data_svc = request.app.state.data
+    pd = data_svc.get_period(period)
+    lang = getattr(request.state, "lang", "cs")
+    return templates.TemplateResponse(
+        "laws.html",
+        _ctx(
+            request,
+            period,
+            active_page="laws",
+            topics=pd.get_all_topic_labels(lang),
+            statuses=get_all_status_labels(pd),
+        ),
+    )
+
+
+@router.get("/laws/{ct}")
+@limiter.limit("60/minute")
+async def law_detail_page(request: Request, ct: int, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    data_svc = request.app.state.data
+    pd = data_svc.get_period(period)
+    lang = getattr(request.state, "lang", "cs")
+    detail = get_law_detail(pd, ct, lang)
+    if detail is None:
+        return templates.TemplateResponse(
+            "laws.html",
+            _ctx(request, period, active_page="laws"),
+        )
+    return templates.TemplateResponse(
+        "law_detail.html",
+        _ctx(request, period, detail=detail, active_page="laws"),
     )
 
 

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}{{ _("laws.detail_title").format(ct=detail.ct) }} — {{ _("site.short_title") }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ _("laws.detail_title").format(ct=detail.ct) }}</h1>
+    <p>{{ detail.nazev }}</p>
+</div>
+
+<article>
+    <div class="stat-grid">
+        <article class="stat-card stat-card-blue">
+            <h3>{{ detail.amendment_entries | length }}</h3>
+            <p>{{ _("laws.amendments_section") }}</p>
+        </article>
+        <article class="stat-card {% if detail.status and ('přijat' in detail.status.lower() or 'podepsal' in detail.status.lower()) %}stat-card-green{% elif 'zamítnut' in detail.status.lower() %}stat-card-red{% else %}stat-card-gray{% endif %}">
+            <h3>{{ detail.status }}</h3>
+            <p>{{ _("laws.current_status") }}</p>
+        </article>
+        <article class="stat-card stat-card-gray">
+            <h3>{{ detail.related_votes | length }}</h3>
+            <p>{{ _("laws.related_votes") }}</p>
+        </article>
+    </div>
+
+    {% if detail.topics %}
+    <p>
+        <strong>{{ _("detail.topics") }}</strong>
+        {% for t in detail.topics %}
+        <span class="topic-badge">{{ t }}</span>
+        {% endfor %}
+    </p>
+    {% endif %}
+
+    <p>
+        <a href="{{ detail.url }}" target="_blank" class="btn-outline btn-small">{{ _("laws.view_on_psp") }} &nearr;</a>
+    </p>
+</article>
+
+{% if detail.summary %}
+<div class="info-box">
+    <div class="info-box-header">
+        {{ _("detail.ai_bill_summary") }}
+        <small>{{ _("detail.ai_bill_summary_note") }}</small>
+    </div>
+    {{ detail.summary | markdown }}
+</div>
+{% endif %}
+
+{% if detail.history and detail.history.stages %}
+<div class="legis-box">
+    <div class="legis-box-header">
+        {{ _("detail.legislative_process") }}
+        {% if detail.submitter %}
+        <small>{{ _("laws.submitted_by") }} {{ detail.submitter }}</small>
+        {% endif %}
+        {% if detail.status %}
+        <span class="status-badge">{{ detail.status }}</span>
+        {% endif %}
+        {% if detail.law_number %}
+        <small class="law-number">{{ detail.law_number }}</small>
+        {% endif %}
+    </div>
+    <div class="legislative-timeline">
+        {% for stage in detail.history.stages %}
+        <div class="timeline-stage">
+            <div class="timeline-dot"></div>
+            <span class="timeline-label">{{ stage.label }}</span>
+            {% if stage.date %}
+            <span class="timeline-date">{{ stage.date }}</span>
+            {% endif %}
+            {% if stage.outcome %}
+            <div class="timeline-outcome {% if 'schválen' in stage.outcome or 'podepsal' in stage.outcome or 'doporučuje' in stage.outcome %}timeline-approved{% elif 'zamítnut' in stage.outcome or 'nedoporučuje' in stage.outcome %}timeline-rejected{% endif %}">
+                {{ stage.outcome }}
+                {% if stage.vote_number %}
+                <small>(hlasování č. {{ stage.vote_number }})</small>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if detail.has_amendments %}
+<h2>{{ _("laws.amendments_section") }}</h2>
+{% for entry in detail.amendment_entries %}
+<article>
+    <p>
+        <strong>{{ _("laws.amendment_count").format(count=entry.amendment_count) }}</strong>
+        {% if entry.final_result == "accepted" %}
+        — <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
+        {% elif entry.final_result == "rejected" %}
+        — <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
+        {% endif %}
+    </p>
+    <a href="/amendments/{{ entry.schuze }}/{{ entry.bod }}?period={{ period }}" class="btn-outline btn-small">{{ _("laws.view_amendment_detail") }}</a>
+</article>
+{% endfor %}
+{% endif %}
+
+{% if detail.related_votes %}
+<h2>{{ _("laws.related_votes") }}</h2>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _("th.date") }}</th>
+                <th>{{ _("th.description") }}</th>
+                <th>{{ _("th.result") }}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in detail.related_votes %}
+            <tr>
+                <td><small>{{ v.datum }}</small></td>
+                <td><small>{{ v.nazev_dlouhy[:80] }}{% if v.nazev_dlouhy|length > 80 %}...{% endif %}</small></td>
+                <td>
+                    {% if v.result == "passed" %}
+                    <span class="vote-yes">{{ _("outcome.passed") }}</span>
+                    {% elif v.result == "rejected" %}
+                    <span class="vote-no">{{ _("outcome.rejected") }}</span>
+                    {% elif v.result == "void" %}
+                    <span class="vote-passive">{{ _("outcome.void") }}</span>
+                    {% else %}
+                    {{ v.result }}
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/votes/{{ v.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<p><a href="/laws?period={{ period }}">&larr; {{ _("laws.back_to_list") }}</a></p>
+{% endblock %}

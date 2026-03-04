@@ -1,0 +1,68 @@
+{% if not rows %}
+<p>{{ _("laws.no_data") }}</p>
+{% else %}
+<p>{{ _("laws.found").format(total=total, page=page, total_pages=total_pages) }}</p>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _("th.tisk") }}</th>
+                <th>{{ _("th.topics") }}</th>
+                <th>{{ _("th.submitter_col") }}</th>
+                <th>{{ _("th.status") }}</th>
+                <th>{{ _("th.law_number") }}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>
+                    <strong>{{ row.ct }}</strong><br>
+                    <small>{{ row.nazev[:80] }}{% if row.nazev|length > 80 %}...{% endif %}</small>
+                </td>
+                <td>
+                    {% for t in row.topics %}
+                    <span class="topic-badge">{{ t }}</span>
+                    {% endfor %}
+                </td>
+                <td><small>{{ row.submitter }}</small></td>
+                <td>
+                    {% set sl = row.status.lower() %}
+                    {% if 'vyhlášeno' in sl or 'podepsáno' in sl or 'schváleno' in sl or 'přijat' in sl %}
+                    <span class="vote-yes">{{ row.status }}</span>
+                    {% elif 'zamítnuto' in sl or 'staženo' in sl %}
+                    <span class="vote-no">{{ row.status }}</span>
+                    {% else %}
+                    <span class="vote-passive">{{ row.status }}</span>
+                    {% endif %}
+                    {% if row.has_amendments %}
+                    <br><small>{{ row.amendment_count }} PN</small>
+                    {% endif %}
+                </td>
+                <td><small>{{ row.law_number }}</small></td>
+                <td>
+                    <a href="/laws/{{ row.ct }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages > 1 %}
+<nav class="pagination">
+    {% if page > 1 %}
+    <button hx-get="/api/laws?period={{ period }}&search={{ search }}&status={{ status_filter }}&topic={{ topic }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
+        {{ _("pagination.previous") }}
+    </button>
+    {% endif %}
+    <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
+    {% if page < total_pages %}
+    <button hx-get="/api/laws?period={{ period }}&search={{ search }}&status={{ status_filter }}&topic={{ topic }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">
+        {{ _("pagination.next") }}
+    </button>
+    {% endif %}
+</nav>
+{% endif %}
+{% endif %}
