@@ -1,0 +1,161 @@
+{% extends "admin_base.html" %}
+{% block title %}Configuration{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Runtime Configuration</h1>
+    <p>Changes take effect immediately. Settings are persisted to <code class="font-mono">runtime_config.json</code>.</p>
+</div>
+
+<form method="post" hx-post="/admin/api/config" hx-swap="none"
+      hx-on::after-request="if(event.detail.successful) showToast('Configuration saved', 'success'); else showToast('Failed to save', 'error');">
+
+    <!-- LLM Provider -->
+    <div class="card mb-2">
+        <div class="card-header">LLM Provider</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="llm_provider">Provider</label>
+                    <select name="llm_provider" id="llm_provider">
+                        <option value="ollama" {% if config.llm_provider == 'ollama' %}selected{% endif %}>Ollama</option>
+                        <option value="openai" {% if config.llm_provider == 'openai' %}selected{% endif %}>OpenAI-compatible</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display:flex; align-items:flex-end;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="llm_structured_output" id="llm_structured_output"
+                               value="true" {% if config.llm_structured_output %}checked{% endif %}>
+                        Structured Output (JSON schema)
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ollama Settings -->
+    <div class="card mb-2">
+        <div class="card-header">Ollama Settings</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ollama_base_url">Base URL</label>
+                    <input type="text" name="ollama_base_url" id="ollama_base_url" value="{{ config.ollama_base_url }}">
+                </div>
+                <div class="form-group">
+                    <label for="ollama_model">Model</label>
+                    <input type="text" name="ollama_model" id="ollama_model" value="{{ config.ollama_model }}">
+                </div>
+                <div class="form-group">
+                    <label for="ollama_api_key">API Key</label>
+                    <input type="password" name="ollama_api_key" id="ollama_api_key" value="{{ config.ollama_api_key }}"
+                           placeholder="Leave empty if unchanged">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OpenAI Settings -->
+    <div class="card mb-2">
+        <div class="card-header">OpenAI-compatible Settings</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="openai_base_url">Base URL</label>
+                    <input type="text" name="openai_base_url" id="openai_base_url" value="{{ config.openai_base_url }}">
+                </div>
+                <div class="form-group">
+                    <label for="openai_model">Model</label>
+                    <input type="text" name="openai_model" id="openai_model" value="{{ config.openai_model }}">
+                </div>
+                <div class="form-group">
+                    <label for="openai_api_key">API Key</label>
+                    <input type="password" name="openai_api_key" id="openai_api_key" value="{{ config.openai_api_key }}"
+                           placeholder="Leave empty if unchanged">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Settings -->
+    <div class="card mb-2">
+        <div class="card-header">Processing Settings</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ai_periods_limit">AI Periods Limit (0 = all)</label>
+                    <input type="number" name="ai_periods_limit" id="ai_periods_limit"
+                           value="{{ config.ai_periods_limit }}" min="0" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="llm_empty_retries">LLM Empty Retries</label>
+                    <input type="number" name="llm_empty_retries" id="llm_empty_retries"
+                           value="{{ config.llm_empty_retries }}" min="0" max="10">
+                </div>
+                <div class="form-group" style="display:flex; align-items:flex-end;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="tisk_shortener" id="tisk_shortener"
+                               value="true" {% if config.tisk_shortener %}checked{% endif %}>
+                        Truncate tisk text for LLM
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Refresh -->
+    <div class="card mb-2">
+        <div class="card-header">Daily Refresh</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group" style="display:flex; align-items:flex-end;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="daily_refresh_enabled" id="daily_refresh_enabled"
+                               value="true" {% if config.daily_refresh_enabled %}checked{% endif %}>
+                        Enable daily data refresh
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="daily_refresh_hour">Refresh hour (CET, 0-23)</label>
+                    <input type="number" name="daily_refresh_hour" id="daily_refresh_hour"
+                           value="{{ config.daily_refresh_hour }}" min="0" max="23">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Flags -->
+    <div class="card mb-2">
+        <div class="card-header">Feature Flags</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="amendments_enabled" id="amendments_enabled"
+                               value="true" {% if config.amendments_enabled %}checked{% endif %}>
+                        Amendment analysis
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dev_skip_classify_and_summarize" id="dev_skip_classify_and_summarize"
+                               value="true" {% if config.dev_skip_classify_and_summarize %}checked{% endif %}>
+                        Skip classify + summarize
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dev_skip_version_diffs" id="dev_skip_version_diffs"
+                               value="true" {% if config.dev_skip_version_diffs %}checked{% endif %}>
+                        Skip version diffs
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-2">
+        <button type="submit" class="btn btn-primary">Save Configuration</button>
+    </div>
+</form>
+{% endblock %}

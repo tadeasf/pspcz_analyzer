@@ -1,0 +1,164 @@
+{# Bare HTML partial — no {% extends %}. Returned by /admin/partials/pipeline-status for HTMX polling. #}
+
+{% if tisk_progress.running %}
+<div style="margin-bottom: 0.75rem;">
+    <div class="flex items-center gap-1 mb-1">
+        <span class="badge badge-running"><span class="pulse-dot"></span> Running</span>
+        {% if pipeline_info %}
+        <span class="text-sm text-muted">{{ pipeline_type_labels.get(pipeline_info.pipeline_type, pipeline_info.pipeline_type) }} — Period {{ pipeline_info.period }}</span>
+        {% endif %}
+    </div>
+
+    <div class="flex items-center gap-2 text-sm mb-1">
+        <span>Elapsed: <strong>{{ format_elapsed(tisk_progress.elapsed) }}</strong></span>
+        {% set overall_eta = tisk_progress.eta_seconds %}
+        {% if overall_eta is not none %}
+        <span>ETA: <strong>{{ format_eta(overall_eta) }}</strong></span>
+        {% endif %}
+        <span>Periods: <strong>{{ tisk_progress.periods_completed }}/{{ tisk_progress.periods_total }}</strong></span>
+    </div>
+
+    {# Per-period progress #}
+    {% for period_num, pp in tisk_progress.periods.items() %}
+    {% if pp.status.value == 'in_progress' and pp.current_stage %}
+    <div style="background: #f8f9fa; border-radius: 4px; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;">
+        <div class="flex items-center gap-1 mb-1">
+            <span class="badge badge-info">Period {{ pp.period }}</span>
+            <span class="text-sm"><strong>{{ stage_labels.get(pp.current_stage.stage.value, pp.current_stage.stage.value) }}</strong></span>
+            <button type="button" class="btn btn-sm btn-danger" style="margin-left: auto; font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                    hx-post="/admin/api/pipeline/cancel/{{ pp.period }}" hx-swap="none"
+                    hx-on::after-request="showToast('Period {{ pp.period }} cancellation requested', 'success')">Cancel</button>
+        </div>
+        {% set pct = pp.current_stage.percent %}
+        {% if pct is not none %}
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: {{ pct | round(1) }}%"></div>
+        </div>
+        <div class="progress-info">
+            <span>{{ pp.current_stage.items_done }}/{{ pp.current_stage.items_total }} items</span>
+            <span>{{ pct | round(1) }}%</span>
+            {% set stage_eta = pp.current_stage.eta_seconds %}
+            {% if stage_eta is not none %}
+            <span>ETA: {{ format_eta(stage_eta) }}</span>
+            {% endif %}
+            {% if pp.current_stage.rate > 0 %}
+            <span>{{ pp.current_stage.rate | round(1) }}/s</span>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: 100%; opacity: 0.3; animation: pulse 1.5s ease-in-out infinite;"></div>
+        </div>
+        <div class="progress-info">
+            <span>Processing...</span>
+            <span>{{ format_elapsed(pp.current_stage.elapsed) }} elapsed</span>
+        </div>
+        {% endif %}
+    </div>
+    {% elif pp.status.value == 'completed' %}
+    <div class="flex items-center gap-1 text-sm" style="margin-bottom: 0.25rem;">
+        <span class="badge badge-success">Period {{ pp.period }}</span>
+        <span class="text-muted">Completed</span>
+    </div>
+    {% elif pp.status.value == 'failed' %}
+    <div class="flex items-center gap-1 text-sm" style="margin-bottom: 0.25rem;">
+        <span class="badge badge-error">Period {{ pp.period }}</span>
+        <span class="text-muted">Failed</span>
+    </div>
+    {% elif pp.status.value == 'cancelled' %}
+    <div class="flex items-center gap-1 text-sm" style="margin-bottom: 0.25rem;">
+        <span class="badge badge-warning">Period {{ pp.period }}</span>
+        <span class="text-muted">Cancelled</span>
+    </div>
+    {% elif pp.status.value == 'pending' %}
+    <div class="flex items-center gap-1 text-sm" style="margin-bottom: 0.25rem;">
+        <span class="badge badge-idle">Period {{ pp.period }}</span>
+        <span class="text-muted">Pending</span>
+        <button type="button" class="btn btn-sm btn-secondary" style="margin-left: auto; font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                hx-post="/admin/api/pipeline/remove/{{ pp.period }}" hx-swap="none"
+                hx-on::after-request="showToast('Period {{ pp.period }} removed', 'success')">Remove</button>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <form method="post" hx-post="/admin/api/pipeline/stop" hx-swap="none"
+          hx-on::after-request="showToast('Pipeline stopped', 'success')"
+          style="margin-top: 0.5rem;">
+        <button type="submit" class="btn btn-sm btn-danger">Stop All</button>
+    </form>
+</div>
+
+{% elif amendment_progress %}
+{# Check if any amendment pipeline is running — use namespace to escape loop scoping #}
+{% set ns = namespace(any_amend_running=false) %}
+{% for period_num, ap in amendment_progress.items() %}
+    {% if ap.status.value == 'running' %}
+        {% set ns.any_amend_running = true %}
+    {% endif %}
+{% endfor %}
+
+{% if ns.any_amend_running %}
+<div style="margin-bottom: 0.75rem;">
+    <div class="flex items-center gap-1 mb-1">
+        <span class="badge badge-running"><span class="pulse-dot"></span> Amendment Pipeline</span>
+    </div>
+    {% for period_num, ap in amendment_progress.items() %}
+    {% if ap.status.value == 'running' %}
+    <div style="background: #f8f9fa; border-radius: 4px; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;">
+        <div class="flex items-center gap-1 mb-1">
+            <span class="badge badge-info">Period {{ period_num }}</span>
+            <span class="text-sm"><strong>{{ stage_labels.get(ap.stage.value, ap.stage.value) }}</strong></span>
+            <button type="button" class="btn btn-sm btn-danger" style="margin-left: auto; font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                    hx-post="/admin/api/pipeline/cancel/{{ period_num }}" hx-swap="none"
+                    hx-on::after-request="showToast('Period {{ period_num }} cancellation requested', 'success')">Cancel</button>
+        </div>
+        {% set pct = ap.percent %}
+        {% if pct is not none %}
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: {{ pct | round(1) }}%"></div>
+        </div>
+        <div class="progress-info">
+            <span>{{ ap.done_items }}/{{ ap.total_items }} items</span>
+            <span>{{ pct | round(1) }}%</span>
+            {% if ap.stage.value == 'llm_summarize' %}
+            <span>{{ ap.summaries_completed }} summaries</span>
+            {% else %}
+            <span>{{ ap.bills_parsed }} bills parsed</span>
+            {% endif %}
+            <span>{{ format_elapsed(ap.elapsed) }} elapsed</span>
+            {% set eta = ap.eta_seconds %}
+            {% if eta is not none %}
+            <span>ETA: {{ format_eta(eta) }}</span>
+            {% endif %}
+            {% if ap.rate > 0 %}
+            <span>{{ ap.rate | round(1) }}/s</span>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: 100%; opacity: 0.3; animation: pulse 1.5s ease-in-out infinite;"></div>
+        </div>
+        <div class="progress-info">
+            <span>Processing...</span>
+            {% if ap.elapsed > 0 %}
+            <span>{{ format_elapsed(ap.elapsed) }} elapsed</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <form method="post" hx-post="/admin/api/pipeline/stop" hx-swap="none"
+          hx-on::after-request="showToast('Pipeline stopped', 'success')"
+          style="margin-top: 0.5rem;">
+        <button type="submit" class="btn btn-sm btn-danger">Stop All</button>
+    </form>
+</div>
+{% else %}
+<span class="badge badge-idle">No pipeline running</span>
+{% endif %}
+
+{% else %}
+<span class="badge badge-idle">No pipeline running</span>
+{% endif %}

@@ -1,0 +1,97 @@
+{% extends "admin_base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p>System overview and quick actions</p>
+</div>
+
+<!-- Stat cards -->
+<div class="stats-grid">
+    <div class="stat-card"
+         hx-get="/admin/partials/pipeline-status" hx-trigger="every 3s" hx-swap="innerHTML"
+         hx-target="#pipeline-stat-content" id="pipeline-stat">
+        <div class="stat-label">Pipeline Status</div>
+        <div id="pipeline-stat-content">
+            {% if pipeline_running %}
+                <div class="stat-value">
+                    <span class="badge badge-running"><span class="pulse-dot"></span> Running</span>
+                </div>
+                {% if pipeline_info %}
+                <div class="stat-sub">{{ pipeline_info.pipeline_id }}</div>
+                {% endif %}
+            {% else %}
+                <div class="stat-value"><span class="badge badge-idle">Idle</span></div>
+                <div class="stat-sub">No active pipeline</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">LLM Provider</div>
+        <div class="stat-value" style="font-size: 1.1rem;">{{ llm_provider }}</div>
+        <div class="stat-sub">{{ llm_model }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Loaded Periods</div>
+        <div class="stat-value">{{ loaded_periods | length }}</div>
+        <div class="stat-sub">of {{ available_periods | length }} available</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Cache Size</div>
+        <div class="stat-value">{{ cache_size_mb }} MB</div>
+        <div class="stat-sub">{{ disk_free_gb }} GB free</div>
+    </div>
+</div>
+
+<!-- Periods table -->
+<div class="card">
+    <div class="card-header">Available Periods</div>
+    <div class="card-body" style="padding: 0;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Period</th>
+                    <th>Label</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in available_periods %}
+                <tr>
+                    <td><strong>{{ p.number }}</strong></td>
+                    <td>{{ p.label }}</td>
+                    <td>
+                        {% if p.loaded %}
+                            <span class="badge badge-success">Loaded</span>
+                        {% else %}
+                            <span class="badge badge-idle">Not loaded</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">Quick Actions</div>
+    <div class="card-body">
+        <div class="flex gap-2">
+            <form method="post"
+                  hx-post="/admin/api/refresh"
+                  hx-swap="none"
+                  hx-confirm="Trigger full data refresh from psp.cz? This will restart all pipelines."
+                  hx-on::after-request="showToast('Data refresh triggered', 'success')">
+                <button type="submit" class="btn btn-outline">Refresh All Data</button>
+            </form>
+            <a href="/admin/pipelines" class="btn btn-primary">Manage Pipelines</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
