@@ -1,6 +1,7 @@
 """Scrape legislative history and law changes from psp.cz."""
 
 import time
+from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
 
@@ -12,16 +13,14 @@ from pspcz_analyzer.config import (
     TISKY_LAW_CHANGES_DIR,
     TISKY_META_DIR,
 )
-from pspcz_analyzer.data.history_scraper import (
+from pspcz_analyzer.services.tisk.io import (
     TiskHistory,
     load_history_json,
-    save_history_json,
-    scrape_tisk_history,
-)
-from pspcz_analyzer.data.law_changes_scraper import (
     load_law_changes_json,
+    save_history_json,
     save_law_changes_json,
     scrape_proposed_law_changes,
+    scrape_tisk_history,
 )
 
 
@@ -29,6 +28,8 @@ def scrape_histories_sync(
     period: int,
     ct_numbers: list[int],
     cache_dir: Path,
+    cancel_check: Callable[[], None] | None = None,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> dict:
     """Scrape legislative history pages for all tisky in a period.
 
@@ -43,13 +44,25 @@ def scrape_histories_sync(
     scraped = 0
 
     for i, ct in enumerate(ct_numbers, 1):
+        if cancel_check:
+            cancel_check()
         json_path = hist_dir / f"{ct}.json"
 
         # Load from cache if available
         if json_path.exists():
             h = load_history_json(json_path)
             if h:
+                # Re-scrape if history predates amendment sub-tisk scraping
+                if h.amendment_tisk_ct1 is None and h.stages:
+                    h_fresh = scrape_tisk_history(period, ct)
+                    if h_fresh and h_fresh.amendment_tisk_ct1 is not None:
+                        save_history_json(h_fresh, json_path)
+                        h = h_fresh
+                        scraped += 1
+                        time.sleep(PSP_REQUEST_DELAY)
                 histories[ct] = h
+            if progress_callback:
+                progress_callback(i, total)
             continue
 
         # Scrape from psp.cz
@@ -68,6 +81,8 @@ def scrape_histories_sync(
             scraped += 1
 
         time.sleep(PSP_REQUEST_DELAY)
+        if progress_callback:
+            progress_callback(i, total)
 
     logger.info(
         "[tisk pipeline] History scraping for period {}: {} cached, {} new, {} total",
@@ -83,6 +98,8 @@ def scrape_law_changes_sync(
     period: int,
     ct_numbers: list[int],
     cache_dir: Path,
+    cancel_check: Callable[[], None] | None = None,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> dict[int, list[dict]]:
     """Scrape law change pages (snzp=1) for all tisky in a period.
 
@@ -96,10 +113,14 @@ def scrape_law_changes_sync(
     scraped = 0
 
     for i, ct in enumerate(ct_numbers, 1):
+        if cancel_check:
+            cancel_check()
         # Load from cache
         cached = load_law_changes_json(period, ct, cache_dir)
         if cached is not None:
             result[ct] = [asdict(c) for c in cached]
+            if progress_callback:
+                progress_callback(i, total)
             continue
 
         if i % 50 == 0 or i == 1:
@@ -117,6 +138,8 @@ def scrape_law_changes_sync(
         scraped += 1
 
         time.sleep(PSP_REQUEST_DELAY)
+        if progress_callback:
+            progress_callback(i, total)
 
     logger.info(
         "[tisk pipeline] Law changes for period {}: {} cached, {} new, {} with changes",

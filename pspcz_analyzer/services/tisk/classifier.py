@@ -7,13 +7,12 @@ import polars as pl
 from loguru import logger
 
 from pspcz_analyzer.config import TISKY_META_DIR
-from pspcz_analyzer.services.llm_service import (
+from pspcz_analyzer.services.llm import (
     LLMClient,
     create_llm_client,
     deserialize_topics,
     serialize_topics,
 )
-from pspcz_analyzer.services.topic_service import classify_tisk_primary_label
 
 
 def classify_and_save(
@@ -21,6 +20,7 @@ def classify_and_save(
     text_paths: dict[int, Path],
     cache_dir: Path,
     progress_callback: Callable[[int, int], None] | None = None,
+    cancel_check: Callable[[], None] | None = None,
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run topic classification on extracted texts, save parquet, return maps.
 
@@ -68,6 +68,9 @@ def classify_and_save(
             total,
         )
 
+    # Start from fully-done existing records
+    records = [row for ct, row in existing.items() if ct not in incomplete]
+
     if use_ai:
         logger.info(
             "[tisk pipeline] LLM available ({}), using AI classification + summarization ({} to process)",
@@ -75,15 +78,16 @@ def classify_and_save(
             len(remaining),
         )
     else:
-        logger.info(
-            "[tisk pipeline] LLM not available, using keyword classification ({} to process)",
+        logger.warning(
+            "[tisk pipeline] LLM not available, skipping classification ({} unprocessed tisks)",
             len(remaining),
         )
-
-    # Start from fully-done existing records
-    records = [row for ct, row in existing.items() if ct not in incomplete]
+        # Without LLM, return whatever we have cached
+        return _build_topic_summary_maps(records, period)
 
     for i, (ct, text_path) in enumerate(sorted(remaining.items()), fully_done + 1):
+        if cancel_check:
+            cancel_check()
         record = _classify_single_tisk(
             ct,
             text_path,
@@ -92,6 +96,7 @@ def classify_and_save(
             i,
             total,
             existing_record=incomplete.get(ct),
+            cancel_check=cancel_check,
         )
         records.append(record)
 
@@ -114,21 +119,27 @@ def _classify_single_tisk(
     i: int,
     total: int,
     existing_record: dict | None = None,
+    cancel_check: Callable[[], None] | None = None,
 ) -> dict:
-    """Classify a single tisk and return its record dict.
+    """Classify a single tisk via LLM and return its record dict.
 
     Smart caching: if existing_record has topics but no summary, only
     generates the summary (2 LLM calls). If nothing exists, does a
     combined classify+summarize call (2 LLM calls instead of 4).
     """
     text = text_path.read_text(encoding="utf-8")
-    source = "keyword"
+    source = "unclassified"
 
     # Check what we already have from a previous run
     has_topics = bool(
         existing_record and existing_record.get("topic") and existing_record["topic"] != "[]"
     )
     has_summary = bool(existing_record and existing_record.get("summary"))
+
+    topics: list[str] = []
+    topics_en: list[str] = []
+    summary = ""
+    summary_en = ""
 
     if use_ai:
         if has_topics and not has_summary:
@@ -142,6 +153,8 @@ def _classify_single_tisk(
                 total,
                 ct,
             )
+            if cancel_check:
+                cancel_check()
             summaries = llm.summarize_bilingual(text, "")
             summary = summaries["cs"]
             summary_en = summaries["en"]
@@ -153,6 +166,8 @@ def _classify_single_tisk(
                 total,
                 ct,
             )
+            if cancel_check:
+                cancel_check()
             topics, topics_en, summary, summary_en = llm.classify_and_summarize_bilingual(text, "")
             if topics:
                 source = f"llm:{llm.model}"
@@ -168,30 +183,6 @@ def _classify_single_tisk(
             len(summary_en),
             source,
         )
-    else:
-        topics: list[str] = []
-        topics_en: list[str] = []
-        summary = ""
-        summary_en = ""
-        kw_result = classify_tisk_primary_label(text, "")
-        if kw_result:
-            topics = [kw_result[0]]
-            topics_en = [kw_result[1]]
-        if i % 20 == 0 or i == total:
-            logger.info("[tisk pipeline] [{}/{}] keyword classification progress", i, total)
-
-    # Fall back to keyword classification if AI didn't produce topics
-    if use_ai and not topics:
-        kw_result = classify_tisk_primary_label(text, "")
-        if kw_result:
-            topics = [kw_result[0]]
-            topics_en = [kw_result[1]]
-            source = "keyword"
-            logger.debug(
-                "[tisk pipeline] tisk ct={} AI returned no topics, keyword fallback -> {}",
-                ct,
-                kw_result[0],
-            )
 
     return {
         "ct": ct,
@@ -206,6 +197,7 @@ def _classify_single_tisk(
 def consolidate_topics(
     period: int,
     cache_dir: Path,
+    cancel_check: Callable[[], None] | None = None,
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run LLM-powered topic deduplication after classification.
 
@@ -266,6 +258,8 @@ def consolidate_topics(
         len(unique_topics_cs),
         len(unique_topics_en),
     )
+    if cancel_check:
+        cancel_check()
     mapping_cs, mapping_en = llm.consolidate_topics_bilingual(unique_topics_cs, unique_topics_en)
 
     # Count how many actually changed

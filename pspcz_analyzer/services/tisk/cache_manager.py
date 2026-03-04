@@ -12,8 +12,8 @@ from pspcz_analyzer.config import (
     TISKY_META_DIR,
     TISKY_VERSION_DIFFS_DIR,
 )
-from pspcz_analyzer.data.history_scraper import load_history_json
-from pspcz_analyzer.services.llm_service import deserialize_topics
+from pspcz_analyzer.services.llm import deserialize_topics
+from pspcz_analyzer.services.tisk.io import load_history_json
 
 
 class TiskCacheManager:
