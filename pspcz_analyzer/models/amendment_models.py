@@ -27,9 +27,11 @@ class AmendmentVote:
         grouped_with: Other amendment letters voted together.
         is_final_vote: True for "zákon jako celku" final passage vote.
         is_leg_tech: True for §95 legislative-technical corrections.
-        amendment_text: Extracted text from T/2 PDF (may be empty).
+        amendment_text: Per-amendment text from PDF (or combined blob for legacy).
         summary: LLM-generated Czech summary.
         summary_en: LLM-generated English summary.
+        pdf_submitter_name: Nominative-case submitter name from PDF header.
+        pdf_letter_raw_text: Raw text of this letter's full PDF section.
     """
 
     letter: str
@@ -51,6 +53,8 @@ class AmendmentVote:
     amendment_text: str = ""
     summary: str = ""
     summary_en: str = ""
+    pdf_submitter_name: str = ""
+    pdf_letter_raw_text: str = ""
 
 
 @dataclass
@@ -66,8 +70,13 @@ class BillAmendmentData:
         steno_url: URL of the stenographic record page.
         amendments: List of parsed amendment votes.
         final_vote: The final passage vote (zákon jako celku), if found.
+        bill_summary: LLM-generated Czech summary of the bill's amendment documents.
+        bill_summary_en: LLM-generated English summary of the bill's amendment documents.
         parse_confidence: Parser confidence score (0.0–1.0).
         parse_warnings: List of parser warnings.
+        amendment_tisk_ct1: CT1 of the amendment sub-tisk (e.g. 4 for tisk 410/4).
+        amendment_tisk_idd: idd for direct PDF download of amendment sub-tisk.
+        amendment_pdf_text: Full raw PDF text for bill-level summary.
     """
 
     period: int
@@ -79,7 +88,12 @@ class BillAmendmentData:
     amendments: list[AmendmentVote] = field(default_factory=list)
     final_vote: AmendmentVote | None = None
     parse_confidence: float = 1.0
+    bill_summary: str = ""
+    bill_summary_en: str = ""
     parse_warnings: list[str] = field(default_factory=list)
+    amendment_tisk_ct1: int | None = None
+    amendment_tisk_idd: int | None = None
+    amendment_pdf_text: str = ""
 
     @property
     def amendment_count(self) -> int:
