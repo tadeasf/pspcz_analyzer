@@ -11,10 +11,18 @@ from pspcz_analyzer.services.amendments.coalition_service import (
     compute_amendment_coalitions,
 )
 from pspcz_analyzer.services.amendments.pipeline import AmendmentPipelineService
+from pspcz_analyzer.services.amendments.progress import (
+    AmendmentProgress,
+    AmendmentStage,
+    AmendmentStatus,
+)
 from pspcz_analyzer.services.amendments.steno_parser import parse_steno_amendments
 
 __all__ = [
     "AmendmentPipelineService",
+    "AmendmentProgress",
+    "AmendmentStage",
+    "AmendmentStatus",
     "compute_amendment_coalitions",
     "load_amendments",
     "parse_steno_amendments",
