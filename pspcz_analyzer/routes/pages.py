@@ -12,7 +12,7 @@ from pspcz_analyzer.config import DEFAULT_PERIOD, GITHUB_FEEDBACK_ENABLED
 from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
 from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.rate_limit import limiter
-from pspcz_analyzer.routes.api import validate_period
+from pspcz_analyzer.routes.utils import validate_period
 from pspcz_analyzer.services.amendment_service import amendment_detail
 from pspcz_analyzer.services.votes_service import vote_detail
 

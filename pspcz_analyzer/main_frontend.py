@@ -1,4 +1,4 @@
-"""Czech Parliamentary Voting Analyzer — FastAPI application."""
+"""Frontend entrypoint — public web app with read-only data access."""
 
 import os
 from contextlib import asynccontextmanager
@@ -21,13 +21,19 @@ from pspcz_analyzer.i18n.middleware import LocaleMiddleware
 from pspcz_analyzer.logging_config import setup_logging
 from pspcz_analyzer.middleware import SecurityHeadersMiddleware
 from pspcz_analyzer.rate_limit import limiter
-from pspcz_analyzer.routes.api import router as api_router
-from pspcz_analyzer.routes.api import templates as api_templates
+from pspcz_analyzer.routes.amendments import router as amendments_router
+from pspcz_analyzer.routes.amendments import templates as amendments_templates
 from pspcz_analyzer.routes.charts import router as charts_router
+from pspcz_analyzer.routes.feedback import router as feedback_router
+from pspcz_analyzer.routes.feedback import templates as feedback_templates
+from pspcz_analyzer.routes.health import router as health_router
 from pspcz_analyzer.routes.pages import router as pages_router
 from pspcz_analyzer.routes.pages import templates as pages_templates
-from pspcz_analyzer.services.daily_refresh_service import DailyRefreshService
-from pspcz_analyzer.services.data_service import DataService
+from pspcz_analyzer.routes.tisk import router as tisk_router
+from pspcz_analyzer.routes.tisk import templates as tisk_templates
+from pspcz_analyzer.routes.voting import router as voting_router
+from pspcz_analyzer.routes.voting import templates as voting_templates
+from pspcz_analyzer.services.data_reader import DataReader
 
 setup_logging()
 
@@ -37,24 +43,19 @@ STATIC_DIR = Path(__file__).parent / "static"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    svc = DataService()
+    """Initialize read-only data service and file watcher."""
+    svc = DataReader()
     svc.initialize(period=DEFAULT_PERIOD)
     app.state.data = svc
-    logger.info("Data service initialized, server ready.")
+    logger.info("Frontend data service initialized, server ready.")
 
-    # Start background tisk pipeline for all periods (newest first)
-    svc.start_all_tisk_pipelines()
-
-    # Start daily data refresh scheduler
-    refresh_svc = DailyRefreshService(svc)
-    refresh_svc.start()
-    app.state.refresh = refresh_svc
+    # Start file watcher to detect backend pipeline outputs
+    svc.start_watcher()
 
     yield
 
     # Graceful shutdown
-    await refresh_svc.stop()
-    await svc.tisk_pipeline.cancel_all()
+    await svc.stop_watcher()
 
 
 app = FastAPI(
@@ -83,7 +84,11 @@ STATIC_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 app.include_router(pages_router)
-app.include_router(api_router, prefix="/api")
+app.include_router(voting_router, prefix="/api")
+app.include_router(amendments_router, prefix="/api")
+app.include_router(tisk_router, prefix="/api")
+app.include_router(feedback_router, prefix="/api")
+app.include_router(health_router, prefix="/api")
 app.include_router(charts_router, prefix="/charts")
 
 
@@ -97,15 +102,23 @@ def _md_filter(text: str) -> markupsafe.Markup:
     return markupsafe.Markup(safe_html)
 
 
-for t in (templates, api_templates, pages_templates):
+for t in (
+    templates,
+    pages_templates,
+    voting_templates,
+    amendments_templates,
+    tisk_templates,
+    feedback_templates,
+):
     t.env.filters["markdown"] = _md_filter
     setup_jinja2_i18n(t.env)
 
 
 def main() -> None:
+    """Run the frontend server."""
     dev_mode = os.environ.get("PSPCZ_DEV", "1") == "1"
     uvicorn.run(
-        "pspcz_analyzer.main:app",
+        "pspcz_analyzer.main_frontend:app",
         host="0.0.0.0",
         port=PORT,
         reload=dev_mode,

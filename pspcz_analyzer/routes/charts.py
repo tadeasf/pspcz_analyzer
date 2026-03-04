@@ -13,7 +13,7 @@ from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.i18n import gettext as _
 from pspcz_analyzer.middleware import run_with_timeout
 from pspcz_analyzer.rate_limit import limiter
-from pspcz_analyzer.routes.api import validate_period
+from pspcz_analyzer.routes.utils import validate_period
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.attendance_service import compute_attendance
 from pspcz_analyzer.services.loyalty_service import compute_loyalty

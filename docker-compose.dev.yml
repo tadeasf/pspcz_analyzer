@@ -1,0 +1,16 @@
+# Development override: source mount for hot reload.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  frontend:
+    volumes:
+      - ./pspcz_analyzer:/app/pspcz_analyzer:ro
+      - cache-data:/data/cache:ro
+    environment:
+      PSPCZ_DEV: "1"
+
+  backend:
+    volumes:
+      - ./pspcz_analyzer:/app/pspcz_analyzer:ro
+      - cache-data:/data/cache
+    environment:
+      PSPCZ_DEV: "1"

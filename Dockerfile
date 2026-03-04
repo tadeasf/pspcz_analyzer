@@ -27,6 +27,6 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PSPCZ_DEV=0
 
-EXPOSE 8000
+EXPOSE 8000 8001
 
-CMD ["python", "-m", "pspcz_analyzer.main"]
+CMD ["python", "-m", "pspcz_analyzer.main_frontend"]
