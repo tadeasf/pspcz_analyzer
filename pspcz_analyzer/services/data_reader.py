@@ -485,7 +485,7 @@ class DataReader:
                         if p in self._periods:
                             periods.add(p)
                     except ValueError:
-                        pass
+                        logger.debug("Ignoring non-period file in watcher: {}", fname)
 
             # Shared table changes affect all loaded periods
             shared_names = (

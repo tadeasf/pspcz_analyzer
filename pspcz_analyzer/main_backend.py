@@ -9,8 +9,9 @@ from loguru import logger
 
 from pspcz_analyzer.admin.auth import AdminAuthMiddleware
 from pspcz_analyzer.admin.log_stream import log_broadcaster
+from pspcz_analyzer.admin.pipeline_history import PipelineHistory
 from pspcz_analyzer.admin.routes import router as admin_router
-from pspcz_analyzer.config import ADMIN_PORT, DEFAULT_PERIOD
+from pspcz_analyzer.config import ADMIN_PASSWORD_HASH, ADMIN_PORT, DEFAULT_PERIOD
 from pspcz_analyzer.logging_config import setup_logging
 from pspcz_analyzer.services.daily_refresh_service import DailyRefreshService
 from pspcz_analyzer.services.data_service import DataService
@@ -26,12 +27,16 @@ setup_logging()
 async def lifespan(app: FastAPI):
     """Initialize pipeline data service, log broadcaster, and daily refresh."""
     # Load and apply runtime config overrides
+    if not ADMIN_PASSWORD_HASH:
+        logger.warning("ADMIN_PASSWORD_HASH not set — admin login will reject all passwords")
+
     svc = DataService()
     runtime_config = load_runtime_config(svc.cache_dir)
     apply_runtime_config(runtime_config)
 
     svc.initialize(period=DEFAULT_PERIOD)
     app.state.data = svc
+    app.state.pipeline_history = PipelineHistory()
     logger.info("Backend data service initialized.")
 
     # Start log broadcaster

@@ -110,18 +110,6 @@ templates.env.globals["format_eta"] = _format_eta
 templates.env.globals["format_elapsed"] = _format_elapsed
 
 
-# ── Pipeline history singleton (loaded per-backend) ──────────────
-_pipeline_history: PipelineHistory | None = None
-
-
-def _get_history() -> PipelineHistory:
-    """Lazy-init pipeline history."""
-    global _pipeline_history  # noqa: PLW0603
-    if _pipeline_history is None:
-        _pipeline_history = PipelineHistory()
-    return _pipeline_history
-
-
 # ── Auth routes ──────────────────────────────────────────────────
 
 
@@ -212,7 +200,7 @@ async def dashboard(request: Request) -> HTMLResponse:
 async def pipelines_page(request: Request) -> HTMLResponse:
     """Pipeline management page."""
     svc = request.app.state.data
-    history = _get_history()
+    history: PipelineHistory = request.app.state.pipeline_history
 
     return templates.TemplateResponse(
         "pipelines.html",
@@ -299,7 +287,7 @@ async def start_pipeline(
     A monitor coroutine awaits the task and handles lock release + history recording.
     """
     svc: DataService = request.app.state.data
-    history = _get_history()
+    history: PipelineHistory = request.app.state.pipeline_history
 
     acquired = await pipeline_lock.acquire(pipeline_type, period)
     if not acquired:
@@ -440,7 +428,7 @@ async def pipeline_status(request: Request) -> dict:
 @router.get("/api/pipeline/history")
 async def pipeline_history_endpoint(request: Request) -> list[dict]:
     """Get recent pipeline run history."""
-    history = _get_history()
+    history: PipelineHistory = request.app.state.pipeline_history
     return history.get_runs()
 
 
@@ -505,15 +493,16 @@ async def update_config(request: Request) -> dict:
         if value == "***":
             continue  # Skip masked secrets
 
+        str_value = str(value)
         field_type = type(getattr(current, field_name))
         match field_type.__name__:
             case "bool":
-                setattr(current, field_name, value in ("true", "1", "on"))
+                setattr(current, field_name, str_value in ("true", "1", "on"))
             case "int":
                 with contextlib.suppress(ValueError):
-                    setattr(current, field_name, int(value))
+                    setattr(current, field_name, int(str_value))
             case _:
-                setattr(current, field_name, str(value))
+                setattr(current, field_name, str_value)
 
     save_runtime_config(current, svc.cache_dir)
     apply_runtime_config(current)
@@ -534,3 +523,17 @@ async def trigger_refresh(request: Request) -> dict:
     except Exception as exc:
         logger.opt(exception=True).error("[admin] Manual refresh failed")
         return {"status": "error", "message": str(exc)}
+
+
+# ── Health endpoint ──────────────────────────────────────────────
+
+
+@router.get("/api/health")
+async def admin_health(request: Request) -> dict:
+    """Admin backend health check."""
+    svc = request.app.state.data
+    return {
+        "status": "ok",
+        "periods_loaded": svc.loaded_periods,
+        "pipeline_running": pipeline_lock.is_locked,
+    }
