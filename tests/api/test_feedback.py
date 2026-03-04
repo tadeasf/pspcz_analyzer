@@ -15,8 +15,8 @@ class TestFeedbackEndpoint:
         """Reset rate limiter storage between tests to avoid 429s."""
         limiter.reset()
 
-    @patch("pspcz_analyzer.routes.api.GITHUB_FEEDBACK_ENABLED", True)
-    @patch("pspcz_analyzer.routes.api.GitHubFeedbackClient")
+    @patch("pspcz_analyzer.routes.feedback.GITHUB_FEEDBACK_ENABLED", True)
+    @patch("pspcz_analyzer.routes.feedback.GitHubFeedbackClient")
     def test_valid_feedback_returns_success(self, mock_client_cls, client):
         mock_instance = MagicMock()
         mock_instance.create_issue.return_value = {
@@ -38,7 +38,7 @@ class TestFeedbackEndpoint:
         assert resp.status_code == 200
         assert "github.com" in resp.text
 
-    @patch("pspcz_analyzer.routes.api.GITHUB_FEEDBACK_ENABLED", True)
+    @patch("pspcz_analyzer.routes.feedback.GITHUB_FEEDBACK_ENABLED", True)
     def test_short_title_returns_validation_error(self, client):
         resp = client.post(
             "/api/feedback",
@@ -53,7 +53,7 @@ class TestFeedbackEndpoint:
         assert resp.status_code == 200
         assert "github.com" not in resp.text
 
-    @patch("pspcz_analyzer.routes.api.GITHUB_FEEDBACK_ENABLED", True)
+    @patch("pspcz_analyzer.routes.feedback.GITHUB_FEEDBACK_ENABLED", True)
     def test_short_body_returns_validation_error(self, client):
         resp = client.post(
             "/api/feedback",
@@ -63,7 +63,7 @@ class TestFeedbackEndpoint:
         assert resp.status_code == 200
         assert "github.com" not in resp.text
 
-    @patch("pspcz_analyzer.routes.api.GITHUB_FEEDBACK_ENABLED", False)
+    @patch("pspcz_analyzer.routes.feedback.GITHUB_FEEDBACK_ENABLED", False)
     def test_disabled_returns_unavailable(self, client):
         resp = client.post(
             "/api/feedback",
@@ -78,8 +78,8 @@ class TestFeedbackEndpoint:
         assert resp.status_code == 200
         assert "github.com" not in resp.text
 
-    @patch("pspcz_analyzer.routes.api.GITHUB_FEEDBACK_ENABLED", True)
-    @patch("pspcz_analyzer.routes.api.GitHubFeedbackClient")
+    @patch("pspcz_analyzer.routes.feedback.GITHUB_FEEDBACK_ENABLED", True)
+    @patch("pspcz_analyzer.routes.feedback.GitHubFeedbackClient")
     def test_github_api_failure_returns_error(self, mock_client_cls, client):
         mock_instance = MagicMock()
         mock_instance.create_issue.return_value = None

@@ -23,7 +23,7 @@ def _make_bill(schuze: int, bod: int, ct: int, n_amendments: int = 3) -> BillAme
             vote_number=100 + i,
             id_hlasovani=i + 1,
             result="accepted" if i % 2 == 0 else "rejected",
-            committee_stance="doporučující" if i % 2 == 0 else "nedoporučující",
+            committee_stance="doporucujici" if i % 2 == 0 else "nedoporucujici",
         )
         for i in range(n_amendments)
     ]

@@ -35,7 +35,7 @@ def client(mock_data_service):
         app.state.data = mock_data_service
         yield
 
-    from pspcz_analyzer.main import app
+    from pspcz_analyzer.main_frontend import app
 
     app.router.lifespan_context = _test_lifespan
     with TestClient(app) as c:

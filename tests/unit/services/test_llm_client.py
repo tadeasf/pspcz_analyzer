@@ -6,14 +6,16 @@ from unittest.mock import patch
 import httpx
 import pytest
 
-from pspcz_analyzer.services.llm_service import (
+from pspcz_analyzer.services.llm import (
     LLMClient,
+    create_llm_client,
+)
+from pspcz_analyzer.services.llm.client import (
     _parse_consolidation_json,
     _render_comparison_markdown_cs,
     _render_comparison_markdown_en,
     _render_summary_markdown_cs,
     _render_summary_markdown_en,
-    create_llm_client,
 )
 
 # ── Factory tests ────────────────────────────────────────────────────────
@@ -23,15 +25,15 @@ class TestCreateLLMClientFactory:
     """Tests for the create_llm_client() factory function."""
 
     def test_default_returns_ollama_provider(self):
-        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"):
+        with patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "ollama"):
             client = create_llm_client()
         assert isinstance(client, LLMClient)
         assert client.provider == "ollama"
 
     def test_openai_provider_returns_openai_client(self):
         with (
-            patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "openai"),
-            patch("pspcz_analyzer.services.llm_service.OPENAI_API_KEY", "sk-test-key"),
+            patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "openai"),
+            patch("pspcz_analyzer.services.llm.client.OPENAI_API_KEY", "sk-test-key"),
         ):
             client = create_llm_client()
         assert isinstance(client, LLMClient)
@@ -39,27 +41,27 @@ class TestCreateLLMClientFactory:
 
     def test_openai_provider_without_key_raises(self):
         with (
-            patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "openai"),
-            patch("pspcz_analyzer.services.llm_service.OPENAI_API_KEY", ""),
+            patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "openai"),
+            patch("pspcz_analyzer.services.llm.client.OPENAI_API_KEY", ""),
         ):
             with pytest.raises(ValueError, match="OPENAI_API_KEY is not set"):
                 create_llm_client()
 
     def test_unknown_provider_raises(self):
-        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "bogus"):
+        with patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "bogus"):
             with pytest.raises(ValueError, match="Unknown LLM_PROVIDER"):
                 create_llm_client()
 
     def test_case_insensitive_provider(self):
-        with patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "OLLAMA"):
+        with patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "OLLAMA"):
             client = create_llm_client()
         assert isinstance(client, LLMClient)
         assert client.provider == "ollama"
 
     def test_factory_passes_structured_output_flag(self):
         with (
-            patch("pspcz_analyzer.services.llm_service.LLM_PROVIDER", "ollama"),
-            patch("pspcz_analyzer.services.llm_service.LLM_STRUCTURED_OUTPUT", False),
+            patch("pspcz_analyzer.services.llm.client.LLM_PROVIDER", "ollama"),
+            patch("pspcz_analyzer.services.llm.client.LLM_STRUCTURED_OUTPUT", False),
         ):
             client = create_llm_client()
         assert client.supports_structured_output is False
@@ -1305,7 +1307,7 @@ class TestGenerateWithRetry:
         responses = ["garbage output", "TOPICS: Budget, Health"]
         with (
             patch.object(client, "_generate", side_effect=responses),
-            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
         ):
             result = client._generate_with_retry(
                 "prompt",
@@ -1320,7 +1322,7 @@ class TestGenerateWithRetry:
         responses = [None, "TOPICS: Finance"]
         with (
             patch.object(client, "_generate", side_effect=responses),
-            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
         ):
             result = client._generate_with_retry(
                 "prompt",
@@ -1334,7 +1336,7 @@ class TestGenerateWithRetry:
         client = self._make_client()
         with (
             patch.object(client, "_generate", return_value="bad output"),
-            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
         ):
             result = client._generate_with_retry(
                 "prompt",
@@ -1348,7 +1350,7 @@ class TestGenerateWithRetry:
         client = self._make_client()
         with (
             patch.object(client, "_generate", return_value="bad") as mock_gen,
-            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 0),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 0),
         ):
             result = client._generate_with_retry(
                 "prompt",
@@ -1363,7 +1365,7 @@ class TestGenerateWithRetry:
         client = self._make_client()
         with (
             patch.object(client, "_generate", return_value="bad") as mock_gen,
-            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
         ):
             client._generate_with_retry("prompt", "system", validator=lambda _r: False)
         assert mock_gen.call_count == 3
@@ -1374,7 +1376,7 @@ class TestGenerateWithRetry:
         responses = ["no topics here", "TOPICS: Rozpočet, Zdraví"]
         with (
             patch.object(client, "_generate", side_effect=responses),
-            patch("pspcz_analyzer.services.llm_service.LLM_EMPTY_RETRIES", 2),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
         ):
             result = client.classify_topics("text about budget", "Budget Act")
         assert result == ["Rozpočet", "Zdraví"]

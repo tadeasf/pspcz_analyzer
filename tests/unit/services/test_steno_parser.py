@@ -1,12 +1,15 @@
 """Tests for stenographic record amendment parser."""
 
 from pspcz_analyzer.services.amendments.steno_parser import (
+    _blocks_to_amendments,
     _clean_html,
     _extract_section,
     _normalize_result,
     _parse_block,
     _parse_letter_groups,
+    _ParseBlock,
     _split_into_blocks,
+    cross_validate_amendments,
     parse_steno_amendments,
 )
 
@@ -154,7 +157,7 @@ class TestParseBlock:
     def test_extracts_committee_stance(self):
         text = "Stanovisko výboru je doporučující. Hlasování číslo 10. Přijato."
         block = _parse_block(text)
-        assert block.committee_stance == "doporučující"
+        assert block.committee_stance == "doporucujici"
 
     def test_extracts_proposer_stance(self):
         text = "Předkladatel? (Souhlas.) Hlasování číslo 10. Přijato."
@@ -222,7 +225,7 @@ class TestParsestenoAmendments:
     def test_stances_extracted(self):
         amendments, _, _ = parse_steno_amendments(STENO_SIMPLE)
         a_amend = next(a for a in amendments if a.letter == "A" and not a.is_final_vote)
-        assert a_amend.committee_stance == "doporučující"
+        assert a_amend.committee_stance == "doporucujici"
         assert a_amend.proposer_stance == "souhlas"
 
     def test_challenge_creates_revote(self):
@@ -318,3 +321,309 @@ class TestSubmitterExtraction:
         # STENO_SIMPLE doesn't have submitter patterns
         a_amend = next(a for a in amendments if a.letter == "A")
         assert a_amend.submitter_names == []
+
+
+# ── New pattern tests: parenthesized stances, Pattern C, paren vote ──────────
+
+# Parenthesized proposer stance: "Stanovisko předkladatele? (Souhlasné.)"
+STENO_PROPOSER_PAREN = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh označeným písmenem A.
+Stanovisko výboru je doporučující.
+Stanovisko předkladatele? (Souhlasné.)</p>
+<p>Hlasování číslo 10. Přijato.</p>
+</body></html>
+"""
+
+# Proposer stance with role prefix: "(Ministr: Nesouhlas.)"
+STENO_PROPOSER_MINISTER = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh označeným písmenem B.
+Stanovisko výboru je nedoporučující.
+Stanovisko navrhovatele? (Ministr: Nesouhlas.)</p>
+<p>Hlasování číslo 11. Zamítnuto.</p>
+</body></html>
+"""
+
+# Parenthesized committee stance: "(Zpravodajka: Bez stanoviska.)"
+STENO_COMMITTEE_PAREN = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh označeným písmenem C.
+Stanovisko výboru? (Zpravodajka: Bez stanoviska.)
+Předkladatel? (Souhlas.)</p>
+<p>Hlasování číslo 12. Přijato.</p>
+</body></html>
+"""
+
+# Pattern C submitter: "návrh pana kolegy poslance Šafránkové"
+STENO_SUBMITTER_PATTERN_C = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Budeme hlasovat o návrhu pana kolegy poslance Šafránkové
+označeným písmenem D.</p>
+<p>Hlasování číslo 13. Zamítnuto.</p>
+</body></html>
+"""
+
+# First+last name: "návrh pana poslance Jana Kuchaře"
+STENO_SUBMITTER_FULL_NAME = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Budeme hlasovat o pozměňovacím návrhu pana poslance Jana Kuchaře
+označeným písmenem E.</p>
+<p>Hlasování číslo 14. Přijato.</p>
+</body></html>
+"""
+
+# Vote number with parenthesized format: "Hlasování (číslo 42)"
+STENO_VOTE_PAREN = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh označeným písmenem F.
+Stanovisko výboru je doporučující.</p>
+<p>Hlasování (číslo 42). Přijato.</p>
+</body></html>
+"""
+
+# Standalone proposer stance without dialogue keyword: "(Souhlas.)"
+STENO_PROPOSER_STANDALONE = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh označeným písmenem G.
+Stanovisko výboru je doporučující. (Souhlas.)</p>
+<p>Hlasování číslo 15. Přijato.</p>
+</body></html>
+"""
+
+# "Kladné" as proposer stance
+STENO_PROPOSER_KLADNE = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh označeným písmenem H.
+Stanovisko výboru je doporučující.
+Stanovisko předkladatele? (Kladné.)</p>
+<p>Hlasování číslo 16. Přijato.</p>
+</body></html>
+"""
+
+
+class TestParenthesizedProposerStance:
+    def test_souhlasne_dialogue(self):
+        """Stanovisko předkladatele? (Souhlasné.)"""
+        amendments, _, _ = parse_steno_amendments(STENO_PROPOSER_PAREN)
+        a = next(a for a in amendments if a.letter == "A")
+        assert a.proposer_stance == "souhlas"
+
+    def test_minister_nesouhlas(self):
+        """(Ministr: Nesouhlas.)"""
+        amendments, _, _ = parse_steno_amendments(STENO_PROPOSER_MINISTER)
+        b = next(a for a in amendments if a.letter == "B")
+        assert b.proposer_stance == "nesouhlas"
+
+    def test_standalone_souhlas(self):
+        """Standalone (Souhlas.) after committee stance."""
+        amendments, _, _ = parse_steno_amendments(STENO_PROPOSER_STANDALONE)
+        g = next(a for a in amendments if a.letter == "G")
+        assert g.proposer_stance == "souhlas"
+
+    def test_kladne_as_souhlas(self):
+        """(Kladné.) should normalize to souhlas."""
+        amendments, _, _ = parse_steno_amendments(STENO_PROPOSER_KLADNE)
+        h = next(a for a in amendments if a.letter == "H")
+        assert h.proposer_stance == "souhlas"
+
+
+class TestParenthesizedCommitteeStance:
+    def test_zpravodajka_bez_stanoviska(self):
+        """(Zpravodajka: Bez stanoviska.)"""
+        amendments, _, _ = parse_steno_amendments(STENO_COMMITTEE_PAREN)
+        c = next(a for a in amendments if a.letter == "C")
+        assert c.committee_stance == "bez_stanoviska"
+
+    def test_committee_paren_with_proposer(self):
+        """Both committee and proposer should be extracted from same block."""
+        amendments, _, _ = parse_steno_amendments(STENO_COMMITTEE_PAREN)
+        c = next(a for a in amendments if a.letter == "C")
+        assert c.committee_stance == "bez_stanoviska"
+        assert c.proposer_stance == "souhlas"
+
+
+class TestSubmitterPatternC:
+    def test_kolegy_poslance(self):
+        """Pattern C: 'návrhu pana kolegy poslance Šafránkové'."""
+        amendments, _, _ = parse_steno_amendments(STENO_SUBMITTER_PATTERN_C)
+        d = next(a for a in amendments if a.letter == "D")
+        assert "Šafránkové" in d.submitter_names[0]
+
+    def test_first_last_name(self):
+        """First+last name: 'poslance Jana Kuchaře'."""
+        amendments, _, _ = parse_steno_amendments(STENO_SUBMITTER_FULL_NAME)
+        e = next(a for a in amendments if a.letter == "E")
+        assert "Kuchaře" in e.submitter_names[0]
+
+
+class TestVoteParenFormat:
+    def test_vote_number_in_parens(self):
+        """Hlasování (číslo 42) should parse vote number 42."""
+        amendments, _, _ = parse_steno_amendments(STENO_VOTE_PAREN)
+        f = next(a for a in amendments if a.letter == "F")
+        assert f.vote_number == 42
+        assert f.result == "accepted"
+
+
+# ── Letter fallback and bug fix tests ─────────────────────────────────────────
+
+# Fallback letter extraction: "návrh A pan poslanec" (no "písmenem")
+STENO_LETTER_FALLBACK = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Budeme hlasovat o pozměňovacím návrh A pan poslanec Nacher.
+Stanovisko výboru je doporučující.</p>
+<p>Hlasování číslo 10. Přijato.</p>
+<p>Dalším je pozměňovací návrh B. Stanovisko výboru je nedoporučující.</p>
+<p>Hlasování číslo 11. Zamítnuto.</p>
+</body></html>
+"""
+
+# Scenario: blocks without letters should NOT inherit previous letter
+STENO_NO_LETTER_INHERITANCE = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh označeným písmenem A.
+Stanovisko výboru je doporučující.</p>
+<p>Hlasování číslo 10. Přijato.</p>
+<p>Nyní budeme hlasovat o dalším.
+Stanovisko výboru je nedoporučující.</p>
+<p>Hlasování číslo 11. Zamítnuto.</p>
+<p>Pozměňovací návrh označeným písmenem C.
+Stanovisko výboru je doporučující.</p>
+<p>Hlasování číslo 12. Přijato.</p>
+</body></html>
+"""
+
+
+class TestLetterFallbackRegex:
+    def test_fallback_extracts_letter(self):
+        """Fallback regex should catch 'návrh A pan poslanec'."""
+        amendments, _, _ = parse_steno_amendments(STENO_LETTER_FALLBACK)
+        letters = [a.letter for a in amendments if not a.is_final_vote]
+        assert "A" in letters
+        assert "B" in letters
+
+
+class TestLetterInheritanceFix:
+    def test_blocks_without_letter_get_empty(self):
+        """Blocks without letters should get '' instead of inheriting."""
+        amendments, _, _ = parse_steno_amendments(STENO_NO_LETTER_INHERITANCE)
+        letters = [a.letter for a in amendments if not a.is_final_vote]
+        assert letters[0] == "A"
+        # Second vote has no letter — should be "" not "A"
+        assert letters[1] == ""
+        assert letters[2] == "C"
+
+    def test_challenge_inherits_letter(self):
+        """Challenge blocks should still inherit the previous letter."""
+        amendments, _, _ = parse_steno_amendments(STENO_CHALLENGE)
+        revotes = [a for a in amendments if a.is_revote]
+        assert len(revotes) >= 1
+        # Revote should inherit letter C from the challenged vote
+        assert revotes[0].letter == "C"
+
+    def test_blocks_to_amendments_empty_letter_on_non_challenge(self):
+        """Direct unit test: _blocks_to_amendments with no letter and no challenge."""
+        blocks = [
+            _ParseBlock(text="first", letter="A", vote_number=1, result="accepted"),
+            _ParseBlock(text="second", letter="", vote_number=2, result="rejected"),
+        ]
+        result = _blocks_to_amendments(blocks)
+        assert result[0].letter == "A"
+        assert result[1].letter == ""  # NOT "A"
+
+    def test_blocks_to_amendments_challenge_inherits(self):
+        """Direct unit test: challenge block inherits previous letter."""
+        blocks = [
+            _ParseBlock(text="first", letter="B", vote_number=1, result="accepted"),
+            _ParseBlock(
+                text="challenge", letter="", vote_number=2, result="rejected", is_challenge=True
+            ),
+        ]
+        result = _blocks_to_amendments(blocks)
+        assert result[0].letter == "B"
+        assert result[1].letter == "B"
+        assert result[1].is_revote is True
+
+
+# ── Cross-validation tests ───────────────────────────────────────────────────
+
+
+class TestCrossValidateAmendments:
+    def test_fills_missing_letters_from_vote_titles(self):
+        """Cross-validation should fill empty letters from vote nazev_dlouhy."""
+        import polars as pl
+
+        from pspcz_analyzer.models.amendment_models import AmendmentVote
+
+        amendments = [
+            AmendmentVote(letter="A", vote_number=10, result="accepted"),
+            AmendmentVote(letter="", vote_number=11, result="rejected"),
+        ]
+        votes = pl.DataFrame(
+            {
+                "schuze": [5, 5],
+                "cislo": [10, 11],
+                "nazev_dlouhy": [
+                    "pozm. navrh A posl. Nacher",
+                    "pozm. navrh B posl. Vyborny",
+                ],
+            }
+        )
+        result, warnings = cross_validate_amendments(amendments, votes, 5, 1)
+        letters = [a.letter for a in result]
+        assert "A" in letters
+        assert "B" in letters
+
+    def test_detects_final_vote_from_title(self):
+        """Cross-validation should detect final vote from 'jako celku'."""
+        import polars as pl
+
+        from pspcz_analyzer.models.amendment_models import AmendmentVote
+
+        amendments = [
+            AmendmentVote(letter="", vote_number=20, result="accepted"),
+        ]
+        votes = pl.DataFrame(
+            {
+                "schuze": [5],
+                "cislo": [20],
+                "nazev_dlouhy": ["navrhu zakona jako celku"],
+            }
+        )
+        result, warnings = cross_validate_amendments(amendments, votes, 5, 1)
+        assert result[0].is_final_vote is True
+
+    def test_creates_missing_amendments(self):
+        """Cross-validation should create amendments for unmatched vote titles."""
+        import polars as pl
+
+        from pspcz_analyzer.models.amendment_models import AmendmentVote
+
+        amendments = [
+            AmendmentVote(letter="A", vote_number=10, result="accepted"),
+        ]
+        votes = pl.DataFrame(
+            {
+                "schuze": [5, 5],
+                "cislo": [10, 11],
+                "nazev_dlouhy": [
+                    "pozm. navrh A posl. Nacher",
+                    "pozm. navrh C posl. Novak",
+                ],
+            }
+        )
+        result, warnings = cross_validate_amendments(amendments, votes, 5, 1)
+        letters = [a.letter for a in result]
+        assert "C" in letters
+        assert any("C" in w for w in warnings)

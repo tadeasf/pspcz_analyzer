@@ -40,13 +40,13 @@ from pspcz_analyzer.config import (
     TISKY_HISTORIE_DIR,
     TISKY_META_DIR,
 )
-from pspcz_analyzer.data.history_scraper import load_history_json
 from pspcz_analyzer.services.amendments.pipeline import (
     AmendmentProgress,
     _identify_third_reading_bods,
     _run_pipeline_sync,
 )
 from pspcz_analyzer.services.data_service import DataService
+from pspcz_analyzer.services.tisk.io import load_history_json
 from pspcz_analyzer.services.tisk.metadata_scraper import scrape_histories_sync
 
 
