@@ -470,9 +470,9 @@ def _merge_pdf_and_steno(
                 # letter E section, typically voted en bloc.
                 for steno_item in steno_matches:
                     steno_item.amendment_text = pdf_amend.raw_text
-                    steno_item.pdf_submitter_name = pdf_amend.submitter_name
-                    if not steno_item.submitter_names and pdf_amend.submitter_name:
-                        steno_item.submitter_names = [pdf_amend.submitter_name]
+                    steno_item.pdf_submitter_names = list(pdf_amend.submitter_names)
+                    if not steno_item.submitter_names and pdf_amend.submitter_names:
+                        steno_item.submitter_names = list(pdf_amend.submitter_names)
                     merged.append(steno_item)
                     total_pdf_matched += 1
             else:
@@ -582,9 +582,13 @@ def _summarize_per_amendment(
             continue
         if not amend.letter:
             continue
-        # Prefer PDF submitter name (nominative), fall back to steno names
-        submitter = amend.pdf_submitter_name or (
-            ", ".join(amend.submitter_names) if amend.submitter_names else ""
+        # Prefer PDF submitter names (nominative), fall back to steno names
+        submitter = (
+            ", ".join(amend.pdf_submitter_names)
+            if amend.pdf_submitter_names
+            else ", ".join(amend.submitter_names)
+            if amend.submitter_names
+            else ""
         )
         amendments_meta.append(
             {

@@ -30,7 +30,7 @@ class AmendmentVote:
         amendment_text: Per-amendment text from PDF (or combined blob for legacy).
         summary: LLM-generated Czech summary.
         summary_en: LLM-generated English summary.
-        pdf_submitter_name: Nominative-case submitter name from PDF header.
+        pdf_submitter_names: Nominative-case submitter names from PDF header.
         pdf_letter_raw_text: Raw text of this letter's full PDF section.
     """
 
@@ -39,7 +39,7 @@ class AmendmentVote:
     id_hlasovani: int | None = None
     submitter_names: list[str] = field(default_factory=list)
     submitter_ids: list[int] = field(default_factory=list)
-    submitter_party: str = ""
+    submitter_parties: list[str] = field(default_factory=list)
     description: str = ""
     committee_stance: str | None = None
     proposer_stance: str | None = None
@@ -53,7 +53,7 @@ class AmendmentVote:
     amendment_text: str = ""
     summary: str = ""
     summary_en: str = ""
-    pdf_submitter_name: str = ""
+    pdf_submitter_names: list[str] = field(default_factory=list)
     pdf_letter_raw_text: str = ""
 
 

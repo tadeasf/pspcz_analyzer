@@ -36,7 +36,8 @@ AMENDMENTS_SCHEMA = {
     "amendment_text": pl.Utf8,
     "summary": pl.Utf8,
     "summary_en": pl.Utf8,
-    "pdf_submitter_name": pl.Utf8,
+    "pdf_submitter_names": pl.Utf8,
+    "submitter_parties": pl.Utf8,
     "bill_summary": pl.Utf8,
     "bill_summary_en": pl.Utf8,
     "parse_confidence": pl.Float64,
@@ -137,7 +138,8 @@ def save_amendments(
                     "amendment_text": amend.amendment_text,
                     "summary": amend.summary,
                     "summary_en": amend.summary_en,
-                    "pdf_submitter_name": amend.pdf_submitter_name,
+                    "pdf_submitter_names": _serialize_list(amend.pdf_submitter_names),
+                    "submitter_parties": _serialize_list(amend.submitter_parties),
                     "bill_summary": bill.bill_summary,
                     "bill_summary_en": bill.bill_summary_en,
                     "parse_confidence": bill.parse_confidence,
@@ -191,7 +193,8 @@ def _row_to_amendment(row: dict) -> AmendmentVote:
         amendment_text=row.get("amendment_text", ""),
         summary=row.get("summary", ""),
         summary_en=row.get("summary_en", ""),
-        pdf_submitter_name=row.get("pdf_submitter_name", ""),
+        pdf_submitter_names=_deserialize_list(row.get("pdf_submitter_names", "")),
+        submitter_parties=_deserialize_list(row.get("submitter_parties", "")),
     )
 
 

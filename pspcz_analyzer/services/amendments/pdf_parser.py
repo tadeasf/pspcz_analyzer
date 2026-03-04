@@ -61,36 +61,68 @@ class PdfAmendment:
 
     Attributes:
         letter: Letter designation (e.g. "A", "B", "C").
-        submitter_name: Submitter name in nominative case.
-        submitter_title: Title prefix ("Poslanec" / "Poslankyně" / etc.).
+        submitter_names: Submitter names in nominative case (may be multiple).
+        submitter_titles: Title prefixes ("Poslanec" / "Poslankyně" / etc.).
         sub_amendments: List of numbered sub-amendments.
         raw_text: Full text block for this letter section.
     """
 
     letter: str
-    submitter_name: str
-    submitter_title: str = ""
+    submitter_names: list[str] = field(default_factory=list)
+    submitter_titles: list[str] = field(default_factory=list)
     sub_amendments: list[PdfSubAmendment] = field(default_factory=list)
     raw_text: str = ""
 
 
-def _clean_submitter_name(raw_name: str) -> str:
-    """Clean and normalize a submitter name from PDF header.
+_MULTI_SUBMITTER_SPLIT_RE = re.compile(
+    r"[,\s]+(?:a\s+)?poslan\w*\s+",
+    re.IGNORECASE,
+)
 
-    Handles trailing punctuation, extra whitespace, and multi-submitter
-    patterns like "Jan Novák, poslanec Petr Nový".
+
+def _clean_single_name(name: str) -> str:
+    """Clean a single submitter name: strip punctuation, whitespace, titles.
+
+    Args:
+        name: Raw single name string.
+
+    Returns:
+        Cleaned name string.
+    """
+    name = name.strip().rstrip(",.:;")
+    # Remove academic titles
+    name = re.sub(
+        r"\b(?:Ing|Mgr|JUDr|MUDr|PhDr|RNDr|doc|prof|Bc|MBA|Ph\.D)\.\s*",
+        "",
+        name,
+    )
+    return name.strip()
+
+
+def _parse_submitter_names(raw_name: str) -> list[str]:
+    """Parse one or more submitter names from a PDF header string.
+
+    Splits on patterns like ", poslanec ", ", poslankyně ", " a poslanec "
+    to extract all names from multi-submitter headers such as:
+      "Mračková Vildumetzová, poslanec Novák, poslankyně Nová, poslanec Hora"
 
     Args:
         raw_name: Raw name string from regex capture.
 
     Returns:
-        Cleaned name string (first submitter only for multi-submitter).
+        List of cleaned submitter name strings.
     """
-    name = raw_name.strip().rstrip(",.:;")
-    # Take first submitter if comma-separated with title
-    if ", poslan" in name.lower():
-        name = name[: name.lower().index(", poslan")].strip()
-    return name
+    raw_name = raw_name.strip().rstrip(",.:;")
+    if not raw_name:
+        return []
+
+    parts = _MULTI_SUBMITTER_SPLIT_RE.split(raw_name)
+    names: list[str] = []
+    for part in parts:
+        cleaned = _clean_single_name(part)
+        if cleaned:
+            names.append(cleaned)
+    return names
 
 
 def _parse_sub_amendments(
@@ -161,7 +193,7 @@ def parse_amendment_pdf(text: str) -> list[PdfAmendment]:
         letter = m.group(1)
         title = m.group(2)
         raw_name = m.group(3)
-        name = _clean_submitter_name(raw_name)
+        names = _parse_submitter_names(raw_name)
 
         # Section runs from end of header line to start of next header (or end)
         section_start = m.end()
@@ -174,8 +206,8 @@ def parse_amendment_pdf(text: str) -> list[PdfAmendment]:
         amendments.append(
             PdfAmendment(
                 letter=letter,
-                submitter_name=name,
-                submitter_title=title,
+                submitter_names=names,
+                submitter_titles=[title],
                 sub_amendments=sub_amendments,
                 raw_text=raw_text,
             )
@@ -206,7 +238,7 @@ def _parse_with_alt_headers(
 
     for i, m in enumerate(matches):
         letter = m.group(1)
-        name = _clean_submitter_name(m.group(2))
+        names = _parse_submitter_names(m.group(2))
 
         section_start = m.end()
         section_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
@@ -218,8 +250,7 @@ def _parse_with_alt_headers(
         amendments.append(
             PdfAmendment(
                 letter=letter,
-                submitter_name=name,
-                submitter_title="",
+                submitter_names=names,
                 sub_amendments=sub_amendments,
                 raw_text=raw_text,
             )

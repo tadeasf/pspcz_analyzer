@@ -80,13 +80,13 @@
                     {% if a.grouped_with %}<br><small>{{ _("amendments.grouped_with") }}: {{ a.grouped_with | join(", ") }}</small>{% endif %}
                 </td>
                 <td>
-                    {% if a.pdf_submitter_name %}
-                    {{ a.pdf_submitter_name }}
+                    {% if a.pdf_submitter_names %}
+                    {{ a.pdf_submitter_names | join(", ") }}
                     {% elif a.submitter_names %}
                     {{ a.submitter_names | join(", ") }}
                     {% endif %}
-                    {% if a.submitter_party %}
-                    <br><small class="badge-info">{{ a.submitter_party }}</small>
+                    {% if a.submitter_parties %}
+                    <br><small class="badge-info">{{ a.submitter_parties | join(", ") }}</small>
                     {% endif %}
                 </td>
                 <td>

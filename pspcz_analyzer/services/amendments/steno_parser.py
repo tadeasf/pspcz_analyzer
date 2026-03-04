@@ -129,6 +129,16 @@ _SUBMITTER_PREDLOZENY_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Submitter name extraction — Pattern D: plural genitive
+# e.g. "návrh poslanců Nováka, Horáka a Štěpánka"
+_SUBMITTER_PLURAL_RE = re.compile(
+    r"(?:návrh\w*|předložen\w*)\s+(?:pan\w+\s+)?"
+    r"(?:poslanců|poslankyň)\s+"
+    r"((?:[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+"
+    r"(?:,\s*|\s+a\s+)?)+)",
+    re.IGNORECASE,
+)
+
 # Submitter name extraction — Pattern C: "návrh [pana/paní] [kolegy] poslanc* Name"
 # e.g. "návrh pana kolegy poslance Šafránkové"
 _SUBMITTER_NAVRH_RE = re.compile(
@@ -378,19 +388,26 @@ def _parse_block(block_text: str) -> _ParseBlock:
 
     # ── Submitter names ───────────────────────────────────────────────────
     # Try Pattern A: letter + genitive (most specific)
-    submitter_match = _SUBMITTER_AFTER_LETTER_RE.search(block_text)
-    if submitter_match:
-        pb.submitter_names = [submitter_match.group(1).strip()]
+    submitter_matches = _SUBMITTER_AFTER_LETTER_RE.findall(block_text)
+    if submitter_matches:
+        pb.submitter_names = [m.strip() for m in submitter_matches]
     else:
         # Try Pattern C: "návrh [pan*] poslanc* Name" (broader)
-        submitter_match = _SUBMITTER_NAVRH_RE.search(block_text)
-        if submitter_match:
-            pb.submitter_names = [submitter_match.group(1).strip()]
+        submitter_matches = _SUBMITTER_NAVRH_RE.findall(block_text)
+        if submitter_matches:
+            pb.submitter_names = [m.strip() for m in submitter_matches]
         else:
             # Try Pattern B: "předložen* poslancem Name" (rare)
-            submitter_match = _SUBMITTER_PREDLOZENY_RE.search(block_text)
-            if submitter_match:
-                pb.submitter_names = [submitter_match.group(1).strip()]
+            submitter_matches = _SUBMITTER_PREDLOZENY_RE.findall(block_text)
+            if submitter_matches:
+                pb.submitter_names = [m.strip() for m in submitter_matches]
+            else:
+                # Try Pattern D: plural "poslanců/poslankyň Name1, Name2 a Name3"
+                plural_match = _SUBMITTER_PLURAL_RE.search(block_text)
+                if plural_match:
+                    raw_names = plural_match.group(1)
+                    parts = re.split(r",\s*|\s+a\s+", raw_names)
+                    pb.submitter_names = [p.strip() for p in parts if p.strip()]
 
     return pb
 

@@ -52,11 +52,12 @@ def resolve_submitter_ids(
 ) -> None:
     """Resolve submitter names to MP IDs and party affiliations.
 
-    Prefers pdf_submitter_name (nominative case, high-confidence match)
+    Prefers pdf_submitter_names (nominative case, high-confidence match)
     over steno submitter_names (inflected, requires fuzzy matching).
+    Resolves ALL names from both sources, not just the first match.
 
     Mutates AmendmentVote objects in-place, populating submitter_ids
-    and submitter_party fields.
+    and submitter_parties fields.
 
     Args:
         bills: List of bill amendment data with parsed submitter_names.
@@ -71,24 +72,18 @@ def resolve_submitter_ids(
             all_amends.append(bill.final_vote)
 
         for amend in all_amends:
-            # Try PDF name first (nominative case — better match quality)
-            if amend.pdf_submitter_name:
-                result = _match_name_to_mp(amend.pdf_submitter_name, mp_rows)
-                if result is not None:
-                    mp_id, party = result
-                    amend.submitter_ids.append(mp_id)
-                    amend.submitter_party = party
-                    resolved_count += 1
-                    continue
-
-            # Fall back to steno names (inflected — fuzzy matching)
-            for name in amend.submitter_names:
+            # Collect all candidate names: prefer PDF (nominative) then steno (inflected)
+            candidate_names = list(amend.pdf_submitter_names) + [
+                n for n in amend.submitter_names if n not in amend.pdf_submitter_names
+            ]
+            for name in candidate_names:
                 result = _match_name_to_mp(name, mp_rows)
                 if result is not None:
                     mp_id, party = result
-                    amend.submitter_ids.append(mp_id)
-                    amend.submitter_party = party
-                    resolved_count += 1
+                    if mp_id not in amend.submitter_ids:  # deduplicate
+                        amend.submitter_ids.append(mp_id)
+                        amend.submitter_parties.append(party)
+                        resolved_count += 1
 
     logger.info(
         "[amendment pipeline] Resolved {} submitter names to MP IDs",
