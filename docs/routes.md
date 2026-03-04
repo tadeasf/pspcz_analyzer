@@ -20,7 +20,13 @@ Full HTML pages rendered with Jinja2. Defined in `pspcz_analyzer/routes/pages.py
 
 ## API Routes (HTMX Partials)
 
-Return HTML fragments for dynamic table updates. Defined in `pspcz_analyzer/routes/api.py`. Mounted under `/api`.
+Return HTML fragments for dynamic table updates. Split across domain modules mounted under `/api`:
+- `routes/voting.py` — loyalty, attendance, similarity, votes
+- `routes/amendments.py` — amendment bills, coalitions
+- `routes/tisk.py` — tisk text, evolution, related bills
+- `routes/feedback.py` — user feedback
+- `routes/health.py` — health checks, LLM diagnostics
+- `routes/utils.py` — shared utilities (`validate_period`, `_safe_url`)
 
 ### GET /api/loyalty
 

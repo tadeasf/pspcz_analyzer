@@ -34,9 +34,9 @@ CSV quoting is always disabled (`quote_char=None`) because UNL files never use C
 
 `get_or_parse()` checks if a Parquet file exists and is newer than the source. If so, it loads from Parquet; otherwise it calls the parse function and caches the result. Cache lives at `~/.cache/pspcz-analyzer/psp/parquet/` (or `$PSPCZ_CACHE_DIR/parquet/`).
 
-## DataService (`services/data_service.py`)
+## DataReader / DataService (`services/data_reader.py`, `services/data_service.py`)
 
-Central orchestrator, initialized at app startup via FastAPI lifespan and stored on `app.state.data`.
+Two-tier data service. `DataReader` (read-only, used by the frontend) and `DataService` (extends `DataReader` with pipeline orchestration, used by the backend admin). Both are initialized at app startup via FastAPI lifespan and stored on `app.state.data`.
 
 ### Shared Tables
 
@@ -175,21 +175,16 @@ Key class: `TiskTextService`
 
 Text files are stored at `~/.cache/pspcz-analyzer/psp/tisky_text/{period}/{ct}.txt`.
 
-### Topic Service (`services/topic_service.py`)
+### LLM Package (`services/llm/`)
 
-Keyword-based topic classifier — the fast, offline fallback when Ollama is unavailable.
+LLM-based topic classification, summarization, and version comparison. Split into three modules:
+- **`prompts.py`** — All prompt templates, JSON schemas, and formatting constants
+- **`client.py`** — `LLMClient` class, factory, and helper utilities
+- **`__init__.py`** — Public API re-exports
 
-Uses a `TOPIC_TAXONOMY` dictionary mapping topic labels to keyword lists. A tisk is assigned a topic if its name or extracted text contains any of the topic's keywords. This is the offline fallback when the configured LLM is unavailable.
+Supports two backends: Ollama (local/remote) and OpenAI-compatible APIs (OpenAI, Azure, Together, Groq, vLLM). This is optional — if the LLM is not running, classification is skipped and tisks remain unclassified.
 
-Functions:
-- `classify_tisk(name, text)` — returns all matching topic IDs with match counts
-- `classify_tisk_primary_label(name, text)` — returns `(label_cs, label_en)` tuple of the best-matching topic, or `None`
-
-### LLM Service (`services/llm_service.py`)
-
-LLM-based topic classification, summarization, and version comparison. Supports two backends: Ollama (local/remote) and OpenAI-compatible APIs (OpenAI, Azure, Together, Groq, vLLM). This is optional — if the LLM is not running, the system falls back to keyword classification.
-
-Key class: `BaseLLMClient` (ABC) with two implementations: `OllamaClient` and `OpenAIClient`.
+Key class: `LLMClient` (unified client supporting both providers).
 - `is_available()` — health check against the LLM API
 - `classify_topics(name, text)` — LLM-based multi-label topic classification
 - `summarize(name, text)` — generate a concise Czech summary
@@ -235,7 +230,7 @@ Configuration (in `config.py`, overridable via `.env`):
 | `LLM_MAX_TEXT_CHARS` | `50000` | Max text length sent to LLM |
 | `LLM_VERBATIM_CHARS` | `40000` | Chars included verbatim (rest truncated) |
 
-If the configured LLM is not running or unreachable, the system silently falls back to keyword-based classification.
+If the configured LLM is not running or unreachable, classification is skipped and tisks remain unclassified until the pipeline is re-run with an available LLM.
 
 ### Tisk Version Service (`services/tisk/version_service.py`)
 
@@ -272,9 +267,11 @@ Configuration:
 
 The refresh itself takes ~1-5 minutes (downloads + parsing). The tisk AI pipeline's incremental resume logic (Parquet checkpointing, JSON caching, file caching) ensures no AI work is redone after restart.
 
-## Data Enrichment Modules
+## Tisk I/O Subpackage (`services/tisk/io/`)
 
-### Tisk Downloader (`data/tisk_downloader.py`)
+Low-level I/O modules for tisk scraping, downloading, and text extraction. All co-located under the tisk service package.
+
+### Tisk Downloader (`services/tisk/io/downloader.py`)
 
 Downloads PDF documents for parliamentary prints from psp.cz.
 
@@ -283,7 +280,7 @@ Downloads PDF documents for parliamentary prints from psp.cz.
 
 PDFs are cached at `~/.cache/pspcz-analyzer/psp/tisky_pdf/{period}/{ct}.pdf`.
 
-### Tisk Extractor (`data/tisk_extractor.py`)
+### Tisk Extractor (`services/tisk/io/extractor.py`)
 
 Extracts plain text from downloaded PDF files using PyMuPDF (fitz).
 
@@ -291,14 +288,14 @@ Extracts plain text from downloaded PDF files using PyMuPDF (fitz).
 - `extract_and_cache(period, ct)` — extract and save to the text cache
 - `extract_period_texts(period)` — batch extract all PDFs for a period
 
-### Tisk Scraper (`data/tisk_scraper.py`)
+### Tisk Scraper (`services/tisk/io/scraper.py`)
 
 Scrapes psp.cz HTML pages to discover available PDF documents for a given print.
 
 - `scrape_tisk_documents(period, ct)` — returns list of `TiskDocument` objects (URLs, types)
 - `get_best_pdf(documents)` — selects the most relevant PDF from available documents
 
-### History Scraper (`data/history_scraper.py`)
+### History Scraper (`services/tisk/io/history_scraper.py`)
 
 Scrapes legislative process history from psp.cz HTML pages for each parliamentary print.
 
@@ -312,7 +309,7 @@ Each `TiskHistoryStage` contains:
 - `outcome` — result text (approved, rejected, etc.)
 - `vote_number` — link to the specific vote, if applicable
 
-### Law Changes Scraper (`data/law_changes_scraper.py`)
+### Law Changes Scraper (`services/tisk/io/law_changes_scraper.py`)
 
 Scrapes zakon.cz to discover laws affected by a parliamentary print and find related bills.
 

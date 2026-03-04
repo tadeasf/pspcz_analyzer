@@ -138,7 +138,7 @@ Per-period topic classification stored as Parquet files:
 
 Columns: `ct` (print number), `topic` (serialized Czech topic labels), `topic_en` (serialized English topic labels), `summary` (Czech), `summary_en` (English), `source` (classification method).
 
-Topics are assigned either by keyword matching (`topic_service.py`) or by LLM classification (`llm_service.py`). The LLM results take priority when available.
+Topics are assigned by LLM classification via the `services/llm/` package. When the LLM is unavailable, tisks remain unclassified until the pipeline is re-run with an available LLM.
 
 ### AI Summaries
 
