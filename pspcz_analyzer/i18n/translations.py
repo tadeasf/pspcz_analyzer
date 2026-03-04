@@ -86,6 +86,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "amendments.vote_about_amendment": "Toto hlasování se týká pozměňovacího návrhu {letter}",
         "amendments.vote_about_final": "Toto je závěrečné hlasování o návrhu zákona jako celku",
         "amendments.view_amendment_detail": "Detail pozměňovacích návrhů",
+        "amendments.view_law_detail": "Zobrazit detail návrhu zákona",
         # ── Laws page ──────────────────────────────────────────────────
         "laws.title": "Zákony a návrhy zákonů",
         "laws.subtitle": "Přehled parlamentních tisků — návrhy zákonů, jejich stav a AI shrnutí",
@@ -427,6 +428,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "amendments.vote_about_amendment": "This vote is about amendment {letter}",
         "amendments.vote_about_final": "This is the final passage vote on the bill",
         "amendments.view_amendment_detail": "Amendment detail",
+        "amendments.view_law_detail": "View law detail",
         # ── Laws page ──────────────────────────────────────────────────
         "laws.title": "Laws & Bills",
         "laws.subtitle": "Overview of parliamentary bills — status, AI summaries, and legislative history",

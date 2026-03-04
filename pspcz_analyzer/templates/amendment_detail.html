@@ -32,6 +32,7 @@
         {% if detail.amendment_pdf_url %}
         <a href="{{ detail.amendment_pdf_url }}" target="_blank" class="btn-outline btn-small">{{ _("amendments.view_pdf") }} &nearr;</a>
         {% endif %}
+        <a href="/laws/{{ detail.ct }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_law_detail") }}</a>
     </p>
     {% endif %}
 
