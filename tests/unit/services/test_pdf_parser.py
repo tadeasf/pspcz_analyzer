@@ -13,9 +13,7 @@ class TestParseSubmitterNames:
 
     def test_multi_submitter_poslanec(self):
         """Multiple submitters separated by ', poslanec'."""
-        result = _parse_submitter_names(
-            "Mračková Vildumetzová, poslanec Novák, poslanec Hora"
-        )
+        result = _parse_submitter_names("Mračková Vildumetzová, poslanec Novák, poslanec Hora")
         assert result == ["Mračková Vildumetzová", "Novák", "Hora"]
 
     def test_multi_submitter_mixed_gender(self):
@@ -47,9 +45,7 @@ class TestParseSubmitterNames:
         assert result == ["Novák"]
 
     def test_multi_with_titles(self):
-        result = _parse_submitter_names(
-            "Ing. Novák, poslanec PhDr. Hora"
-        )
+        result = _parse_submitter_names("Ing. Novák, poslanec PhDr. Hora")
         assert result == ["Novák", "Hora"]
 
 
@@ -70,11 +66,7 @@ class TestParseAmendmentPdfMultiSubmitter:
 
     def test_single_submitter_still_works(self):
         """Single submitter header still works correctly."""
-        text = (
-            "A. Poslanec Jan Novák\n"
-            "A.1. SD 3327\n"
-            "Some text.\n"
-        )
+        text = "A. Poslanec Jan Novák\nA.1. SD 3327\nSome text.\n"
         amendments = parse_amendment_pdf(text)
         assert len(amendments) == 1
         assert amendments[0].submitter_names == ["Jan Novák"]

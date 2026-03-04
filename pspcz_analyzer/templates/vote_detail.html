@@ -42,8 +42,13 @@
     {% if show_summary %}
     <div class="info-box">
         <div class="info-box-header">
-            {{ _("detail.ai_summary") }}
-            <small>{{ _("detail.ai_generated") }}</small>
+            {% if detail.info.amendment_link %}
+                {{ _("detail.ai_amendment_vote_summary") }}
+                <small>{{ _("detail.ai_amendment_vote_note") }}</small>
+            {% else %}
+                {{ _("detail.ai_bill_summary") }}
+                <small>{{ _("detail.ai_bill_summary_note") }}</small>
+            {% endif %}
         </div>
         {{ show_summary | markdown }}
     </div>

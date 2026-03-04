@@ -50,8 +50,8 @@
 {% if detail.bill_summary %}
 <div class="info-box">
     <div class="info-box-header">
-        {{ _("detail.ai_summary") }}
-        <small>{{ _("detail.ai_generated") }}</small>
+        {{ _("amendments.ai_amendments_overview") }}
+        <small>{{ _("amendments.ai_amendments_overview_note") }}</small>
     </div>
     {{ detail.bill_summary | markdown }}
 </div>
@@ -120,7 +120,7 @@
             <tr class="amendment-summary-row">
                 <td colspan="6">
                     <details>
-                        <summary><small>{{ _("amendments.ai_amendment_summary") }}</small></summary>
+                        <summary><small>{{ _("amendments.ai_single_amendment") }}</small></summary>
                         <div class="info-box-compact">
                             {{ a.amendment_summary }}
                         </div>
