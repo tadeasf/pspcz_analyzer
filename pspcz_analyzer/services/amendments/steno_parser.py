@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass, field
 from html import unescape as html_unescape
 
+import polars as pl
 from loguru import logger
 from selectolax.parser import HTMLParser
 
@@ -30,22 +31,51 @@ _LETTER_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Committee (výbor) stance
-_COMMITTEE_RE = re.compile(
-    r"[Ss]tanovisko\s+výboru.*?(?:je\s*)?[-–]?\s*"
-    r"(doporučující|nedoporučující|bez\s+stanoviska)",
+# Fallback letter regex: catches letters after "návrhu/návrh" without "písmenem"
+# e.g. "pozměňovací návrh A pan poslanec Nacher"
+_LETTER_FALLBACK_RE = re.compile(
+    r"(?:pozměňovac\w+\s+)?návrh\w*\s+"
+    r"([A-Z]\d?(?:(?:,\s*|\s+a\s+)[A-Z]\d?)*)"
+    r"(?:\s+pan|\s+poslanc|\s*[,.]|\s+(?:Stanovisko|předložen))",
     re.IGNORECASE,
 )
 
-# Proposer (předkladatel) stance — e.g. "Předkladatel? (Souhlas.)"
-_PROPOSER_RE = re.compile(
-    r"[Pp]ředkladatel\w*\??\s*\(?(\w+)\.\)?",
+# Committee (výbor) stance — inline: "Stanovisko výboru je doporučující"
+_COMMITTEE_INLINE_RE = re.compile(
+    r"[Ss]tanovisko\s+(?:garančního\s+)?(?:výboru|zpravodaj\w*)\s+.*?"
+    r"(doporučující|nedoporučující|bez\s+stanovisk\w*|kladn\w*|záporn\w*)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Committee stance — parenthesized: "(Zpravodajka: Doporučující.)"
+_COMMITTEE_PAREN_RE = re.compile(
+    r"(?:[Ss]tanovisko\s+(?:garančního\s+)?(?:výboru|zpravodaj\w*)|"
+    r"[Zz]pravodaj\w*)\s*[^(]{0,80}"
+    r"\(([^)]+)\)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Proposer stance — dialogue: "Stanovisko předkladatele? (Souhlasné.)"
+_PROPOSER_DIALOGUE_RE = re.compile(
+    r"(?:předkladatel|navrhovatel|ministr)\w*\??\s*"
+    r"\(([^)]+)\)",
     re.IGNORECASE,
 )
 
-# Vote result with vote number
+# Standalone parenthesized stance — "(Souhlas.)" "(Ministr: Nesouhlas.)"
+_PAREN_STANCE_RE = re.compile(
+    r"\("
+    r"(?:(?:Ministr\w*|Ministryně|Navrhovatel\w*|Předkladatel\w*"
+    r"|Pan\w?\s+ministr\w*)\s*:\s*)?"
+    r"(Souhlas\w*|Nesouhlas\w*|Souhlasn\w*|Nesouhlasn\w*"
+    r"|Kladn\w*|Záporn\w*|Neutrální)"
+    r"[^)]*\)",
+    re.IGNORECASE,
+)
+
+# Vote result with vote number — allows "Hlasování (číslo N)" paren format
 _VOTE_RESULT_RE = re.compile(
-    r"[Hh]lasování\s+(?:číslo|č\.)\s*(\d+)"
+    r"[Hh]lasování\s+\(?(?:číslo|č\.)\s*(\d+)"
     r".*?"
     r"(Přijato|Zamítnuto|Návrh\s+byl\s+přijat|Návrh\s+nebyl\s+přijat)",
     re.DOTALL,
@@ -95,6 +125,18 @@ _SUBMITTER_PREDLOZENY_RE = re.compile(
     r"(?:panem\s+|paní\s+)?"
     r"(?:poslancem|poslankyní)\s+"
     r"((?:(?:Ing|Mgr|JUDr|MUDr|PhDr|RNDr|doc|prof|Bc|MBA|Ph\.D)\.\s+)*"
+    r"[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)",
+    re.IGNORECASE,
+)
+
+# Submitter name extraction — Pattern C: "návrh [pana/paní] [kolegy] poslanc* Name"
+# e.g. "návrh pana kolegy poslance Šafránkové"
+_SUBMITTER_NAVRH_RE = re.compile(
+    r"návrh\w*\s+"
+    r"(?:pan\w+\s+)?(?:koleg\w+\s+)?"
+    r"(?:poslanc\w+|poslankyně)\s+"
+    r"((?:(?:Ing|Mgr|JUDr|MUDr|PhDr|RNDr|doc|prof|Bc|MBA|Ph\.D)\.\s+)*"
+    r"(?:[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+\s+)?"
     r"[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)",
     re.IGNORECASE,
 )
@@ -220,6 +262,35 @@ def _split_into_blocks(section: str) -> list[str]:
     return blocks
 
 
+def _normalize_paren_stance(raw: str) -> str | None:
+    """Classify parenthesized stance text into a normalized key.
+
+    Args:
+        raw: Raw text from inside parentheses, e.g. "Ministr: Souhlasné."
+
+    Returns:
+        Normalized stance key or None if unrecognizable.
+    """
+    lower = raw.lower().strip()
+    if "nesouhlas" in lower or "nesouhlasn" in lower:
+        return "nesouhlas"
+    if "souhlas" in lower or "souhlasn" in lower or "souhlasím" in lower:
+        return "souhlas"
+    if "nedoporuč" in lower:
+        return "nedoporucujici"
+    if "doporuč" in lower:
+        return "doporucujici"
+    if "bez stanovis" in lower:
+        return "bez_stanoviska"
+    if "neutrální" in lower:
+        return "neutralni"
+    if "kladn" in lower:
+        return "souhlas"
+    if "záporn" in lower:
+        return "nesouhlas"
+    return None
+
+
 def _parse_block(block_text: str) -> _ParseBlock:
     """Parse a single text block into a _ParseBlock.
 
@@ -231,32 +302,63 @@ def _parse_block(block_text: str) -> _ParseBlock:
     """
     pb = _ParseBlock(text=block_text)
 
-    # Extract letter
+    # Extract letter — try primary regex first, then fallback
     letter_match = _LETTER_RE.search(block_text)
+    if not letter_match:
+        letter_match = _LETTER_FALLBACK_RE.search(block_text)
     if letter_match:
         raw_letter = letter_match.group(1).strip()
         pb.letter, pb.grouped_letters = _parse_letter_groups(raw_letter)
 
-    # Committee stance
-    comm_match = _COMMITTEE_RE.search(block_text)
+    # ── Committee stance ──────────────────────────────────────────────────
+    # Try inline pattern first: "Stanovisko výboru je doporučující"
+    comm_match = _COMMITTEE_INLINE_RE.search(block_text)
     if comm_match:
-        pb.committee_stance = comm_match.group(1).strip().lower()
-
-    # Proposer stance
-    prop_match = _PROPOSER_RE.search(block_text)
-    if prop_match:
-        raw_stance = prop_match.group(1).strip().lower()
-        match raw_stance:
-            case "souhlas":
-                pb.proposer_stance = "souhlas"
-            case "nesouhlas":
-                pb.proposer_stance = "nesouhlas"
-            case "neutrální":
-                pb.proposer_stance = "neutrální"
+        raw_committee = comm_match.group(1).strip().lower()
+        match raw_committee:
+            case s if "nedoporuč" in s:
+                pb.committee_stance = "nedoporucujici"
+            case s if "doporuč" in s:
+                pb.committee_stance = "doporucujici"
+            case s if "bez" in s:
+                pb.committee_stance = "bez_stanoviska"
+            case s if "kladn" in s:
+                pb.committee_stance = "doporucujici"
+            case s if "záporn" in s:
+                pb.committee_stance = "nedoporucujici"
             case _:
-                pb.proposer_stance = raw_stance
+                pb.committee_stance = raw_committee
 
-    # Vote result
+    # Fall back to parenthesized: "(Zpravodajka: Doporučující.)"
+    if pb.committee_stance is None:
+        comm_paren = _COMMITTEE_PAREN_RE.search(block_text)
+        if comm_paren:
+            stance = _normalize_paren_stance(comm_paren.group(1))
+            if stance:
+                pb.committee_stance = stance
+
+    # ── Proposer stance ───────────────────────────────────────────────────
+    # Try dialogue pattern: "předkladatele? (Souhlasné.)"
+    prop_match = _PROPOSER_DIALOGUE_RE.search(block_text)
+    if prop_match:
+        stance = _normalize_paren_stance(prop_match.group(1))
+        if stance:
+            pb.proposer_stance = stance
+
+    # Fall back to standalone parenthesized stance: "(Souhlas.)" "(Ministr: Nesouhlas.)"
+    if pb.proposer_stance is None:
+        for paren_match in _PAREN_STANCE_RE.finditer(block_text):
+            # Skip if this match overlaps with the committee paren match
+            stance = _normalize_paren_stance(paren_match.group(1))
+            if stance and stance not in (
+                "doporucujici",
+                "nedoporucujici",
+                "bez_stanoviska",
+            ):
+                pb.proposer_stance = stance
+                break
+
+    # ── Vote result ───────────────────────────────────────────────────────
     result_match = _VOTE_RESULT_RE.search(block_text)
     if result_match:
         pb.vote_number = int(result_match.group(1))
@@ -274,14 +376,21 @@ def _parse_block(block_text: str) -> _ParseBlock:
     # Legislative-technical
     pb.is_leg_tech = bool(_LEG_TECH_RE.search(block_text))
 
-    # Submitter name — try letter+genitive pattern first, fall back to předložen*
+    # ── Submitter names ───────────────────────────────────────────────────
+    # Try Pattern A: letter + genitive (most specific)
     submitter_match = _SUBMITTER_AFTER_LETTER_RE.search(block_text)
     if submitter_match:
         pb.submitter_names = [submitter_match.group(1).strip()]
     else:
-        submitter_match = _SUBMITTER_PREDLOZENY_RE.search(block_text)
+        # Try Pattern C: "návrh [pan*] poslanc* Name" (broader)
+        submitter_match = _SUBMITTER_NAVRH_RE.search(block_text)
         if submitter_match:
             pb.submitter_names = [submitter_match.group(1).strip()]
+        else:
+            # Try Pattern B: "předložen* poslancem Name" (rare)
+            submitter_match = _SUBMITTER_PREDLOZENY_RE.search(block_text)
+            if submitter_match:
+                pb.submitter_names = [submitter_match.group(1).strip()]
 
     return pb
 
@@ -320,7 +429,15 @@ def _blocks_to_amendments(blocks: list[_ParseBlock]) -> list[AmendmentVote]:
             continue
 
         is_revote = block.is_challenge and last_vote_number is not None
-        letter = block.letter or last_letter
+
+        # Only challenges legitimately inherit the previous letter;
+        # other blocks with missing letters get "" (cross-validation fills them)
+        if block.letter:
+            letter = block.letter
+        elif block.is_challenge and last_letter:
+            letter = last_letter
+        else:
+            letter = ""
 
         amendment = AmendmentVote(
             letter=letter,
@@ -419,3 +536,131 @@ def parse_steno_amendments(
     )
 
     return amendments, confidence, warnings
+
+
+# ── Cross-validation against official vote data ─────────────────────────────
+
+# Extract amendment letter from official vote titles (nazev_dlouhy)
+# e.g. "pozm. navrh A posl. Nachera" → "A"
+_VOTE_TITLE_LETTER_RE = re.compile(
+    r"pozm\w*\.?\s+n[aá]vrh\w*\s+([A-Z]\d?)",
+    re.IGNORECASE,
+)
+
+# Detect final passage vote from title
+_VOTE_TITLE_FINAL_RE = re.compile(
+    r"jako\s+celku",
+    re.IGNORECASE,
+)
+
+# Detect procedure vote from title
+_VOTE_TITLE_PROCEDURE_RE = re.compile(
+    r"procedur|postup",
+    re.IGNORECASE,
+)
+
+
+def _extract_letter_from_vote_title(title: str) -> str:
+    """Extract amendment letter from official vote title.
+
+    Args:
+        title: The nazev_dlouhy field from the votes DataFrame.
+
+    Returns:
+        Amendment letter (e.g. "A", "B1") or "" if not found.
+    """
+    m = _VOTE_TITLE_LETTER_RE.search(title)
+    return m.group(1) if m else ""
+
+
+def cross_validate_amendments(
+    amendments: list[AmendmentVote],
+    schuze_votes: pl.DataFrame,
+    schuze: int,
+    bod: int,
+) -> tuple[list[AmendmentVote], list[str]]:
+    """Cross-validate parser output against official vote data.
+
+    Uses the nazev_dlouhy column from official votes to:
+    1. Fill missing letters on AmendmentVote objects
+    2. Detect missed amendments and create minimal entries
+    3. Detect final votes from title
+    4. Skip procedure votes
+
+    Args:
+        amendments: List of parsed AmendmentVote objects.
+        schuze_votes: Votes DataFrame filtered to this schuze.
+        schuze: Session number (for logging).
+        bod: Agenda item number (for logging).
+
+    Returns:
+        Tuple of (corrected amendments, list of warning messages).
+    """
+    warnings: list[str] = []
+
+    # Build vote_number → title mapping from official data
+    vote_titles: dict[int, str] = {}
+    if "cislo" in schuze_votes.columns and "nazev_dlouhy" in schuze_votes.columns:
+        for row in schuze_votes.iter_rows(named=True):
+            cislo = row.get("cislo")
+            title = row.get("nazev_dlouhy") or ""
+            if cislo is not None:
+                vote_titles[int(cislo)] = title
+
+    # Build vote_number → amendment index for quick lookups
+    amend_by_vote: dict[int, int] = {}
+    for i, a in enumerate(amendments):
+        if a.vote_number and a.vote_number > 0:
+            amend_by_vote[a.vote_number] = i
+
+    # Pass 1: fill missing letters and detect final votes
+    for a in amendments:
+        title = vote_titles.get(a.vote_number, "")
+        if not title:
+            continue
+
+        # Fill missing letter from vote title
+        if not a.letter and not a.is_final_vote:
+            extracted = _extract_letter_from_vote_title(title)
+            if extracted:
+                a.letter = extracted
+                warnings.append(
+                    f"Filled letter '{extracted}' from vote title "
+                    f"(vote {a.vote_number}, schuze={schuze}, bod={bod})"
+                )
+
+        # Detect final vote from title
+        if not a.is_final_vote and _VOTE_TITLE_FINAL_RE.search(title):
+            a.is_final_vote = True
+            warnings.append(f"Detected final vote from title (vote {a.vote_number})")
+
+    # Pass 2: detect missed amendments (official votes with letters not in parser output)
+    known_vote_numbers = {a.vote_number for a in amendments if a.vote_number}
+    for cislo, title in vote_titles.items():
+        if cislo in known_vote_numbers:
+            continue
+
+        # Skip procedure votes
+        if _VOTE_TITLE_PROCEDURE_RE.search(title):
+            continue
+
+        # Check for final vote
+        if _VOTE_TITLE_FINAL_RE.search(title):
+            continue
+
+        # Check for amendment letter
+        letter = _extract_letter_from_vote_title(title)
+        if letter:
+            amendments.append(
+                AmendmentVote(
+                    letter=letter,
+                    vote_number=cislo,
+                    result="",
+                )
+            )
+            warnings.append(
+                f"Created missing amendment '{letter}' from official vote "
+                f"{cislo} (schuze={schuze}, bod={bod})"
+            )
+
+    return amendments, warnings

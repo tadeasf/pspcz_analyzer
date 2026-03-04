@@ -10,33 +10,34 @@ from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentD
 from pspcz_analyzer.models.tisk_models import PeriodData
 
 
-def _amendment_to_dict(amend: AmendmentVote, lang: str = "cs") -> dict:
+def _amendment_to_dict(amend: AmendmentVote) -> dict:
     """Convert an AmendmentVote to a template-friendly dict.
 
     Args:
         amend: The amendment vote to convert.
-        lang: Language code for summary selection.
 
     Returns:
         Dict suitable for template rendering.
     """
-    summary = amend.summary_en if (lang == "en" and amend.summary_en) else amend.summary
     return {
         "letter": amend.letter,
         "vote_number": amend.vote_number,
         "id_hlasovani": amend.id_hlasovani,
         "submitter_names": amend.submitter_names,
         "submitter_party": amend.submitter_party,
+        "pdf_submitter_name": amend.pdf_submitter_name,
         "description": amend.description,
         "committee_stance": amend.committee_stance,
         "proposer_stance": amend.proposer_stance,
         "result": amend.result,
         "is_revote": amend.is_revote,
+        "original_vote_number": amend.original_vote_number,
         "is_withdrawn": amend.is_withdrawn,
         "is_final_vote": amend.is_final_vote,
         "is_leg_tech": amend.is_leg_tech,
         "grouped_with": amend.grouped_with,
-        "summary": summary,
+        "summary": amend.summary,
+        "summary_en": amend.summary_en,
     }
 
 
@@ -117,6 +118,53 @@ def list_amendment_bills(
     }
 
 
+def _build_vote_result_map(bill: BillAmendmentData) -> dict[int, str]:
+    """Build a mapping of vote_number → result for all amendments in a bill.
+
+    Args:
+        bill: Bill amendment data.
+
+    Returns:
+        Dict mapping vote_number to result string.
+    """
+    result_map: dict[int, str] = {}
+    for a in bill.amendments:
+        if a.vote_number and a.result:
+            result_map[a.vote_number] = a.result
+    if bill.final_vote and bill.final_vote.vote_number:
+        result_map[bill.final_vote.vote_number] = bill.final_vote.result
+    return result_map
+
+
+def _group_amendments(amendments: list[dict]) -> list[dict]:
+    """Group amendments by letter, nesting revotes under their original.
+
+    Groups amendments so revotes appear as sub-entries of the primary
+    amendment. The summary is shown only on the primary entry.
+
+    Args:
+        amendments: Flat list of amendment dicts.
+
+    Returns:
+        List of grouped amendment dicts. Each has an optional 'revotes' key.
+    """
+    grouped: list[dict] = []
+    by_letter: dict[str, dict] = {}
+
+    for a in amendments:
+        letter = a["letter"]
+        if a["is_revote"] and letter in by_letter:
+            # Attach as revote of the original
+            by_letter[letter].setdefault("revotes", []).append(a)
+        else:
+            a["revotes"] = []
+            grouped.append(a)
+            if letter:
+                by_letter[letter] = a
+
+    return grouped
+
+
 def amendment_detail(
     data: PeriodData,
     schuze: int,
@@ -138,12 +186,47 @@ def amendment_detail(
     if bill is None:
         return None
 
-    amendments = [_amendment_to_dict(a, lang) for a in bill.amendments]
-    final = _amendment_to_dict(bill.final_vote, lang) if bill.final_vote else None
+    amendments = [_amendment_to_dict(a) for a in bill.amendments]
+    final = _amendment_to_dict(bill.final_vote) if bill.final_vote else None
+
+    # Build vote_number → result lookup for revote context
+    vote_result_map = _build_vote_result_map(bill)
+
+    # Enrich revotes with original vote result
+    for a_dict in amendments:
+        if a_dict["is_revote"] and a_dict["original_vote_number"]:
+            a_dict["original_result"] = vote_result_map.get(a_dict["original_vote_number"], "")
+        else:
+            a_dict["original_result"] = ""
+
+    # Select per-amendment summary by language
+    for a_dict in amendments:
+        a_dict["amendment_summary"] = (
+            a_dict["summary_en"] if (lang == "en" and a_dict["summary_en"]) else a_dict["summary"]
+        )
 
     # Get tisk info for additional context
     tisk = data.get_tisk(schuze, bod)
     tisk_url = tisk.url if tisk else ""
+
+    # Select bill-level summary by language
+    bill_summary = (
+        bill.bill_summary_en if (lang == "en" and bill.bill_summary_en) else bill.bill_summary
+    )
+
+    grouped = _group_amendments(amendments)
+
+    # Build direct PDF link for the amendment sub-tisk
+    # Prefer direct idd link, fall back to ct1-based viewer page
+    if bill.amendment_tisk_idd:
+        amendment_pdf_url = f"https://www.psp.cz/sqw/text/orig2.sqw?idd={bill.amendment_tisk_idd}"
+    elif bill.amendment_tisk_ct1:
+        amendment_pdf_url = (
+            f"https://www.psp.cz/sqw/text/tiskt.sqw"
+            f"?O={bill.period}&CT={bill.ct}&CT1={bill.amendment_tisk_ct1}"
+        )
+    else:
+        amendment_pdf_url = ""
 
     return {
         "schuze": bill.schuze,
@@ -152,7 +235,10 @@ def amendment_detail(
         "tisk_nazev": bill.tisk_nazev,
         "tisk_url": tisk_url,
         "steno_url": bill.steno_url,
+        "amendment_pdf_url": amendment_pdf_url,
+        "bill_summary": bill_summary,
         "amendments": amendments,
+        "grouped_amendments": grouped,
         "final_vote": final,
         "amendment_count": bill.amendment_count,
         "parse_confidence": bill.parse_confidence,

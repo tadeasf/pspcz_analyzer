@@ -52,6 +52,9 @@ def resolve_submitter_ids(
 ) -> None:
     """Resolve submitter names to MP IDs and party affiliations.
 
+    Prefers pdf_submitter_name (nominative case, high-confidence match)
+    over steno submitter_names (inflected, requires fuzzy matching).
+
     Mutates AmendmentVote objects in-place, populating submitter_ids
     and submitter_party fields.
 
@@ -68,6 +71,17 @@ def resolve_submitter_ids(
             all_amends.append(bill.final_vote)
 
         for amend in all_amends:
+            # Try PDF name first (nominative case — better match quality)
+            if amend.pdf_submitter_name:
+                result = _match_name_to_mp(amend.pdf_submitter_name, mp_rows)
+                if result is not None:
+                    mp_id, party = result
+                    amend.submitter_ids.append(mp_id)
+                    amend.submitter_party = party
+                    resolved_count += 1
+                    continue
+
+            # Fall back to steno names (inflected — fuzzy matching)
             for name in amend.submitter_names:
                 result = _match_name_to_mp(name, mp_rows)
                 if result is not None:
@@ -76,4 +90,7 @@ def resolve_submitter_ids(
                     amend.submitter_party = party
                     resolved_count += 1
 
-    logger.info("Resolved {} submitter names to MP IDs", resolved_count)
+    logger.info(
+        "[amendment pipeline] Resolved {} submitter names to MP IDs",
+        resolved_count,
+    )

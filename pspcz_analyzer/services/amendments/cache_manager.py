@@ -11,6 +11,40 @@ from loguru import logger
 
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 
+AMENDMENTS_SCHEMA = {
+    "period": pl.Int64,
+    "schuze": pl.Int64,
+    "bod": pl.Int64,
+    "ct": pl.Int64,
+    "tisk_nazev": pl.Utf8,
+    "steno_url": pl.Utf8,
+    "letter": pl.Utf8,
+    "vote_number": pl.Int64,
+    "id_hlasovani": pl.Int64,
+    "submitter_names": pl.Utf8,
+    "submitter_ids": pl.Utf8,
+    "description": pl.Utf8,
+    "committee_stance": pl.Utf8,
+    "proposer_stance": pl.Utf8,
+    "result": pl.Utf8,
+    "is_revote": pl.Boolean,
+    "original_vote_number": pl.Int64,
+    "is_withdrawn": pl.Boolean,
+    "grouped_with": pl.Utf8,
+    "is_final_vote": pl.Boolean,
+    "is_leg_tech": pl.Boolean,
+    "amendment_text": pl.Utf8,
+    "summary": pl.Utf8,
+    "summary_en": pl.Utf8,
+    "pdf_submitter_name": pl.Utf8,
+    "bill_summary": pl.Utf8,
+    "bill_summary_en": pl.Utf8,
+    "parse_confidence": pl.Float64,
+    "parse_warnings": pl.Utf8,
+    "amendment_tisk_ct1": pl.Int64,
+    "amendment_tisk_idd": pl.Int64,
+}
+
 
 def _cache_path(cache_dir: Path, period: int) -> Path:
     """Get the parquet cache file path for a period.
@@ -103,8 +137,13 @@ def save_amendments(
                     "amendment_text": amend.amendment_text,
                     "summary": amend.summary,
                     "summary_en": amend.summary_en,
+                    "pdf_submitter_name": amend.pdf_submitter_name,
+                    "bill_summary": bill.bill_summary,
+                    "bill_summary_en": bill.bill_summary_en,
                     "parse_confidence": bill.parse_confidence,
                     "parse_warnings": _serialize_list(bill.parse_warnings),
+                    "amendment_tisk_ct1": bill.amendment_tisk_ct1,
+                    "amendment_tisk_idd": bill.amendment_tisk_idd,
                 }
             )
 
@@ -112,7 +151,7 @@ def save_amendments(
         logger.debug("No amendment rows to save for period {}", period)
         return
 
-    df = pl.DataFrame(rows)
+    df = pl.DataFrame(rows, schema=AMENDMENTS_SCHEMA)
     path = _cache_path(cache_dir, period)
     df.write_parquet(path)
     logger.info(
@@ -152,6 +191,7 @@ def _row_to_amendment(row: dict) -> AmendmentVote:
         amendment_text=row.get("amendment_text", ""),
         summary=row.get("summary", ""),
         summary_en=row.get("summary_en", ""),
+        pdf_submitter_name=row.get("pdf_submitter_name", ""),
     )
 
 
@@ -201,8 +241,12 @@ def load_amendments(
             steno_url=first.get("steno_url", ""),
             amendments=amendments,
             final_vote=final_vote,
+            bill_summary=first.get("bill_summary", ""),
+            bill_summary_en=first.get("bill_summary_en", ""),
             parse_confidence=first.get("parse_confidence", 1.0),
             parse_warnings=_deserialize_list(first.get("parse_warnings", "")),
+            amendment_tisk_ct1=first.get("amendment_tisk_ct1"),
+            amendment_tisk_idd=first.get("amendment_tisk_idd"),
         )
         result[(schuze, bod)] = bill  # type: ignore[index]
 
