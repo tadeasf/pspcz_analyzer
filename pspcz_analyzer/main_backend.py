@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from loguru import logger
+from starlette.responses import RedirectResponse
 
 from pspcz_analyzer.admin.auth import AdminAuthMiddleware
 from pspcz_analyzer.admin.log_stream import log_broadcaster
@@ -72,6 +73,12 @@ app.add_middleware(AdminAuthMiddleware)
 
 # Mount admin routes
 app.include_router(admin_router)
+
+
+@app.get("/")
+async def root_redirect() -> RedirectResponse:
+    """Redirect bare root to admin dashboard."""
+    return RedirectResponse(url="/admin/", status_code=307)
 
 
 def main() -> None:
