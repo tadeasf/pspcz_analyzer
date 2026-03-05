@@ -5,7 +5,7 @@ services:
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
     volumes:
-      - ./cache-data:/data/cache:ro
+      - ./cache-data:/data/cache
     env_file:
       - .env
     environment:
