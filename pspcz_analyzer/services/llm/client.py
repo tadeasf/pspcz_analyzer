@@ -383,7 +383,12 @@ class LLMClient:
         try:
             return json.loads(raw)
         except (json.JSONDecodeError, TypeError):
-            logger.debug("{} Failed to parse JSON response: {}", self._log_prefix, raw[:200])
+            logger.warning(
+                "{} Schema-constrained output not valid JSON ({}chars): {}",
+                self._log_prefix,
+                len(raw),
+                raw[:300],
+            )
             return None
 
     @staticmethod
@@ -429,9 +434,10 @@ class LLMClient:
             return None
         result = self._extract_json_from_text(raw)
         if result is None:
-            logger.debug(
-                "%s JSON extraction failed from prompt fallback. Raw[:300]: %s",
+            logger.warning(
+                "{} JSON extraction failed from prompt fallback ({}chars): {}",
                 self._log_prefix,
+                len(raw),
                 raw[:300],
             )
         return result
@@ -891,6 +897,15 @@ class LLMClient:
         sanitized_text = _sanitize_llm_input(truncated)
         amendments_list = _format_amendments_list(amendments)
 
+        amendments_with_text = sum(1 for a in amendments if a.get("amendment_text"))
+        logger.debug(
+            "%s summarize_amendments(%s): %d/%d amendments have per-amendment text",
+            self._log_prefix,
+            lang,
+            amendments_with_text,
+            len(amendments),
+        )
+
         if bill_context:
             if lang == "cs":
                 bill_context_section = (
@@ -924,22 +939,34 @@ class LLMClient:
         if self.supports_structured_output:
             prompt = structured_prompt_tpl.format(**fmt_kwargs)
             data = self._generate_json(prompt, structured_system, _AMENDMENT_SUMMARIES_SCHEMA)
-            if data is None:
-                logger.debug(
-                    "%s Amendment summaries: structured output returned None",
+            if data is not None:
+                raw_letters = [item.get("letter", "") for item in data.get("amendments", [])]
+                result = _parse_amendment_summaries_json(data)
+                logger.info(
+                    "{} Amendment summaries ({}): {}/{} keys matched, raw letters={}",
                     self._log_prefix,
+                    lang,
+                    len(result),
+                    len(raw_letters),
+                    raw_letters,
                 )
-                return {}
-            result = _parse_amendment_summaries_json(data)
-            logger.debug(
-                "%s Amendment summaries (%s): %d keys from %d items",
-                self._log_prefix,
-                lang,
-                len(result),
-                len(data.get("amendments", [])),
-            )
-            return result
+                if result:
+                    return result
+                logger.warning(
+                    "{} Amendment summaries ({}): structured JSON returned 0 matches, "
+                    "falling back to free-text",
+                    self._log_prefix,
+                    lang,
+                )
+            else:
+                logger.warning(
+                    "{} Amendment summaries ({}): structured JSON returned None, "
+                    "falling back to free-text",
+                    self._log_prefix,
+                    lang,
+                )
 
+        # Free-text path (primary when structured output disabled, fallback otherwise)
         prompt = freetext_prompt_tpl.format(**fmt_kwargs)
         response = self._generate_with_retry(
             prompt,
@@ -947,15 +974,15 @@ class LLMClient:
             validator=lambda r: bool(_parse_amendment_summaries_text(r)),
         )
         if response is None:
-            logger.debug(
-                "%s Amendment summaries (%s): free-text returned None",
+            logger.warning(
+                "{} Amendment summaries ({}): free-text also returned None",
                 self._log_prefix,
                 lang,
             )
             return {}
         result = _parse_amendment_summaries_text(response)
-        logger.debug(
-            "%s Amendment summaries (%s): %d keys from free-text",
+        logger.info(
+            "{} Amendment summaries ({}): {} keys from free-text",
             self._log_prefix,
             lang,
             len(result),

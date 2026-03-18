@@ -12,7 +12,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from pspcz_analyzer.models.amendment_models import BillAmendmentData
+from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.amendments.cache_manager import save_amendments
 from pspcz_analyzer.services.amendments.progress import AmendmentProgress
@@ -71,6 +71,33 @@ def _summarize_bill_text(
         return "", ""
 
 
+def _build_amendment_meta(amend: AmendmentVote) -> dict[str, str]:
+    """Build metadata dict for a single amendment, including per-amendment text.
+
+    Args:
+        amend: Amendment vote object.
+
+    Returns:
+        Dict with letter, submitter, description, amendment_text, and grouped_with.
+    """
+    submitter = (
+        ", ".join(amend.pdf_submitter_names)
+        if amend.pdf_submitter_names
+        else ", ".join(amend.submitter_names)
+        if amend.submitter_names
+        else ""
+    )
+    meta: dict[str, str] = {
+        "letter": amend.letter,
+        "submitter": submitter,
+        "description": amend.description,
+        "amendment_text": amend.amendment_text,
+    }
+    if amend.grouped_with:
+        meta["grouped_with"] = ", ".join(amend.grouped_with)
+    return meta
+
+
 def _summarize_per_amendment(
     llm: LLMClient,
     bill: BillAmendmentData,
@@ -107,32 +134,36 @@ def _summarize_per_amendment(
             continue
         if not amend.letter:
             continue
-        # Prefer PDF submitter names (nominative), fall back to steno names
-        submitter = (
-            ", ".join(amend.pdf_submitter_names)
-            if amend.pdf_submitter_names
-            else ", ".join(amend.submitter_names)
-            if amend.submitter_names
-            else ""
-        )
-        amendments_meta.append(
-            {
-                "letter": amend.letter,
-                "submitter": submitter,
-                "description": amend.description,
-            }
-        )
+        meta = _build_amendment_meta(amend)
+        if not meta["amendment_text"]:
+            logger.warning(
+                "[amendment pipeline] amendment {} in '{}' has no per-amendment text",
+                amend.letter,
+                bill.tisk_nazev[:60],
+            )
+        amendments_meta.append(meta)
 
     if not amendments_meta:
         return 0
 
+    amendments_with_text = sum(1 for a in amendments_meta if a.get("amendment_text"))
+    logger.debug(
+        "[amendment pipeline] [{}/{}] '{}' {}/{} amendments have per-amendment text",
+        bill_index,
+        total_bills,
+        bill.tisk_nazev[:60],
+        amendments_with_text,
+        len(amendments_meta),
+    )
+
     try:
         logger.info(
-            "[amendment pipeline] [{}/{}] per-amendment summaries for '{}' ({} amendments)...",
+            "[amendment pipeline] [{}/{}] per-amendment summaries for '{}' ({} amendments, {} with text)...",
             bill_index,
             total_bills,
             bill.tisk_nazev[:60],
             len(amendments_meta),
+            amendments_with_text,
         )
         cs_map, en_map = llm.summarize_amendments_bilingual(
             text,
@@ -142,7 +173,7 @@ def _summarize_per_amendment(
         )
     except Exception:
         logger.warning(
-            "[amendment pipeline] [%d/%d] per-amendment LLM failed for '%s'",
+            "[amendment pipeline] [{}/{}] per-amendment LLM failed for '{}'",
             bill_index,
             total_bills,
             bill.tisk_nazev[:60],
@@ -150,7 +181,7 @@ def _summarize_per_amendment(
         return 0
 
     logger.debug(
-        "[amendment pipeline] cs_map keys=%s en_map keys=%s amend letters=%s",
+        "[amendment pipeline] cs_map keys={} en_map keys={} amend letters={}",
         list(cs_map.keys()),
         list(en_map.keys()),
         [
@@ -173,7 +204,7 @@ def _summarize_per_amendment(
             amend.summary_en = en_summary
 
     logger.info(
-        "[amendment pipeline] [%d/%d] per-amendment summaries: %d/%d amendments got summaries",
+        "[amendment pipeline] [{}/{}] per-amendment summaries: {}/{} amendments got summaries",
         bill_index,
         total_bills,
         count,

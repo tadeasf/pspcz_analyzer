@@ -61,27 +61,69 @@ def _render_comparison_markdown_en(data: dict[str, Any]) -> str:
     return "\n\n".join(parts)
 
 
+_AMENDMENT_TEXT_LIMIT = 600
+
+# Strip markdown headers, parenthesized suffixes, "Amendment" prefix from letters
+_LETTER_STRIP_RE = re.compile(r"[#*\-]")
+_LETTER_AMEND_RE = re.compile(r"\bamendment\b\s*", re.IGNORECASE)
+_LETTER_PAREN_RE = re.compile(r"\s*\(.*$")
+
+
+def _normalize_amendment_letter(raw: str) -> str:
+    """Normalize an amendment letter from LLM output.
+
+    Strips markdown formatting (``###``), ``Amendment`` prefix,
+    parenthesized suffixes like ``(Novák)``, and whitespace.
+
+    Args:
+        raw: Raw letter string from LLM response.
+
+    Returns:
+        Cleaned uppercase letter like ``A``, ``B1``, ``E1``.
+    """
+    cleaned = _LETTER_STRIP_RE.sub("", raw)
+    cleaned = _LETTER_AMEND_RE.sub("", cleaned)
+    cleaned = _LETTER_PAREN_RE.sub("", cleaned)
+    return cleaned.strip().upper()
+
+
 def _format_amendments_list(amendments: list[dict[str, str]]) -> str:
-    """Format amendment metadata into a prompt-friendly list.
+    """Format amendment metadata into a prompt-friendly list with per-amendment text.
 
     Args:
         amendments: List of dicts with 'letter', 'submitter', 'description' keys.
+            May also contain 'amendment_text' and 'grouped_with'.
 
     Returns:
-        Formatted string like "- A (Berkovce): legislativně-technická oprava".
+        Formatted string with per-amendment sections including text excerpts.
     """
-    lines: list[str] = []
+    sections: list[str] = []
     for a in amendments:
         letter = a.get("letter", "?")
         submitter = a.get("submitter", "")
         description = a.get("description", "")
-        parts = [f"- {letter}"]
+
+        lines = [f"[Amendment {letter}]"]
         if submitter:
-            parts.append(f"({submitter})")
+            lines.append(f"  Submitter: {submitter}")
         if description:
-            parts.append(f": {description}")
-        lines.append(" ".join(parts))
-    return "\n".join(lines)
+            lines.append(f"  Description: {description}")
+
+        grouped_with = a.get("grouped_with", "")
+        if grouped_with:
+            lines.append(f"  Voted together with: {grouped_with}")
+
+        amendment_text = a.get("amendment_text", "")
+        if amendment_text:
+            excerpt = amendment_text[:_AMENDMENT_TEXT_LIMIT]
+            if len(amendment_text) > _AMENDMENT_TEXT_LIMIT:
+                excerpt += "..."
+            lines.append(f"  Text: {excerpt}")
+        else:
+            lines.append("  Text: (not available)")
+
+        sections.append("\n".join(lines))
+    return "\n\n".join(sections)
 
 
 def _parse_amendment_summaries_json(data: dict[str, Any]) -> dict[str, str]:
@@ -95,7 +137,7 @@ def _parse_amendment_summaries_json(data: dict[str, Any]) -> dict[str, str]:
     """
     result: dict[str, str] = {}
     for item in data.get("amendments", []):
-        letter = item.get("letter", "").strip().upper()
+        letter = _normalize_amendment_letter(item.get("letter", ""))
         summary = item.get("summary", "").strip()
         if letter and summary:
             result[letter] = summary
@@ -118,9 +160,13 @@ def _parse_amendment_summaries_text(response: str) -> dict[str, str]:
         if not line:
             continue
         # Match patterns like "A: summary", "B1: summary", "- A: summary", "* b2 – summary"
-        match = re.match(r"^[-*•]?\s*([A-Za-z]\d*(?:\s*[aA]\s*[A-Za-z]\d*)?)\s*[:–—-]\s*(.+)", line)
+        match = re.match(
+            r"^[-*•#]?\s*(?:amendment\s+)?([A-Za-z]\d*(?:\s*[aA]\s*[A-Za-z]\d*)?)\s*[:–—-]\s*(.+)",
+            line,
+            re.IGNORECASE,
+        )
         if match:
-            letter = match.group(1).strip().upper()
+            letter = _normalize_amendment_letter(match.group(1))
             summary = match.group(2).strip()
             if letter and summary:
                 result[letter] = summary

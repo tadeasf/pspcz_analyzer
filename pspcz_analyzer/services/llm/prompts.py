@@ -476,12 +476,14 @@ _STRUCTURED_AMENDMENT_SUMMARIES_SYSTEM_CS = (
 )
 
 _STRUCTURED_AMENDMENT_SUMMARIES_PROMPT_CS = (
-    "Následuje text pozměňovacích návrhů k parlamentnímu tisku a seznam jednotlivých návrhů.\n"
-    "Pro každý návrh napiš stručné shrnutí (1–2 věty), co konkrétně mění.\n\n"
+    "Následuje seznam pozměňovacích návrhů k parlamentnímu tisku. U každého návrhu je uveden jeho text.\n"
+    "Pro každý návrh napiš stručné shrnutí (1–2 věty), co konkrétně mění.\n"
+    "Použij text uvedený u každého návrhu. Pokud text u návrhu chybí, zkus najít informace "
+    "v doplňkovém kontextu celého dokumentu níže.\n\n"
     "Tisk: {title}\n\n"
     "{bill_context_section}"
-    "Text pozměňovacích návrhů:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Pozměňovací návrhy:\n{amendments_list}\n\n"
+    "Pozměňovací návrhy (s textem):\n{amendments_list}\n\n"
+    "Doplňkový kontext celého dokumentu:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
     "Pro každý návrh vrať jeho písmeno a shrnutí."
 )
 
@@ -491,12 +493,14 @@ _STRUCTURED_AMENDMENT_SUMMARIES_SYSTEM_EN = (
 )
 
 _STRUCTURED_AMENDMENT_SUMMARIES_PROMPT_EN = (
-    "Below is the text of amendments to a Czech parliamentary bill and a list of individual amendments.\n"
-    "For each amendment, write a brief summary (1-2 sentences) of what it specifically changes.\n\n"
+    "Below is a list of amendments to a Czech parliamentary bill. Each amendment includes its own text.\n"
+    "For each amendment, write a brief summary (1-2 sentences) of what it specifically changes.\n"
+    "Use the text provided with each amendment. If text is missing for an amendment, "
+    "try to find relevant information in the supplementary document context below.\n\n"
     "Bill: {title}\n\n"
     "{bill_context_section}"
-    "Amendment text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Amendments:\n{amendments_list}\n\n"
+    "Amendments (with text):\n{amendments_list}\n\n"
+    "Supplementary document context:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
     "For each amendment, return its letter and summary."
 )
 
@@ -509,12 +513,14 @@ _AMENDMENT_SUMMARIES_SYSTEM_CS = (
 )
 
 _AMENDMENT_SUMMARIES_PROMPT_CS = (
-    "Následuje text pozměňovacích návrhů k parlamentnímu tisku a seznam jednotlivých návrhů.\n"
-    "Pro každý návrh napiš stručné shrnutí (1–2 věty), co konkrétně mění.\n\n"
+    "Následuje seznam pozměňovacích návrhů k parlamentnímu tisku. U každého návrhu je uveden jeho text.\n"
+    "Pro každý návrh napiš stručné shrnutí (1–2 věty), co konkrétně mění.\n"
+    "Použij text uvedený u každého návrhu. Pokud text u návrhu chybí, zkus najít informace "
+    "v doplňkovém kontextu celého dokumentu níže.\n\n"
     "Tisk: {title}\n\n"
     "{bill_context_section}"
-    "Text pozměňovacích návrhů:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Pozměňovací návrhy:\n{amendments_list}\n\n"
+    "Pozměňovací návrhy (s textem):\n{amendments_list}\n\n"
+    "Doplňkový kontext celého dokumentu:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
     "Odpověz PŘESNĚ ve formátu:\n"
     "A: shrnutí návrhu A\n"
     "B1: shrnutí návrhu B1\n"
@@ -528,12 +534,14 @@ _AMENDMENT_SUMMARIES_SYSTEM_EN = (
 )
 
 _AMENDMENT_SUMMARIES_PROMPT_EN = (
-    "Below is the text of amendments to a Czech parliamentary bill and a list of individual amendments.\n"
-    "For each amendment, write a brief summary (1-2 sentences) of what it specifically changes.\n\n"
+    "Below is a list of amendments to a Czech parliamentary bill. Each amendment includes its own text.\n"
+    "For each amendment, write a brief summary (1-2 sentences) of what it specifically changes.\n"
+    "Use the text provided with each amendment. If text is missing for an amendment, "
+    "try to find relevant information in the supplementary document context below.\n\n"
     "Bill: {title}\n\n"
     "{bill_context_section}"
-    "Amendment text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Amendments:\n{amendments_list}\n\n"
+    "Amendments (with text):\n{amendments_list}\n\n"
+    "Supplementary document context:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
     "Respond EXACTLY in format:\n"
     "A: summary of amendment A\n"
     "B1: summary of amendment B1\n"
