@@ -229,6 +229,19 @@ def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData, lang: str = "cs")
     info["tisk_law_changes"] = tisk.law_changes if tisk else []
     info["tisk_sub_versions"] = tisk.sub_versions if tisk else []
 
+    # Amendment context: reverse link vote → amendment
+    amend_ctx = data.get_amendment_for_vote(info["id_hlasovani"])
+    if amend_ctx:
+        a_schuze, a_bod, a_letter, a_is_final = amend_ctx
+        info["amendment_link"] = {
+            "schuze": a_schuze,
+            "bod": a_bod,
+            "letter": a_letter,
+            "is_final_vote": a_is_final,
+        }
+    else:
+        info["amendment_link"] = None
+
     # Legislative history and vote-to-stage matching
     info["tisk_history"] = tisk.history if tisk else None
     info["tisk_current_stage"] = None

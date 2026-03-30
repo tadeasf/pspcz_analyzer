@@ -18,9 +18,10 @@ Czech Parliamentary Voting Analyzer — OSINT tool for downloading, parsing, and
 
 ## Key Commands
 - Install: `uv sync`
-- Dev server: `uv run python -m pspcz_analyzer.main` (0.0.0.0:8000, reload)
+- Frontend: `uv run python -m pspcz_analyzer.main_frontend` (0.0.0.0:8000, reload)
+- Backend (admin): `uv run python -m pspcz_analyzer.main_backend` (0.0.0.0:8001)
 - Add dep: `uv add <package>`
-- No test suite yet
+- Tests: `uv run pytest -m "not integration" --cov -q`
 
 ## Project Structure
 ```
@@ -80,51 +81,75 @@ pspcz_analyzer/
 8. **After finishing each task**: run `uv run pytest -m "not integration" --cov -q`
 9. **After implementing a new feature**: update docs and README
 
-## Project Structure (post-refactoring)
+## Project Structure (post-reorganization)
 ```
 pspcz_analyzer/
-├── main.py
+├── main_frontend.py          — Public web app (port 8000, DataReader)
+├── main_backend.py           — Admin dashboard (port 8001, DataService)
 ├── config.py
 ├── logging_config.py
+├── middleware.py
+├── rate_limit.py
 ├── models/
-│   ├── schemas.py        — UNL column definitions
-│   ├── enums.py          — Vote result codes
-│   └── tisk_models.py    — TiskInfo + PeriodData dataclasses
-├── data/
-│   ├── downloader.py
-│   ├── parser.py
-│   ├── cache.py
-│   ├── tisk_downloader.py
-│   ├── tisk_extractor.py
-│   ├── tisk_scraper.py
-│   ├── history_scraper.py
-│   └── law_changes_scraper.py
+│   ├── schemas.py            — UNL column definitions
+│   ├── enums.py              — Vote result codes
+│   ├── tisk_models.py        — TiskInfo + PeriodData dataclasses
+│   └── amendment_models.py
+├── data/                     — Core I/O only
+│   ├── downloader.py         — ZIP download from psp.cz
+│   ├── parser.py             — UNL parsing
+│   └── cache.py              — Parquet caching
 ├── services/
-│   ├── data_service.py              — Central orchestrator (~420 lines)
-│   ├── mp_builder.py                — MP info builder
-│   ├── tisk/                        — Tisk (parliamentary print) subpackage
-│   │   ├── __init__.py              — Public API re-exports
-│   │   ├── pipeline.py              — Pipeline orchestrator (~170 lines)
-│   │   ├── classifier.py            — Topic classification + consolidation
-│   │   ├── downloader_pipeline.py   — PDF download + text extraction
-│   │   ├── metadata_scraper.py      — History + law changes scraping
-│   │   ├── version_service.py       — Sub-tisk versions + diffs
-│   │   ├── cache_manager.py         — TiskCacheManager class
-│   │   ├── lookup_builder.py        — Tisk lookup table builder
-│   │   └── text_service.py          — Text cache + retrieval
+│   ├── data_reader.py        — Read-only data service (frontend)
+│   ├── data_service.py       — Full data service (extends DataReader)
+│   ├── llm/                  — LLM integration package
+│   │   ├── __init__.py       — Public API re-exports
+│   │   ├── prompts.py        — Prompt templates + JSON schemas
+│   │   └── client.py         — LLMClient + factory + helpers
+│   ├── tisk/                 — Tisk (parliamentary print) subpackage
+│   │   ├── __init__.py
+│   │   ├── io/               — Tisk I/O subpackage
+│   │   │   ├── scraper.py
+│   │   │   ├── downloader.py
+│   │   │   ├── extractor.py
+│   │   │   ├── history_scraper.py
+│   │   │   └── law_changes_scraper.py
+│   │   ├── pipeline.py
+│   │   ├── classifier.py
+│   │   ├── downloader_pipeline.py
+│   │   ├── metadata_scraper.py
+│   │   ├── version_service.py
+│   │   ├── cache_manager.py
+│   │   ├── lookup_builder.py
+│   │   └── text_service.py
+│   ├── amendments/           — Amendment analysis subpackage
+│   │   ├── pipeline.py
+│   │   ├── steno_scraper.py
+│   │   ├── steno_parser.py
+│   │   └── ...
 │   ├── loyalty_service.py
 │   ├── attendance_service.py
 │   ├── similarity_service.py
 │   ├── votes_service.py
-│   ├── llm_service.py
 │   └── topic_service.py
 ├── routes/
-│   ├── pages.py
-│   ├── api.py
-│   └── charts.py
+│   ├── pages.py              — Full HTML page routes
+│   ├── voting.py             — Loyalty, attendance, similarity, votes
+│   ├── amendments.py         — Amendment bills, coalitions
+│   ├── tisk.py               — Tisk text, evolution, related bills
+│   ├── feedback.py           — User feedback
+│   ├── health.py             — Health checks, LLM diagnostics
+│   ├── utils.py              — Shared utilities
+│   └── charts.py             — PNG chart endpoints
+├── admin/                    — Admin dashboard
+│   ├── routes.py
+│   ├── auth.py
+│   └── log_stream.py
+├── i18n/
+│   ├── __init__.py
+│   ├── translations.py
+│   └── middleware.py
 ├── templates/
 │   └── partials/
-├── static/
-└── utils/
-    └── text.py
+└── static/
 ```

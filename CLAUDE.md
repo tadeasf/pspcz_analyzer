@@ -9,7 +9,8 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 ## Commands
 
 - **Install dependencies:** `uv sync` (add `--extra dev` for test/lint tools)
-- **Run the dev server:** `uv run python -m pspcz_analyzer.main` (starts on `0.0.0.0:8000` with reload)
+- **Run the frontend:** `uv run python -m pspcz_analyzer.main_frontend` (starts on `0.0.0.0:8000` with reload)
+- **Run the backend (admin):** `uv run python -m pspcz_analyzer.main_backend` (starts on `0.0.0.0:8001`)
 - **Add a dependency:** `uv add <package>`
 - **Run unit + API tests:** `uv run pytest -m "not integration" --cov`
 - **Run integration tests:** `uv run pytest -m integration -v` (requires network — hits real psp.cz)
@@ -46,6 +47,11 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `GITHUB_FEEDBACK_REPO` — target repository (default: `tadeasf/pspcz_analyzer`)
 - `GITHUB_FEEDBACK_LABELS` — labels for feedback issues (default: `user-feedback`)
 - `TISK_SHORTENER` — truncate tisk text for LLM (`0` = full text, `1` = truncate, default: `0`)
+- `ADMIN_PORT` — admin backend server port (default: `8001`)
+- `ADMIN_USERNAME` — admin dashboard login username (default: `admin`)
+- `ADMIN_PASSWORD_HASH` — bcrypt hash of the admin password (default: empty — login rejects all)
+- `ADMIN_SESSION_SECRET` — HMAC secret for signing admin session cookies (default: auto-generated)
+- `ADMIN_ALLOWED_IPS` — comma-separated IP/CIDR whitelist for admin access (default: `127.0.0.1,::1,172.16.0.0/12`)
 
 ## Architecture
 
@@ -57,12 +63,29 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 
 Column definitions for all UNL tables live in `models/schemas.py`. Column names are Czech (matching psp.cz docs) for traceability.
 
-### DataService (`services/data_service.py`)
+### Dual-Process Architecture
 
-Central orchestrator. Initialized at startup via FastAPI lifespan, stored on `app.state.data`. Manages:
+The app runs as two separate FastAPI processes:
+- **`main_frontend.py`** — Public web app (port 8000). Uses `DataReader` for read-only data access with file-watcher for hot-reloading pipeline outputs.
+- **`main_backend.py`** — Admin dashboard (port 8001). Uses `DataService` (extends `DataReader`) with pipeline orchestration, daily refresh, and admin auth.
+
+### DataReader / DataService (`services/data_reader.py`, `services/data_service.py`)
+
+Two-tier data service:
+- **`DataReader`** — Read-only base class. Loads shared tables, per-period data, watches filesystem for pipeline outputs. Used by the frontend.
+- **`DataService`** — Extends `DataReader` with pipeline orchestration (tisk, amendment, daily refresh). Used by the backend.
+
+Both are initialized at startup via FastAPI lifespan, stored on `app.state.data`. Manages:
 - **Shared tables** (persons, MPs, organs, memberships) — loaded once across all periods
 - **Per-period data** (`PeriodData` dataclass) — voting records, MP votes, void votes, MP info, tisk (print) lookups
 - Periods are loaded on demand; `config.py` maps period numbers to years, organ IDs, and labels
+
+### Admin Dashboard (`admin/`)
+
+Password-protected admin interface (bcrypt auth + session cookies):
+- **`admin/routes.py`** — Dashboard, config editor, log streaming, pipeline control
+- **`admin/auth.py`** — `AdminAuthMiddleware` with IP whitelist + session management
+- **`admin/log_stream.py`** — Real-time log broadcasting via SSE
 
 ### i18n (`i18n/`)
 
@@ -92,8 +115,33 @@ Background pipeline for parliamentary print (tisk) enrichment. Runs as asyncio t
 - **`cache_manager.py`** — Loads/caches topic classifications, summaries, version diffs, histories from Parquet/JSON/text files
 - **`lookup_builder.py`** — Builds `(schuze, bod) → TiskInfo` lookup dicts linking votes to prints
 - **`text_service.py`** — Cache/retrieval layer for extracted PDF text
+- **`io/`** — Low-level I/O subpackage: `scraper.py` (tisk page scraping), `downloader.py` (PDF download), `extractor.py` (PDF text extraction), `history_scraper.py` (legislative history), `law_changes_scraper.py` (proposed law changes)
 
-Low-level I/O helpers remain in `data/`: `tisk_downloader.py`, `tisk_extractor.py`, `tisk_scraper.py`, `history_scraper.py`, `law_changes_scraper.py`.
+### Amendment Pipeline (`services/amendments/`)
+
+Background pipeline for third-reading amendment voting analysis. Runs as asyncio tasks, coordinated by `AmendmentPipelineService`:
+- **`pipeline.py`** — Orchestrator: identify → download PDFs → scrape steno → merge → resolve votes → resolve submitters → summarize → cache
+- **`pdf_parser.py`** — Downloads and parses amendment PDFs, extracts amendment number, proposed changes, justification
+- **`steno_scraper.py`** — Scrapes stenographic record pages from psp.cz for third-reading sessions
+- **`steno_parser.py`** — Parses steno HTML into structured data: speakers, speech text, amendment references
+- **`submitter_resolver.py`** — Resolves amendment submitter names to MP records, handles name variations
+- **`coalition_service.py`** — Analyzes voting coalitions: which parties voted together per amendment
+- **`cache_manager.py`** — Loads/saves amendment pipeline outputs as Parquet and JSON files
+
+### Law Service (`services/law_service.py`)
+
+Provides data for the laws browser. Loads tisk metadata and legislative histories, returns paginated/filterable bill lists.
+
+### Amendment Service (`services/amendment_service.py`)
+
+High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point).
+
+### LLM Integration (`services/llm/`)
+
+Unified LLM client supporting Ollama and OpenAI-compatible providers:
+- **`__init__.py`** — Public API re-exports (`LLMClient`, `create_llm_client`, `serialize_topics`, etc.)
+- **`prompts.py`** — All prompt templates, JSON schemas, and formatting constants (~50 constants)
+- **`client.py`** — `LLMClient` class, `create_llm_client()` factory, text sanitization/truncation helpers
 
 ### Feedback Service (`services/feedback_service.py`)
 
@@ -107,7 +155,13 @@ Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`.
 ### Web Layer
 
 - **`routes/pages.py`** — Full HTML page renders (Jinja2 templates) + `/set-lang/{lang}` endpoint
-- **`routes/api.py`** — HTMX partial endpoints returning HTML fragments
+- **`routes/voting.py`** — HTMX partials for loyalty, attendance, similarity, votes
+- **`routes/amendments.py`** — HTMX partials for amendment bills and coalitions
+- **`routes/laws.py`** — HTMX partials for laws browser and law detail
+- **`routes/tisk.py`** — HTMX partials for tisk text, evolution, related bills
+- **`routes/feedback.py`** — Feedback submission endpoint (POST /api/feedback)
+- **`routes/health.py`** — Health check, LLM health, LLM smoke test
+- **`routes/utils.py`** — Shared utilities (`validate_period`, `_safe_url`)
 - **`routes/charts.py`** — Seaborn/matplotlib chart endpoints returning PNG via `StreamingResponse`
 - Templates in `templates/`, partials in `templates/partials/`
 - All user-visible strings use `{{ _("key") }}` Jinja2 i18n calls

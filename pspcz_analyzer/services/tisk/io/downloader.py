@@ -12,7 +12,7 @@ from pspcz_analyzer.config import (
     PSP_REQUEST_DELAY,
     TISKY_PDF_DIR,
 )
-from pspcz_analyzer.data.tisk_scraper import get_best_pdf
+from pspcz_analyzer.services.tisk.io.scraper import get_best_pdf
 
 
 def download_tisk_pdf(

@@ -1,12 +1,18 @@
 """Data models for parliamentary prints (tisky) and period data."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import date
+from typing import TYPE_CHECKING
 
 import polars as pl
 
 from pspcz_analyzer.config import PERIOD_LABELS, PERIOD_YEARS
-from pspcz_analyzer.data.history_scraper import TiskHistory
+
+if TYPE_CHECKING:
+    from pspcz_analyzer.models.amendment_models import BillAmendmentData
+    from pspcz_analyzer.services.tisk.io.history_scraper import TiskHistory
 
 
 @dataclass
@@ -65,6 +71,50 @@ class PeriodData:
     mp_info: pl.DataFrame
     # Lookup: (schuze_num, bod_num) -> TiskInfo
     tisk_lookup: dict[tuple[int, int], TiskInfo] = field(default_factory=dict)
+    # Amendment data: (schuze, bod) -> BillAmendmentData
+    amendment_data: dict[tuple[int, int], BillAmendmentData] = field(default_factory=dict)
+    # Reverse index: id_hlasovani -> (schuze, bod, letter, is_final_vote)
+    _amendment_vote_index: dict[int, tuple[int, int, str, bool]] = field(
+        default_factory=dict, repr=False
+    )
+
+    def get_amendments(self, schuze: int, bod: int) -> BillAmendmentData | None:
+        """Get amendment data for a vote given its session and agenda item."""
+        return self.amendment_data.get((schuze, bod))
+
+    def build_amendment_vote_index(self) -> None:
+        """Build reverse index mapping id_hlasovani to amendment context.
+
+        Should be called whenever amendment_data is loaded or reloaded.
+        """
+        self._amendment_vote_index.clear()
+        for (schuze, bod), bill in self.amendment_data.items():
+            for a in bill.amendments:
+                if a.id_hlasovani is not None:
+                    self._amendment_vote_index[a.id_hlasovani] = (
+                        schuze,
+                        bod,
+                        a.letter,
+                        False,
+                    )
+            if bill.final_vote and bill.final_vote.id_hlasovani is not None:
+                self._amendment_vote_index[bill.final_vote.id_hlasovani] = (
+                    schuze,
+                    bod,
+                    "",
+                    True,
+                )
+
+    def get_amendment_for_vote(self, vote_id: int) -> tuple[int, int, str, bool] | None:
+        """Look up amendment context for a vote ID.
+
+        Args:
+            vote_id: The id_hlasovani to look up.
+
+        Returns:
+            Tuple of (schuze, bod, letter, is_final_vote) or None.
+        """
+        return self._amendment_vote_index.get(vote_id)
 
     @property
     def stats(self) -> dict:

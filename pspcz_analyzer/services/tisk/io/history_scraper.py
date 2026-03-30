@@ -84,6 +84,8 @@ class TiskHistory:
     law_number: str | None = None
     scraped_at: str = ""
     law_changes: list[dict] = field(default_factory=list)
+    amendment_tisk_ct1: int | None = None
+    amendment_tisk_idd: int | None = None
 
 
 def _extract_first_date(text: str) -> str | None:
@@ -272,6 +274,67 @@ def _extract_law_number(text: str) -> str | None:
     return None
 
 
+_AMENDMENT_TISK_RE = re.compile(
+    r"[Pp]odan[ée]\s+pozm[ěe][ňn]ovac[ií]\s+n[áa]vrhy\s+zpracov[áa]ny\s+"
+    r"jako\s+tisk\s+(\d+)\s*/\s*(\d+)",
+)
+
+
+def _extract_amendment_tisk_reference(
+    page_text: str,
+) -> tuple[int | None, int | None]:
+    """Extract amendment sub-tisk CT1 reference from history page text.
+
+    Looks for patterns like "Podané pozměňovací návrhy zpracovány jako tisk 410/4".
+
+    Args:
+        page_text: Full text content of the history page.
+
+    Returns:
+        (ct1, idd) tuple. ct1 is the sub-tisk number, idd is None initially
+        (resolved later via scraping).
+    """
+    m = _AMENDMENT_TISK_RE.search(page_text)
+    if not m:
+        return None, None
+    ct1 = int(m.group(2))
+    return ct1, None
+
+
+def _resolve_amendment_tisk_idd(
+    period: int,
+    ct: int,
+    ct1: int,
+) -> int | None:
+    """Resolve the idd for a known amendment sub-tisk CT1.
+
+    Scrapes the sub-tisk page to find the downloadable PDF idd.
+
+    Args:
+        period: Electoral period number.
+        ct: Parent tisk number.
+        ct1: Sub-tisk version number.
+
+    Returns:
+        The idd for PDF download, or None if not found.
+    """
+    from pspcz_analyzer.services.tisk.io import scrape_all_subtisk_documents
+
+    try:
+        versions = scrape_all_subtisk_documents(period, ct, max_ct1=ct1 + 1)
+        for v in versions:
+            if v.ct1 == ct1 and v.idd is not None:
+                return v.idd
+    except Exception:
+        logger.warning(
+            "Failed to resolve idd for tisk {}/{}/{}",
+            period,
+            ct,
+            ct1,
+        )
+    return None
+
+
 def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
     """Scrape the legislative history page for a tisk.
 
@@ -301,6 +364,11 @@ def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
     law_number = _extract_law_number(full_text)
     status = _determine_status(stages, full_text)
 
+    # Extract amendment sub-tisk reference (e.g. "tisk 410/4")
+    amendment_ct1, amendment_idd = _extract_amendment_tisk_reference(full_text)
+    if amendment_ct1 is not None and amendment_idd is None:
+        amendment_idd = _resolve_amendment_tisk_idd(period, ct, amendment_ct1)
+
     return TiskHistory(
         ct=ct,
         period=period,
@@ -311,6 +379,8 @@ def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
         current_status=status,
         law_number=law_number,
         scraped_at=datetime.now(UTC).isoformat(),
+        amendment_tisk_ct1=amendment_ct1,
+        amendment_tisk_idd=amendment_idd,
     )
 
 
@@ -333,6 +403,8 @@ def history_from_dict(d: dict) -> TiskHistory:
         law_number=d.get("law_number"),
         scraped_at=d.get("scraped_at", ""),
         law_changes=d.get("law_changes", []),
+        amendment_tisk_ct1=d.get("amendment_tisk_ct1"),
+        amendment_tisk_idd=d.get("amendment_tisk_idd"),
     )
 
 

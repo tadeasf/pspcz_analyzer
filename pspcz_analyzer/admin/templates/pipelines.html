@@ -1,0 +1,135 @@
+{% extends "admin_base.html" %}
+{% block title %}Pipelines{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Pipeline Management</h1>
+    <p>Run data processing and AI pipelines</p>
+</div>
+
+<!-- Pipeline status (auto-refreshing HTML partial) -->
+<div class="card mb-2">
+    <div class="card-header">
+        Pipeline Status
+        <span class="text-sm text-muted">auto-refreshes every 3s</span>
+    </div>
+    <div class="card-body" id="pipeline-status-area"
+         hx-get="/admin/partials/pipeline-status"
+         hx-trigger="every 3s"
+         hx-swap="innerHTML">
+        {% if pipeline_running and pipeline_info %}
+            <div class="flex items-center gap-1">
+                <span class="badge badge-running"><span class="pulse-dot"></span> Running</span>
+                <span class="text-sm">{{ pipeline_info.pipeline_id }}</span>
+            </div>
+        {% else %}
+            <span class="badge badge-idle">No pipeline running</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Start Pipeline -->
+<div class="card mb-2">
+    <div class="card-header">Start Pipeline</div>
+    <div class="card-body">
+        <form method="post" hx-post="/admin/api/pipeline/start" hx-swap="none"
+              hx-on::after-request="if(event.detail.successful) showToast('Pipeline started', 'success'); else showToast('Failed to start pipeline', 'error');">
+            <div class="flex gap-2 items-end flex-wrap">
+                <div class="form-group" style="min-width: 260px;">
+                    <label for="pipeline_type">Pipeline</label>
+                    <select name="pipeline_type" id="pipeline_type" required>
+                        <optgroup label="Tisk Data (no AI)">
+                            <option value="tisk_download">Download All (PDFs, histories, versions, law changes)</option>
+                        </optgroup>
+                        <optgroup label="Tisk AI">
+                            <option value="tisk_classify">Classify + Summarize (needs prior download)</option>
+                            <option value="tisk_diffs">Version Diff Analysis (needs prior download)</option>
+                        </optgroup>
+                        <optgroup label="Amendments">
+                            <option value="amendment_parse">Parse Steno Records (no AI)</option>
+                            <option value="amendment_summarize">Summarize (needs prior parse)</option>
+                        </optgroup>
+                        <optgroup label="Complete">
+                            <option value="full">Full Pipeline (everything)</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="form-group" style="min-width: 200px;">
+                    <label for="period">Period</label>
+                    <select name="period" id="period" required>
+                        {% for p in available_periods %}
+                        <option value="{{ p.number }}">{{ p.number }} — {{ p.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Start Pipeline</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Live logs -->
+<div class="card mb-2">
+    <div class="card-header">
+        Pipeline Logs
+        <button class="btn btn-sm btn-secondary" onclick="document.getElementById('log-viewer').innerHTML=''">Clear</button>
+    </div>
+    <div class="log-viewer" id="log-viewer"
+         hx-ext="sse"
+         sse-connect="/admin/api/pipeline/logs"
+         sse-swap="message"
+         hx-swap="beforeend">
+    </div>
+</div>
+
+<!-- Recent history -->
+<div class="card">
+    <div class="card-header">Recent Pipeline Runs</div>
+    <div class="card-body" style="padding: 0;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Period</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in recent_runs %}
+                <tr>
+                    <td>{{ pipeline_type_labels.get(run.pipeline_type, run.pipeline_type) }}</td>
+                    <td>{{ run.period }}</td>
+                    <td class="font-mono">{{ run.duration_s }}s</td>
+                    <td>
+                        {% if run.status == 'success' %}
+                            <span class="badge badge-success">Success</span>
+                        {% elif run.status == 'error' %}
+                            <span class="badge badge-error">Error</span>
+                        {% else %}
+                            <span class="badge badge-idle">{{ run.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-sm text-muted">{{ run.error[:80] if run.error else '' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not recent_runs %}
+                <tr><td colspan="5" class="text-muted" style="text-align:center; padding:1.5rem;">No pipeline runs recorded yet.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// Auto-scroll log viewer to bottom
+const viewer = document.getElementById('log-viewer');
+const observer = new MutationObserver(() => {
+    viewer.scrollTop = viewer.scrollHeight;
+});
+observer.observe(viewer, { childList: true, subtree: true });
+</script>
+{% endblock %}

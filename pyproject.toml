@@ -21,6 +21,8 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "nh3>=0.3.3",
     "ruff>=0.15.1",
+    "selectolax>=0.4.6",
+    "bcrypt>=5.0.0",
 ]
 
 [project.optional-dependencies]
@@ -98,7 +100,7 @@ omit = ["pspcz_analyzer/main.py"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 0
+fail_under = 40
 
 [tool.bumpversion]
 current_version = "0.1.0"

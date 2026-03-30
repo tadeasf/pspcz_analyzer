@@ -5,6 +5,23 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 
+class TiskMode(StrEnum):
+    """Execution modes for the tisk pipeline."""
+
+    DOWNLOAD = "download"  # Stages 1,2,5,6 — scrape/download only, no AI
+    CLASSIFY = "classify"  # Stages 3,4 — AI classify+summarize (needs cached text)
+    DIFFS = "diffs"  # Stage 7 — AI version diff analysis (needs cached versions)
+    FULL = "full"  # All stages (current behavior)
+
+
+class AmendmentMode(StrEnum):
+    """Execution modes for the amendment pipeline."""
+
+    PARSE = "parse"  # Stages 1-5 — identify, download steno, parse, resolve, PDF extract
+    SUMMARIZE = "summarize"  # Stage 6 — LLM summarization (needs cached parquet)
+    FULL = "full"  # All stages (current behavior)
+
+
 class PipelineStage(StrEnum):
     """Stages of the per-period tisk pipeline."""
 
@@ -28,6 +45,7 @@ class PeriodStatus(StrEnum):
     COMPLETED = "completed"
     SKIPPED = "skipped"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 @dataclass
@@ -124,8 +142,9 @@ class PipelineProgress:
 
     @property
     def periods_completed(self) -> int:
-        """Number of periods that have finished processing."""
-        return sum(1 for pp in self.periods.values() if pp.status == PeriodStatus.COMPLETED)
+        """Number of periods that have finished processing (completed, cancelled, or skipped)."""
+        done_statuses = (PeriodStatus.COMPLETED, PeriodStatus.CANCELLED, PeriodStatus.SKIPPED)
+        return sum(1 for pp in self.periods.values() if pp.status in done_statuses)
 
     @property
     def periods_total(self) -> int:

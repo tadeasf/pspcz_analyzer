@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}Admin{% endblock %} — PSP.cz Analyzer</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/sse.js"></script>
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 14px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #212529;
+            background: #f5f7fa;
+            display: flex;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 230px;
+            background: #003168;
+            color: #fff;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .sidebar-brand {
+            padding: 1.25rem 1rem;
+            font-size: 1rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            letter-spacing: 0.02em;
+        }
+        .sidebar-brand small {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 400;
+            opacity: 0.7;
+            margin-top: 0.15rem;
+        }
+        .sidebar-nav { list-style: none; padding: 0.75rem 0; flex: 1; }
+        .sidebar-nav li { margin: 0; }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 1.25rem;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: #fff; text-decoration: none; }
+        .sidebar-nav a.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 600; }
+        .sidebar-nav .nav-icon { width: 18px; text-align: center; font-size: 1rem; }
+        .sidebar-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+        .sidebar-footer strong { color: rgba(255,255,255,0.9); }
+        .sidebar-footer form { margin-top: 0.5rem; }
+
+        /* ── Main content ── */
+        .main-content { flex: 1; padding: 1.5rem 2rem; overflow-y: auto; max-width: 1200px; }
+        .page-header { margin-bottom: 1.5rem; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; color: #003168; margin-bottom: 0.25rem; }
+        .page-header p { color: #6c757d; font-size: 0.9rem; }
+
+        /* ── Cards ── */
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            margin-bottom: 1.25rem;
+        }
+        .card-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #003168;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .card-body { padding: 1rem; }
+
+        /* ── Stat cards ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .stat-card .stat-label { font-size: 0.75rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+        .stat-card .stat-value { font-size: 1.5rem; font-weight: 700; color: #003168; }
+        .stat-card .stat-sub { font-size: 0.8rem; color: #6c757d; margin-top: 0.15rem; }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-idle { background: #e9ecef; color: #6c757d; }
+        .badge-running { background: #fff3e0; color: #e65100; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-error { background: #ffebee; color: #c62828; }
+        .badge-info { background: #e8f0fe; color: #1a73e8; }
+        .badge-warning { background: #fff8e1; color: #f57f17; }
+
+        /* Pulse animation for running */
+        .pulse-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #e65100;
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* ── Tables ── */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        thead th {
+            background: #003168;
+            color: #fff;
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        thead th:first-child { border-radius: 4px 0 0 0; }
+        thead th:last-child { border-radius: 0 4px 0 0; }
+        tbody td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #e9ecef; }
+        tbody tr:nth-child(even) { background: #f8f9fa; }
+        tbody tr:hover { background: #eef2f7; }
+
+        /* ── Forms ── */
+        label { display: block; font-size: 0.8rem; font-weight: 600; color: #495057; margin-bottom: 0.25rem; }
+        input[type="text"], input[type="password"], input[type="number"], input[type="email"],
+        select, textarea {
+            width: 100%;
+            padding: 0.5rem 0.65rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            color: #212529;
+            background: #fff;
+            transition: border-color 0.15s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.15);
+        }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+        .form-group { margin-bottom: 0.75rem; }
+
+        /* Checkbox */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 400;
+            cursor: pointer;
+        }
+        .checkbox-label input[type="checkbox"] { width: auto; margin: 0; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s, opacity 0.15s;
+            text-decoration: none;
+        }
+        .btn:hover { opacity: 0.9; text-decoration: none; }
+        .btn-primary { background: #003168; color: #fff; }
+        .btn-primary:hover { background: #002450; }
+        .btn-secondary { background: #e9ecef; color: #495057; }
+        .btn-secondary:hover { background: #dee2e6; }
+        .btn-danger { background: #c62828; color: #fff; }
+        .btn-danger:hover { background: #b71c1c; }
+        .btn-outline { background: transparent; border: 1px solid #003168; color: #003168; }
+        .btn-outline:hover { background: #003168; color: #fff; }
+        .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+
+        /* ── Progress bars ── */
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.35rem 0;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066cc, #003168);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        /* ── Log viewer ── */
+        .log-viewer {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+            font-size: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0 0 6px 6px;
+            max-height: 350px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+        .log-viewer .log-line {
+            padding: 0.1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            word-break: break-all;
+        }
+        .log-viewer:empty::before {
+            content: "Waiting for log messages...";
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        /* ── Toast notifications ── */
+        .toast {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.65rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease, fadeOut 0.5s ease 2.5s forwards;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .toast-success { background: #2e7d32; color: #fff; }
+        .toast-error { background: #c62828; color: #fff; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+        /* ── Utility ── */
+        .flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .items-end { align-items: flex-end; }
+        .items-center { align-items: center; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .text-muted { color: #6c757d; }
+        .text-sm { font-size: 0.8rem; }
+        .font-mono { font-family: "JetBrains Mono", "Fira Code", monospace; }
+
+        /* ── Optgroup styling ── */
+        optgroup { font-weight: 700; color: #003168; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            PSP.cz Analyzer
+            <small>Admin Dashboard</small>
+        </div>
+        <ul class="sidebar-nav">
+            <li>
+                <a href="/admin/" {% if request.url.path == '/admin/' %}class="active"{% endif %}>
+                    <span class="nav-icon">&#9632;</span> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="/admin/pipelines" {% if '/pipelines' in request.url.path %}class="active"{% endif %}>
+                    <span class="nav-icon">&#9654;</span> Pipelines
+                </a>
+            </li>
+            <li>
+                <a href="/admin/config" {% if '/config' in request.url.path %}class="active"{% endif %}>
+                    <span class="nav-icon">&#9881;</span> Configuration
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            {% if admin_user %}
+            Logged in as <strong>{{ admin_user }}</strong>
+            <form method="post" action="/admin/logout">
+                <button type="submit" class="btn btn-sm btn-secondary" style="color:#fff; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2);">
+                    Logout
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </aside>
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    <script>
+    // Toast helper
+    function showToast(message, type) {
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + (type || 'success');
+        t.textContent = message;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3500);
+    }
+    </script>
+</body>
+</html>

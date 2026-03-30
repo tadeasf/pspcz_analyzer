@@ -20,6 +20,9 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Feedback** — user feedback form on vote detail pages, submitted as GitHub Issues
 - **Rate Limiting & Security** — per-endpoint rate limits (slowapi), CSP/HSTS/Permissions-Policy headers, CSRF protection, and XSS sanitization (nh3)
 - **Legislative Evolution** — bill version diffs, law changes, and related bills discovery
+- **Laws Browser** — searchable list of all parliamentary bills with detail pages showing sponsors, status, and legislative history
+- **Amendment Voting** — third-reading amendment analysis: per-amendment vote results, coalition breakdowns, and AI summaries
+- **Admin Dashboard** — password-protected backend (port 8001) for pipeline management, runtime config, log streaming, and system monitoring
 - **Docker** — containerized deployment with docker-compose
 - **Documentation** — project docs on [GitHub](https://tadeasf.github.io/pspcz_analyzer/)
 
@@ -36,8 +39,11 @@ uv sync
 # (Optional) Copy and edit environment variables
 cp .env.example .env
 
-# Run the dev server (with hot reload)
-uv run python -m pspcz_analyzer.main
+# Run the frontend (public web app)
+uv run python -m pspcz_analyzer.main_frontend
+
+# (Optional) Run the admin backend on port 8001
+uv run python -m pspcz_analyzer.main_backend
 ```
 
 The app starts on `http://localhost:8000`. On first launch it downloads ~50 MB of open data from psp.cz and caches it locally as Parquet files.
@@ -66,6 +72,13 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `GITHUB_FEEDBACK_TOKEN`   | _(empty)_                     | GitHub PAT with `public_repo` scope                            |
 | `GITHUB_FEEDBACK_REPO`    | `tadeasf/pspcz_analyzer`      | Repository for feedback issues                                 |
 | `GITHUB_FEEDBACK_LABELS`  | `user-feedback`               | Labels applied to feedback issues                              |
+| `LLM_STRUCTURED_OUTPUT`   | `1`                           | JSON schema structured output (`0` = free-text regex fallback) |
+| `LLM_EMPTY_RETRIES`       | `2`                           | Extra LLM attempts on empty/unparseable free-text results      |
+| `ADMIN_PORT`              | `8001`                        | Port for the admin backend server                              |
+| `ADMIN_USERNAME`          | `admin`                       | Admin dashboard login username                                 |
+| `ADMIN_PASSWORD_HASH`     | _(empty)_                     | bcrypt hash of the admin password                              |
+| `ADMIN_SESSION_SECRET`    | _(auto-generated)_            | HMAC secret for signing admin session cookies                  |
+| `ADMIN_ALLOWED_IPS`       | `127.0.0.1,::1,172.16.0.0/12`| IP/CIDR whitelist for admin access                             |
 
 ## Docker
 
@@ -174,14 +187,37 @@ On startup, the app launches a background pipeline that enriches parliamentary p
 
 This data powers the vote detail pages (topic tags, AI summaries, legislative timelines, and tisk transcriptions).
 
+## Amendment Pipeline
+
+The amendment pipeline enriches third-reading votes with detailed amendment data:
+
+1. **Identify** third-reading vote points from tisk legislative histories
+2. **Download** amendment PDFs from psp.cz and parse amendment text
+3. **Scrape** stenographic records for spoken-word context
+4. **Merge** PDF and steno data, resolve vote IDs and submitters
+5. **Summarize** each amendment with bilingual AI summaries
+6. **Analyze** coalition voting patterns (who voted together)
+
+This data powers the `/amendments` pages with per-amendment vote breakdowns and coalition analysis.
+
+## Admin Dashboard
+
+A password-protected admin backend runs on a separate port (default 8001):
+
+- **Pipeline Management** — start/stop/monitor tisk and amendment pipelines per period
+- **Runtime Config** — edit LLM provider, model, and processing settings without restart
+- **Log Streaming** — real-time SSE-based log viewer
+- **System Status** — cache size, disk space, loaded periods, pipeline history
+- **Authentication** — bcrypt password + IP whitelist + session cookies
+
 ## Documentation
 
 | Document                           | Contents                                                                               |
 | ---------------------------------- | -------------------------------------------------------------------------------------- |
-| [Routes](docs/routes.md)           | All HTTP endpoints — pages, API partials, chart images, health check, OpenAPI          |
-| [Services](docs/services.md)       | Data pipeline, analysis services, tisk pipeline, Ollama integration                    |
-| [Templates](docs/templates.md)     | Frontend structure, HTMX patterns, i18n, vote detail, skeleton loading, styling        |
-| [Data Model](docs/data-model.md)   | Electoral periods, UNL format, table schemas, vote codes, tisk data, Ollama/env config |
+| [Routes](docs/routes.md)           | All HTTP endpoints — pages, API partials, chart images, laws/amendments, admin routes  |
+| [Services](docs/services.md)       | Data pipeline, analysis services, tisk pipeline, amendment pipeline, law service, LLM integration, admin |
+| [Templates](docs/templates.md)     | Frontend structure, HTMX patterns, i18n, vote detail, laws, amendments, admin templates |
+| [Data Model](docs/data-model.md)   | Electoral periods, UNL format, table schemas, vote codes, tisk data, amendment data, configuration |
 | [Testing & CI/CD](docs/testing.md) | Test suite structure, fixtures, linting config, GitHub Actions workflows, contributing |
 
 ## License

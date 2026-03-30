@@ -1,6 +1,7 @@
 """Download tisk PDFs and extract text from them."""
 
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 import httpx
@@ -13,7 +14,7 @@ from pspcz_analyzer.config import (
     TISKY_PDF_DIR,
     TISKY_TEXT_DIR,
 )
-from pspcz_analyzer.data.tisk_scraper import get_best_pdf
+from pspcz_analyzer.services.tisk.io import get_best_pdf
 
 pymupdf.TOOLS.mupdf_display_warnings(False)
 pymupdf.TOOLS.mupdf_display_errors(False)
@@ -73,6 +74,8 @@ def process_period_sync(
     ct_numbers: list[int],
     cache_dir: Path,
     force: bool = False,
+    cancel_check: Callable[[], None] | None = None,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> tuple[dict[int, Path], dict[int, Path]]:
     """Synchronous pipeline: scrape -> download -> extract for all ct numbers.
 
@@ -83,6 +86,8 @@ def process_period_sync(
     total = len(ct_numbers)
 
     for i, ct in enumerate(ct_numbers, 1):
+        if cancel_check:
+            cancel_check()
         # Check caches first (fast path — no HTTP needed)
         pdf_dir = cache_dir / TISKY_PDF_DIR / str(period)
         text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
@@ -93,6 +98,8 @@ def process_period_sync(
             text_paths[ct] = text_cached
             if pdf_cached.exists():
                 pdf_paths[ct] = pdf_cached
+            if progress_callback:
+                progress_callback(i, total)
             continue
 
         if pdf_cached.exists() and not force:
@@ -101,6 +108,8 @@ def process_period_sync(
             txt = extract_one(pdf_cached, period, ct, cache_dir, force)
             if txt:
                 text_paths[ct] = txt
+            if progress_callback:
+                progress_callback(i, total)
             continue
 
         # Need to scrape + download
@@ -110,17 +119,24 @@ def process_period_sync(
         doc = get_best_pdf(period, ct)
         if doc is None:
             time.sleep(PSP_REQUEST_DELAY)
+            if progress_callback:
+                progress_callback(i, total)
             continue
 
         pdf = download_one(period, ct, doc.idd, cache_dir, force)
         time.sleep(PSP_REQUEST_DELAY)
 
         if pdf is None:
+            if progress_callback:
+                progress_callback(i, total)
             continue
         pdf_paths[ct] = pdf
 
         txt = extract_one(pdf, period, ct, cache_dir, force)
         if txt:
             text_paths[ct] = txt
+
+        if progress_callback:
+            progress_callback(i, total)
 
     return pdf_paths, text_paths

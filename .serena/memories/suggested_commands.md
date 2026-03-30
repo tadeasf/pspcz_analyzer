@@ -2,7 +2,8 @@
 
 ## Development
 - `uv sync` — Install/sync dependencies
-- `uv run python -m pspcz_analyzer.main` — Run dev server (hot reload, 0.0.0.0:8000)
+- `uv run python -m pspcz_analyzer.main_frontend` — Run frontend (hot reload, 0.0.0.0:8000)
+- `uv run python -m pspcz_analyzer.main_backend` — Run backend admin (0.0.0.0:8001)
 - `uv add <package>` — Add a dependency
 - `uv run fastapi run pspcz_analyzer/main.py --host 0.0.0.0 --port 8000` — Production mode
 

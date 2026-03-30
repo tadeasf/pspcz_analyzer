@@ -14,10 +14,14 @@ from pspcz_analyzer.config import (
     TISKY_META_DIR,
     TISKY_TEXT_DIR,
     TISKY_VERSION_DIFFS_DIR,
+    VERSION_DIFF_MAX_PAIRS,
 )
-from pspcz_analyzer.data.tisk_downloader import download_subtisk_pdf
-from pspcz_analyzer.data.tisk_scraper import SubTiskVersion, scrape_all_subtisk_documents
-from pspcz_analyzer.services.llm_service import LLMClient, create_llm_client
+from pspcz_analyzer.services.llm import LLMClient, create_llm_client
+from pspcz_analyzer.services.tisk.io import (
+    SubTiskVersion,
+    download_subtisk_pdf,
+    scrape_all_subtisk_documents,
+)
 
 pymupdf.TOOLS.mupdf_display_warnings(False)
 pymupdf.TOOLS.mupdf_display_errors(False)
@@ -27,6 +31,8 @@ def download_subtisk_versions_sync(
     period: int,
     ct_numbers: list[int],
     cache_dir: Path,
+    cancel_check: Callable[[], None] | None = None,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> dict[int, list[dict]]:
     """Download all sub-tisk versions (CT1=0..N) for tisky in a period.
 
@@ -42,6 +48,8 @@ def download_subtisk_versions_sync(
     scraped = 0
 
     for i, ct in enumerate(ct_numbers, 1):
+        if cancel_check:
+            cancel_check()
         scan_cache = scan_dir / f"{ct}.json"
 
         # Load from JSON cache if available
@@ -50,6 +58,8 @@ def download_subtisk_versions_sync(
                 data = json.loads(scan_cache.read_text(encoding="utf-8"))
                 if data:  # non-empty means this ct has sub-versions
                     result[ct] = data
+                if progress_callback:
+                    progress_callback(i, total)
                 continue
             except Exception:
                 logger.debug("Bad cache for ct={}, re-scraping", ct)
@@ -70,6 +80,8 @@ def download_subtisk_versions_sync(
             # Only CT1=0 or nothing — save empty list to cache so we don't re-scrape
             scan_cache.write_text("[]", encoding="utf-8")
             time.sleep(PSP_REQUEST_DELAY)
+            if progress_callback:
+                progress_callback(i, total)
             continue
 
         text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
@@ -94,6 +106,9 @@ def download_subtisk_versions_sync(
         )
         if version_dicts:
             result[ct] = version_dicts
+
+        if progress_callback:
+            progress_callback(i, total)
 
     logger.info(
         "[tisk pipeline] Sub-tisk versions for period {}: {} cached, {} new, {} with multiple versions",
@@ -133,6 +148,7 @@ def analyze_version_diffs_sync(
     ct_numbers: list[int],
     cache_dir: Path,
     progress_callback: Callable[[int, int], None] | None = None,
+    cancel_check: Callable[[], None] | None = None,
 ) -> tuple[dict[str, str], dict[str, str]]:
     """Run LLM comparison on consecutive sub-tisk versions.
 
@@ -156,6 +172,9 @@ def analyze_version_diffs_sync(
         versions = _collect_version_texts(text_dir, ct)
         if len(versions) < 2:
             continue
+        # Cap: keep only the N+1 most recent versions (= N pairs)
+        if VERSION_DIFF_MAX_PAIRS > 0 and len(versions) > VERSION_DIFF_MAX_PAIRS + 1:
+            versions = versions[-(VERSION_DIFF_MAX_PAIRS + 1) :]
         ct_versions.append((ct, versions))
         total_pairs += len(versions) - 1
 
@@ -169,6 +188,8 @@ def analyze_version_diffs_sync(
 
     for ct, versions in ct_versions:
         for j in range(len(versions) - 1):
+            if cancel_check:
+                cancel_check()
             ct1_old, path_old = versions[j]
             ct1_new, path_new = versions[j + 1]
             diff_key = f"{ct}_{ct1_new}"

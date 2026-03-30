@@ -106,7 +106,7 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:8b")
 LLM_STRUCTURED_OUTPUT = (
     os.environ.get("LLM_STRUCTURED_OUTPUT", os.environ.get("OLLAMA_STRUCTURED_OUTPUT", "1")) == "1"
 )
-TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "1") == "1"
+TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "0") == "1"
 LLM_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 LLM_HEALTH_TIMEOUT = 5.0  # connectivity check
 LLM_EMPTY_RETRIES = int(os.environ.get("LLM_EMPTY_RETRIES", "2"))
@@ -119,6 +119,9 @@ LLM_VERBATIM_CHARS = int(
 LLM_MAX_COMPARISON_CHARS = int(
     os.environ.get("LLM_MAX_COMPARISON_CHARS", "120000")
 )  # per-text limit for version comparisons (~40k tok each)
+
+# Version diff cost control — max pairs to compare per tisk (0 = all)
+VERSION_DIFF_MAX_PAIRS = int(os.environ.get("VERSION_DIFF_MAX_PAIRS", "2"))
 
 # OpenAI-compatible API integration (OpenAI, Azure OpenAI, Together, Groq, vLLM, etc.)
 # Used when LLM_PROVIDER=openai
@@ -133,8 +136,24 @@ DAILY_REFRESH_HOUR = int(os.environ.get("DAILY_REFRESH_HOUR", "3"))
 # Server port (overridable for Docker and deployment)
 PORT = int(os.environ.get("PORT", "8000"))
 
+# Amendment voting analysis — steno record parsing
+AMENDMENTS_ENABLED = os.environ.get("AMENDMENTS_ENABLED", "1") == "1"
+AMENDMENT_CACHE_SUBDIR = "amendments"
+
+# Dev pipeline skip flags — skip expensive stages during development
+DEV_SKIP_CLASSIFY_AND_SUMMARIZE = os.environ.get("DEV_SKIP_CLASSIFY_AND_SUMMARIZE", "0") == "1"
+DEV_SKIP_VERSION_DIFFS = os.environ.get("DEV_SKIP_VERSION_DIFFS", "0") == "1"
+DEV_SKIP_AMENDMENTS = os.environ.get("DEV_SKIP_AMENDMENTS", "0") == "1"
+
 # GitHub feedback — user feedback creates GitHub issues
 GITHUB_FEEDBACK_ENABLED = os.environ.get("GITHUB_FEEDBACK_ENABLED", "0") == "1"
 GITHUB_FEEDBACK_TOKEN = os.environ.get("GITHUB_FEEDBACK_TOKEN", "")
 GITHUB_FEEDBACK_REPO = os.environ.get("GITHUB_FEEDBACK_REPO", "tadeasf/pspcz_analyzer")
 GITHUB_FEEDBACK_LABELS = os.environ.get("GITHUB_FEEDBACK_LABELS", "user-feedback").split(",")
+
+# Admin dashboard — backend-only authentication and access control
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+ADMIN_ALLOWED_IPS = os.environ.get("ADMIN_ALLOWED_IPS", "127.0.0.1,::1,172.16.0.0/12")
+ADMIN_SESSION_SECRET = os.environ.get("ADMIN_SESSION_SECRET", "")
+ADMIN_PORT = int(os.environ.get("ADMIN_PORT", "8001"))

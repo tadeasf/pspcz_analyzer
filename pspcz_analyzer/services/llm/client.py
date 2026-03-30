@@ -1,16 +1,4 @@
-"""LLM integration for AI topic classification and tisk summarization.
-
-Unified LLMClient supports two providers:
-- ``ollama`` (default) — auto-detects native /api/generate vs
-  OpenAI-compatible /chat/completions (e.g. vLLM, llama-server, LiteLLM proxy)
-- ``openai`` — uses /chat/completions (OpenAI, Azure, Together, Groq, vLLM)
-
-When the configured LLM is available, provides:
-- Free-form topic classification (1-3 Czech topic labels per tisk)
-- Czech-language summaries explaining what each proposed law changes
-
-Falls back gracefully to keyword classification when LLM is unavailable.
-"""
+"""LLM client implementation — LLMClient class."""
 
 from __future__ import annotations
 
@@ -26,603 +14,79 @@ from pspcz_analyzer.config import (
     LLM_EMPTY_RETRIES,
     LLM_HEALTH_TIMEOUT,
     LLM_MAX_COMPARISON_CHARS,
-    LLM_MAX_TEXT_CHARS,
-    LLM_PROVIDER,
-    LLM_STRUCTURED_OUTPUT,
     LLM_TIMEOUT,
-    LLM_VERBATIM_CHARS,
-    OLLAMA_API_KEY,
-    OLLAMA_BASE_URL,
-    OLLAMA_MODEL,
-    OPENAI_API_KEY,
-    OPENAI_BASE_URL,
-    OPENAI_MODEL,
-    TISK_SHORTENER,
 )
-
-# ── Shared formatting / language enforcement constants ────────────────────
-
-_LANG_CS = " VŽDY odpovídej POUZE v češtině. Nikdy nepoužívej angličtinu."
-_LANG_EN = " ALWAYS respond ONLY in English. Never use Czech or any other language."
-
-_FORMAT_CS = (
-    " Formátuj výstup jako validní markdown. Nepoužívej emoji. "
-    "Tabulky piš ve formátu markdown. Používej **tučné** pro klíčové pojmy, "
-    "odrážky pro seznamy. Nepoužívej HTML tagy."
+from pspcz_analyzer.services.llm.helpers import (
+    _THINK_RE,
+    _sanitize_llm_input,
+    truncate_legislative_text,
 )
-_FORMAT_EN = (
-    " Format output as valid markdown. No emojis. "
-    "Use markdown tables. Use **bold** for key terms, bullet points for lists. "
-    "No HTML tags."
+from pspcz_analyzer.services.llm.parsers import (
+    _format_amendments_list,
+    _parse_amendment_summaries_json,
+    _parse_amendment_summaries_text,
+    _parse_consolidation_json,
+    _render_comparison_markdown_cs,
+    _render_comparison_markdown_en,
+    _render_summary_markdown_cs,
+    _render_summary_markdown_en,
 )
-
-# ── Czech system prompts ─────────────────────────────────────────────────
-
-_CLASSIFICATION_SYSTEM = (
-    "Jsi analytik českého parlamentu. Analyzuješ parlamentní tisky a přiřazuješ jim tematické štítky. "
-    "Odpověz POUZE ve formátu 'TOPICS: téma1, téma2, téma3' kde témata jsou 1–3 krátké české názvy "
-    "tematických oblastí (např. 'Daně a poplatky', 'Sociální pojištění', 'Trestní právo'). "
-    "Používej stručné a konkrétní názvy témat. Žádný další text." + _LANG_CS + _FORMAT_CS
+from pspcz_analyzer.services.llm.prompts import (
+    _AMENDMENT_SUMMARIES_PROMPT_CS,
+    _AMENDMENT_SUMMARIES_PROMPT_EN,
+    _AMENDMENT_SUMMARIES_SCHEMA,
+    _AMENDMENT_SUMMARIES_SYSTEM_CS,
+    _AMENDMENT_SUMMARIES_SYSTEM_EN,
+    _CLASSIFICATION_PROMPT_TEMPLATE,
+    _CLASSIFICATION_PROMPT_TEMPLATE_EN,
+    _CLASSIFICATION_SCHEMA,
+    _CLASSIFICATION_SYSTEM,
+    _CLASSIFICATION_SYSTEM_EN,
+    _CLASSIFY_AND_SUMMARIZE_SCHEMA,
+    _COMBINED_PROMPT_TEMPLATE_CS,
+    _COMBINED_PROMPT_TEMPLATE_EN,
+    _COMBINED_SYSTEM_CS,
+    _COMBINED_SYSTEM_EN,
+    _COMPARISON_PROMPT_TEMPLATE,
+    _COMPARISON_PROMPT_TEMPLATE_EN,
+    _COMPARISON_SCHEMA,
+    _COMPARISON_SYSTEM,
+    _COMPARISON_SYSTEM_EN,
+    _CONSOLIDATION_PROMPT_TEMPLATE,
+    _CONSOLIDATION_PROMPT_TEMPLATE_EN,
+    _CONSOLIDATION_SCHEMA,
+    _CONSOLIDATION_SYSTEM,
+    _CONSOLIDATION_SYSTEM_EN,
+    _STRUCTURED_AMENDMENT_SUMMARIES_PROMPT_CS,
+    _STRUCTURED_AMENDMENT_SUMMARIES_PROMPT_EN,
+    _STRUCTURED_AMENDMENT_SUMMARIES_SYSTEM_CS,
+    _STRUCTURED_AMENDMENT_SUMMARIES_SYSTEM_EN,
+    _STRUCTURED_CLASSIFICATION_PROMPT_CS,
+    _STRUCTURED_CLASSIFICATION_PROMPT_EN,
+    _STRUCTURED_CLASSIFICATION_SYSTEM_CS,
+    _STRUCTURED_CLASSIFICATION_SYSTEM_EN,
+    _STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_CS,
+    _STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_EN,
+    _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_CS,
+    _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_EN,
+    _STRUCTURED_COMPARISON_PROMPT_CS,
+    _STRUCTURED_COMPARISON_PROMPT_EN,
+    _STRUCTURED_COMPARISON_SYSTEM_CS,
+    _STRUCTURED_COMPARISON_SYSTEM_EN,
+    _STRUCTURED_CONSOLIDATION_PROMPT_CS,
+    _STRUCTURED_CONSOLIDATION_PROMPT_EN,
+    _STRUCTURED_CONSOLIDATION_SYSTEM_CS,
+    _STRUCTURED_CONSOLIDATION_SYSTEM_EN,
+    _STRUCTURED_SUMMARY_PROMPT_CS,
+    _STRUCTURED_SUMMARY_PROMPT_EN,
+    _STRUCTURED_SUMMARY_SYSTEM_CS,
+    _STRUCTURED_SUMMARY_SYSTEM_EN,
+    _SUMMARY_PROMPT_TEMPLATE,
+    _SUMMARY_PROMPT_TEMPLATE_EN,
+    _SUMMARY_SCHEMA,
+    _SUMMARY_SYSTEM,
+    _SUMMARY_SYSTEM_EN,
 )
-
-_CLASSIFICATION_PROMPT_TEMPLATE = (
-    "Urči 1–3 hlavní témata následujícího parlamentního tisku. "
-    "Použij krátké české názvy témat (2–4 slova). "
-    "Buď konkrétní – např. místo 'Právo' napiš 'Trestní právo' nebo 'Občanské právo'.\n\n"
-    "Název tisku:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text tisku:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Odpověz POUZE: TOPICS: téma1, téma2, téma3"
-)
-
-_SUMMARY_SYSTEM = (
-    "Jsi kriticko-analytický komentátor českého parlamentu. Píšeš ostře, věcně a bez přikrašlování. "
-    "Odhaluješ skryté dopady zákonů, rizika zneužití, a kdo z novely skutečně profituje. "
-    "Neboj se pojmenovat problémy přímo — např. oslabení nezávislosti úředníků, rozšíření pravomocí "
-    "bez kontroly, skryté privatizace, nebo omezení občanských práv. 3–4 věty."
-    + _LANG_CS
-    + _FORMAT_CS
-)
-
-_SUMMARY_PROMPT_TEMPLATE = (
-    "Analyzuj následující parlamentní tisk KRITICKY. Nestačí říct 'co mění' — vysvětli:\n"
-    "1. Co KONKRÉTNĚ se mění (žádné vágní formulace)\n"
-    "2. Komu to prospívá a komu škodí\n"
-    "3. Jaké je RIZIKO zneužití nebo nezamýšlený důsledek\n"
-    "Buď přímý a kriticko-analytický. Pokud zákon oslabuje kontrolu, nezávislost nebo práva, řekni to jasně.\n"
-    "3–4 věty v češtině.\n\n"
-    "Název:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_CONSOLIDATION_SYSTEM = (
-    "Jsi analytik českého parlamentu. Dostaneš seznam tematických štítků. "
-    "Sjednoť podobná/překrývající se témata pod jeden kanonický název." + _LANG_CS + _FORMAT_CS
-)
-
-_CONSOLIDATION_PROMPT_TEMPLATE = (
-    "Zde je seznam {n} témat z parlamentních tisků. Sjednoť podobná a překrývající se témata.\n"
-    "Pro každé téma napiš mapování ve formátu: staré_téma -> kanonický_název\n"
-    "Pokud je téma už trefné, mapuj ho samo na sebe.\n\n"
-    "Témata:\n{topics_list}\n\n"
-    "Odpověz POUZE mapováním, jeden řádek na téma."
-)
-
-_COMPARISON_SYSTEM = (
-    "Jsi analyticko-právní expert na českou legislativu. Srovnáváš verze parlamentních tisků "
-    "a identifikuješ KONKRÉTNÍ změny mezi nimi — čísla paragrafů, co bylo přidáno, odebráno či změněno."
-    + _LANG_CS
-    + _FORMAT_CS
-)
-
-_COMPARISON_PROMPT_TEMPLATE = (
-    "Porovnej následující dvě verze parlamentního tisku a popiš KONKRÉTNÍ rozdíly:\n"
-    "1. Které paragrafy/články se změnily a jak\n"
-    "2. Co bylo přidáno nebo odebráno\n"
-    "3. Jaký je celkový charakter změn (zpřísnění/zmírnění/technická úprava)\n"
-    "3–4 věty v češtině. Buď konkrétní — cituj čísla paragrafů.\n\n"
-    "VERZE {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
-    "VERZE {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
-)
-
-# ── English system prompts ───────────────────────────────────────────────
-
-_CLASSIFICATION_SYSTEM_EN = (
-    "You are a Czech Parliament analyst. You analyze parliamentary bills and assign topic labels. "
-    "Respond ONLY in format 'TOPICS: topic1, topic2, topic3' where topics are 1-3 short English names "
-    "of thematic areas (e.g. 'Taxes & Fees', 'Social Insurance', 'Criminal Law'). "
-    "Use concise and specific topic names. No other text." + _LANG_EN + _FORMAT_EN
-)
-
-_CLASSIFICATION_PROMPT_TEMPLATE_EN = (
-    "Identify 1-3 main topics of the following Czech parliamentary bill. "
-    "Use short English topic names (2-4 words). "
-    "Be specific — e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
-    "Bill title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Bill text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Respond ONLY: TOPICS: topic1, topic2, topic3"
-)
-
-_CONSOLIDATION_SYSTEM_EN = (
-    "You are a Czech Parliament analyst. You will receive a list of topic labels. "
-    "Unify similar/overlapping topics under one canonical English name." + _LANG_EN + _FORMAT_EN
-)
-
-_CONSOLIDATION_PROMPT_TEMPLATE_EN = (
-    "Here is a list of {n} topics from parliamentary bills. Unify similar and overlapping topics.\n"
-    "For each topic write a mapping in format: old_topic -> canonical_name\n"
-    "If a topic is already good, map it to itself.\n\n"
-    "Topics:\n{topics_list}\n\n"
-    "Respond ONLY with mappings, one line per topic."
-)
-
-_SUMMARY_SYSTEM_EN = (
-    "You are a critical analyst of the Czech Parliament. You write sharp, factual assessments "
-    "without embellishment. You expose hidden impacts of laws, risks of abuse, and who truly "
-    "benefits from amendments. Don't hesitate to name problems directly — e.g. weakening of "
-    "official independence, expanding powers without oversight, hidden privatizations, or "
-    "restrictions on civil rights. 3-4 sentences." + _LANG_EN + _FORMAT_EN
-)
-
-_SUMMARY_PROMPT_TEMPLATE_EN = (
-    "Analyze the following Czech parliamentary bill CRITICALLY. Don't just say 'what it changes' — explain:\n"
-    "1. What SPECIFICALLY changes (no vague formulations)\n"
-    "2. Who benefits and who is harmed\n"
-    "3. What is the RISK of abuse or unintended consequence\n"
-    "Be direct and critical. If the law weakens oversight, independence, or rights, say it clearly.\n"
-    "3-4 sentences in English.\n\n"
-    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_COMPARISON_SYSTEM_EN = (
-    "You are a legal expert on Czech legislation. You compare versions of parliamentary bills "
-    "and identify SPECIFIC changes between them — paragraph numbers, what was added, removed, or modified."
-    + _LANG_EN
-    + _FORMAT_EN
-)
-
-_COMPARISON_PROMPT_TEMPLATE_EN = (
-    "Compare the following two versions of a Czech parliamentary bill and describe SPECIFIC differences:\n"
-    "1. Which paragraphs/articles changed and how\n"
-    "2. What was added or removed\n"
-    "3. What is the overall character of changes (tightening/loosening/technical adjustment)\n"
-    "3-4 sentences in English. Be specific — cite paragraph numbers.\n\n"
-    "VERSION {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
-    "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
-)
-
-# ── Combined classify + summarize free-text prompts (Ollama fallback) ────
-
-_COMBINED_SYSTEM_CS = (
-    "Jsi kriticko-analytický komentátor českého parlamentu. Analyzuješ parlamentní tisky, "
-    "přiřazuješ jim tematické štítky a píšeš ostré, věcné komentáře. "
-    "Odpověz PŘESNĚ ve formátu:\n"
-    "TOPICS: téma1, téma2, téma3\n"
-    "CHANGES: co se konkrétně mění\n"
-    "IMPACT: komu to prospívá a komu škodí\n"
-    "RISKS: riziko zneužití nebo nezamýšlený důsledek\n"
-    "Žádný další text." + _LANG_CS + _FORMAT_CS
-)
-
-_COMBINED_PROMPT_TEMPLATE_CS = (
-    "Analyzuj následující parlamentní tisk.\n\n"
-    "1. Urči 1–3 hlavní témata (krátké české názvy, 2–4 slova, konkrétní).\n"
-    "2. Napiš kritickou analýzu: co se mění, komu to prospívá/škodí, jaká jsou rizika.\n\n"
-    "Název:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Odpověz PŘESNĚ v tomto formátu:\n"
-    "TOPICS: téma1, téma2, téma3\n"
-    "CHANGES: co se konkrétně mění (1–2 věty)\n"
-    "IMPACT: komu to prospívá a komu škodí (1–2 věty)\n"
-    "RISKS: riziko zneužití (1–2 věty)"
-)
-
-_COMBINED_SYSTEM_EN = (
-    "You are a critical analyst of the Czech Parliament. You analyze parliamentary bills, "
-    "assign topic labels, and write sharp, factual assessments. "
-    "Respond EXACTLY in this format:\n"
-    "TOPICS: topic1, topic2, topic3\n"
-    "CHANGES: what specifically changes\n"
-    "IMPACT: who benefits and who is harmed\n"
-    "RISKS: risk of abuse or unintended consequence\n"
-    "No other text." + _LANG_EN + _FORMAT_EN
-)
-
-_COMBINED_PROMPT_TEMPLATE_EN = (
-    "Analyze the following Czech parliamentary bill.\n\n"
-    "1. Identify 1-3 main topics (short English names, 2-4 words, specific).\n"
-    "2. Write a critical analysis: what changes, who benefits/is harmed, what are the risks.\n\n"
-    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
-    "Respond EXACTLY in this format:\n"
-    "TOPICS: topic1, topic2, topic3\n"
-    "CHANGES: what specifically changes (1-2 sentences)\n"
-    "IMPACT: who benefits and who is harmed (1-2 sentences)\n"
-    "RISKS: risk of abuse (1-2 sentences)"
-)
-
-# ── Security & text processing ───────────────────────────────────────────
-
-
-# ── JSON schemas for structured output (OpenAI-compatible) ──────────────
-
-_CLASSIFICATION_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "topics": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "1-3 short topic labels",
-        }
-    },
-    "required": ["topics"],
-    "additionalProperties": False,
-}
-
-_SUMMARY_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "changes": {"type": "string", "description": "What specifically changes"},
-        "impact": {"type": "string", "description": "Who benefits and who is harmed"},
-        "risks": {"type": "string", "description": "Risk of abuse or unintended consequences"},
-    },
-    "required": ["changes", "impact", "risks"],
-    "additionalProperties": False,
-}
-
-_COMPARISON_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "changed_paragraphs": {
-            "type": "string",
-            "description": "Which paragraphs/articles changed and how",
-        },
-        "additions_removals": {
-            "type": "string",
-            "description": "What was added or removed",
-        },
-        "overall_character": {
-            "type": "string",
-            "description": "Overall character: tightening/loosening/technical",
-        },
-    },
-    "required": ["changed_paragraphs", "additions_removals", "overall_character"],
-    "additionalProperties": False,
-}
-
-_CONSOLIDATION_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "mappings": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "old": {"type": "string"},
-                    "canonical": {"type": "string"},
-                },
-                "required": ["old", "canonical"],
-                "additionalProperties": False,
-            },
-        }
-    },
-    "required": ["mappings"],
-    "additionalProperties": False,
-}
-
-_CLASSIFY_AND_SUMMARIZE_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "topics": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "1-3 short topic labels",
-        },
-        "changes": {"type": "string", "description": "What specifically changes"},
-        "impact": {"type": "string", "description": "Who benefits and who is harmed"},
-        "risks": {"type": "string", "description": "Risk of abuse or unintended consequences"},
-    },
-    "required": ["topics", "changes", "impact", "risks"],
-    "additionalProperties": False,
-}
-
-# ── Structured output prompts (no format instructions) ──────────────────
-
-_STRUCTURED_CLASSIFICATION_SYSTEM_CS = (
-    "Jsi analytik českého parlamentu. Analyzuješ parlamentní tisky a přiřazuješ jim tematické štítky. "
-    "Používej stručné a konkrétní české názvy tematických oblastí." + _LANG_CS
-)
-
-_STRUCTURED_CLASSIFICATION_PROMPT_CS = (
-    "Urči 1–3 hlavní témata následujícího parlamentního tisku. "
-    "Použij krátké české názvy témat (2–4 slova). "
-    "Buď konkrétní – např. místo 'Právo' napiš 'Trestní právo' nebo 'Občanské právo'.\n\n"
-    "Název tisku:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text tisku:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_STRUCTURED_CLASSIFICATION_SYSTEM_EN = (
-    "You are a Czech Parliament analyst. You analyze parliamentary bills and assign topic labels. "
-    "Use concise and specific English topic names." + _LANG_EN
-)
-
-_STRUCTURED_CLASSIFICATION_PROMPT_EN = (
-    "Identify 1-3 main topics of the following Czech parliamentary bill. "
-    "Use short English topic names (2-4 words). "
-    "Be specific — e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
-    "Bill title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Bill text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_STRUCTURED_SUMMARY_SYSTEM_CS = (
-    "Jsi kriticko-analytický komentátor českého parlamentu. Píšeš ostře, věcně a bez přikrašlování. "
-    "Odhaluješ skryté dopady zákonů, rizika zneužití, a kdo z novely skutečně profituje. "
-    "Neboj se pojmenovat problémy přímo — např. oslabení nezávislosti úředníků, rozšíření pravomocí "
-    "bez kontroly, skryté privatizace, nebo omezení občanských práv." + _LANG_CS
-)
-
-_STRUCTURED_SUMMARY_PROMPT_CS = (
-    "Analyzuj následující parlamentní tisk KRITICKY.\n"
-    "Pro pole 'changes': Co KONKRÉTNĚ se mění (žádné vágní formulace)\n"
-    "Pro pole 'impact': Komu to prospívá a komu škodí\n"
-    "Pro pole 'risks': Jaké je RIZIKO zneužití nebo nezamýšlený důsledek\n"
-    "Buď přímý a kriticko-analytický. 1–2 věty na pole.\n\n"
-    "Název:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_STRUCTURED_SUMMARY_SYSTEM_EN = (
-    "You are a critical analyst of the Czech Parliament. You write sharp, factual assessments "
-    "without embellishment. You expose hidden impacts of laws, risks of abuse, and who truly "
-    "benefits from amendments. Don't hesitate to name problems directly." + _LANG_EN
-)
-
-_STRUCTURED_SUMMARY_PROMPT_EN = (
-    "Analyze the following Czech parliamentary bill CRITICALLY.\n"
-    "For 'changes': What SPECIFICALLY changes (no vague formulations)\n"
-    "For 'impact': Who benefits and who is harmed\n"
-    "For 'risks': What is the RISK of abuse or unintended consequence\n"
-    "Be direct and critical. 1-2 sentences per field.\n\n"
-    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_STRUCTURED_CONSOLIDATION_SYSTEM_CS = (
-    "Jsi analytik českého parlamentu. Dostaneš seznam tematických štítků. "
-    "Sjednoť podobná/překrývající se témata pod jeden kanonický název." + _LANG_CS
-)
-
-_STRUCTURED_CONSOLIDATION_PROMPT_CS = (
-    "Zde je seznam {n} témat z parlamentních tisků. Sjednoť podobná a překrývající se témata.\n"
-    "Pro každé téma vrať mapování z původního názvu na kanonický název.\n"
-    "Pokud je téma už trefné, mapuj ho samo na sebe.\n\n"
-    "Témata:\n{topics_list}"
-)
-
-_STRUCTURED_CONSOLIDATION_SYSTEM_EN = (
-    "You are a Czech Parliament analyst. You will receive a list of topic labels. "
-    "Unify similar/overlapping topics under one canonical English name." + _LANG_EN
-)
-
-_STRUCTURED_CONSOLIDATION_PROMPT_EN = (
-    "Here is a list of {n} topics from parliamentary bills. Unify similar and overlapping topics.\n"
-    "For each topic return a mapping from original name to canonical name.\n"
-    "If a topic is already good, map it to itself.\n\n"
-    "Topics:\n{topics_list}"
-)
-
-_STRUCTURED_COMPARISON_SYSTEM_CS = (
-    "Jsi analyticko-právní expert na českou legislativu. Srovnáváš verze parlamentních tisků "
-    "a identifikuješ KONKRÉTNÍ změny mezi nimi — čísla paragrafů, co bylo přidáno, odebráno či změněno."
-    + _LANG_CS
-)
-
-_STRUCTURED_COMPARISON_PROMPT_CS = (
-    "Porovnej následující dvě verze parlamentního tisku a popiš KONKRÉTNÍ rozdíly.\n"
-    "Pro pole 'changed_paragraphs': Které paragrafy/články se změnily a jak\n"
-    "Pro pole 'additions_removals': Co bylo přidáno nebo odebráno\n"
-    "Pro pole 'overall_character': Celkový charakter změn (zpřísnění/zmírnění/technická úprava)\n"
-    "Buď konkrétní — cituj čísla paragrafů. 1–2 věty na pole.\n\n"
-    "VERZE {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
-    "VERZE {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
-)
-
-_STRUCTURED_COMPARISON_SYSTEM_EN = (
-    "You are a legal expert on Czech legislation. You compare versions of parliamentary bills "
-    "and identify SPECIFIC changes between them — paragraph numbers, what was added, removed, or modified."
-    + _LANG_EN
-)
-
-_STRUCTURED_COMPARISON_PROMPT_EN = (
-    "Compare the following two versions of a Czech parliamentary bill and describe SPECIFIC differences.\n"
-    "For 'changed_paragraphs': Which paragraphs/articles changed and how\n"
-    "For 'additions_removals': What was added or removed\n"
-    "For 'overall_character': Overall character of changes (tightening/loosening/technical adjustment)\n"
-    "Be specific — cite paragraph numbers. 1-2 sentences per field.\n\n"
-    "VERSION {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
-    "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
-)
-
-# ── Combined classify + summarize structured prompts ─────────────────────
-
-_STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_CS = (
-    "Jsi kriticko-analytický komentátor českého parlamentu. Analyzuješ parlamentní tisky, "
-    "přiřazuješ jim tematické štítky a píšeš ostré, věcné komentáře bez přikrašlování. "
-    "Odhaluješ skryté dopady zákonů, rizika zneužití, a kdo z novely skutečně profituje. "
-    "Neboj se pojmenovat problémy přímo." + _LANG_CS
-)
-
-_STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_CS = (
-    "Analyzuj následující parlamentní tisk.\n\n"
-    "ÚKOL 1 — TÉMATA: Urči 1–3 hlavní témata. Použij krátké české názvy (2–4 slova). "
-    "Buď konkrétní — např. 'Trestní právo', ne 'Právo'.\n\n"
-    "ÚKOL 2 — KRITICKÁ ANALÝZA:\n"
-    "Pro pole 'changes': Co KONKRÉTNĚ se mění (žádné vágní formulace)\n"
-    "Pro pole 'impact': Komu to prospívá a komu škodí\n"
-    "Pro pole 'risks': Jaké je RIZIKO zneužití nebo nezamýšlený důsledek\n"
-    "Buď přímý a kriticko-analytický. 1–2 věty na pole.\n\n"
-    "Název:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_EN = (
-    "You are a critical analyst of the Czech Parliament. You analyze parliamentary bills, "
-    "assign topic labels, and write sharp, factual assessments without embellishment. "
-    "You expose hidden impacts of laws, risks of abuse, and who truly benefits from amendments. "
-    "Don't hesitate to name problems directly." + _LANG_EN
-)
-
-_STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_EN = (
-    "Analyze the following Czech parliamentary bill.\n\n"
-    "TASK 1 — TOPICS: Identify 1-3 main topics. Use short English names (2-4 words). "
-    "Be specific — e.g. 'Criminal Law', not 'Law'.\n\n"
-    "TASK 2 — CRITICAL ANALYSIS:\n"
-    "For 'changes': What SPECIFICALLY changes (no vague formulations)\n"
-    "For 'impact': Who benefits and who is harmed\n"
-    "For 'risks': What is the RISK of abuse or unintended consequence\n"
-    "Be direct and critical. 1-2 sentences per field.\n\n"
-    "Title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
-    "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
-)
-
-_INJECTION_PHRASES_RE = re.compile(
-    r"(?:ignore (?:all )?(?:previous|above|prior) instructions"
-    r"|you are now"
-    r"|new instructions:"
-    r"|system prompt:"
-    r"|---END USER TEXT---)",
-    re.IGNORECASE,
-)
-
-
-def _sanitize_llm_input(text: str) -> str:
-    """Strip common prompt injection phrases from user-supplied text."""
-    return _INJECTION_PHRASES_RE.sub("[REDACTED]", text)
-
-
-# Strip <think>...</think> blocks from responses (defensive — models with chain-of-thought)
-_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
-
-# Pattern for heading lines in Czech legislative texts
-_HEADING_RE = re.compile(
-    r"^(?:"
-    r"[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ\s]{10,}"  # ALL CAPS lines (10+ chars)
-    r"|(?:Část|ČÁST|Hlava|HLAVA|Článek|ČLÁNEK|Díl|DÍL)\s"  # Section markers
-    r"|(?:I{1,3}V?|VI{0,3}|IX|X{1,3})\.\s"  # Roman numerals
-    r"|DŮVODOVÁ ZPRÁVA"
-    r"|ZVLÁŠTNÍ ČÁST"
-    r"|OBECNÁ ČÁST"
-    r"|§\s*\d+"  # Paragraph markers (§ 1, § 123a)
-    r")",
-    re.MULTILINE,
-)
-
-
-def truncate_legislative_text(
-    text: str,
-    verbatim_chars: int = LLM_VERBATIM_CHARS,
-    max_chars: int = LLM_MAX_TEXT_CHARS,
-) -> str:
-    """Truncate Czech legislative text via structural extraction for LLM processing.
-
-    When TISK_SHORTENER is disabled (0), returns the full text unmodified.
-
-    Strategy (when enabled and text exceeds max_chars):
-    1. First `verbatim_chars` kept verbatim (covers explanatory report + most content)
-    2. From remainder: extract section headings + first 500 chars of each section
-    3. Hard cap at `max_chars` total
-    """
-    if not TISK_SHORTENER:
-        return text
-
-    if len(text) <= max_chars:
-        return text
-
-    # Clamp verbatim to not exceed max (defensive for comparison calls)
-    verbatim_chars = min(verbatim_chars, max_chars)
-
-    result = text[:verbatim_chars]
-    remainder = text[verbatim_chars:]
-
-    # Extract structural highlights from the remainder
-    highlights: list[str] = []
-    for match in _HEADING_RE.finditer(remainder):
-        start = match.start()
-        snippet = remainder[start : start + 500 + len(match.group())]
-        highlights.append(snippet.strip())
-
-    if highlights:
-        result += "\n\n[...]\n\n" + "\n\n".join(highlights)
-
-    return result[:max_chars]
-
-
-# ── Base class ───────────────────────────────────────────────────────────
-
-
-# ── Markdown rendering helpers for structured output ────────────────────
-
-
-def _render_summary_markdown_cs(data: dict[str, Any]) -> str:
-    """Render structured summary JSON to Czech markdown."""
-    parts: list[str] = []
-    if data.get("changes"):
-        parts.append(f"**Co se mění:** {data['changes']}")
-    if data.get("impact"):
-        parts.append(f"**Dopady:** {data['impact']}")
-    if data.get("risks"):
-        parts.append(f"**Rizika:** {data['risks']}")
-    return "\n\n".join(parts)
-
-
-def _render_summary_markdown_en(data: dict[str, Any]) -> str:
-    """Render structured summary JSON to English markdown."""
-    parts: list[str] = []
-    if data.get("changes"):
-        parts.append(f"**Changes:** {data['changes']}")
-    if data.get("impact"):
-        parts.append(f"**Impact:** {data['impact']}")
-    if data.get("risks"):
-        parts.append(f"**Risks:** {data['risks']}")
-    return "\n\n".join(parts)
-
-
-def _render_comparison_markdown_cs(data: dict[str, Any]) -> str:
-    """Render structured comparison JSON to Czech markdown."""
-    parts: list[str] = []
-    if data.get("changed_paragraphs"):
-        parts.append(f"**Změněné paragrafy:** {data['changed_paragraphs']}")
-    if data.get("additions_removals"):
-        parts.append(f"**Přidáno/odebráno:** {data['additions_removals']}")
-    if data.get("overall_character"):
-        parts.append(f"**Charakter změn:** {data['overall_character']}")
-    return "\n\n".join(parts)
-
-
-def _render_comparison_markdown_en(data: dict[str, Any]) -> str:
-    """Render structured comparison JSON to English markdown."""
-    parts: list[str] = []
-    if data.get("changed_paragraphs"):
-        parts.append(f"**Changed paragraphs:** {data['changed_paragraphs']}")
-    if data.get("additions_removals"):
-        parts.append(f"**Additions/removals:** {data['additions_removals']}")
-    if data.get("overall_character"):
-        parts.append(f"**Overall character:** {data['overall_character']}")
-    return "\n\n".join(parts)
-
-
-def _parse_consolidation_json(data: dict[str, Any], all_topics: list[str]) -> dict[str, str]:
-    """Parse structured consolidation JSON into a topic mapping dict."""
-    mapping: dict[str, str] = {}
-    for item in data.get("mappings", []):
-        old = item.get("old", "").strip()
-        canonical = item.get("canonical", "").strip()
-        if old and canonical:
-            mapping[old] = canonical
-    for t in all_topics:
-        if t not in mapping:
-            mapping[t] = t
-    return mapping
 
 
 class LLMClient:
@@ -902,6 +366,29 @@ class LLMClient:
         )
         return self._generate_json_via_prompt(prompt, system, schema)
 
+    @staticmethod
+    def _strip_additional_properties(schema: dict[str, Any]) -> dict[str, Any]:
+        """Recursively remove ``additionalProperties`` from a JSON schema.
+
+        vLLM's xgrammar guided-decoding backend does not support this field
+        and returns HTTP 500 when it is present.  Stripping it is safe because
+        the grammar still constrains output to the declared properties.
+        """
+        result: dict[str, Any] = {}
+        for k, v in schema.items():
+            if k == "additionalProperties":
+                continue
+            if isinstance(v, dict):
+                result[k] = LLMClient._strip_additional_properties(v)
+            elif isinstance(v, list):
+                result[k] = [
+                    LLMClient._strip_additional_properties(item) if isinstance(item, dict) else item
+                    for item in v
+                ]
+            else:
+                result[k] = v
+        return result
+
     def _generate_json_schema_constrained(
         self,
         prompt: str,
@@ -909,9 +396,12 @@ class LLMClient:
         schema: dict[str, Any],
     ) -> dict[str, Any] | None:
         """Try schema-constrained JSON generation via response_format."""
-        response_format = {
+        # vLLM/xgrammar does not support additionalProperties — strip it.
+        # Also drop "strict" which is OpenAI-only and meaningless for vLLM.
+        clean_schema = self._strip_additional_properties(schema)
+        response_format: dict[str, Any] = {
             "type": "json_schema",
-            "json_schema": {"name": "response", "strict": True, "schema": schema},
+            "json_schema": {"name": "response", "schema": clean_schema},
         }
         raw = self._generate(prompt, system, response_format=response_format)
         if raw is None:
@@ -919,7 +409,12 @@ class LLMClient:
         try:
             return json.loads(raw)
         except (json.JSONDecodeError, TypeError):
-            logger.debug("{} Failed to parse JSON response: {}", self._log_prefix, raw[:200])
+            logger.warning(
+                "{} Schema-constrained output not valid JSON ({}chars): {}",
+                self._log_prefix,
+                len(raw),
+                raw[:300],
+            )
             return None
 
     @staticmethod
@@ -963,7 +458,15 @@ class LLMClient:
         raw = self._generate(prompt + json_instruction, system)
         if raw is None:
             return None
-        return self._extract_json_from_text(raw)
+        result = self._extract_json_from_text(raw)
+        if result is None:
+            logger.warning(
+                "{} JSON extraction failed from prompt fallback ({}chars): {}",
+                self._log_prefix,
+                len(raw),
+                raw[:300],
+            )
+        return result
 
     # ── Business methods ────────────────────────────────────────────
 
@@ -1389,6 +892,170 @@ class LLMClient:
 
         return {"cs": cs, "en": en}
 
+    def summarize_amendments(
+        self,
+        text: str,
+        title: str,
+        amendments: list[dict[str, str]],
+        *,
+        lang: str = "cs",
+        bill_context: str = "",
+        _truncated: bool = False,
+    ) -> dict[str, str]:
+        """Generate per-amendment summaries for a bill in a single LLM call.
+
+        Args:
+            text: Combined amendment PDF text.
+            title: Bill title.
+            amendments: List of dicts with 'letter', 'submitter', 'description'.
+            lang: Language code ('cs' or 'en').
+            bill_context: Optional AI-generated summary of the original bill
+                for additional context in prompts.
+            _truncated: If True, skip truncation.
+
+        Returns:
+            Dict mapping amendment letter to summary text.
+        """
+        truncated = text if _truncated else truncate_legislative_text(text)
+        sanitized_title = _sanitize_llm_input(
+            title or ("(bez názvu)" if lang == "cs" else "(no title)")
+        )
+        sanitized_text = _sanitize_llm_input(truncated)
+        amendments_list = _format_amendments_list(amendments)
+
+        amendments_with_text = sum(1 for a in amendments if a.get("amendment_text"))
+        logger.debug(
+            "%s summarize_amendments(%s): %d/%d amendments have per-amendment text",
+            self._log_prefix,
+            lang,
+            amendments_with_text,
+            len(amendments),
+        )
+
+        if bill_context:
+            if lang == "cs":
+                bill_context_section = (
+                    f"Kontext návrhu zákona (AI shrnutí původního tisku):\n{bill_context}\n\n"
+                )
+            else:
+                bill_context_section = (
+                    f"Bill context (AI-generated summary of the original bill):\n{bill_context}\n\n"
+                )
+        else:
+            bill_context_section = ""
+
+        fmt_kwargs = {
+            "title": sanitized_title,
+            "text": sanitized_text,
+            "amendments_list": amendments_list,
+            "bill_context_section": bill_context_section,
+        }
+
+        if lang == "cs":
+            structured_system = _STRUCTURED_AMENDMENT_SUMMARIES_SYSTEM_CS
+            structured_prompt_tpl = _STRUCTURED_AMENDMENT_SUMMARIES_PROMPT_CS
+            freetext_system = _AMENDMENT_SUMMARIES_SYSTEM_CS
+            freetext_prompt_tpl = _AMENDMENT_SUMMARIES_PROMPT_CS
+        else:
+            structured_system = _STRUCTURED_AMENDMENT_SUMMARIES_SYSTEM_EN
+            structured_prompt_tpl = _STRUCTURED_AMENDMENT_SUMMARIES_PROMPT_EN
+            freetext_system = _AMENDMENT_SUMMARIES_SYSTEM_EN
+            freetext_prompt_tpl = _AMENDMENT_SUMMARIES_PROMPT_EN
+
+        if self.supports_structured_output:
+            prompt = structured_prompt_tpl.format(**fmt_kwargs)
+            data = self._generate_json(prompt, structured_system, _AMENDMENT_SUMMARIES_SCHEMA)
+            if data is not None:
+                raw_letters = [item.get("letter", "") for item in data.get("amendments", [])]
+                result = _parse_amendment_summaries_json(data)
+                logger.info(
+                    "{} Amendment summaries ({}): {}/{} keys matched, raw letters={}",
+                    self._log_prefix,
+                    lang,
+                    len(result),
+                    len(raw_letters),
+                    raw_letters,
+                )
+                if result:
+                    return result
+                logger.warning(
+                    "{} Amendment summaries ({}): structured JSON returned 0 matches, "
+                    "falling back to free-text",
+                    self._log_prefix,
+                    lang,
+                )
+            else:
+                logger.warning(
+                    "{} Amendment summaries ({}): structured JSON returned None, "
+                    "falling back to free-text",
+                    self._log_prefix,
+                    lang,
+                )
+
+        # Free-text path (primary when structured output disabled, fallback otherwise)
+        prompt = freetext_prompt_tpl.format(**fmt_kwargs)
+        response = self._generate_with_retry(
+            prompt,
+            freetext_system,
+            validator=lambda r: bool(_parse_amendment_summaries_text(r)),
+        )
+        if response is None:
+            logger.warning(
+                "{} Amendment summaries ({}): free-text also returned None",
+                self._log_prefix,
+                lang,
+            )
+            return {}
+        result = _parse_amendment_summaries_text(response)
+        logger.info(
+            "{} Amendment summaries ({}): {} keys from free-text",
+            self._log_prefix,
+            lang,
+            len(result),
+        )
+        return result
+
+    def summarize_amendments_bilingual(
+        self,
+        text: str,
+        title: str,
+        amendments: list[dict[str, str]],
+        *,
+        bill_context: str = "",
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Generate per-amendment summaries in both Czech and English.
+
+        Truncates text once and calls summarize_amendments for each language.
+
+        Args:
+            text: Combined amendment PDF text.
+            title: Bill title.
+            amendments: List of dicts with 'letter', 'submitter', 'description'.
+            bill_context: Optional AI-generated summary of the original bill
+                for additional context in prompts.
+
+        Returns:
+            (cs_map, en_map) — each mapping amendment letter to summary.
+        """
+        truncated = truncate_legislative_text(text)
+        cs_map = self.summarize_amendments(
+            truncated,
+            title,
+            amendments,
+            lang="cs",
+            bill_context=bill_context,
+            _truncated=True,
+        )
+        en_map = self.summarize_amendments(
+            truncated,
+            title,
+            amendments,
+            lang="en",
+            bill_context=bill_context,
+            _truncated=True,
+        )
+        return cs_map, en_map
+
     @staticmethod
     def _strip_think(text: str) -> str:
         """Remove <think>...</think> blocks from responses."""
@@ -1444,69 +1111,3 @@ class LLMClient:
             if t not in mapping:
                 mapping[t] = t
         return mapping
-
-
-# ── Serialization helpers ────────────────────────────────────────────────
-
-
-def serialize_topics(topics: list[str]) -> str:
-    """Serialize topic list for parquet storage."""
-    return json.dumps(topics, ensure_ascii=False)
-
-
-def deserialize_topics(raw: str) -> list[str]:
-    """Deserialize topic list from parquet storage.
-
-    Handles both new JSON format and old single-topic-ID format.
-    """
-    if not raw:
-        return []
-    # Try JSON first (new format: '["topic1", "topic2"]')
-    if raw.startswith("["):
-        try:
-            topics = json.loads(raw)
-            return [t for t in topics if isinstance(t, str) and t]
-        except (json.JSONDecodeError, TypeError):
-            logger.debug("Failed to parse topics JSON: {}", raw)
-    # Old format: single topic ID like "finance" or "justice"
-    return [raw]
-
-
-# ── Factory ──────────────────────────────────────────────────────────────
-
-
-def create_llm_client() -> LLMClient:
-    """Factory: return the configured LLM backend client.
-
-    Reads LLM_PROVIDER from config:
-    - "ollama" (default) -> LLMClient(provider="ollama", ...)
-    - "openai" -> LLMClient(provider="openai", ...) (fails fast if OPENAI_API_KEY is empty)
-
-    Raises ValueError for unknown provider.
-    """
-    match LLM_PROVIDER.lower().strip():
-        case "ollama":
-            return LLMClient(
-                provider="ollama",
-                base_url=OLLAMA_BASE_URL,
-                model=OLLAMA_MODEL,
-                api_key=OLLAMA_API_KEY,
-                structured_output=LLM_STRUCTURED_OUTPUT,
-            )
-        case "openai":
-            if not OPENAI_API_KEY:
-                msg = (
-                    "LLM_PROVIDER=openai but OPENAI_API_KEY is not set. "
-                    "Set OPENAI_API_KEY in your .env or environment."
-                )
-                raise ValueError(msg)
-            return LLMClient(
-                provider="openai",
-                base_url=OPENAI_BASE_URL,
-                model=OPENAI_MODEL,
-                api_key=OPENAI_API_KEY,
-                structured_output=LLM_STRUCTURED_OUTPUT,
-            )
-        case _:
-            msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
-            raise ValueError(msg)

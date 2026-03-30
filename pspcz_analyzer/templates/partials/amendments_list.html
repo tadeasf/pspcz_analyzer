@@ -1,0 +1,62 @@
+{% if not rows %}
+<p>{{ _("amendments.no_data") }}</p>
+{% else %}
+<p>{{ _("amendments.bills_found").format(total=total) }}</p>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _("th.description") }}</th>
+                <th>{{ _("amendments.amendments_for") }}</th>
+                <th>{{ _("amendments.result.accepted") }}</th>
+                <th>{{ _("amendments.result.rejected") }}</th>
+                <th>{{ _("amendments.final_vote") }}</th>
+                <th>{{ _("amendments.confidence") }}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>
+                    <strong>Tisk {{ row.ct }}</strong><br>
+                    <small>{{ row.tisk_nazev[:80] }}{% if row.tisk_nazev|length > 80 %}...{% endif %}</small>
+                </td>
+                <td>{{ row.amendment_count }}</td>
+                <td class="vote-yes">{{ row.accepted }}</td>
+                <td class="vote-no">{{ row.rejected }}</td>
+                <td>
+                    {% if row.final_result == "accepted" %}
+                    <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
+                    {% elif row.final_result == "rejected" %}
+                    <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+                <td>{{ "{:.0f}%".format(row.parse_confidence * 100) }}</td>
+                <td>
+                    <a href="/amendments/{{ row.schuze }}/{{ row.bod }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages > 1 %}
+<nav class="pagination">
+    {% if page > 1 %}
+    <button hx-get="/api/amendments?period={{ period }}&search={{ search }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
+        {{ _("pagination.previous") }}
+    </button>
+    {% endif %}
+    <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
+    {% if page < total_pages %}
+    <button hx-get="/api/amendments?period={{ period }}&search={{ search }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">
+        {{ _("pagination.next") }}
+    </button>
+    {% endif %}
+</nav>
+{% endif %}
+{% endif %}
