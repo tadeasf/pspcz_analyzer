@@ -2,230 +2,366 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/data-model/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/routes/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/services/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/templates/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/testing/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/SUMMARY/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/config/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/logging_config/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/main/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/main_backend/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/main_frontend/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/middleware/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/rate_limit/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/admin/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/admin/auth/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/admin/log_stream/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/admin/pipeline_history/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/admin/routes/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/cache/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/downloader/</loc>
-         <lastmod>2026-02-27</lastmod>
-    </url>
-    <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/history_scraper/</loc>
-         <lastmod>2026-02-27</lastmod>
-    </url>
-    <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/law_changes_scraper/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/parser/</loc>
-         <lastmod>2026-02-27</lastmod>
-    </url>
-    <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/tisk_downloader/</loc>
-         <lastmod>2026-02-27</lastmod>
-    </url>
-    <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/tisk_extractor/</loc>
-         <lastmod>2026-02-27</lastmod>
-    </url>
-    <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/tisk_scraper/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/i18n/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/i18n/middleware/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/i18n/translations/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/amendment_models/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/enums/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/pipeline_progress/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/schemas/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/models/tisk_models/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/api/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/amendments/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/charts/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/feedback/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/health/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/laws/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/pages/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/tisk/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/utils/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/routes/voting/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendment_service/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/analysis_cache/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/attendance_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/daily_refresh_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/data_reader/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/data_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/feedback_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/llm_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/law_service/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/loyalty_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/mp_builder/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/pipeline_lock/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/runtime_config/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/similarity_service/</loc>
-         <lastmod>2026-02-27</lastmod>
-    </url>
-    <url>
-         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/topic_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/votes_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/cache_manager/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/coalition_service/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/identifier/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/merger/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/pdf_parser/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/pipeline/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/progress/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/steno_parser/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/steno_scraper/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/submitter_resolver/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/summarizer/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/llm/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/llm/client/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/llm/helpers/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/llm/parsers/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/llm/prompts/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/cache_manager/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/classifier/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/downloader_pipeline/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/lookup_builder/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/metadata_scraper/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/pipeline/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/text_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/version_service/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/io/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/io/downloader/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/io/extractor/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/io/history_scraper/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/io/law_changes_scraper/</loc>
+         <lastmod>2026-03-30</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/tisk/io/scraper/</loc>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/utils/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/utils/text/</loc>
-         <lastmod>2026-02-27</lastmod>
+         <lastmod>2026-03-30</lastmod>
     </url>
 </urlset>
