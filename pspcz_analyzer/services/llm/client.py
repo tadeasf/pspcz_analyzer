@@ -366,6 +366,29 @@ class LLMClient:
         )
         return self._generate_json_via_prompt(prompt, system, schema)
 
+    @staticmethod
+    def _strip_additional_properties(schema: dict[str, Any]) -> dict[str, Any]:
+        """Recursively remove ``additionalProperties`` from a JSON schema.
+
+        vLLM's xgrammar guided-decoding backend does not support this field
+        and returns HTTP 500 when it is present.  Stripping it is safe because
+        the grammar still constrains output to the declared properties.
+        """
+        result: dict[str, Any] = {}
+        for k, v in schema.items():
+            if k == "additionalProperties":
+                continue
+            if isinstance(v, dict):
+                result[k] = LLMClient._strip_additional_properties(v)
+            elif isinstance(v, list):
+                result[k] = [
+                    LLMClient._strip_additional_properties(item) if isinstance(item, dict) else item
+                    for item in v
+                ]
+            else:
+                result[k] = v
+        return result
+
     def _generate_json_schema_constrained(
         self,
         prompt: str,
@@ -373,9 +396,12 @@ class LLMClient:
         schema: dict[str, Any],
     ) -> dict[str, Any] | None:
         """Try schema-constrained JSON generation via response_format."""
-        response_format = {
+        # vLLM/xgrammar does not support additionalProperties — strip it.
+        # Also drop "strict" which is OpenAI-only and meaningless for vLLM.
+        clean_schema = self._strip_additional_properties(schema)
+        response_format: dict[str, Any] = {
             "type": "json_schema",
-            "json_schema": {"name": "response", "strict": True, "schema": schema},
+            "json_schema": {"name": "response", "schema": clean_schema},
         }
         raw = self._generate(prompt, system, response_format=response_format)
         if raw is None:

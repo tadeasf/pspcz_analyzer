@@ -120,6 +120,9 @@ LLM_MAX_COMPARISON_CHARS = int(
     os.environ.get("LLM_MAX_COMPARISON_CHARS", "120000")
 )  # per-text limit for version comparisons (~40k tok each)
 
+# Version diff cost control — max pairs to compare per tisk (0 = all)
+VERSION_DIFF_MAX_PAIRS = int(os.environ.get("VERSION_DIFF_MAX_PAIRS", "2"))
+
 # OpenAI-compatible API integration (OpenAI, Azure OpenAI, Together, Groq, vLLM, etc.)
 # Used when LLM_PROVIDER=openai
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")

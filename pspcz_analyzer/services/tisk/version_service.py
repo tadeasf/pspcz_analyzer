@@ -14,6 +14,7 @@ from pspcz_analyzer.config import (
     TISKY_META_DIR,
     TISKY_TEXT_DIR,
     TISKY_VERSION_DIFFS_DIR,
+    VERSION_DIFF_MAX_PAIRS,
 )
 from pspcz_analyzer.services.llm import LLMClient, create_llm_client
 from pspcz_analyzer.services.tisk.io import (
@@ -171,6 +172,9 @@ def analyze_version_diffs_sync(
         versions = _collect_version_texts(text_dir, ct)
         if len(versions) < 2:
             continue
+        # Cap: keep only the N+1 most recent versions (= N pairs)
+        if VERSION_DIFF_MAX_PAIRS > 0 and len(versions) > VERSION_DIFF_MAX_PAIRS + 1:
+            versions = versions[-(VERSION_DIFF_MAX_PAIRS + 1) :]
         ct_versions.append((ct, versions))
         total_pairs += len(versions) - 1
 

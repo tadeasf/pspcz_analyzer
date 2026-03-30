@@ -5,7 +5,7 @@ services:
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
     volumes:
-      - ./cache-data:/data/cache
+      - cache-data:/data/cache
     env_file:
       - .env
     environment:
@@ -22,7 +22,7 @@ services:
     ports:
       - "${ADMIN_PORT:-8001}:${ADMIN_PORT:-8001}"
     volumes:
-      - ./cache-data:/data/cache
+      - cache-data:/data/cache
     env_file:
       - .env
     environment:
@@ -33,5 +33,5 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
-# volumes:
-#   cache-data:
+volumes:
+  cache-data:

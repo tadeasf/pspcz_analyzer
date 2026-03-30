@@ -37,6 +37,9 @@ class RuntimeConfig:
     # Amendment analysis
     amendments_enabled: bool = True
 
+    # Version diff cost control
+    version_diff_max_pairs: int = 2
+
     # Dev skip flags
     dev_skip_classify_and_summarize: bool = False
     dev_skip_version_diffs: bool = False
@@ -82,6 +85,7 @@ def _defaults_from_env() -> dict:
         "daily_refresh_enabled": cfg.DAILY_REFRESH_ENABLED,
         "daily_refresh_hour": cfg.DAILY_REFRESH_HOUR,
         "amendments_enabled": cfg.AMENDMENTS_ENABLED,
+        "version_diff_max_pairs": cfg.VERSION_DIFF_MAX_PAIRS,
         "dev_skip_classify_and_summarize": cfg.DEV_SKIP_CLASSIFY_AND_SUMMARIZE,
         "dev_skip_version_diffs": cfg.DEV_SKIP_VERSION_DIFFS,
         "dev_skip_amendments": cfg.DEV_SKIP_AMENDMENTS,
@@ -148,6 +152,7 @@ def apply_runtime_config(config: RuntimeConfig) -> None:
     cfg.DAILY_REFRESH_ENABLED = config.daily_refresh_enabled
     cfg.DAILY_REFRESH_HOUR = config.daily_refresh_hour
     cfg.AMENDMENTS_ENABLED = config.amendments_enabled
+    cfg.VERSION_DIFF_MAX_PAIRS = config.version_diff_max_pairs
     cfg.DEV_SKIP_CLASSIFY_AND_SUMMARIZE = config.dev_skip_classify_and_summarize
     cfg.DEV_SKIP_VERSION_DIFFS = config.dev_skip_version_diffs
     cfg.DEV_SKIP_AMENDMENTS = config.dev_skip_amendments
