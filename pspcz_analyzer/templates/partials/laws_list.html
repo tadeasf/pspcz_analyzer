@@ -1,3 +1,4 @@
+{% from "macros.html" import driver_badge %}
 {% if not rows %}
 <p>{{ _("laws.no_data") }}</p>
 {% else %}
@@ -23,7 +24,10 @@
                 </td>
                 <td>
                     {% for t in row.topics %}
-                    <span class="topic-badge">{{ t }}</span>
+                    <button type="button" class="topic-badge topic-badge-link"
+                            hx-get="/api/laws?period={{ period }}&topic={{ t | urlencode }}"
+                            hx-target="#results" hx-indicator="#loading"
+                            title="{{ _('laws.filter_by_topic') }}">{{ t }}</button>
                     {% endfor %}
                 </td>
                 <td><small>{{ row.submitter }}</small></td>
@@ -37,10 +41,18 @@
                     <span class="vote-passive">{{ row.status }}</span>
                     {% endif %}
                     {% if row.has_amendments %}
-                    <br><small>{{ row.amendment_count }} PN</small>
+                    <br>
+                    <a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}" class="amend-inline-link">{{ row.amendment_count }} PN</a>
+                    {{ driver_badge(row.driver) }}
                     {% endif %}
                 </td>
-                <td><small>{{ row.law_number }}</small></td>
+                <td>
+                    {% if row.law_number %}
+                    <small>{{ row.law_number }}</small>
+                    {% else %}
+                    <small class="law-number-pending" title="{{ _('laws.law_number_pending') }}">—</small>
+                    {% endif %}
+                </td>
                 <td>
                     <a href="/laws/{{ row.ct }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
                 </td>

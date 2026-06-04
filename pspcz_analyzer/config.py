@@ -69,6 +69,21 @@ PERIOD_ORGAN_IDS: dict[int, int] = {
 
 DEFAULT_PERIOD = 10
 
+# Government-coalition detection (services/coalition_detector.py) reads the
+# governing coalition automatically from the chamber's investiture confidence
+# vote — no manual per-period list. A coalition is only emitted when a passed
+# confidence vote is clearly polarized: at least one club votes YES with a
+# fraction >= CONFIDENCE_YES_BLOC and at least one votes YES with a fraction
+# <= CONFIDENCE_NO_BLOC, AND the vote is genuinely contested (overall YES share
+# <= CONFIDENCE_MAX_YES_SHARE — this rejects near-unanimous procedural votes that
+# share the confidence agenda-item name). Otherwise the period is "unknown".
+CONFIDENCE_YES_BLOC: float = 0.6
+CONFIDENCE_NO_BLOC: float = 0.4
+CONFIDENCE_MAX_YES_SHARE: float = 0.75
+
+# Club abbreviation fragments that mark non-affiliated MPs (no gov/opposition side).
+INDEPENDENT_CLUB_MARKERS: tuple[str, ...] = ("Nezařaz", "nez.")
+
 # Number of newest electoral periods to process with AI (0 = all)
 AI_PERIODS_LIMIT: int = int(os.environ.get("AI_PERIODS_LIMIT", "3"))
 
@@ -84,6 +99,12 @@ PSP_TISKT_URL_TEMPLATE = "https://www.psp.cz/sqw/text/tiskt.sqw?o={period}&ct={c
 PSP_HISTORIE_URL_TEMPLATE = "https://www.psp.cz/sqw/historie.sqw?o={period}&t={ct}"
 TISKY_HISTORIE_DIR = "tisky_historie"
 
+# Terminal tisk statuses — a bill in one of these states is finished and will
+# not change again, so the daily refresh skips re-scraping it. Any other status
+# (e.g. "projednáváno", "schváleno sněmovnou", "podepsáno") is still "active":
+# it can advance another legislative step, so refresh re-scrapes it.
+TERMINAL_TISK_STATUSES: frozenset[str] = frozenset({"vyhlášeno", "zamítnuto", "staženo"})
+
 # Legislative evolution: law changes, related bills, sub-tisk versions
 PSP_LAW_CHANGES_URL_TEMPLATE = "https://www.psp.cz/sqw/historie.sqw?o={period}&t={ct}&snzp=1"
 PSP_RELATED_BILLS_URL_TEMPLATE = "https://www.psp.cz/sqw/tisky.sqw?idsb={idsb}"
@@ -93,6 +114,10 @@ TISKY_RELATED_BILLS_DIR = "related_bills"
 TISKY_VERSION_DIFFS_DIR = "tisky_version_diffs"
 PSP_ORIG2_BASE_URL = "https://www.psp.cz/sqw/text/orig2.sqw"
 PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
+# Upper bound on steno sub-pages downloaded per agenda item (bod). Amendment
+# voting is at the END of a bod's discussion, so when a bod exceeds this we keep
+# the LAST N sub-pages. Prevents pathological 100-220 page bods from flooding I/O.
+STENO_MAX_SUBPAGES_PER_BOD = 250
 
 # LLM provider selection: "ollama" (default) or "openai" (any OpenAI-compatible API)
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")

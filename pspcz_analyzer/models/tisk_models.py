@@ -73,6 +73,8 @@ class PeriodData:
     tisk_lookup: dict[tuple[int, int], TiskInfo] = field(default_factory=dict)
     # Amendment data: (schuze, bod) -> BillAmendmentData
     amendment_data: dict[tuple[int, int], BillAmendmentData] = field(default_factory=dict)
+    # Government-coalition club abbreviations (auto-detected; empty = unknown)
+    coalition_parties: frozenset[str] = field(default_factory=frozenset)
     # Reverse index: id_hlasovani -> (schuze, bod, letter, is_final_vote)
     _amendment_vote_index: dict[int, tuple[int, int, str, bool]] = field(
         default_factory=dict, repr=False

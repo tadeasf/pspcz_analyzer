@@ -21,6 +21,7 @@ def classify_and_save(
     cache_dir: Path,
     progress_callback: Callable[[int, int], None] | None = None,
     cancel_check: Callable[[], None] | None = None,
+    force_cts: set[int] | None = None,
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Run topic classification on extracted texts, save parquet, return maps.
 
@@ -28,8 +29,14 @@ def classify_and_save(
     Saves incrementally after each tisk and resumes from where it left off.
     Smart caching: tisks with topics but no summary are re-processed for
     summaries only (2 LLM calls instead of 4).
+
+    Args:
+        force_cts: Tisk numbers to fully re-classify + re-summarize even if
+            already cached (used by the daily refresh for active bills).
+
     Returns (topic_map, summary_map, summary_en_map).
     """
+    force_cts = force_cts or set()
     meta_dir = cache_dir / TISKY_META_DIR / str(period)
     meta_dir.mkdir(parents=True, exist_ok=True)
     parquet_path = meta_dir / "topic_classifications.parquet"
@@ -47,7 +54,10 @@ def classify_and_save(
     remaining: dict[int, Path] = {}
     incomplete: dict[int, dict] = {}
     for ct, p in text_paths.items():
-        if ct not in existing:
+        if ct in force_cts:
+            # Forced re-run: re-classify + re-summarize from scratch
+            remaining[ct] = p
+        elif ct not in existing:
             remaining[ct] = p
         elif not existing[ct].get("summary"):
             # Has record but missing summary — needs re-processing
@@ -57,7 +67,7 @@ def classify_and_save(
     llm = create_llm_client()
     use_ai = llm.is_available()
     total = len(text_paths)
-    fully_done = len(existing) - len(incomplete)
+    fully_done = sum(1 for ct in existing if ct not in incomplete and ct not in force_cts)
 
     if fully_done > 0 or incomplete:
         logger.info(
@@ -68,8 +78,8 @@ def classify_and_save(
             total,
         )
 
-    # Start from fully-done existing records
-    records = [row for ct, row in existing.items() if ct not in incomplete]
+    # Start from fully-done existing records (forced cts are rebuilt below)
+    records = [row for ct, row in existing.items() if ct not in incomplete and ct not in force_cts]
 
     if use_ai:
         logger.info(

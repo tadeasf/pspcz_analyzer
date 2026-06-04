@@ -16,6 +16,7 @@ from pspcz_analyzer.config import (
     DEFAULT_CACHE_DIR,
     DEV_SKIP_CLASSIFY_AND_SUMMARIZE,
     DEV_SKIP_VERSION_DIFFS,
+    TERMINAL_TISK_STATUSES,
     TISKY_META_DIR,
     TISKY_TEXT_DIR,
 )
@@ -72,14 +73,21 @@ class TiskPipelineService:
         ct_numbers: list[int],
         on_complete: Callable | None = None,
         mode: TiskMode = TiskMode.FULL,
+        refresh_active: bool = False,
     ) -> None:
-        """Start background processing for a period. Idempotent — skips if already running."""
+        """Start background processing for a period. Idempotent — skips if already running.
+
+        When *refresh_active* is True, cached metadata, sub-tisk versions and AI
+        outputs are re-generated for bills whose status is still active
+        (not terminal) — used by the daily refresh to pick up new legislative
+        steps, amendments and version diffs without re-processing finished bills.
+        """
         if period in self._tasks and not self._tasks[period].done():
             logger.debug("Tisk pipeline already running for period {}", period)
             return
 
         task = asyncio.create_task(
-            self._run_period(period, ct_numbers, on_complete, mode),
+            self._run_period(period, ct_numbers, on_complete, mode, refresh_active),
             name=f"tisk-pipeline-{period}",
         )
         self._tasks[period] = task
@@ -340,10 +348,12 @@ class TiskPipelineService:
         ct_numbers: list[int],
         on_complete: Callable | None,
         mode: TiskMode = TiskMode.FULL,
+        refresh_active: bool = False,
     ) -> None:
         """Run pipeline stages based on mode. Runs heavy work in threads."""
         n = len(ct_numbers)
         cancel_check = self._make_cancel_check(period)
+        active_cts: set[int] | None = None
         try:
             histories: dict = {}
             pdf_paths: dict = {}
@@ -374,7 +384,19 @@ class TiskPipelineService:
                     self.cache_dir,
                     cancel_check=cancel_check,
                     progress_callback=_progress_cb,
+                    force_active=refresh_active,
                 )
+                if refresh_active and histories:
+                    active_cts = {
+                        ct
+                        for ct, h in histories.items()
+                        if h.current_status not in TERMINAL_TISK_STATUSES
+                    }
+                    logger.info(
+                        "[tisk pipeline] Refresh: {} active bills to re-process for period {}",
+                        len(active_cts),
+                        period,
+                    )
                 self._check_period_cancelled(period)
                 self._set_stage(period, PipelineStage.DOWNLOAD_PDFS, n)
                 pdf_paths, text_paths = await asyncio.to_thread(
@@ -394,6 +416,8 @@ class TiskPipelineService:
                     self.cache_dir,
                     cancel_check=cancel_check,
                     progress_callback=_progress_cb,
+                    force_active=refresh_active,
+                    active_cts=active_cts,
                 )
                 self._check_period_cancelled(period)
                 self._set_stage(period, PipelineStage.DOWNLOAD_VERSIONS, n)
@@ -404,6 +428,8 @@ class TiskPipelineService:
                     self.cache_dir,
                     cancel_check=cancel_check,
                     progress_callback=_progress_cb,
+                    force_active=refresh_active,
+                    active_cts=active_cts,
                 )
 
             # ── Phase B: AI Classify + Summarize ──
@@ -435,6 +461,7 @@ class TiskPipelineService:
                         self.cache_dir,
                         progress_callback=_classify_cb,
                         cancel_check=cancel_check,
+                        force_cts=active_cts,
                     )
                     self._check_period_cancelled(period)
                     self._set_stage(period, PipelineStage.CONSOLIDATE_TOPICS)
@@ -466,6 +493,7 @@ class TiskPipelineService:
                         self.cache_dir,
                         progress_callback=_diffs_cb,
                         cancel_check=cancel_check,
+                        force_cts=active_cts,
                     )
 
             self._set_period_status(period, PeriodStatus.COMPLETED)

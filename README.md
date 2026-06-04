@@ -8,6 +8,9 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 
 ## Features
 
+- **Legislation Dashboard** — legislation-first homepage leading with laws & amendments: a search hero, a "recent legislative activity" feed (bills that moved most recently), and "currently active laws" linked directly to their amendments. Topic chips filter the laws browser, and each law detail embeds the original bill PDF for reading inline
+- **Daily Refresh** — automatically picks up newly passed laws and freshly voted amendments for the current period: re-scrapes and re-analyzes any bill still in progress (terminal bills stay cached)
+- **Government vs Opposition** — every amendment is tagged by who drives the change (government-coalition, opposition, or cross-party submitters); the coalition is auto-derived per period from the chamber's confidence vote, so new periods need no configuration
 - **Party Loyalty** — rebellion rates: how often each MP votes against their party's majority
 - **Attendance** — participation rates with breakdowns (active, passive, absent, excused)
 - **Voting Similarity** — cross-party alliances via cosine similarity + PCA visualization
@@ -21,7 +24,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Rate Limiting & Security** — per-endpoint rate limits (slowapi), CSP/HSTS/Permissions-Policy headers, CSRF protection, and XSS sanitization (nh3)
 - **Legislative Evolution** — bill version diffs, law changes, and related bills discovery
 - **Laws Browser** — searchable list of all parliamentary bills with detail pages showing sponsors, status, and legislative history
-- **Amendment Voting** — third-reading amendment analysis: per-amendment vote results, coalition breakdowns, and AI summaries
+- **Amendment Voting** — third-reading amendment analysis: per-amendment vote results, coalition breakdowns, government/opposition submitter tagging, and AI summaries
 - **Admin Dashboard** — password-protected backend (port 8001) for pipeline management, runtime config, log streaming, and system monitoring
 - **Docker** — containerized deployment with docker-compose
 - **Documentation** — project docs on [GitHub](https://tadeasf.github.io/pspcz_analyzer/)

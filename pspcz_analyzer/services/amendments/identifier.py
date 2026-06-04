@@ -11,7 +11,11 @@ from pathlib import Path
 import polars as pl
 from loguru import logger
 
-from pspcz_analyzer.config import TISKY_HISTORIE_DIR, TISKY_META_DIR
+from pspcz_analyzer.config import (
+    TERMINAL_TISK_STATUSES,
+    TISKY_HISTORIE_DIR,
+    TISKY_META_DIR,
+)
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.tisk.cache_manager import TiskCacheManager
@@ -22,6 +26,7 @@ def _ensure_tisk_histories(
     period: int,
     period_data: PeriodData,
     cache_dir: Path,
+    refresh_active: bool = False,
 ) -> None:
     """Ensure tisk history data exists and is loaded into memory.
 
@@ -34,6 +39,9 @@ def _ensure_tisk_histories(
         period: Electoral period number.
         period_data: Loaded period data with tisk_lookup.
         cache_dir: Base cache directory.
+        refresh_active: When True, re-scrape histories of active (non-terminal)
+            bills so newly third-read bills enter the candidate set during the
+            daily refresh.
     """
     hist_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_HISTORIE_DIR
     needs_scrape = not hist_dir.exists() or not any(hist_dir.glob("*.json"))
@@ -56,16 +64,22 @@ def _ensure_tisk_histories(
     cache_mgr.invalidate(period)
     history_map = cache_mgr.load_history_cache(period)
 
-    # Detect stale histories missing amendment sub-tisk data and re-scrape
-    stale_cts = [ct for ct, h in history_map.items() if h.amendment_tisk_ct1 is None and h.stages]
+    # Re-scrape histories that are stale (missing amendment sub-tisk data) or,
+    # during a daily refresh, still active (so new third readings are detected).
+    stale_cts = [
+        ct
+        for ct, h in history_map.items()
+        if (h.amendment_tisk_ct1 is None and h.stages)
+        or (refresh_active and h.current_status not in TERMINAL_TISK_STATUSES)
+    ]
     if stale_cts:
         logger.info(
-            "[amendment pipeline] Re-scraping {} stale tisk histories for period {} "
-            "(missing amendment sub-tisk data)",
+            "[amendment pipeline] Re-scraping {} tisk histories for period {} "
+            "(stale or active refresh)",
             len(stale_cts),
             period,
         )
-        refreshed = scrape_histories_sync(period, stale_cts, cache_dir)
+        refreshed = scrape_histories_sync(period, stale_cts, cache_dir, force_active=refresh_active)
         history_map.update(refreshed)
 
     loaded = 0

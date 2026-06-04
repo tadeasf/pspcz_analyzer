@@ -47,6 +47,7 @@ from pspcz_analyzer.models.schemas import (
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.amendments.cache_manager import load_amendments
 from pspcz_analyzer.services.analysis_cache import analysis_cache
+from pspcz_analyzer.services.coalition_detector import detect_coalition_parties
 from pspcz_analyzer.services.mp_builder import build_mp_info
 from pspcz_analyzer.services.tisk import (
     TiskCacheManager,
@@ -353,6 +354,9 @@ class DataReader:
         # Load cached amendment data
         amendment_data = load_amendments(self.cache_dir, period) if AMENDMENTS_ENABLED else {}
 
+        # Auto-detect the governing coalition from the confidence vote
+        coalition_parties = detect_coalition_parties(votes, mp_votes, mp_info)
+
         pd = PeriodData(
             period=period,
             votes=votes,
@@ -361,6 +365,7 @@ class DataReader:
             mp_info=mp_info,
             tisk_lookup=tisk_lookup,
             amendment_data=amendment_data,
+            coalition_parties=coalition_parties,
         )
         pd.build_amendment_vote_index()
         self._periods[period] = pd

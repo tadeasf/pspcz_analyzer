@@ -1,3 +1,4 @@
+{% from "macros.html" import driver_badge %}
 {% if not rows %}
 <p>{{ _("amendments.no_data") }}</p>
 {% else %}
@@ -7,6 +8,7 @@
         <thead>
             <tr>
                 <th>{{ _("th.description") }}</th>
+                <th>{{ _("driver.label") }}</th>
                 <th>{{ _("amendments.amendments_for") }}</th>
                 <th>{{ _("amendments.result.accepted") }}</th>
                 <th>{{ _("amendments.result.rejected") }}</th>
@@ -22,6 +24,7 @@
                     <strong>Tisk {{ row.ct }}</strong><br>
                     <small>{{ row.tisk_nazev[:80] }}{% if row.tisk_nazev|length > 80 %}...{% endif %}</small>
                 </td>
+                <td>{{ driver_badge(row.driver) }}</td>
                 <td>{{ row.amendment_count }}</td>
                 <td class="vote-yes">{{ row.accepted }}</td>
                 <td class="vote-no">{{ row.rejected }}</td>

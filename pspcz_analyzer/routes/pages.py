@@ -16,6 +16,7 @@ from pspcz_analyzer.routes.utils import validate_period
 from pspcz_analyzer.services.amendment_service import amendment_detail
 from pspcz_analyzer.services.law_service import get_all_status_labels
 from pspcz_analyzer.services.law_service import law_detail as get_law_detail
+from pspcz_analyzer.services.legislation_overview import active_laws, recent_activity
 from pspcz_analyzer.services.votes_service import vote_detail
 
 router = APIRouter(tags=["Pages"])
@@ -78,9 +79,17 @@ async def index(request: Request, period: int = DEFAULT_PERIOD):
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
+    lang = getattr(request.state, "lang", "cs")
     return templates.TemplateResponse(
         "index.html",
-        _ctx(request, period, stats=pd.stats, active_page="index"),
+        _ctx(
+            request,
+            period,
+            stats=pd.stats,
+            active_page="index",
+            recent_activity=recent_activity(pd, lang),
+            active_laws=active_laws(pd, lang),
+        ),
     )
 
 
@@ -154,7 +163,7 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
 
 @router.get("/laws")
 @limiter.limit("60/minute")
-async def laws_page(request: Request, period: int = DEFAULT_PERIOD):
+async def laws_page(request: Request, period: int = DEFAULT_PERIOD, search: str = ""):
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
@@ -167,6 +176,7 @@ async def laws_page(request: Request, period: int = DEFAULT_PERIOD):
             active_page="laws",
             topics=pd.get_all_topic_labels(lang),
             statuses=get_all_status_labels(pd),
+            initial_search=search,
         ),
     )
 

@@ -1,6 +1,28 @@
 """Service functions for the laws/bills (zákony) page."""
 
+from pspcz_analyzer.config import DEFAULT_CACHE_DIR, TISKY_PDF_DIR
+from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
+from pspcz_analyzer.services.affiliation import amendment_driver
+
+
+def _tisk_pdf_exists(period: int, ct: int) -> bool:
+    """Check whether a cached bill PDF exists for this tisk.
+
+    Args:
+        period: Electoral period number.
+        ct: Tisk number.
+
+    Returns:
+        True if {cache}/tisky_pdf/{period}/{ct}.pdf is present.
+    """
+    return (DEFAULT_CACHE_DIR / TISKY_PDF_DIR / str(period) / f"{ct}.pdf").exists()
+
+
+def _bill_driver(bill: BillAmendmentData, coalition: frozenset[str]) -> str:
+    """Government/opposition driver aggregated across a bill's amendments."""
+    parties = [p for a in bill.amendments for p in a.submitter_parties]
+    return amendment_driver(parties, coalition)
 
 
 def _tisk_status(tisk: TiskInfo) -> str:
@@ -85,12 +107,14 @@ def _build_law_row(
     amendment_count = 0
     final_result = ""
     amendment_link: dict | None = None
+    driver = "unknown"
     for (schuze, bod), bill in data.amendment_data.items():
         if bill.ct == tisk.ct:
             amendment_count = bill.amendment_count
             if bill.final_vote:
                 final_result = bill.final_vote.result
             amendment_link = {"schuze": schuze, "bod": bod}
+            driver = _bill_driver(bill, data.coalition_parties)
             break
 
     # Summary — truncated for list view
@@ -111,6 +135,7 @@ def _build_law_row(
         "amendment_count": amendment_count,
         "has_amendments": amendment_link is not None,
         "amendment_link": amendment_link,
+        "driver": driver,
     }
 
 
@@ -289,6 +314,7 @@ def law_detail(
                     "bod": bod,
                     "amendment_count": bill.amendment_count,
                     "final_result": final_result,
+                    "driver": _bill_driver(bill, data.coalition_parties),
                 }
             )
 
@@ -306,6 +332,8 @@ def law_detail(
         "submitter": submitter,
         "law_number": law_number,
         "history": history,
+        "has_pdf": _tisk_pdf_exists(tisk.period, ct),
+        "pdf_url": f"/api/tisk-pdf/{tisk.period}/{ct}",
         "amendment_entries": amendment_entries,
         "has_amendments": len(amendment_entries) > 0,
         "related_votes": related_votes,

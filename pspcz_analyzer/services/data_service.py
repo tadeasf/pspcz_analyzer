@@ -45,12 +45,21 @@ class DataService(DataReader):
         self.amendment_pipeline = AmendmentPipelineService(cache_dir=cache_dir)
         self._refresh_lock = asyncio.Lock()
 
-    def start_tisk_pipeline(self, period: int, mode: TiskMode = TiskMode.FULL) -> bool:
+    def start_tisk_pipeline(
+        self, period: int, mode: TiskMode = TiskMode.FULL, refresh_active: bool = False
+    ) -> bool:
         """Kick off background tisk processing for a period.
 
         Extracts the list of ct numbers from the already-loaded tisky table
         and starts the pipeline. On completion, updates in-memory tisk_lookup
         entries with fresh topics, summaries, and has_text flags.
+
+        Args:
+            period: Electoral period number.
+            mode: Pipeline execution mode.
+            refresh_active: When True, re-process active (non-terminal) bills even
+                if cached — used by the daily refresh to pick up new legislative
+                steps, amendments and version diffs.
 
         Returns:
             True if a background task was created, False if preconditions not met.
@@ -87,17 +96,32 @@ class DataService(DataReader):
                 p,
             )
             # Start amendment pipeline after tisk completes
-            self.start_amendment_pipeline(p)
+            self.start_amendment_pipeline(p, refresh_active=refresh_active)
 
-        self.tisk_pipeline.start_period(period, ct_numbers, on_complete=_on_complete, mode=mode)
+        self.tisk_pipeline.start_period(
+            period,
+            ct_numbers,
+            on_complete=_on_complete,
+            mode=mode,
+            refresh_active=refresh_active,
+        )
         return True
 
     def start_amendment_pipeline(
-        self, period: int, mode: AmendmentMode = AmendmentMode.FULL
+        self,
+        period: int,
+        mode: AmendmentMode = AmendmentMode.FULL,
+        refresh_active: bool = False,
     ) -> bool:
         """Kick off background amendment parsing for a period.
 
         Should be called after tisk pipeline completes (needs tisk_lookup).
+
+        Args:
+            period: Electoral period number.
+            mode: Pipeline execution mode.
+            refresh_active: When True, re-scrape active bills' histories so newly
+                third-read bills are detected (daily refresh).
 
         Returns:
             True if a background task was created, False if preconditions not met.
@@ -159,7 +183,12 @@ class DataService(DataReader):
             )
 
         self.amendment_pipeline.start_period(
-            period, pd, on_complete=_on_complete, on_progress=_on_progress, mode=mode
+            period,
+            pd,
+            on_complete=_on_complete,
+            on_progress=_on_progress,
+            mode=mode,
+            refresh_active=refresh_active,
         )
         return True
 
@@ -307,7 +336,10 @@ class DataService(DataReader):
             for period in self._periods:
                 self._cache_mgr.invalidate(period)
 
-            # 5. Restart tisk pipeline with fresh data
-            self.start_all_tisk_pipelines()
+            # 5. Re-run the tisk + amendment pipelines for the current period in
+            #    refresh mode: brand-new tisky are processed and active (non-terminal)
+            #    bills are re-scraped/re-analyzed so new laws and freshly voted
+            #    amendments are picked up. Terminal bills stay served from cache.
+            self.start_tisk_pipeline(DEFAULT_PERIOD, mode=TiskMode.FULL, refresh_active=True)
 
             logger.info("[daily-refresh] Full data refresh complete")

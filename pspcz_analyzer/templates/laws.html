@@ -11,8 +11,8 @@
     <input type="hidden" name="period" value="{{ period }}">
     <div class="form-row">
         <label>
-            {{ _("form.search_votes") }}
-            <input type="search" name="search" placeholder="{{ _('form.search_placeholder') }}" value="">
+            {{ _("form.search_laws") }}
+            <input type="search" name="search" placeholder="{{ _('form.search_laws_placeholder') }}" value="{{ initial_search|default('') }}">
         </label>
         <label>
             {{ _("laws.status_filter") }}
@@ -41,7 +41,7 @@
 
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
-<div id="results" hx-get="/api/laws?period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+<div id="results" hx-get="/api/laws?period={{ period }}{% if initial_search %}&search={{ initial_search|urlencode }}{% endif %}" hx-trigger="load" hx-indicator="#loading">
     <div class="skeleton">{% for _ in range(8) %}
     <div class="skeleton-pulse skeleton-table-row"></div>
     {% endfor %}</div>

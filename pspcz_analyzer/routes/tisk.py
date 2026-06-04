@@ -4,14 +4,15 @@ import html as html_mod
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import APIRouter, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import (
     DEFAULT_CACHE_DIR,
     DEFAULT_PERIOD,
     GITHUB_FEEDBACK_ENABLED,
+    TISKY_PDF_DIR,
     TISKY_TEXT_DIR,
 )
 from pspcz_analyzer.i18n import gettext as _t
@@ -59,6 +60,31 @@ async def tisk_text_api(
         'padding: 1rem; border: 1px solid #dee2e6; border-radius: 0.5rem;">'
         f'<pre style="white-space: pre-wrap; word-wrap: break-word; font-size: 0.85rem;">{escaped}</pre>'
         "</article>"
+    )
+
+
+@router.get("/tisk-pdf/{period}/{ct}")
+@limiter.limit("120/minute")
+async def tisk_pdf_api(
+    request: Request,
+    period: int,
+    ct: int,
+    ct1: int = Query(default=-1, ge=-1, le=999999),
+):
+    """Serve the cached bill PDF inline for embedding/reading.
+
+    When ct1 >= 0, serves a sub-tisk version PDF ({ct}_{ct1}.pdf).
+    """
+    validate_period(period)
+    data_svc = request.app.state.data
+    name = f"{ct}_{ct1}.pdf" if ct1 >= 0 else f"{ct}.pdf"
+    pdf_path = data_svc.cache_dir / TISKY_PDF_DIR / str(period) / name
+    if not pdf_path.exists():
+        raise HTTPException(status_code=404, detail=_t("laws.pdf_unavailable"))
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{name}"'},
     )
 
 

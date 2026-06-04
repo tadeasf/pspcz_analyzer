@@ -19,16 +19,15 @@ This module handles:
 import re
 import time
 from enum import StrEnum
-from html import unescape as html_unescape
 from pathlib import Path
 
 import httpx
 from loguru import logger
-from selectolax.parser import HTMLParser
 
 from pspcz_analyzer.config import (
     PERIOD_YEARS,
     PSP_REQUEST_DELAY,
+    STENO_MAX_SUBPAGES_PER_BOD,
     UNL_ENCODING,
 )
 
@@ -40,7 +39,6 @@ class StenoFailure(StrEnum):
     INDEX_DOWNLOAD_FAILED = "index_download_failed"
     BOD_NOT_IN_INDEX = "bod_not_in_index"
     NO_SUBPAGES = "no_subpages"
-    NO_AMENDMENT_START = "no_amendment_start"
     SUBPAGE_DOWNLOAD_FAILED = "subpage_download_failed"
 
 
@@ -57,54 +55,8 @@ _DAY_PAGE_LINK_RE = re.compile(r'href="((\d+-\d+)\.html(?:#(q\d+))?)"', re.IGNOR
 # Regex for steno sub-page links in day-pages: href="s045062.htm#r1"
 _SUBPAGE_LINK_RE = re.compile(r'href="(s\d+\.htm)', re.IGNORECASE)
 
-# Section anchors in day-pages: <a name="q230" id="q230">
-_SECTION_ANCHOR_RE = re.compile(r'<a\s+[^>]*?(?:name|id)="(q\d+)"', re.IGNORECASE)
-
 # Encoding for steno HTML (matches UNL encoding)
 _STENO_ENCODINGS = ["windows-1250", "iso-8859-2", "utf-8"]
-
-# Regex to detect start of amendment voting section in HTML
-_AMENDMENT_START_RE = re.compile(
-    r"(?:přikročíme|přistoupíme).*?k\s+hlasování\s+o\s+(?:pozměňovac|návrzích)",
-    re.IGNORECASE | re.DOTALL,
-)
-
-# Regex to detect transition to a different bod (agenda item boundary)
-_BOD_BOUNDARY_RE = re.compile(
-    r"(?:Dalším\s+bodem|Přistoupíme\s+k\s+bodu|Přistoupíme\s+k\s+projednávání"
-    r"|Dalším\s+(?:projednávaným\s+)?bodem\s+(?:je|bude|pořadu))",
-    re.IGNORECASE,
-)
-
-
-def _has_amendment_start(html: str) -> bool:
-    """Check if HTML contains the start of the amendment voting section.
-
-    Strips HTML tags and searches for the characteristic phrase
-    "přikročíme k hlasování o pozměňovacích návrzích" that marks where
-    the chair begins the amendment voting procedure.
-
-    Args:
-        html: Raw HTML content of a steno sub-page.
-
-    Returns:
-        True if the amendment voting start pattern is found.
-    """
-    text = html_unescape(HTMLParser(html).text(separator=" ", strip=True) or "")
-    return bool(_AMENDMENT_START_RE.search(text))
-
-
-def _is_bod_boundary(html: str) -> bool:
-    """Check if HTML contains a transition to a different agenda item (bod).
-
-    Args:
-        html: Raw HTML content of a steno sub-page.
-
-    Returns:
-        True if the page starts a new/different bod.
-    """
-    text = html_unescape(HTMLParser(html).text(separator=" ", strip=True) or "")
-    return bool(_BOD_BOUNDARY_RE.search(text))
 
 
 def _detect_decode(content: bytes) -> str:
@@ -282,41 +234,112 @@ def _download_day_page(
     return _download_cached(url, cache_file)
 
 
-def _extract_subpage_links(
-    day_html: str,
-    anchor_id: str | None,
-) -> list[str]:
-    """Extract steno sub-page filenames from a day-page section.
+def _index_anchors_by_page(index_html: str) -> dict[str, list[str]]:
+    """Map each day-page filename to all section anchors the index references.
 
-    If anchor_id is given, extracts links only from the section between
-    that anchor and the next section anchor (e.g. between q230 and q310).
-    Otherwise extracts from the entire page.
+    Every agenda item (bod) the index links onto a given day-page contributes
+    its start anchor (e.g. "q230"). These anchors mark agenda-item boundaries
+    within a day-page, used to bound one bod's span.
+
+    Args:
+        index_html: HTML content of the session index page.
+
+    Returns:
+        Mapping of day-page filename -> ordered unique anchor IDs.
+    """
+    by_page: dict[str, list[str]] = {}
+    for m in _DAY_PAGE_LINK_RE.finditer(index_html):
+        page_file = m.group(1).split("#")[0]
+        anchor = m.group(3)
+        if not anchor:
+            continue
+        anchors = by_page.setdefault(page_file, [])
+        if anchor not in anchors:
+            anchors.append(anchor)
+    return by_page
+
+
+def _find_anchor(day_html: str, anchor: str) -> re.Match[str] | None:
+    """Locate a section anchor (name=/id=) within a day-page.
 
     Args:
         day_html: HTML content of the day-page.
-        anchor_id: Section anchor ID (e.g. "q230"), or None for full page.
+        anchor: Anchor ID to find (e.g. "q230").
+
+    Returns:
+        The regex match, or None if absent.
+    """
+    return re.search(rf'(?:name|id)="{re.escape(anchor)}"', day_html, re.IGNORECASE)
+
+
+def _earliest_anchor_pos(day_html: str, target_anchors: list[str | None]) -> int:
+    """Return the start offset of a bod's span on a day-page.
+
+    A None anchor (index link without a #fragment) means the bod begins at the
+    top of the page.
+
+    Args:
+        day_html: HTML content of the day-page.
+        target_anchors: Anchors the index assigned to this bod on this page.
+
+    Returns:
+        Character offset where the bod's span starts.
+    """
+    if any(a is None for a in target_anchors):
+        return 0
+    positions: list[int] = []
+    for anchor in target_anchors:
+        if anchor is None:
+            continue
+        match = _find_anchor(day_html, anchor)
+        if match:
+            positions.append(match.end())
+    return min(positions) if positions else 0
+
+
+def _next_boundary_pos(day_html: str, boundary_anchors: list[str], start_pos: int) -> int:
+    """Return the end offset of a bod's span (the next other-bod anchor).
+
+    Args:
+        day_html: HTML content of the day-page.
+        boundary_anchors: Anchors of OTHER bods on this page.
+        start_pos: Offset where the target bod's span starts.
+
+    Returns:
+        Character offset where the next agenda item begins, or end-of-page.
+    """
+    end_pos = len(day_html)
+    for anchor in boundary_anchors:
+        match = _find_anchor(day_html, anchor)
+        if match and start_pos <= match.start() < end_pos:
+            end_pos = match.start()
+    return end_pos
+
+
+def _subpage_span_for_bod(
+    day_html: str,
+    target_anchors: list[str | None],
+    boundary_anchors: list[str],
+) -> list[str]:
+    """Extract every sub-page link belonging to one bod's span on a day-page.
+
+    The span runs from the bod's earliest target anchor to the next *other-bod*
+    anchor (or end-of-page). Speaker sub-anchors within the bod are NOT treated
+    as boundaries, so intermediate voting sub-pages are captured (unlike the old
+    "stop at the next q### section" logic, which truncated multi-speaker bods).
+
+    Args:
+        day_html: HTML content of the day-page.
+        target_anchors: Anchors the index assigned to this bod on this page.
+        boundary_anchors: Anchors of other bods on this page.
 
     Returns:
         Ordered list of unique sub-page filenames (e.g. ["s045062.htm"]).
     """
-    if anchor_id:
-        # Find section start
-        start_pattern = re.compile(rf'(?:name|id)="{re.escape(anchor_id)}"', re.IGNORECASE)
-        start_match = start_pattern.search(day_html)
-        if not start_match:
-            # Anchor not found; fall back to full page
-            section = day_html
-        else:
-            start_pos = start_match.end()
-            # Find the next section anchor after this one
-            next_match = _SECTION_ANCHOR_RE.search(day_html, pos=start_pos)
-            section = (
-                day_html[start_pos : next_match.start()] if next_match else day_html[start_pos:]
-            )
-    else:
-        section = day_html
+    start_pos = _earliest_anchor_pos(day_html, target_anchors)
+    end_pos = _next_boundary_pos(day_html, boundary_anchors, start_pos)
+    section = day_html[start_pos:end_pos]
 
-    # Extract unique sub-page filenames, preserving order
     seen: set[str] = set()
     subpages: list[str] = []
     for m in _SUBPAGE_LINK_RE.finditer(section):
@@ -324,7 +347,6 @@ def _extract_subpage_links(
         if fname not in seen:
             seen.add(fname)
             subpages.append(fname)
-
     return subpages
 
 
@@ -359,6 +381,88 @@ def _download_subpage(
 # ── Public API ────────────────────────────────────────────────────────────
 
 
+def _collect_bod_subpages(
+    index_html: str,
+    base_url: str,
+    period: int,
+    schuze: int,
+    bod: int,
+    cache_dir: Path,
+) -> list[str] | None:
+    """Collect the complete, ordered set of steno sub-pages for one bod.
+
+    Unions sub-pages across every day-page the index links for this bod, each
+    scoped to the bod's anchor span (start anchor → next other-bod anchor).
+
+    Args:
+        index_html: HTML content of the session index page.
+        base_url: Base URL for this session's steno pages.
+        period: Electoral period number.
+        schuze: Session number.
+        bod: Agenda item number.
+        cache_dir: Base cache directory.
+
+    Returns:
+        Ordered unique sub-page filenames, an empty list if none were found, or
+        None if the bod is absent from the index.
+    """
+    day_refs = _find_bod_day_pages(index_html, bod)
+    if not day_refs:
+        logger.debug(
+            "[amendment pipeline] Bod {} not found in steno index for period={} schuze={}",
+            bod,
+            period,
+            schuze,
+        )
+        return None
+
+    anchors_by_page = _index_anchors_by_page(index_html)
+    target_by_page: dict[str, list[str | None]] = {}
+    for page_file, anchor_id in day_refs:
+        target_by_page.setdefault(page_file, []).append(anchor_id)
+
+    all_subpages: list[str] = []
+    seen: set[str] = set()
+    for page_file, target_anchors in target_by_page.items():
+        day_html = _download_day_page(base_url, page_file, period, schuze, cache_dir)
+        if day_html is None:
+            continue
+        boundary = [a for a in anchors_by_page.get(page_file, []) if a not in target_anchors]
+        for sp in _subpage_span_for_bod(day_html, target_anchors, boundary):
+            if sp not in seen:
+                seen.add(sp)
+                all_subpages.append(sp)
+    return all_subpages
+
+
+def _download_all_subpages(
+    base_url: str,
+    subpages: list[str],
+    period: int,
+    schuze: int,
+    cache_dir: Path,
+) -> list[tuple[str, str]]:
+    """Download every sub-page in order, skipping failures.
+
+    Args:
+        base_url: Base URL for this session's steno pages.
+        subpages: Ordered sub-page filenames to download.
+        period: Electoral period number.
+        schuze: Session number.
+        cache_dir: Base cache directory.
+
+    Returns:
+        List of (subpage_name, html) in order for pages that downloaded.
+    """
+    collected: list[tuple[str, str]] = []
+    for name in subpages:
+        html = _download_subpage(base_url, name, period, schuze, cache_dir)
+        if html is None:
+            continue
+        collected.append((name, html))
+    return collected
+
+
 def find_steno_for_bod(
     period: int,
     schuze: int,
@@ -368,8 +472,11 @@ def find_steno_for_bod(
 ) -> tuple[str | None, str, StenoFailure | None]:
     """Find and download steno transcript pages for a specific agenda item.
 
-    Follows the three-level psp.cz steno structure:
-      index → day-pages → transcript sub-pages
+    Follows the three-level psp.cz steno structure (index → day-pages →
+    transcript sub-pages) and returns the concatenated transcript for the bod.
+    Rather than guessing where amendment voting starts from a narrative phrase,
+    it captures the bod's whole span and lets the parser + cross-validation
+    against the official vote numbers isolate the amendment votes.
 
     Args:
         period: Electoral period number.
@@ -389,36 +496,13 @@ def find_steno_for_bod(
 
     base_url = PSP_STENO_BASE_TEMPLATE.format(year=year, session=schuze)
 
-    # Step 1: Download and parse the index page
     index_html = _download_index(period, schuze, cache_dir)
     if not index_html:
         return None, "", StenoFailure.INDEX_DOWNLOAD_FAILED
 
-    # Step 2: Find which day-pages discuss this bod
-    day_refs = _find_bod_day_pages(index_html, bod)
-    if not day_refs:
-        logger.debug(
-            "[amendment pipeline] Bod {} not found in steno index for period={} schuze={}",
-            bod,
-            period,
-            schuze,
-        )
+    all_subpages = _collect_bod_subpages(index_html, base_url, period, schuze, bod, cache_dir)
+    if all_subpages is None:
         return None, "", StenoFailure.BOD_NOT_IN_INDEX
-
-    # Step 3: Download day-pages and extract sub-page links
-    all_subpages: list[str] = []
-    seen_subpages: set[str] = set()
-    for page_file, anchor_id in day_refs:
-        day_html = _download_day_page(base_url, page_file, period, schuze, cache_dir)
-        if day_html is None:
-            continue
-
-        subpages = _extract_subpage_links(day_html, anchor_id)
-        for sp in subpages:
-            if sp not in seen_subpages:
-                seen_subpages.add(sp)
-                all_subpages.append(sp)
-
     if not all_subpages:
         logger.debug(
             "[amendment pipeline] No steno sub-pages found for period={} schuze={} bod={}",
@@ -428,6 +512,18 @@ def find_steno_for_bod(
         )
         return None, "", StenoFailure.NO_SUBPAGES
 
+    if len(all_subpages) > STENO_MAX_SUBPAGES_PER_BOD:
+        logger.warning(
+            "[amendment pipeline] Bod {} has {} steno sub-pages (period={} schuze={}); "
+            "keeping last {} (voting is at the end)",
+            bod,
+            len(all_subpages),
+            period,
+            schuze,
+            STENO_MAX_SUBPAGES_PER_BOD,
+        )
+        all_subpages = all_subpages[-STENO_MAX_SUBPAGES_PER_BOD:]
+
     logger.debug(
         "[amendment pipeline] Found {} steno sub-pages for period={} schuze={} bod={}",
         len(all_subpages),
@@ -436,51 +532,10 @@ def find_steno_for_bod(
         bod,
     )
 
-    # Step 4: Download sub-pages in reverse order with early exit
-    # Amendment voting always happens at the END of a bod's discussion,
-    # so we search backwards to find the start pattern, avoiding downloading
-    # all 100-220 sub-pages when only the last 3-10 contain useful data.
-    collected: list[tuple[str, str]] = []  # (subpage_name, html)
-    found_start = False
-    start_idx: int | None = None
-
-    for i, subpage_name in enumerate(reversed(all_subpages)):
-        html = _download_subpage(base_url, subpage_name, period, schuze, cache_dir)
-        if html is None:
-            continue
-        collected.append((subpage_name, html))
-
-        if _has_amendment_start(html):
-            found_start = True
-            # Convert reversed index back to forward index
-            start_idx = len(all_subpages) - 1 - i
-            break
-
+    collected = _download_all_subpages(base_url, all_subpages, period, schuze, cache_dir)
     if not collected:
         return None, "", StenoFailure.SUBPAGE_DOWNLOAD_FAILED
 
-    if not found_start:
-        # No amendment voting section found in the last N pages
-        return None, "", StenoFailure.NO_AMENDMENT_START
-
-    # Restore chronological order (we collected in reverse)
-    collected.reverse()
-
-    # Step 4b: Collect forward sub-pages after the start page
-    # Amendment voting often spans 2-5 consecutive sub-pages. Continue
-    # forward until hitting a page that starts a different bod.
-    assert start_idx is not None
-    last_collected = collected[-1][0]
-    last_collected_idx = all_subpages.index(last_collected)
-    for fwd_name in all_subpages[last_collected_idx + 1 :]:
-        fwd_html = _download_subpage(base_url, fwd_name, period, schuze, cache_dir)
-        if fwd_html is None:
-            continue
-        if _is_bod_boundary(fwd_html):
-            break
-        collected.append((fwd_name, fwd_html))
-
     first_url = base_url + collected[0][0]
     combined_parts = [html for _, html in collected]
-
     return "\n".join(combined_parts), first_url, None

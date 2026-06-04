@@ -1,0 +1,11 @@
+{# Shared UI macros. Import with: {% from "macros.html" import driver_badge %} #}
+
+{% macro driver_badge(driver) %}
+{%- if driver == 'government' -%}
+<span class="driver-badge driver-government">{{ _("driver.government") }}</span>
+{%- elif driver == 'opposition' -%}
+<span class="driver-badge driver-opposition">{{ _("driver.opposition") }}</span>
+{%- elif driver == 'mixed' -%}
+<span class="driver-badge driver-mixed">{{ _("driver.mixed") }}</span>
+{%- endif -%}
+{% endmacro %}

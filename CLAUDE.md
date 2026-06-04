@@ -73,7 +73,7 @@ The app runs as two separate FastAPI processes:
 
 Two-tier data service:
 - **`DataReader`** — Read-only base class. Loads shared tables, per-period data, watches filesystem for pipeline outputs. Used by the frontend.
-- **`DataService`** — Extends `DataReader` with pipeline orchestration (tisk, amendment, daily refresh). Used by the backend.
+- **`DataService`** — Extends `DataReader` with pipeline orchestration (tisk, amendment, daily refresh). Used by the backend. The daily refresh (`refresh_all_data`) re-downloads shared tables + current-period voting, then re-runs the current-period tisk + amendment pipelines in **refresh-active mode**: brand-new tisky are processed and any bill whose status is non-terminal (not in `TERMINAL_TISK_STATUSES`) is re-scraped and re-analyzed (histories, law changes, sub-tisk versions, AI summaries/diffs, amendments). Terminal bills stay served from cache. The `refresh_active` flag threads through `start_tisk_pipeline`/`start_amendment_pipeline` → the pipeline stages → `scrape_histories_sync`/`scrape_law_changes_sync`/`classify_and_save`/`analyze_version_diffs_sync` and the amendment `identifier`.
 
 Both are initialized at startup via FastAPI lifespan, stored on `app.state.data`. Manages:
 - **Shared tables** (persons, MPs, organs, memberships) — loaded once across all periods
@@ -130,11 +130,23 @@ Background pipeline for third-reading amendment voting analysis. Runs as asyncio
 
 ### Law Service (`services/law_service.py`)
 
-Provides data for the laws browser. Loads tisk metadata and legislative histories, returns paginated/filterable bill lists.
+Provides data for the laws browser. Loads tisk metadata and legislative histories, returns paginated/filterable bill lists. Each law row carries its linked amendment count, `(schuze, bod)` link, and gov/opposition `driver` (via `affiliation`).
 
 ### Amendment Service (`services/amendment_service.py`)
 
-High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point).
+High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point). Each amendment/bill dict is tagged with a `driver` (`government`/`opposition`/`mixed`/`unknown`) via `affiliation`.
+
+### Affiliation Service (`services/affiliation.py`)
+
+Classifies a parliamentary club as government-coalition vs opposition (`classify_party`) and derives who drives an amendment from its submitters' clubs (`amendment_driver`). Both take the period's coalition set explicitly (`PeriodData.coalition_parties`); an empty set means "unknown".
+
+### Coalition Detector (`services/coalition_detector.py`)
+
+Auto-derives the governing coalition per period from the chamber's investiture **confidence vote** — no manual config. `detect_coalition_parties(votes, mp_votes, mp_info)` finds passed "vyslovení důvěry" votes (excludes "nedůvěr" no-confidence motions), takes the most recent by `id_hlasovani`, and returns the clubs whose MPs voted YES — but only if the vote is genuinely contested (a polarization guard: clear yes/no blocs, a coalition seat-majority, and overall YES share ≤ `CONFIDENCE_MAX_YES_SHARE` to reject near-unanimous procedural votes). Otherwise returns an empty set ("unknown"). Computed in `DataReader._load_period` and stored on `PeriodData.coalition_parties` (recomputed on daily refresh). Exact for recent periods (10 = ANO+SPD+MS, 8 = ANO+ČSSD+KSČM); conservatively "unknown" when the confidence vote is ambiguous (e.g. period 9).
+
+### Legislation Overview (`services/legislation_overview.py`)
+
+Powers the homepage legislation-first dashboard: `recent_activity()` (bills that moved most recently, by latest dated legislative stage) and `active_laws()` (non-terminal bills still being decided). Each row links a law to its amendments and shows the gov/opposition driver.
 
 ### LLM Integration (`services/llm/`)
 
@@ -158,7 +170,7 @@ Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`.
 - **`routes/voting.py`** — HTMX partials for loyalty, attendance, similarity, votes
 - **`routes/amendments.py`** — HTMX partials for amendment bills and coalitions
 - **`routes/laws.py`** — HTMX partials for laws browser and law detail
-- **`routes/tisk.py`** — HTMX partials for tisk text, evolution, related bills
+- **`routes/tisk.py`** — HTMX partials for tisk text, evolution, related bills; `GET /api/tisk-pdf/{period}/{ct}` streams the cached bill PDF (`tisky_pdf/{period}/{ct}.pdf`) inline (`ct1` query for sub-tisk versions), embedded in an iframe on the law detail page. `SecurityHeadersMiddleware` relaxes `X-Frame-Options`/`frame-ancestors` to same-origin for this route only so the embed renders.
 - **`routes/feedback.py`** — Feedback submission endpoint (POST /api/feedback)
 - **`routes/health.py`** — Health check, LLM health, LLM smoke test
 - **`routes/utils.py`** — Shared utilities (`validate_period`, `_safe_url`)
@@ -168,7 +180,7 @@ Submits user feedback as GitHub Issues. Controlled by `GITHUB_FEEDBACK_ENABLED`.
 
 ### Configuration (`config.py`)
 
-Loads `.env` via `python-dotenv`. Contains psp.cz URLs, cache paths, period-to-year mappings, UNL format constants, and LLM settings (provider-agnostic `LLM_*` constants plus per-provider `OLLAMA_*` / `OPENAI_*` env vars). The `PERIOD_ORGAN_IDS` map is critical — `id_obdobi` in the psp.cz database uses organ IDs, not period numbers.
+Loads `.env` via `python-dotenv`. Contains psp.cz URLs, cache paths, period-to-year mappings, UNL format constants, and LLM settings (provider-agnostic `LLM_*` constants plus per-provider `OLLAMA_*` / `OPENAI_*` env vars). The `PERIOD_ORGAN_IDS` map is critical — `id_obdobi` in the psp.cz database uses organ IDs, not period numbers. Also defines `TERMINAL_TISK_STATUSES` (finished bill statuses the daily refresh skips re-scraping) and the confidence-vote detection thresholds (`CONFIDENCE_YES_BLOC`, `CONFIDENCE_NO_BLOC`, `CONFIDENCE_MAX_YES_SHARE`) used by `coalition_detector` to auto-derive the government coalition (no manual per-period list).
 
 ### Domain Enums (`models/enums.py`)
 

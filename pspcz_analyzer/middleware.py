@@ -20,8 +20,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # Bill PDFs are embedded in our own law-detail page via a same-origin
+        # iframe, so they must allow same-origin framing — the default DENY /
+        # frame-ancestors 'none' would block our own embed.
+        if request.url.path.startswith("/api/tisk-pdf/"):
+            response.headers["X-Frame-Options"] = "SAMEORIGIN"
+            frame_ancestors = "frame-ancestors 'self'"
+        else:
+            response.headers["X-Frame-Options"] = "DENY"
+            frame_ancestors = "frame-ancestors 'none'"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' https://unpkg.com 'unsafe-inline'; "
@@ -29,7 +37,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "img-src 'self' data:; "
             "font-src 'self'; "
             "connect-src 'self'; "
-            "frame-ancestors 'none'"
+            f"{frame_ancestors}"
         )
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["Permissions-Policy"] = (

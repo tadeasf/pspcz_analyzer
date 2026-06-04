@@ -17,9 +17,14 @@ from pspcz_analyzer.models.amendment_models import AmendmentVote
 
 # ── Compiled regex patterns ────────────────────────────────────────────────
 
-# Start of amendment voting section
+# Start of amendment voting section. Czech chairs open the third-reading vote
+# several ways — "Přikročíme k hlasování", "Budeme hlasovat", "Zahájíme
+# hlasování" — often WITHOUT the "o pozměňovacích návrzích" suffix. Match the
+# transition-to-voting verb forms; the suffix is no longer required.
 _START_RE = re.compile(
-    r"přikročíme.*?k\s+hlasování\s+o\s+pozměňovac",
+    r"(?:přikročíme|přistoupíme|budeme|zaháj\w+)\s+"
+    r"(?:nyní\s+|tedy\s+|teď\s+|nejdříve\s+|k\s+)*"
+    r"hlasov\w+",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -187,17 +192,23 @@ def _clean_html(html: str) -> str:
 
 
 def _extract_section(text: str) -> str:
-    """Extract the amendment voting section from cleaned steno text.
+    """Narrow cleaned steno text to the amendment voting section.
+
+    When the start marker is present, slice from it to drop preceding debate
+    (reduces noise). When it is ABSENT, fall back to the full text rather than
+    discarding everything — block-splitting keeps only vote-numbered blocks and
+    cross-validation against the official vote numbers filters the rest, so a
+    bare-opening voting block is still recovered.
 
     Args:
         text: Full cleaned steno text.
 
     Returns:
-        Substring containing the amendment voting section, or empty string.
+        The voting section (sliced) or the full text when no marker is found.
     """
     match = _START_RE.search(text)
     if not match:
-        return ""
+        return text
     return text[match.start() :]
 
 
@@ -501,24 +512,24 @@ def parse_steno_amendments(
     # Clean HTML
     text = _clean_html(html)
 
-    # Find amendment section
+    # Narrow to the voting section. A missing start marker is no longer fatal:
+    # _extract_section falls back to the full text and we lower confidence.
+    if not _START_RE.search(text):
+        warnings.append("No explicit amendment-voting start marker; parsed full bod text")
+        confidence -= 0.1
     section = _extract_section(text)
-    if not section:
-        warnings.append("No amendment voting section found in steno text")
-        confidence -= 0.3
+
+    # Split into blocks — no vote-numbered blocks means genuinely no votes here.
+    raw_blocks = _split_into_blocks(section)
+    if not raw_blocks:
+        warnings.append("No vote blocks found in steno text")
+        confidence -= 0.2
         logger.debug(
-            "No amendment section found in steno for period={} schuze={} bod={}",
+            "No vote blocks found in steno for period={} schuze={} bod={}",
             period,
             schuze,
             bod,
         )
-        return [], max(0.0, confidence), warnings
-
-    # Split into blocks
-    raw_blocks = _split_into_blocks(section)
-    if not raw_blocks:
-        warnings.append("No vote blocks found in amendment section")
-        confidence -= 0.2
         return [], max(0.0, confidence), warnings
 
     # Parse each block
