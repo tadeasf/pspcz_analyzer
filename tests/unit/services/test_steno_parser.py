@@ -76,6 +76,19 @@ STENO_NO_SECTION = """
 </body></html>
 """
 
+# Voting block opened with a bare "Přikročíme k hlasování" (no
+# "o pozměňovacích návrzích" suffix) — the common phrasing that used to be
+# missed by the strict start regex.
+STENO_BARE_OPENING = """
+<html><body>
+<p>Děkuji. Tím rozpravu končím. Přikročíme k hlasování.</p>
+<p>Budeme hlasovat o pozměňovacím návrhu označeném písmenem A.
+Stanovisko výboru je doporučující. Předkladatel? (Souhlas.)</p>
+<p>Zahajuji hlasování. Kdo je pro? Kdo je proti?
+Hlasování číslo 46. Přijato. Pro 140, proti 20.</p>
+</body></html>
+"""
+
 
 class TestCleanHtml:
     def test_strips_tags(self):
@@ -101,10 +114,19 @@ class TestExtractSection:
         assert section != ""
         assert "pozměňovac" in section.lower()
 
-    def test_no_section_returns_empty(self):
+    def test_no_marker_returns_full_text(self):
+        # No start marker -> fall back to full text (not empty), so bare-opening
+        # voting blocks are still parseable downstream.
         text = _clean_html(STENO_NO_SECTION)
         section = _extract_section(text)
-        assert section == ""
+        assert section == text
+
+    def test_bare_opening_marker_matches(self):
+        # "Přikročíme k hlasování" without the "o pozměňovacích" suffix.
+        text = _clean_html(STENO_BARE_OPENING)
+        section = _extract_section(text)
+        assert section != ""
+        assert "Hlasování číslo 46" in section
 
 
 class TestNormalizeResult:
@@ -251,6 +273,15 @@ class TestParsestenoAmendments:
         amendments, _, _ = parse_steno_amendments(STENO_LEG_TECH)
         leg_tech = [a for a in amendments if a.is_leg_tech]
         assert len(leg_tech) >= 1
+
+    def test_bare_opening_yields_vote(self):
+        # Regression for the 0-bills bug: a voting block opened with bare
+        # "Přikročíme k hlasování" (no "o pozměňovacích" suffix) must still parse.
+        amendments, _confidence, _warns = parse_steno_amendments(STENO_BARE_OPENING)
+        a_amends = [a for a in amendments if a.letter == "A"]
+        assert len(a_amends) >= 1
+        assert a_amends[0].vote_number == 46
+        assert a_amends[0].result == "accepted"
 
     def test_no_section_returns_empty(self):
         amendments, confidence, warns = parse_steno_amendments(STENO_NO_SECTION)
