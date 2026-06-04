@@ -37,11 +37,13 @@ _LETTER_RE = re.compile(
 )
 
 # Fallback letter regex: catches letters after "návrhu/návrh" without "písmenem"
-# e.g. "pozměňovací návrh A pan poslanec Nacher"
+# e.g. "pozměňovací návrh A pan poslanec Nacher", "k pozměňovacímu návrhu C)".
+# The mandatory "návrh" prefix keeps this from matching stray capitals such as
+# a name initial ("poslanec Mgr. A. Novák"); only the trailing context is widened.
 _LETTER_FALLBACK_RE = re.compile(
     r"(?:pozměňovac\w+\s+)?návrh\w*\s+"
     r"([A-Z]\d?(?:(?:,\s*|\s+a\s+)[A-Z]\d?)*)"
-    r"(?:\s+pan|\s+poslanc|\s*[,.]|\s+(?:Stanovisko|předložen))",
+    r"(?:\s+pan|\s+poslanc|\s*[,.)]|\s+(?:Stanovisko|předložen|který|jež|jenž))",
     re.IGNORECASE,
 )
 
@@ -78,12 +80,24 @@ _PAREN_STANCE_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Vote result with vote number — allows "Hlasování (číslo N)" paren format
+# Vote number anchor — "Hlasování číslo N" / "Hlasování (číslo N)" / "č. N".
+# Every announced vote carries this regardless of result phrasing; used to COUNT
+# announced votes (multi-day detection) independently of whether a result matched.
+_VOTE_NUMBER_RE = re.compile(r"[Hh]lasování\s+\(?(?:číslo|č\.)\s*(\d+)")
+
+# Vote result with vote number — allows "Hlasování (číslo N)" paren format.
+# The result alternation is broad: beyond bare "Přijato/Zamítnuto" it covers the
+# "(ne)byl přijat/zamítnut" and "Konstatuji, že …" phrasings chairs use, so votes
+# whose result is announced in a non-standard way still produce a block.
 _VOTE_RESULT_RE = re.compile(
     r"[Hh]lasování\s+\(?(?:číslo|č\.)\s*(\d+)"
     r".*?"
-    r"(Přijato|Zamítnuto|Návrh\s+byl\s+přijat|Návrh\s+nebyl\s+přijat)",
-    re.DOTALL,
+    r"(Přijato"
+    r"|Zamítnuto"
+    r"|[Nn]ávrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
+    r"|[Kk]onstatuji[,\s]+že\s+návrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
+    r"|s\s+návrhem\s+(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas))",
+    re.IGNORECASE | re.DOTALL,
 )
 
 # Final passage vote — "zákon jako celku"
@@ -191,25 +205,42 @@ def _clean_html(html: str) -> str:
     return text.strip()
 
 
+def _count_votes(text: str) -> int:
+    """Count announced votes ("Hlasování číslo N") in a text span.
+
+    Args:
+        text: Cleaned steno text.
+
+    Returns:
+        Number of vote-number anchors found.
+    """
+    return sum(1 for _ in _VOTE_NUMBER_RE.finditer(text))
+
+
 def _extract_section(text: str) -> str:
     """Narrow cleaned steno text to the amendment voting section.
 
     When the start marker is present, slice from it to drop preceding debate
-    (reduces noise). When it is ABSENT, fall back to the full text rather than
-    discarding everything — block-splitting keeps only vote-numbered blocks and
-    cross-validation against the official vote numbers filters the rest, so a
-    bare-opening voting block is still recovered.
+    (reduces noise) — UNLESS voting also happens before the marker, which means
+    the bill was voted across multiple days and the first marker belongs to a
+    later day. In that case keep the full text so earlier-day votes are not
+    discarded. When no marker is present, keep the full text too: block-splitting
+    only retains vote-numbered blocks, so a bare-opening voting block still parses.
 
     Args:
         text: Full cleaned steno text.
 
     Returns:
-        The voting section (sliced) or the full text when no marker is found.
+        The voting section (sliced) or the full text.
     """
     match = _START_RE.search(text)
     if not match:
         return text
-    return text[match.start() :]
+    sliced = text[match.start() :]
+    # Votes before the marker (multi-day) → the slice would drop them.
+    if _count_votes(text) > _count_votes(sliced):
+        return text
+    return sliced
 
 
 def _normalize_result(raw: str) -> str:
@@ -222,10 +253,16 @@ def _normalize_result(raw: str) -> str:
         Normalized result: "accepted", "rejected", or "unknown".
     """
     lower = raw.lower().strip()
+    # Rejection phrasings first — some contain the substring "přijat"
+    # (e.g. "návrh nebyl přijat"), so they must win over the "přijat" check.
+    if "nebyl přijat" in lower or "nepřijat" in lower or "zamítnut" in lower or "neprošel" in lower:
+        return "rejected"
     if "přijat" in lower:
         return "accepted"
-    if "zamítnut" in lower:
+    if "nesouhlas" in lower:
         return "rejected"
+    if "souhlas" in lower:
+        return "accepted"
     return "unknown"
 
 
@@ -251,9 +288,10 @@ def _parse_letter_groups(letter_str: str) -> tuple[str, list[str]]:
 def _split_into_blocks(section: str) -> list[str]:
     """Split the amendment section into blocks at each vote result.
 
-    Each block contains the letter introduction, vote number, and result.
-    Splits AFTER each vote result so that text following a result (e.g.
-    the next amendment's introduction) belongs to the next block.
+    Each block contains the letter introduction, vote number, and result, in
+    that order (intro precedes the number, result follows it), so a block maps
+    cleanly to one amendment. Splits AFTER each vote result so text following a
+    result (the next amendment's introduction) belongs to the next block.
 
     Args:
         section: The amendment voting section text.
@@ -514,9 +552,14 @@ def parse_steno_amendments(
 
     # Narrow to the voting section. A missing start marker is no longer fatal:
     # _extract_section falls back to the full text and we lower confidence.
-    if not _START_RE.search(text):
+    marker = _START_RE.search(text)
+    if not marker:
         warnings.append("No explicit amendment-voting start marker; parsed full bod text")
         confidence -= 0.1
+    elif _count_votes(text) > _count_votes(text[marker.start() :]):
+        # Marker present but votes also precede it → multi-day voting.
+        warnings.append("Multi-day voting detected; parsed full bod text")
+        confidence -= 0.05
     section = _extract_section(text)
 
     # Split into blocks — no vote-numbered blocks means genuinely no votes here.

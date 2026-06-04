@@ -658,3 +658,66 @@ class TestCrossValidateAmendments:
         letters = [a.letter for a in result]
         assert "C" in letters
         assert any("C" in w for w in warnings)
+
+
+# Votes on two sitting days: vote 46 (day 1) precedes the first start marker
+# (day 2). The slice would drop vote 46 — full text must be kept.
+STENO_MULTI_DAY = """
+<html><body>
+<p>První den. Sněmovna rozhodla. Hlasování číslo 46. Přijato. Pro 150, proti 10.</p>
+<p>Druhý den. Budeme hlasovat o pozměňovacím návrhu označeném písmenem A.
+Hlasování číslo 51. Přijato. Pro 120, proti 30.</p>
+</body></html>
+"""
+
+# Varied result phrasings the broadened regex must catch.
+STENO_CONTINUATION_PHRASINGS = """
+<html><body>
+<p>Přikročíme k hlasování.</p>
+<p>Návrh pod písmenem D. Hlasování číslo 60. Konstatuji, že návrh byl přijat.</p>
+<p>Návrh pod písmenem E. Hlasování číslo 61. Návrh nebyl přijat.</p>
+<p>Návrh pod písmenem F. Hlasování číslo 62. Zamítnuto.</p>
+</body></html>
+"""
+
+# Letter introduced without "písmenem", plus a name initial that must NOT
+# be picked up as a letter.
+STENO_LETTER_VARIANTS = """
+<html><body>
+<p>Přikročíme k hlasování.</p>
+<p>K pozměňovacímu návrhu C, pan poslanec Svoboda.
+Hlasování číslo 70. Přijato.</p>
+<p>Pan poslanec Mgr. A. Novák vystoupil k věci.
+Hlasování číslo 71. Přijato.</p>
+</body></html>
+"""
+
+
+class TestMultiDayAndPhrasings:
+    def test_multi_day_keeps_pre_marker_votes(self):
+        amendments, _conf, warns = parse_steno_amendments(STENO_MULTI_DAY)
+        nums = {a.vote_number for a in amendments}
+        assert 46 in nums  # day-1 vote, before the day-2 start marker
+        assert 51 in nums
+        assert any("Multi-day" in w for w in warns)
+
+    def test_extract_section_keeps_full_text_multi_day(self):
+        section = _extract_section(_clean_html(STENO_MULTI_DAY))
+        assert "číslo 46" in section  # not trimmed away
+
+    def test_varied_result_phrasings_captured(self):
+        amendments, _conf, _warns = parse_steno_amendments(STENO_CONTINUATION_PHRASINGS)
+        by_num = {a.vote_number: a.result for a in amendments}
+        assert by_num.get(60) == "accepted"  # "Konstatuji, že návrh byl přijat"
+        assert by_num.get(61) == "rejected"  # "Návrh nebyl přijat"
+        assert by_num.get(62) == "rejected"  # "Zamítnuto"
+
+    def test_letter_variant_extracted(self):
+        amendments, _conf, _warns = parse_steno_amendments(STENO_LETTER_VARIANTS)
+        by_num = {a.vote_number: a.letter for a in amendments}
+        assert by_num.get(70) == "C"
+
+    def test_name_initial_not_treated_as_letter(self):
+        amendments, _conf, _warns = parse_steno_amendments(STENO_LETTER_VARIANTS)
+        by_num = {a.vote_number: a.letter for a in amendments}
+        assert by_num.get(71) == ""  # "Mgr. A. Novák" must not yield letter "A"
