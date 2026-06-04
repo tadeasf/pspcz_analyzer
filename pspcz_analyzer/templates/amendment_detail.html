@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% from "macros.html" import driver_badge %}
 {% block title %}{{ _("amendments.detail_title").format(ct=detail.ct) }} — {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h1>{{ _("amendments.detail_title").format(ct=detail.ct) }}</h1>
     <p>{{ detail.tisk_nazev }}</p>
+    {% if detail.driver and detail.driver != "unknown" %}
+    <p class="driver-line">{{ _("driver.label") }}: {{ driver_badge(detail.driver) }}</p>
+    {% endif %}
 </div>
 
 <article>
@@ -88,6 +92,7 @@
                     {% endif %}
                     {% if a.submitter_parties %}
                     <br><small class="badge-info">{{ a.submitter_parties | join(", ") }}</small>
+                    {{ driver_badge(a.driver) }}
                     {% endif %}
                 </td>
                 <td>

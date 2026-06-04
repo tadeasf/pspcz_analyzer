@@ -9,6 +9,7 @@ from loguru import logger
 
 from pspcz_analyzer.config import (
     PSP_REQUEST_DELAY,
+    TERMINAL_TISK_STATUSES,
     TISKY_HISTORIE_DIR,
     TISKY_LAW_CHANGES_DIR,
     TISKY_META_DIR,
@@ -30,11 +31,24 @@ def scrape_histories_sync(
     cache_dir: Path,
     cancel_check: Callable[[], None] | None = None,
     progress_callback: Callable[[int, int], None] | None = None,
+    force_active: bool = False,
 ) -> dict:
     """Scrape legislative history pages for all tisky in a period.
 
     Caches results as JSON files. Skips already-cached tisky.
-    Returns {ct: TiskHistory} dict.
+
+    Args:
+        period: Electoral period number.
+        ct_numbers: Tisk numbers to scrape.
+        cache_dir: Base cache directory.
+        cancel_check: Optional cancellation hook raised between tisky.
+        progress_callback: Optional (done, total) progress hook.
+        force_active: When True, re-scrape any cached bill whose status is not
+            terminal (see TERMINAL_TISK_STATUSES) so daily refresh picks up
+            legislative step changes. Terminal bills are still served from cache.
+
+    Returns:
+        {ct: TiskHistory} dict.
     """
     hist_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_HISTORIE_DIR
     hist_dir.mkdir(parents=True, exist_ok=True)
@@ -52,10 +66,13 @@ def scrape_histories_sync(
         if json_path.exists():
             h = load_history_json(json_path)
             if h:
-                # Re-scrape if history predates amendment sub-tisk scraping
-                if h.amendment_tisk_ct1 is None and h.stages:
+                # Refresh active (non-terminal) bills so status changes show up
+                needs_refresh = force_active and h.current_status not in TERMINAL_TISK_STATUSES
+                # One-time migration: history predates amendment sub-tisk scraping
+                needs_migration = h.amendment_tisk_ct1 is None and bool(h.stages)
+                if needs_refresh or needs_migration:
                     h_fresh = scrape_tisk_history(period, ct)
-                    if h_fresh and h_fresh.amendment_tisk_ct1 is not None:
+                    if h_fresh and (needs_refresh or h_fresh.amendment_tisk_ct1 is not None):
                         save_history_json(h_fresh, json_path)
                         h = h_fresh
                         scraped += 1
@@ -100,10 +117,25 @@ def scrape_law_changes_sync(
     cache_dir: Path,
     cancel_check: Callable[[], None] | None = None,
     progress_callback: Callable[[int, int], None] | None = None,
+    force_active: bool = False,
+    active_cts: set[int] | None = None,
 ) -> dict[int, list[dict]]:
     """Scrape law change pages (snzp=1) for all tisky in a period.
 
-    Caches results as JSON. Returns {ct: [law_change_dicts]}.
+    Caches results as JSON.
+
+    Args:
+        period: Electoral period number.
+        ct_numbers: Tisk numbers to scrape.
+        cache_dir: Base cache directory.
+        cancel_check: Optional cancellation hook raised between tisky.
+        progress_callback: Optional (done, total) progress hook.
+        force_active: When True, re-scrape cached law changes for cts in
+            *active_cts* so daily refresh picks up newly enacted law changes.
+        active_cts: Tisk numbers whose bills are still active (non-terminal).
+
+    Returns:
+        {ct: [law_change_dicts]} dict.
     """
     law_changes_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_LAW_CHANGES_DIR
     law_changes_dir.mkdir(parents=True, exist_ok=True)
@@ -115,9 +147,10 @@ def scrape_law_changes_sync(
     for i, ct in enumerate(ct_numbers, 1):
         if cancel_check:
             cancel_check()
-        # Load from cache
+        # Load from cache (unless this is an active bill being force-refreshed)
+        force = force_active and active_cts is not None and ct in active_cts
         cached = load_law_changes_json(period, ct, cache_dir)
-        if cached is not None:
+        if cached is not None and not force:
             result[ct] = [asdict(c) for c in cached]
             if progress_callback:
                 progress_callback(i, total)

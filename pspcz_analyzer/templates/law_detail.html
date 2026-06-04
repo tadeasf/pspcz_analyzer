@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros.html" import driver_badge %}
 {% block title %}{{ _("laws.detail_title").format(ct=detail.ct) }} — {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
@@ -27,7 +28,7 @@
     <p>
         <strong>{{ _("detail.topics") }}</strong>
         {% for t in detail.topics %}
-        <span class="topic-badge">{{ t }}</span>
+        <a href="/laws?period={{ period }}&topic={{ t | urlencode }}" class="topic-badge topic-badge-link" title="{{ _('laws.filter_by_topic') }}">{{ t }}</a>
         {% endfor %}
     </p>
     {% endif %}
@@ -44,6 +45,16 @@
         <small>{{ _("detail.ai_bill_summary_note") }}</small>
     </div>
     {{ detail.summary | markdown }}
+</div>
+{% endif %}
+
+{% if detail.has_pdf %}
+<div class="pdf-box">
+    <div class="pdf-box-header">
+        {{ _("laws.bill_pdf") }}
+        <a href="{{ detail.pdf_url }}" target="_blank" rel="noopener" class="btn-outline btn-small">{{ _("laws.open_pdf") }} &nearr;</a>
+    </div>
+    <iframe class="pdf-viewer" src="{{ detail.pdf_url }}" loading="lazy" title="{{ _('laws.bill_pdf') }}"></iframe>
 </div>
 {% endif %}
 
@@ -89,6 +100,7 @@
 <article>
     <p>
         <strong>{{ _("laws.amendment_count").format(count=entry.amendment_count) }}</strong>
+        {{ driver_badge(entry.driver) }}
         {% if entry.final_result == "accepted" %}
         — <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
         {% elif entry.final_result == "rejected" %}

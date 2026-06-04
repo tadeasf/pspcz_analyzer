@@ -21,7 +21,10 @@ from loguru import logger
 
 from pspcz_analyzer.config import PSP_HISTORIE_URL_TEMPLATE
 
-# Mark text -> (stage_type, label)
+# Mark text -> (stage_type, label).
+# Marks come from the psp.cz history page's document-log items. NOTE: "VL" is
+# the Vláda (government opinion) mark — NOT Sbírka zákonů. Publication in the
+# collection of laws uses the "Sb" mark under the "Sbírka zákonů" section.
 _MARK_MAP: dict[str, tuple[str, str]] = {
     "PS": ("ps", "Poslanecká sněmovna"),
     "O": ("organizacni", "Organizační výbor"),
@@ -32,7 +35,8 @@ _MARK_MAP: dict[str, tuple[str, str]] = {
     "3": ("3_cteni", "3. čtení"),
     "S": ("senat", "Senát"),
     "P": ("prezident", "Prezident"),
-    "VL": ("sbirka", "Sbírka zákonů"),
+    "VL": ("vlada", "Vláda"),
+    "Sb": ("sbirka", "Sbírka zákonů"),
 }
 
 # Regexes for extracting structured data from text
@@ -238,39 +242,56 @@ def _extract_government_opinion(soup: BeautifulSoup) -> str | None:
     return None
 
 
-def _determine_status(stages: list[TiskHistoryStage], full_text: str) -> str:
-    """Determine current overall status from stages and page text."""
-    lower = full_text.lower()
+def _determine_status(stages: list[TiskHistoryStage]) -> str:
+    """Determine the current overall status from the parsed legislative stages.
 
+    Only the structured stages (the document-log items) are inspected — never the
+    full page text, which contains boilerplate like "ke stažení" (download) and a
+    reference to zákon 106/1999 Sb. that would otherwise yield false positives.
+    """
     if any(s.stage_type == "sbirka" for s in stages):
         return "vyhlášeno"
-    if "zamítnut" in lower:
-        return "zamítnuto"
-    if "stažen" in lower or "vzat zpět" in lower:
-        return "staženo"
 
-    # Check what the last meaningful stage outcome was
+    # Walk the legislative log newest-first; the latest decisive outcome wins.
     for stage in reversed(stages):
-        if stage.outcome:
-            if "schválen" in stage.outcome:
-                if stage.stage_type == "prezident":
-                    return "podepsáno"
-                if stage.stage_type == "3_cteni":
-                    return "schváleno sněmovnou"
-            if "zamítnut" in stage.outcome:
-                return "zamítnuto"
+        outcome = (stage.outcome or "").lower()
+        if not outcome:
+            continue
+        if "zamítnut" in outcome:
+            return "zamítnuto"
+        if "stažen" in outcome or "vzat zpět" in outcome:
+            return "staženo"
+        if "schválen" in outcome:
+            if stage.stage_type == "prezident":
+                return "podepsáno"
+            if stage.stage_type == "3_cteni":
+                return "schváleno sněmovnou"
 
     return "projednáváno"
 
 
 def _extract_law_number(text: str) -> str | None:
-    """Extract law number (e.g. '246/2022 Sb.') from page text."""
+    """Extract a law number (e.g. '246/2022 Sb.') from a text fragment."""
     m = _LAW_NUMBER_RE.search(text)
     if m:
         return m.group(1)
     m = _LAW_NUMBER_ALT_RE.search(text)
     if m:
         return m.group(1)
+    return None
+
+
+def _law_number_from_stages(stages: list[TiskHistoryStage]) -> str | None:
+    """Extract the published law number from the Sbírka zákonů stage only.
+
+    Reading from the whole page would pick up the boilerplate "106/1999 Sb."
+    (the Freedom of Information Act referenced in every page footer).
+    """
+    for stage in stages:
+        if stage.stage_type == "sbirka":
+            number = _extract_law_number(stage.details or "")
+            if number:
+                return number
     return None
 
 
@@ -361,8 +382,8 @@ def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
     stages = _parse_stages(soup)
     submitter, submitter_date = _extract_submitter(soup)
     gov_opinion = _extract_government_opinion(soup)
-    law_number = _extract_law_number(full_text)
-    status = _determine_status(stages, full_text)
+    law_number = _law_number_from_stages(stages)
+    status = _determine_status(stages)
 
     # Extract amendment sub-tisk reference (e.g. "tisk 410/4")
     amendment_ct1, amendment_idd = _extract_amendment_tisk_reference(full_text)

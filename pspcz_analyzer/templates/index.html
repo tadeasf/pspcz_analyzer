@@ -1,68 +1,149 @@
 {% extends "base.html" %}
 {% block title %}{{ _("nav.dashboard") }} — {{ _("site.short_title") }}{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <h1>{{ _("index.title") }}</h1>
-    <p>{{ _("index.subtitle") }}</p>
-</div>
+{% macro status_badge(status) %}
+{% set sl = status.lower() %}
+{% if 'vyhlášeno' in sl or 'podepsáno' in sl or 'schváleno' in sl or 'přijat' in sl %}
+<span class="status-pill status-pill-pass">{{ status }}</span>
+{% elif 'zamítnuto' in sl or 'staženo' in sl or 'zamítnut' in sl %}
+<span class="status-pill status-pill-fail">{{ status }}</span>
+{% else %}
+<span class="status-pill status-pill-active">{{ status }}</span>
+{% endif %}
+{% endmacro %}
 
-<h2>{{ _("index.dataset").format(period=stats.period, label=stats.label) }}</h2>
+{% macro driver_badge(driver) %}
+{% if driver == 'government' %}
+<span class="driver-badge driver-government">{{ _("driver.government") }}</span>
+{% elif driver == 'opposition' %}
+<span class="driver-badge driver-opposition">{{ _("driver.opposition") }}</span>
+{% elif driver == 'mixed' %}
+<span class="driver-badge driver-mixed">{{ _("driver.mixed") }}</span>
+{% endif %}
+{% endmacro %}
 
-<div class="stat-grid">
-    <article class="stat-card stat-card-blue">
-        <h3>{{ "{:,}".format(stats.total_votes) }}</h3>
-        <p>{{ _("index.total_votes") }}</p>
-    </article>
-    <article class="stat-card stat-card-blue">
-        <h3>{{ "{:,}".format(stats.total_mps) }}</h3>
-        <p>{{ _("index.mps") }}</p>
-    </article>
-    <article class="stat-card stat-card-blue">
-        <h3>{{ "{:,}".format(stats.total_mp_records) }}</h3>
-        <p>{{ _("index.individual_records") }}</p>
-    </article>
-    <article class="stat-card stat-card-gray">
-        <h3>{{ "{:,}".format(stats.void_votes) }}</h3>
-        <p>{{ _("index.void_votes") }}</p>
-    </article>
-</div>
-
-<article>
-    <header>{{ _("index.date_range") }}</header>
-    <p>{{ stats.date_min }} — {{ stats.date_max }}</p>
+{% macro feed_item(row) %}
+<article class="feed-item">
+    <div class="feed-item-main">
+        <div class="feed-item-head">
+            <span class="feed-tisk">{{ _("th.tisk") }} {{ row.ct }}</span>
+            {{ status_badge(row.status) }}
+        </div>
+        <a href="/laws/{{ row.ct }}?period={{ period }}" class="feed-title">{{ row.nazev }}</a>
+        <div class="feed-meta">
+            {% if row.latest_date %}
+            <span class="feed-date">{{ _("index.overview.latest_step") }}: {{ row.latest_date }}</span>
+            {% endif %}
+            {% for t in row.topics %}<a href="/laws?period={{ period }}&topic={{ t | urlencode }}" class="topic-badge topic-badge-link" title="{{ _('laws.filter_by_topic') }}">{{ t }}</a>{% endfor %}
+        </div>
+    </div>
+    <div class="feed-item-side">
+        {% if row.has_amendments %}
+        {{ driver_badge(row.driver) }}
+        <a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}"
+           class="feed-amend-link">{{ _("index.overview.view_amendments").format(count=row.amendment_count) }} &rarr;</a>
+        {% else %}
+        <span class="feed-no-amend">{{ _("index.overview.no_amendments") }}</span>
+        {% endif %}
+        <a href="/laws/{{ row.ct }}?period={{ period }}" class="btn-outline btn-small">{{ _("index.overview.view_law") }}</a>
+    </div>
 </article>
+{% endmacro %}
 
-<h2>{{ _("index.available_analyses") }}</h2>
-<div class="grid">
-    <article>
-        <header>{{ _("index.card.loyalty") }}</header>
-        <p>{{ _("index.card.loyalty_desc") }}</p>
-        <a href="/loyalty?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
-    </article>
-    <article>
-        <header>{{ _("index.card.attendance") }}</header>
-        <p>{{ _("index.card.attendance_desc") }}</p>
-        <a href="/attendance?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
-    </article>
-</div>
-<div class="grid">
-    <article>
-        <header>{{ _("index.card.similarity") }}</header>
-        <p>{{ _("index.card.similarity_desc") }}</p>
-        <a href="/similarity?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
-    </article>
-    <article>
-        <header>{{ _("index.card.votes") }}</header>
-        <p>{{ _("index.card.votes_desc") }}</p>
-        <a href="/votes?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
-    </article>
-</div>
-<div class="grid">
-    <article>
-        <header>{{ _("index.card.amendments") }}</header>
-        <p>{{ _("index.card.amendments_desc") }}</p>
-        <a href="/amendments?period={{ period }}" class="btn-explore">{{ _("btn.explore") }}</a>
-    </article>
-</div>
+{% block content %}
+<section class="hero">
+    <p class="hero-eyebrow">{{ _("index.hero.eyebrow") }}</p>
+    <h1 class="hero-title">{{ _("index.hero.title") }}</h1>
+    <p class="hero-subtitle">{{ _("index.hero.subtitle") }}</p>
+    <form class="hero-search" action="/laws" method="get" role="search">
+        <input type="hidden" name="period" value="{{ period }}">
+        <input type="search" name="search"
+               placeholder="{{ _('index.hero.search_placeholder') }}"
+               aria-label="{{ _('index.hero.search_aria') }}">
+        <button type="submit" class="btn-primary">{{ _("index.hero.search_submit") }}</button>
+    </form>
+    <div class="hero-cta">
+        <a href="/laws?period={{ period }}" class="btn-explore">{{ _("index.hero.cta_laws") }}</a>
+        <a href="/amendments?period={{ period }}" class="btn-outline">{{ _("index.hero.cta_amendments") }}</a>
+    </div>
+</section>
+
+<section class="legislation-section">
+    <div class="section-lead">
+        <h2>{{ _("index.recent.title") }}</h2>
+        <p>{{ _("index.recent.subtitle") }}</p>
+    </div>
+    {% if recent_activity %}
+    <div class="legislation-feed">
+        {% for row in recent_activity %}{{ feed_item(row) }}{% endfor %}
+    </div>
+    {% else %}
+    <p class="feed-empty">{{ _("index.recent.empty") }}</p>
+    {% endif %}
+</section>
+
+<section class="legislation-section">
+    <div class="section-lead">
+        <h2>{{ _("index.active.title") }}</h2>
+        <p>{{ _("index.active.subtitle") }}</p>
+    </div>
+    {% if active_laws %}
+    <div class="legislation-feed">
+        {% for row in active_laws %}{{ feed_item(row) }}{% endfor %}
+    </div>
+    {% else %}
+    <p class="feed-empty">{{ _("index.active.empty") }}</p>
+    {% endif %}
+</section>
+
+<section class="dataset-section">
+    <h2>{{ _("index.dataset").format(period=stats.period, label=stats.label) }}</h2>
+    <div class="stat-grid">
+        <article class="stat-card stat-card-blue">
+            <h3>{{ "{:,}".format(stats.total_votes) }}</h3>
+            <p>{{ _("index.total_votes") }}</p>
+        </article>
+        <article class="stat-card stat-card-blue">
+            <h3>{{ "{:,}".format(stats.total_mps) }}</h3>
+            <p>{{ _("index.mps") }}</p>
+        </article>
+        <article class="stat-card stat-card-blue">
+            <h3>{{ "{:,}".format(stats.total_mp_records) }}</h3>
+            <p>{{ _("index.individual_records") }}</p>
+        </article>
+        <article class="stat-card stat-card-gray">
+            <h3>{{ "{:,}".format(stats.void_votes) }}</h3>
+            <p>{{ _("index.void_votes") }}</p>
+        </article>
+    </div>
+    <p class="dataset-range"><strong>{{ _("index.date_range") }}:</strong> {{ stats.date_min }} — {{ stats.date_max }}</p>
+</section>
+
+<section class="analysis-section">
+    <h2>{{ _("index.analysis.title") }}</h2>
+    <div class="grid">
+        <article>
+            <header>{{ _("index.card.loyalty") }}</header>
+            <p>{{ _("index.card.loyalty_desc") }}</p>
+            <a href="/loyalty?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
+        </article>
+        <article>
+            <header>{{ _("index.card.attendance") }}</header>
+            <p>{{ _("index.card.attendance_desc") }}</p>
+            <a href="/attendance?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
+        </article>
+    </div>
+    <div class="grid">
+        <article>
+            <header>{{ _("index.card.similarity") }}</header>
+            <p>{{ _("index.card.similarity_desc") }}</p>
+            <a href="/similarity?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
+        </article>
+        <article>
+            <header>{{ _("index.card.votes") }}</header>
+            <p>{{ _("index.card.votes_desc") }}</p>
+            <a href="/votes?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
+        </article>
+    </div>
+</section>
 {% endblock %}

@@ -8,13 +8,15 @@ import polars as pl
 
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.affiliation import amendment_driver
 
 
-def _amendment_to_dict(amend: AmendmentVote) -> dict:
+def _amendment_to_dict(amend: AmendmentVote, coalition: frozenset[str]) -> dict:
     """Convert an AmendmentVote to a template-friendly dict.
 
     Args:
         amend: The amendment vote to convert.
+        coalition: Government-coalition clubs for the period (gov/opposition tag).
 
     Returns:
         Dict suitable for template rendering.
@@ -26,6 +28,7 @@ def _amendment_to_dict(amend: AmendmentVote) -> dict:
         "submitter_names": amend.submitter_names,
         "submitter_parties": amend.submitter_parties,
         "pdf_submitter_names": amend.pdf_submitter_names,
+        "driver": amendment_driver(amend.submitter_parties, coalition),
         "description": amend.description,
         "committee_stance": amend.committee_stance,
         "proposer_stance": amend.proposer_stance,
@@ -41,11 +44,18 @@ def _amendment_to_dict(amend: AmendmentVote) -> dict:
     }
 
 
-def _bill_summary(bill: BillAmendmentData) -> dict:
+def _bill_driver(bill: BillAmendmentData, coalition: frozenset[str]) -> str:
+    """Aggregate the gov/opposition driver across all of a bill's amendments."""
+    parties = [p for a in bill.amendments for p in a.submitter_parties]
+    return amendment_driver(parties, coalition)
+
+
+def _bill_summary(bill: BillAmendmentData, coalition: frozenset[str]) -> dict:
     """Build a summary dict for a bill's amendment data.
 
     Args:
         bill: Bill amendment data.
+        coalition: Government-coalition clubs for the period (gov/opposition tag).
 
     Returns:
         Dict with bill-level summary fields for template rendering.
@@ -68,6 +78,7 @@ def _bill_summary(bill: BillAmendmentData) -> dict:
         "rejected": rejected,
         "withdrawn": withdrawn,
         "final_result": final_result,
+        "driver": _bill_driver(bill, coalition),
         "parse_confidence": bill.parse_confidence,
         "steno_url": bill.steno_url,
     }
@@ -107,7 +118,7 @@ def list_amendment_bills(
     offset = (page - 1) * per_page
     page_bills = bills[offset : offset + per_page]
 
-    rows = [_bill_summary(b) for b in page_bills]
+    rows = [_bill_summary(b, data.coalition_parties) for b in page_bills]
 
     return {
         "rows": rows,
@@ -186,8 +197,8 @@ def amendment_detail(
     if bill is None:
         return None
 
-    amendments = [_amendment_to_dict(a) for a in bill.amendments]
-    final = _amendment_to_dict(bill.final_vote) if bill.final_vote else None
+    amendments = [_amendment_to_dict(a, data.coalition_parties) for a in bill.amendments]
+    final = _amendment_to_dict(bill.final_vote, data.coalition_parties) if bill.final_vote else None
 
     # Build vote_number → result lookup for revote context
     vote_result_map = _build_vote_result_map(bill)
@@ -241,6 +252,7 @@ def amendment_detail(
         "grouped_amendments": grouped,
         "final_vote": final,
         "amendment_count": bill.amendment_count,
+        "driver": _bill_driver(bill, data.coalition_parties),
         "parse_confidence": bill.parse_confidence,
         "parse_warnings": bill.parse_warnings,
     }

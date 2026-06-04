@@ -56,6 +56,7 @@ def _run_pipeline_sync(
     progress: AmendmentProgress,
     on_progress: Callable[[int, list[BillAmendmentData]], None] | None = None,
     mode: AmendmentMode = AmendmentMode.FULL,
+    refresh_active: bool = False,
 ) -> list[BillAmendmentData]:
     """Run the amendment pipeline synchronously with mode-based stage selection.
 
@@ -66,6 +67,8 @@ def _run_pipeline_sync(
         progress: Progress tracker (mutated in-place).
         on_progress: Optional callback(period, bills) for incremental UI refresh.
         mode: Pipeline execution mode.
+        refresh_active: When True, re-scrape active bills' histories so newly
+            third-read bills are picked up (daily refresh).
 
     Returns:
         List of parsed BillAmendmentData.
@@ -84,7 +87,7 @@ def _run_pipeline_sync(
 
     if run_parse:
         bills, ct_to_pdf_text = _run_parse_stages(
-            period, period_data, cache_dir, progress, on_progress
+            period, period_data, cache_dir, progress, on_progress, refresh_active
         )
     elif run_summarize:
         # Load cached bills from disk
@@ -137,6 +140,7 @@ def _run_parse_stages(
     cache_dir: Path,
     progress: AmendmentProgress,
     on_progress: Callable[[int, list[BillAmendmentData]], None] | None = None,
+    refresh_active: bool = False,
 ) -> tuple[list[BillAmendmentData], dict[int, str]]:
     """Run parse stages of the amendment pipeline.
 
@@ -163,7 +167,7 @@ def _run_parse_stages(
     # Stage 0: Ensure tisk histories exist (scrape if needed)
     progress.stage = AmendmentStage.SCRAPE_HISTORIES
     logger.info("[amendment pipeline] Ensuring tisk histories exist...")
-    _ensure_tisk_histories(period, period_data, cache_dir)
+    _ensure_tisk_histories(period, period_data, cache_dir, refresh_active=refresh_active)
 
     # Stage 1: Identify candidates
     progress.stage = AmendmentStage.IDENTIFY
@@ -369,6 +373,7 @@ class AmendmentPipelineService:
         on_complete: Callable | None = None,
         on_progress: Callable[[int, list[BillAmendmentData]], None] | None = None,
         mode: AmendmentMode = AmendmentMode.FULL,
+        refresh_active: bool = False,
     ) -> None:
         """Start the amendment pipeline for a single period.
 
@@ -378,6 +383,8 @@ class AmendmentPipelineService:
             on_complete: Optional callback(period, bills) on completion.
             on_progress: Optional callback(period, bills) for incremental UI refresh.
             mode: Pipeline execution mode.
+            refresh_active: When True, re-scrape active bills' histories so newly
+                third-read bills are picked up (daily refresh).
         """
         if period in self._tasks and not self._tasks[period].done():
             logger.info("[amendment pipeline] Already running for period {}", period)
@@ -396,6 +403,7 @@ class AmendmentPipelineService:
                     prog,
                     on_progress,
                     mode,
+                    refresh_active,
                 )
                 prog.status = AmendmentStatus.COMPLETED
                 prog.stage = AmendmentStage.COMPLETED

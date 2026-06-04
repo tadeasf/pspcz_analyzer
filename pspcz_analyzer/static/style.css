@@ -687,6 +687,57 @@ details.methodology article {
     border: 1px solid #D0DCE8;
 }
 
+/* Clickable topic chips (filter laws by topic) */
+a.topic-badge-link,
+button.topic-badge-link {
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.2;
+    font-family: inherit;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.topic-badge-link:hover {
+    background: #1A4677;
+    color: #fff;
+    border-color: #1A4677;
+}
+
+/* "Zákon č." not yet assigned in the Collection */
+.law-number-pending {
+    color: #9AA5B1;
+    cursor: help;
+}
+
+/* ============================================================
+   Bill PDF viewer (law detail page)
+   ============================================================ */
+.pdf-box {
+    border: 1px solid #D9D9D9;
+    border-radius: 3px;
+    margin: 1rem 0;
+    overflow: hidden;
+}
+
+.pdf-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background: #F5F5F5;
+    border-bottom: 1px solid #D9D9D9;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    color: #1A4677;
+}
+
+.pdf-viewer {
+    display: block;
+    width: 100%;
+    min-height: 70vh;
+    border: 0;
+}
+
 /* ============================================================
    Info Box (AI summary, etc.)
    ============================================================ */
@@ -857,10 +908,169 @@ details.methodology article {
 }
 
 /* ============================================================
+   Legislation hero (homepage lead)
+   ============================================================ */
+.hero {
+    background: linear-gradient(180deg, #F4F8FC 0%, #FFFFFF 100%);
+    border: 1px solid #D0DCE8;
+    border-top: 3px solid #3C71AC;
+    border-radius: 4px;
+    padding: 2rem 1.75rem;
+    margin-bottom: 1.75rem;
+}
+
+.hero-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #3C71AC;
+    margin-bottom: 0.35rem;
+}
+
+.hero-title { font-size: 2rem; margin-bottom: 0.35rem; }
+
+.hero-subtitle {
+    font-size: 1.02rem;
+    color: #44525f;
+    max-width: 62ch;
+    margin-bottom: 1.1rem;
+}
+
+.hero-search {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 640px;
+    margin-bottom: 0.9rem;
+}
+
+.hero-search input[type="search"] {
+    flex: 1;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #C2CFDC;
+    border-radius: 3px;
+    font-size: 0.95rem;
+}
+
+.hero-cta { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+/* ============================================================
+   Legislation feed (recent activity + active laws)
+   ============================================================ */
+.legislation-section { margin-bottom: 1.75rem; }
+
+.section-lead { margin-bottom: 0.9rem; }
+.section-lead h2 { margin-top: 0; margin-bottom: 0.2rem; }
+.section-lead p { color: #666; font-size: 0.92rem; margin-bottom: 0; }
+
+.legislation-feed { display: grid; gap: 0.6rem; }
+
+.feed-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid #E0E0E0;
+    border-left: 3px solid #3C71AC;
+    border-radius: 3px;
+    padding: 0.8rem 1rem;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+
+.feed-item:hover { background: #F7FAFD; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
+
+.feed-item-main { min-width: 0; }
+
+.feed-item-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.feed-tisk { font-weight: 700; color: #1A4677; font-size: 0.8rem; }
+
+.feed-title {
+    display: block;
+    font-weight: 600;
+    color: #1A4677;
+    text-decoration: none;
+    margin-bottom: 0.3rem;
+}
+.feed-title:hover { text-decoration: underline; }
+
+.feed-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: #777;
+}
+.feed-date { color: #888; }
+
+.feed-item-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.feed-amend-link { font-size: 0.85rem; font-weight: 600; color: #B00007; text-decoration: none; }
+.feed-amend-link:hover { text-decoration: underline; }
+.feed-no-amend { font-size: 0.78rem; color: #999; }
+.feed-empty { color: #777; font-style: italic; padding: 0.75rem 0; }
+
+.amend-inline-link { color: #B00007; font-weight: 600; text-decoration: none; }
+.amend-inline-link:hover { text-decoration: underline; }
+
+.dataset-section, .analysis-section { margin-top: 1.75rem; }
+.dataset-range { font-size: 0.9rem; color: #555; }
+
+/* ============================================================
+   Status pills & gov/opposition driver badges
+   ============================================================ */
+.status-pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.status-pill-pass { background: #E5F2E6; color: #2e7d32; }
+.status-pill-fail { background: #FBE7E7; color: #B00007; }
+.status-pill-active { background: #FFF3E0; color: #b35a00; }
+
+.driver-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.08rem 0.45rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.driver-government { background: #EBF1F8; color: #1A4677; border-color: #BCD0E6; }
+.driver-opposition { background: #FBE7E7; color: #B00007; border-color: #E6BCBC; }
+.driver-mixed { background: #FFF3E0; color: #b35a00; border-color: #EAD2A8; }
+.driver-line { font-size: 0.9rem; color: #555; }
+
+/* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 768px) {
     html { font-size: 12px; }
+
+    .hero { padding: 1.5rem 1.1rem; }
+    .hero-title { font-size: 1.5rem; }
+    .hero-search { flex-direction: column; }
+    .feed-item { flex-direction: column; }
+    .feed-item-side { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
 
     .header-inner {
         flex-wrap: wrap;

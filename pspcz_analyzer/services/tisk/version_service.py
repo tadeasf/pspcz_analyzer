@@ -33,11 +33,20 @@ def download_subtisk_versions_sync(
     cache_dir: Path,
     cancel_check: Callable[[], None] | None = None,
     progress_callback: Callable[[int, int], None] | None = None,
+    force_active: bool = False,
+    active_cts: set[int] | None = None,
 ) -> dict[int, list[dict]]:
     """Download all sub-tisk versions (CT1=0..N) for tisky in a period.
 
     Caches scan results as JSON per-ct so restarts skip already-processed tisky.
-    Returns {ct: [SubTiskVersion dicts]}.
+
+    Args:
+        force_active: When True, re-scan cached cts in *active_cts* so daily
+            refresh discovers newly published amendment/version PDFs.
+        active_cts: Tisk numbers whose bills are still active (non-terminal).
+
+    Returns:
+        {ct: [SubTiskVersion dicts]} dict.
     """
     # JSON cache dir for sub-tisk scan results
     scan_dir = cache_dir / TISKY_META_DIR / str(period) / "subtisk_versions"
@@ -52,8 +61,9 @@ def download_subtisk_versions_sync(
             cancel_check()
         scan_cache = scan_dir / f"{ct}.json"
 
-        # Load from JSON cache if available
-        if scan_cache.exists():
+        # Load from JSON cache if available (unless force-refreshing an active bill)
+        force = force_active and active_cts is not None and ct in active_cts
+        if scan_cache.exists() and not force:
             try:
                 data = json.loads(scan_cache.read_text(encoding="utf-8"))
                 if data:  # non-empty means this ct has sub-versions
@@ -149,11 +159,17 @@ def analyze_version_diffs_sync(
     cache_dir: Path,
     progress_callback: Callable[[int, int], None] | None = None,
     cancel_check: Callable[[], None] | None = None,
+    force_cts: set[int] | None = None,
 ) -> tuple[dict[str, str], dict[str, str]]:
     """Run LLM comparison on consecutive sub-tisk versions.
 
+    Args:
+        force_cts: Tisk numbers whose diffs should be recomputed even if cached
+            (used by the daily refresh for active bills).
+
     Returns ({"{ct}_{ct1}": diff_cs}, {"{ct}_{ct1}": diff_en}).
     """
+    force_cts = force_cts or set()
     llm = create_llm_client()
     if not llm.is_available():
         logger.info("[tisk pipeline] LLM not available, skipping version diff analysis")
@@ -196,8 +212,8 @@ def analyze_version_diffs_sync(
             diff_file = diff_dir / f"{diff_key}.txt"
             diff_file_en = diff_dir / f"{diff_key}_en.txt"
 
-            # Check cache — both CS and EN
-            if diff_file.exists():
+            # Check cache — both CS and EN (forced cts always recompute)
+            if diff_file.exists() and ct not in force_cts:
                 result[diff_key] = diff_file.read_text(encoding="utf-8")
                 if diff_file_en.exists():
                     result_en[diff_key] = diff_file_en.read_text(encoding="utf-8")
