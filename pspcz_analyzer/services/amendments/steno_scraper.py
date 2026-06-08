@@ -28,6 +28,7 @@ from pspcz_analyzer.config import (
     PERIOD_YEARS,
     PSP_REQUEST_DELAY,
     STENO_MAX_SUBPAGES_PER_BOD,
+    STENO_SUBPAGE_GAP_FILL,
     UNL_ENCODING,
 )
 
@@ -54,6 +55,9 @@ _DAY_PAGE_LINK_RE = re.compile(r'href="((\d+-\d+)\.html(?:#(q\d+))?)"', re.IGNOR
 
 # Regex for steno sub-page links in day-pages: href="s045062.htm#r1"
 _SUBPAGE_LINK_RE = re.compile(r'href="(s\d+\.htm)', re.IGNORECASE)
+
+# Parses a sub-page filename into its numeric part: "s017212.htm" -> "017212".
+_SUBPAGE_NUM_RE = re.compile(r"^s(\d+)\.htm$", re.IGNORECASE)
 
 # Encoding for steno HTML (matches UNL encoding)
 _STENO_ENCODINGS = ["windows-1250", "iso-8859-2", "utf-8"]
@@ -381,6 +385,46 @@ def _download_subpage(
 # ── Public API ────────────────────────────────────────────────────────────
 
 
+def _fill_subpage_gaps(subpages: list[str], max_gap: int) -> list[str]:
+    """Fill small numeric gaps between collected steno sub-pages.
+
+    Day-page TOCs link sub-pages by speaker, so a voting-continuation page (no
+    speaker anchor) is skipped even though it sits mid-bod. Given the collected
+    pages, insert any sub-page whose number falls in a gap of at most ``max_gap``
+    between two consecutive collected pages (e.g. s017212 between s017211 and
+    s017213). Larger gaps (separate sitting days/segments) are left alone.
+
+    Args:
+        subpages: Collected sub-page filenames, any order.
+        max_gap: Largest numeric gap to bridge.
+
+    Returns:
+        Sub-page filenames including fillers, in ascending numeric order;
+        any names that don't parse are kept (ordered first).
+    """
+    parsed: list[tuple[int, int, str]] = []  # (number, zero-pad width, name)
+    unparsed: list[str] = []
+    for name in subpages:
+        m = _SUBPAGE_NUM_RE.match(name)
+        if m:
+            digits = m.group(1)
+            parsed.append((int(digits), len(digits), name))
+        else:
+            unparsed.append(name)
+    if not parsed:
+        return subpages
+    parsed.sort(key=lambda t: t[0])
+
+    result: list[str] = []
+    for i, (num, width, name) in enumerate(parsed):
+        result.append(name)
+        if i + 1 < len(parsed):
+            nxt = parsed[i + 1][0]
+            if 1 < nxt - num <= max_gap:
+                result.extend(f"s{n:0{width}d}.htm" for n in range(num + 1, nxt))
+    return [*unparsed, *result]
+
+
 def _collect_bod_subpages(
     index_html: str,
     base_url: str,
@@ -432,6 +476,21 @@ def _collect_bod_subpages(
             if sp not in seen:
                 seen.add(sp)
                 all_subpages.append(sp)
+
+    if all_subpages:
+        filled = _fill_subpage_gaps(all_subpages, STENO_SUBPAGE_GAP_FILL)
+        added = [p for p in filled if p not in seen]
+        if added:
+            logger.debug(
+                "[amendment pipeline] Gap-filled {} continuation sub-page(s) for "
+                "period={} schuze={} bod={}: {}",
+                len(added),
+                period,
+                schuze,
+                bod,
+                added,
+            )
+        all_subpages = filled
     return all_subpages
 
 

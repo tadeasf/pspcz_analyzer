@@ -192,6 +192,11 @@ def _merge_pdf_and_steno(
         if not pdf_amendments:
             continue
 
+        # Only surface PDF-only amendments when steno linked at least one vote for
+        # this bill — otherwise a wholesale steno failure would dump the entire PDF
+        # as unvoted rows.
+        has_steno_votes = any(a.vote_number for a in bill.amendments)
+
         # Build steno lookup by letter (uppercase, stripped)
         steno_by_letter: dict[str, AmendmentVote] = {}
         for amend in bill.amendments:
@@ -232,8 +237,23 @@ def _merge_pdf_and_steno(
                         steno_item.submitter_names = list(pdf_amend.submitter_names)
                     merged.append(steno_item)
                     total_pdf_matched += 1
+            elif has_steno_votes:
+                # PDF-only: a submitted amendment we couldn't tie to a recorded
+                # vote. Surface it as an unvoted entry (vote_number=0 keeps it out
+                # of vote-ID resolution) so the bill shows its full amendment list.
+                merged.append(
+                    AmendmentVote(
+                        letter=pdf_amend.letter.strip().upper(),
+                        vote_number=0,
+                        result="",
+                        amendment_text=pdf_amend.raw_text,
+                        submitter_names=list(pdf_amend.submitter_names),
+                        pdf_submitter_names=list(pdf_amend.submitter_names),
+                    )
+                )
+                total_pdf_only += 1
             else:
-                # PDF-only: no steno match → no vote linkage, skip
+                # No steno votes at all for this bill → don't dump the PDF.
                 total_pdf_only += 1
 
         # Append steno-only leftovers (oral amendments not in PDF)

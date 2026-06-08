@@ -10,6 +10,7 @@ from pspcz_analyzer.services.amendments import steno_scraper
 from pspcz_analyzer.services.amendments.steno_scraper import (
     StenoFailure,
     _collect_bod_subpages,
+    _fill_subpage_gaps,
     _index_anchors_by_page,
     _subpage_span_for_bod,
     find_steno_for_bod,
@@ -119,3 +120,47 @@ class TestFindStenoForBod:
         assert first_url.endswith("s300.htm")
         assert "CONTENT s100.htm" not in html
         assert "CONTENT s301.htm" in html
+
+
+class TestFillSubpageGaps:
+    def test_fills_small_gap(self):
+        # The real case: s017212 (no speaker anchor) between linked pages.
+        out = _fill_subpage_gaps(["s017211.htm", "s017213.htm"], 3)
+        assert out == ["s017211.htm", "s017212.htm", "s017213.htm"]
+
+    def test_does_not_bridge_large_gap(self):
+        # 29 May (s017158) vs 3 June (s017211) — different sitting days, gap ~50.
+        out = _fill_subpage_gaps(["s017158.htm", "s017211.htm"], 3)
+        assert out == ["s017158.htm", "s017211.htm"]
+
+    def test_preserves_zero_pad_width(self):
+        out = _fill_subpage_gaps(["s017211.htm", "s017214.htm"], 3)
+        assert out == ["s017211.htm", "s017212.htm", "s017213.htm", "s017214.htm"]
+
+    def test_consecutive_pages_unchanged(self):
+        out = _fill_subpage_gaps(["s100.htm", "s101.htm"], 3)
+        assert out == ["s100.htm", "s101.htm"]
+
+    def test_sorts_and_handles_short_names(self):
+        out = _fill_subpage_gaps(["s103.htm", "s100.htm"], 3)
+        assert out == ["s100.htm", "s101.htm", "s102.htm", "s103.htm"]
+
+
+# Day 3 variant: TOC links s300 and s302 but NOT the continuation page s301.
+DAY3_GAP_HTML = """
+<html><body>
+<a name="q300"></a> <a href="s300.htm">řečník</a> <a href="s302.htm">pokračování</a>
+<a name="q400"></a> <a href="s400.htm">bod 3</a>
+</body></html>
+"""
+
+
+class TestCollectBodSubpagesGapFill:
+    def test_collects_unlinked_continuation_page(self, monkeypatch):
+        _patch_downloads(
+            monkeypatch, day_pages={"17-1.html": DAY1_HTML, "17-3.html": DAY3_GAP_HTML}
+        )
+        subs = _collect_bod_subpages(INDEX_HTML, "base/", 10, 17, 2, Path("/tmp"))
+        # s301 was never linked in the TOC but is gap-filled between s300 and s302.
+        assert "s301.htm" in subs
+        assert subs == ["s100.htm", "s101.htm", "s300.htm", "s301.htm", "s302.htm"]

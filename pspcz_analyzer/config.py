@@ -118,6 +118,12 @@ PSP_REQUEST_DELAY = 1.0  # seconds between requests to psp.cz
 # voting is at the END of a bod's discussion, so when a bod exceeds this we keep
 # the LAST N sub-pages. Prevents pathological 100-220 page bods from flooding I/O.
 STENO_MAX_SUBPAGES_PER_BOD = 250
+# Day-page TOCs link steno sub-pages by speaker anchor, so voting-continuation
+# pages (no speaker) are skipped. After collecting linked sub-pages we fill
+# numeric gaps no larger than this between consecutive collected pages, so e.g.
+# s017212 between s017211 and s017213 is fetched. Small bound keeps it from
+# bridging unrelated segments (e.g. votes split across two sitting days).
+STENO_SUBPAGE_GAP_FILL = 3
 
 # LLM provider selection: "ollama" (default) or "openai" (any OpenAI-compatible API)
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
