@@ -135,7 +135,7 @@ Provides data for the laws browser. Loads tisk metadata and legislative historie
 
 ### Amendment Service (`services/amendment_service.py`)
 
-High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point). Each amendment/bill dict is tagged with a `driver` (`government`/`opposition`/`mixed`/`unknown`) via `affiliation`.
+High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point). Each amendment/bill dict is tagged with a `driver` (`government`/`opposition`/`mixed`/`unknown`) via `affiliation`. The `driver_badge` macro (macros.html) renders per-amendment and per-bill badges and is **deliberately silent for `unknown`** (e.g. periods where the coalition cannot be derived from the confidence vote) — a neutral badge on every row would be noise; the `.driver-unknown` style and `driver.unknown` key exist for the rare cases a badge is wanted anyway.
 
 ### Affiliation Service (`services/affiliation.py`)
 

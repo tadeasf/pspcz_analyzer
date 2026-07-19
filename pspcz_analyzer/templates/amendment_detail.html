@@ -92,7 +92,7 @@
                     {% endif %}
                     {% if a.submitter_parties %}
                     <br><small class="badge-info">{{ a.submitter_parties | join(", ") }}</small>
-                    {{ driver_badge(a.driver) }}
+                    {{ driver_badge(a.driver, tooltip=a.submitter_names|join(", ")) }}
                     {% endif %}
                 </td>
                 <td>

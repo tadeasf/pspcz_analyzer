@@ -1058,7 +1058,37 @@ button.topic-badge-link {
 .driver-government { background: #EBF1F8; color: #1A4677; border-color: #BCD0E6; }
 .driver-opposition { background: #FBE7E7; color: #B00007; border-color: #E6BCBC; }
 .driver-mixed { background: #FFF3E0; color: #b35a00; border-color: #EAD2A8; }
+.driver-unknown { background: #F0F0F0; color: #555; border-color: #D8D8D8; }
 .driver-line { font-size: 0.9rem; color: #555; }
+
+.unlinked-note { color: #8a6d3b; font-style: italic; }
+.confidence-cell { cursor: help; }
+
+.error-box {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 36rem;
+    background: #FBE7E7;
+    color: #B00007;
+    border: 1px solid #E6BCBC;
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+}
+.error-box-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 0.2rem;
+}
 
 /* ============================================================
    Responsive
