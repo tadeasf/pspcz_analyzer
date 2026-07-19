@@ -170,6 +170,7 @@ def _parse_simple_section(content_div: Tag) -> TiskHistoryStage | None:
     try:
         return _build_stage(mark_text, text)
     except Exception:
+        logger.opt(exception=True).debug("Failed to parse history stage: {!r}", mark_text)
         return None
 
 
