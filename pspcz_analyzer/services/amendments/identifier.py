@@ -156,7 +156,8 @@ def _resolve_vote_ids(
 ) -> None:
     """Resolve vote_number (cislo) to id_hlasovani via the votes DataFrame.
 
-    Mutates the AmendmentVote objects in-place.
+    Mutates the AmendmentVote objects in-place. Unresolved votes are recorded
+    in the bill's parse_warnings so the gap is visible instead of silent.
 
     Args:
         amendments: List of bill amendment data with parsed votes.
@@ -175,3 +176,20 @@ def _resolve_vote_ids(
             match = schuze_votes.filter(pl.col("cislo") == amend.vote_number)
             if match.height > 0:
                 amend.id_hlasovani = match.item(0, "id_hlasovani")
+
+        unresolved = [a for a in all_amends if a.vote_number > 0 and a.id_hlasovani is None]
+        if unresolved:
+            vote_numbers = ", ".join(str(a.vote_number) for a in unresolved)
+            bill.parse_warnings.append(
+                f"{len(unresolved)} amendment vote(s) not resolved to vote IDs "
+                f"(session {bill.schuze}, votes: {vote_numbers})"
+            )
+            logger.warning(
+                "Bill {}/{} (period {}): {} amendment vote(s) could not be "
+                "resolved to id_hlasovani (votes: {})",
+                bill.schuze,
+                bill.bod,
+                bill.period,
+                len(unresolved),
+                vote_numbers,
+            )

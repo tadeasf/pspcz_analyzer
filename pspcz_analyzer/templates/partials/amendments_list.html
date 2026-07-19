@@ -23,6 +23,9 @@
                 <td>
                     <strong>{{ _("th.tisk") }} {{ row.ct }}</strong><br>
                     <small>{{ row.tisk_nazev[:80] }}{% if row.tisk_nazev|length > 80 %}...{% endif %}</small>
+                    {% if row.unlinked_amendment_count %}
+                    <br><small class="unlinked-note">{{ _("amendments.unlinked_note").format(count=row.unlinked_amendment_count) }}</small>
+                    {% endif %}
                 </td>
                 <td>{{ driver_badge(row.driver) }}</td>
                 <td>{{ row.amendment_count }}</td>
@@ -37,7 +40,7 @@
                     —
                     {% endif %}
                 </td>
-                <td>{{ "{:.0f}%".format(row.parse_confidence * 100) }}</td>
+                <td class="confidence-cell" title="{{ _('amendments.confidence_help') }}">{{ "{:.0f}%".format(row.parse_confidence * 100) }}</td>
                 <td>
                     <a href="/amendments/{{ row.schuze }}/{{ row.bod }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
                 </td>

@@ -197,6 +197,11 @@ def _merge_pdf_and_steno(
         # as unvoted rows.
         has_steno_votes = any(a.vote_number for a in bill.amendments)
 
+        if not has_steno_votes:
+            # PDF amendments exist but steno parsing found no recorded votes —
+            # don't dump them as rows, but remember the count for the UI.
+            bill.unlinked_amendment_count = len(pdf_amendments)
+
         # Build steno lookup by letter (uppercase, stripped)
         steno_by_letter: dict[str, AmendmentVote] = {}
         for amend in bill.amendments:

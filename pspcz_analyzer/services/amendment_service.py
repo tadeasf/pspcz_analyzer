@@ -81,6 +81,7 @@ def _bill_summary(bill: BillAmendmentData, coalition: frozenset[str]) -> dict:
         "driver": _bill_driver(bill, coalition),
         "parse_confidence": bill.parse_confidence,
         "steno_url": bill.steno_url,
+        "unlinked_amendment_count": bill.unlinked_amendment_count,
     }
 
 

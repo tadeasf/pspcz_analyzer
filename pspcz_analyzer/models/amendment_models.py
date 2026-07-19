@@ -77,6 +77,9 @@ class BillAmendmentData:
         amendment_tisk_ct1: CT1 of the amendment sub-tisk (e.g. 4 for tisk 410/4).
         amendment_tisk_idd: idd for direct PDF download of amendment sub-tisk.
         amendment_pdf_text: Full raw PDF text for bill-level summary.
+        unlinked_amendment_count: Number of PDF-detected amendments that could
+            not be linked to any recorded vote (steno parsing found no votes
+            for this bill). 0 when all amendments are linked.
     """
 
     period: int
@@ -94,6 +97,7 @@ class BillAmendmentData:
     amendment_tisk_ct1: int | None = None
     amendment_tisk_idd: int | None = None
     amendment_pdf_text: str = ""
+    unlinked_amendment_count: int = 0
 
     @property
     def amendment_count(self) -> int:

@@ -34,3 +34,11 @@ class TestMergePdfAndSteno:
         pdf = {82: [PdfAmendment(letter="B", raw_text="text B")]}
         _merge_pdf_and_steno([bill], pdf)
         assert bill.amendments == []
+        # ...but the count is remembered so the UI can surface the gap.
+        assert bill.unlinked_amendment_count == 1
+
+    def test_unlinked_count_zero_when_steno_votes_present(self):
+        bill = _bill([AmendmentVote(letter="A", vote_number=51, result="accepted")])
+        pdf = {82: [PdfAmendment(letter="A", raw_text="text A")]}
+        _merge_pdf_and_steno([bill], pdf)
+        assert bill.unlinked_amendment_count == 0
