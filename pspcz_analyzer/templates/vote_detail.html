@@ -94,7 +94,7 @@
                 <span class="timeline-date">{{ stage.date }}</span>
                 {% endif %}
                 {% if stage.outcome %}
-                <div class="timeline-outcome {% if 'schválen' in stage.outcome or 'podepsal' in stage.outcome or 'doporučuje' in stage.outcome %}timeline-approved{% elif 'zamítnut' in stage.outcome or 'nedoporučuje' in stage.outcome %}timeline-rejected{% endif %}">
+                <div class="timeline-outcome {% set cat = stage.outcome|status_category %}{% if cat == 'pass' %}timeline-approved{% elif cat == 'fail' %}timeline-rejected{% endif %}">
                     {{ stage.outcome }}
                     {% if stage.vote_number %}
                     <small>({{ _("timeline.vote_number").format(number=stage.vote_number) }})</small>

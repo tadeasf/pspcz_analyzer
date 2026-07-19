@@ -1,16 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ _("nav.dashboard") }} — {{ _("site.short_title") }}{% endblock %}
 
-{% macro status_badge(status) %}
-{% set sl = status.lower() %}
-{% if 'vyhlášeno' in sl or 'podepsáno' in sl or 'schváleno' in sl or 'přijat' in sl %}
-<span class="status-pill status-pill-pass">{{ status }}</span>
-{% elif 'zamítnuto' in sl or 'staženo' in sl or 'zamítnut' in sl %}
-<span class="status-pill status-pill-fail">{{ status }}</span>
-{% else %}
-<span class="status-pill status-pill-active">{{ status }}</span>
-{% endif %}
-{% endmacro %}
+{% from "macros.html" import status_badge %}
 
 {% macro driver_badge(driver) %}
 {% if driver == 'government' %}

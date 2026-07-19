@@ -9,3 +9,7 @@
 <span class="driver-badge driver-mixed">{{ _("driver.mixed") }}</span>
 {%- endif -%}
 {% endmacro %}
+
+{% macro status_badge(status) %}
+<span class="status-pill status-pill-{{ status|status_category }}">{{ status }}</span>
+{% endmacro %}

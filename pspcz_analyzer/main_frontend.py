@@ -35,6 +35,7 @@ from pspcz_analyzer.routes.tisk import templates as tisk_templates
 from pspcz_analyzer.routes.voting import router as voting_router
 from pspcz_analyzer.routes.voting import templates as voting_templates
 from pspcz_analyzer.services.data_reader import DataReader
+from pspcz_analyzer.utils.text import status_category
 
 setup_logging()
 
@@ -114,6 +115,7 @@ for t in (
     feedback_templates,
 ):
     t.env.filters["markdown"] = _md_filter
+    t.env.filters["status_category"] = status_category
     setup_jinja2_i18n(t.env)
 
 
