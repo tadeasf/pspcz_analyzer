@@ -26,7 +26,7 @@
                     <em>{{ _("session_vote").format(session=row.schuze, number=row.cislo) }}</em>
                     {% endif %}
                     {% if row.tisk_url %}
-                    <br><small><a href="{{ row.tisk_url }}" target="_blank">Tisk {{ row.tisk_ct }}</a></small>
+                    <br><small><a href="{{ row.tisk_url }}" target="_blank">{{ _("th.tisk") }} {{ row.tisk_ct }}</a></small>
                     {% endif %}
                     {% if row.tisk_topics %}
                     <br>{% for t in row.tisk_topics %}<span class="topic-badge">{{ t }}</span>{% endfor %}

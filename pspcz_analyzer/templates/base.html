@@ -14,7 +14,7 @@
     <header class="site-header">
         <div class="header-inner">
             <a href="/" class="site-logo">
-                <img src="/static/logo-psp.png" alt="Poslanecka snemovna">
+                <img src="/static/logo-psp.png" alt="{{ _('site.logo_alt') }}">
             </a>
             <div class="header-right">
                 <span class="header-title">{{ _("site.title") }}</span>
@@ -49,6 +49,13 @@
     <main class="container">
         {% block content %}{% endblock %}
     </main>
+
+    <div id="htmx-error-box" class="error-box" role="alert" hidden
+         data-network="{{ _('error.network') }}" data-server="{{ _('error.server') }}">
+        <span id="htmx-error-msg"></span>
+        <button type="button" class="error-box-close" aria-label="×"
+                onclick="this.parentElement.hidden = true">×</button>
+    </div>
 
     <footer class="site-footer">
         <p>{{ _("footer.source") }} <a href="https://www.psp.cz/sqw/hp.sqw?k=1300" target="_blank">{{ _("footer.source_link") }}</a> | {{ _("footer.project") }}</p>
@@ -88,6 +95,26 @@
                     '</div>';
             });
         });
+
+        // Global HTMX error handling: show a translated alert box on failures
+        (function () {
+            var box = document.getElementById('htmx-error-box');
+            var msg = document.getElementById('htmx-error-msg');
+            var hideTimer = null;
+            function showError(text) {
+                msg.textContent = text;
+                box.hidden = false;
+                if (hideTimer) { clearTimeout(hideTimer); }
+                hideTimer = setTimeout(function () { box.hidden = true; }, 8000);
+            }
+            document.body.addEventListener('htmx:responseError', function (evt) {
+                var status = evt.detail && evt.detail.xhr ? evt.detail.xhr.status : '';
+                showError(box.dataset.server.replace('{status}', status));
+            });
+            document.body.addEventListener('htmx:sendError', function () {
+                showError(box.dataset.network);
+            });
+        })();
     </script>
 </body>
 </html>

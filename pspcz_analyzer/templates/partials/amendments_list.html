@@ -21,7 +21,7 @@
             {% for row in rows %}
             <tr>
                 <td>
-                    <strong>Tisk {{ row.ct }}</strong><br>
+                    <strong>{{ _("th.tisk") }} {{ row.ct }}</strong><br>
                     <small>{{ row.tisk_nazev[:80] }}{% if row.tisk_nazev|length > 80 %}...{% endif %}</small>
                 </td>
                 <td>{{ driver_badge(row.driver) }}</td>

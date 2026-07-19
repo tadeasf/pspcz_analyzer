@@ -84,7 +84,7 @@
             <div class="timeline-outcome {% if 'schválen' in stage.outcome or 'podepsal' in stage.outcome or 'doporučuje' in stage.outcome %}timeline-approved{% elif 'zamítnut' in stage.outcome or 'nedoporučuje' in stage.outcome %}timeline-rejected{% endif %}">
                 {{ stage.outcome }}
                 {% if stage.vote_number %}
-                <small>(hlasování č. {{ stage.vote_number }})</small>
+                <small>({{ _("timeline.vote_number").format(number=stage.vote_number) }})</small>
                 {% endif %}
             </div>
             {% endif %}

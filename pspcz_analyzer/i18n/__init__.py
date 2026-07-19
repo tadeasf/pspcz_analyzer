@@ -39,7 +39,19 @@ def ngettext(singular: str, plural: str, n: int) -> str:
     return gettext(key)
 
 
+def format_int(value: int) -> str:
+    """Format an integer with locale-appropriate thousands grouping.
+
+    Czech uses non-breaking spaces (1 234 567), English uses commas (1,234,567).
+    """
+    grouped = f"{int(value):,}"
+    if get_locale() == "cs":
+        return grouped.replace(",", " ")
+    return grouped
+
+
 def setup_jinja2_i18n(env: Environment) -> None:
-    """Install gettext callables on a Jinja2 environment."""
+    """Install gettext callables and locale-aware filters on a Jinja2 environment."""
     env.add_extension("jinja2.ext.i18n")
     env.install_gettext_callables(gettext, ngettext, newstyle=False)  # type: ignore[attr-defined]
+    env.filters["thousands"] = format_int  # type: ignore[attr-defined]
