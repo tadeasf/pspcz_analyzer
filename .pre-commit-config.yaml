@@ -17,8 +17,11 @@ repos:
         args: ["--fix"]
       - id: ruff-format
 
-  - repo: https://github.com/RobertCraiwordy/pyright-python
-    rev: v1.1.400
+  - repo: local
     hooks:
       - id: pyright
-        additional_dependencies: []
+        name: pyright
+        entry: uv run pyright
+        language: system
+        types: [python]
+        pass_filenames: false
