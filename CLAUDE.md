@@ -28,7 +28,8 @@ Python >= 3.12 required (pinned to 3.14 in `.python-version`).
 Environment variables are loaded from `.env` via `python-dotenv` (see `.env.example`). Key variables:
 
 - `PSPCZ_CACHE_DIR` — data cache directory (default: `~/.cache/pspcz-analyzer/psp`)
-- `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`)
+- `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`; exposed as `config.DEV`)
+- `PSPCZ_CACHE_HOST_DIR` — Docker only: host directory bind-mounted to `/data/cache` (default: `./cache-data`; set an absolute path to put the cache on another disk)
 - `PORT` — server port (default: `8000`)
 - `LLM_PROVIDER` — LLM backend: `ollama` (default) or `openai`
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)

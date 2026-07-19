@@ -59,6 +59,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | ------------------------- | ----------------------------- | -------------------------------------------------------------- |
 | `PSPCZ_CACHE_DIR`         | `~/.cache/pspcz-analyzer/psp` | Data cache directory                                           |
 | `PSPCZ_DEV`               | `1`                           | Set to `1` for hot reload, `0` for production                  |
+| `PSPCZ_CACHE_HOST_DIR`    | `./cache-data`                | Docker only: host directory bind-mounted to `/data/cache`      |
 | `PORT`                    | `8000`                        | Server port (used by both local dev and Docker)                |
 | `LLM_PROVIDER`            | `ollama`                      | LLM backend: `ollama` or `openai`                              |
 | `OLLAMA_BASE_URL`         | `http://localhost:11434`      | Ollama API endpoint                                            |
@@ -94,7 +95,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app is available at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/`. The LLM runs separately — configure the connection via `OLLAMA_BASE_URL` (for Ollama) or `OPENAI_BASE_URL` + `OPENAI_API_KEY` (for OpenAI-compatible APIs) in `.env`.
+The app is available at `http://localhost:8000` (or the port set by `PORT`). Data cache is persisted via a bind mount at `./cache-data/` — set `PSPCZ_CACHE_HOST_DIR` in `.env` to place it on any disk (useful when the system disk is small). Both containers share the mount with the SELinux `:z` label, so it works on Fedora out of the box. Containers run as root, so cached files are root-owned on the host (`sudo chown -R $USER ./cache-data` if you need host-side access). The LLM runs separately — configure the connection via `OLLAMA_BASE_URL` (for Ollama) or `OPENAI_BASE_URL` + `OPENAI_API_KEY` (for OpenAI-compatible APIs) in `.env`.
 
 To use a custom port:
 

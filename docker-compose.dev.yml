@@ -4,13 +4,13 @@ services:
   frontend:
     volumes:
       - ./pspcz_analyzer:/app/pspcz_analyzer:ro
-      - cache-data:/data/cache:ro
+      - ${PSPCZ_CACHE_HOST_DIR:-./cache-data}:/data/cache:ro,z
     environment:
       PSPCZ_DEV: "1"
 
   backend:
     volumes:
       - ./pspcz_analyzer:/app/pspcz_analyzer:ro
-      - cache-data:/data/cache
+      - ${PSPCZ_CACHE_HOST_DIR:-./cache-data}:/data/cache:z
     environment:
       PSPCZ_DEV: "1"
