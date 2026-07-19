@@ -1,6 +1,5 @@
 """Frontend entrypoint — public web app with read-only data access."""
 
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -15,7 +14,7 @@ from loguru import logger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, PORT
+from pspcz_analyzer.config import DEFAULT_PERIOD, DEV, PORT
 from pspcz_analyzer.i18n import setup_jinja2_i18n
 from pspcz_analyzer.i18n.middleware import LocaleMiddleware
 from pspcz_analyzer.logging_config import setup_logging
@@ -120,12 +119,11 @@ for t in (
 
 def main() -> None:
     """Run the frontend server."""
-    dev_mode = os.environ.get("PSPCZ_DEV", "1") == "1"
     uvicorn.run(
         "pspcz_analyzer.main_frontend:app",
         host="0.0.0.0",
         port=PORT,
-        reload=dev_mode,
+        reload=DEV,
     )
 
 
