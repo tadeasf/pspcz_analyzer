@@ -410,6 +410,30 @@ class DataReader:
             self._watcher_task = None
             logger.info("[file-watcher] Stopped")
 
+    def last_updated(self, period: int | None = None) -> float | None:
+        """Return the newest known data mtime (epoch seconds), if any.
+
+        Uses the file watcher's mtime snapshots (30 s tick granularity);
+        falls back to a one-shot filesystem scan if the watcher hasn't
+        populated them yet.
+
+        Args:
+            period: When given, also consider that period's amendment cache.
+
+        Returns:
+            Epoch seconds of the newest known cache file, or None when no
+            cache files exist yet.
+        """
+        mtimes = self._last_mtimes or _collect_parquet_mtimes(self.cache_dir)
+        stamps = list(mtimes.values())
+        if period is not None:
+            amendment_mtimes = self._last_amendment_mtimes or _collect_amendment_mtimes(
+                self.cache_dir
+            )
+            if period in amendment_mtimes:
+                stamps.append(amendment_mtimes[period])
+        return max(stamps) if stamps else None
+
     async def _watch_loop(self) -> None:
         """Poll parquet file mtimes and reload periods with changed data."""
         while True:

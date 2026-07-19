@@ -1090,6 +1090,12 @@ button.topic-badge-link {
     padding: 0 0.2rem;
 }
 
+.footer-updated {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.35rem;
+}
+
 /* ============================================================
    Responsive
    ============================================================ */

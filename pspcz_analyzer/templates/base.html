@@ -59,6 +59,9 @@
 
     <footer class="site-footer">
         <p>{{ _("footer.source") }} <a href="https://www.psp.cz/sqw/hp.sqw?k=1300" target="_blank">{{ _("footer.source_link") }}</a> | {{ _("footer.project") }}</p>
+        {% if data_updated %}
+        <p class="footer-updated" title="{{ data_updated.absolute }}">{{ _("footer.updated").format(time=data_updated.relative) }}</p>
+        {% endif %}
     </footer>
 
     <script>

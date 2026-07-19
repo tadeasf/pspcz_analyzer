@@ -23,6 +23,7 @@ from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.amendments import router as amendments_router
 from pspcz_analyzer.routes.amendments import templates as amendments_templates
 from pspcz_analyzer.routes.charts import router as charts_router
+from pspcz_analyzer.routes.context import data_freshness_processor
 from pspcz_analyzer.routes.feedback import router as feedback_router
 from pspcz_analyzer.routes.feedback import templates as feedback_templates
 from pspcz_analyzer.routes.health import router as health_router
@@ -116,6 +117,7 @@ for t in (
 ):
     t.env.filters["markdown"] = _md_filter
     t.env.filters["status_category"] = status_category
+    t.context_processors.append(data_freshness_processor)
     setup_jinja2_i18n(t.env)
 
 
