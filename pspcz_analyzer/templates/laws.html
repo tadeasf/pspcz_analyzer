@@ -12,7 +12,7 @@
     <div class="form-row">
         <label>
             {{ _("form.search_laws") }}
-            <input type="search" name="search" placeholder="{{ _('form.search_laws_placeholder') }}" value="{{ initial_search|default('') }}">
+            <input type="search" name="search" placeholder="{{ _('form.search_laws_placeholder') }}" aria-label="{{ _('form.search_laws_placeholder') }}" value="{{ initial_search|default('') }}">
         </label>
         <label>
             {{ _("laws.status_filter") }}

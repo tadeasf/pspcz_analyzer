@@ -11,7 +11,7 @@
 }
 
 html {
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.6;
     -webkit-text-size-adjust: 100%;
 }
@@ -823,6 +823,20 @@ button.topic-badge-link {
     font-size: 0.9rem;
 }
 
+.pagination button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #426c95;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.pagination button:hover {
+    color: #bd292f;
+}
+
 /* ============================================================
    Footer
    ============================================================ */
@@ -1096,11 +1110,41 @@ button.topic-badge-link {
     margin-top: 0.35rem;
 }
 
+/* Accessibility: skip link, keyboard focus, chart layout-shift guards */
+.skip-link {
+    position: absolute;
+    left: -999px;
+    top: 0;
+    background: #3C71AC;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 4px 0;
+    z-index: 200;
+}
+
+.skip-link:focus {
+    left: 0;
+}
+
+:focus-visible {
+    outline: 2px solid #3C71AC;
+    outline-offset: 2px;
+}
+
+.chart-container {
+    min-height: 420px;
+}
+
+.chart-img {
+    max-width: 100%;
+    height: auto;
+}
+
 /* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 768px) {
-    html { font-size: 12px; }
+    html { font-size: 13px; }
 
     .hero { padding: 1.5rem 1.1rem; }
     .hero-title { font-size: 1.5rem; }

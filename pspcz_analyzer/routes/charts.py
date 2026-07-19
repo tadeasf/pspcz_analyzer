@@ -30,7 +30,7 @@ sns.set_theme(style="whitegrid", palette="deep")
 def _fig_to_png(fig: Figure) -> io.BytesIO:
     """Render a matplotlib figure to a PNG BytesIO buffer."""
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", facecolor="#FFFFFF")
+    fig.savefig(buf, format="png", dpi=200, bbox_inches="tight", facecolor="#FFFFFF")
     buf.seek(0)
     plt.close(fig)
     return buf

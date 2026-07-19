@@ -51,7 +51,7 @@
 </div>
 
 {% if total_pages > 1 %}
-<nav class="pagination">
+<nav class="pagination" aria-label="{{ _('pagination.label') }}">
     {% if page > 1 %}
     <button hx-get="/api/amendments?period={{ period }}&search={{ search }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
         {{ _("pagination.previous") }}

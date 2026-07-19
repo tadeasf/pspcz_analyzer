@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 </head>
 <body>
+    <a class="skip-link" href="#main-content">{{ _("nav.skip") }}</a>
     <header class="site-header">
         <div class="header-inner">
             <a href="/" class="site-logo">
@@ -33,7 +34,7 @@
         </div>
     </header>
 
-    <nav class="site-nav">
+    <nav class="site-nav" aria-label="{{ _('nav.main_aria') }}">
         <div class="nav-inner">
             <a href="/?period={{ period }}" {% if active_page == "index" %}aria-current="page"{% endif %}>{{ _("nav.dashboard") }}</a>
             <a href="/laws?period={{ period }}" {% if active_page == "laws" %}aria-current="page"{% endif %}>{{ _("nav.laws") }}</a>
@@ -46,7 +47,7 @@
         </div>
     </nav>
 
-    <main class="container">
+    <main id="main-content" class="container">
         {% block content %}{% endblock %}
     </main>
 
@@ -58,7 +59,7 @@
     </div>
 
     <footer class="site-footer">
-        <p>{{ _("footer.source") }} <a href="https://www.psp.cz/sqw/hp.sqw?k=1300" target="_blank">{{ _("footer.source_link") }}</a> | {{ _("footer.project") }}</p>
+        <p>{{ _("footer.source") }} <a href="https://www.psp.cz/sqw/hp.sqw?k=1300" target="_blank" rel="noopener">{{ _("footer.source_link") }}</a> | {{ _("footer.project") }}</p>
         {% if data_updated %}
         <p class="footer-updated" title="{{ data_updated.absolute }}">{{ _("footer.updated").format(time=data_updated.relative) }}</p>
         {% endif %}

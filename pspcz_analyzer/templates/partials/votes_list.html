@@ -58,16 +58,16 @@
 </div>
 
 {% if total_pages > 1 %}
-<div class="pagination">
+<nav class="pagination" aria-label="{{ _('pagination.label') }}">
     {% if page > 1 %}
-    <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
-       hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</a>
+    <button hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
+            hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</button>
     {% endif %}
     <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
     {% if page < total_pages %}
-    <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
-       hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</a>
+    <button hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
+            hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</button>
     {% endif %}
-</div>
+</nav>
 {% endif %}
 {% endif %}
