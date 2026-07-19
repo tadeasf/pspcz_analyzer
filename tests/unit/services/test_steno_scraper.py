@@ -101,6 +101,7 @@ class TestFindStenoForBod:
         _patch_downloads(monkeypatch, day_pages={"17-1.html": DAY1_HTML, "17-3.html": DAY3_HTML})
         html, first_url, failure = find_steno_for_bod(10, 17, 2, "", Path("/tmp"))
         assert failure is None
+        assert html is not None
         assert first_url.endswith("s100.htm")
         for name in ("s100.htm", "s101.htm", "s300.htm", "s301.htm"):
             assert f"CONTENT {name}" in html
@@ -116,6 +117,7 @@ class TestFindStenoForBod:
         monkeypatch.setattr(steno_scraper, "STENO_MAX_SUBPAGES_PER_BOD", 2)
         html, first_url, failure = find_steno_for_bod(10, 17, 2, "", Path("/tmp"))
         assert failure is None
+        assert html is not None
         # Voting is at the end -> keep the last 2 (s300, s301), drop s100/s101.
         assert first_url.endswith("s300.htm")
         assert "CONTENT s100.htm" not in html
@@ -161,6 +163,7 @@ class TestCollectBodSubpagesGapFill:
             monkeypatch, day_pages={"17-1.html": DAY1_HTML, "17-3.html": DAY3_GAP_HTML}
         )
         subs = _collect_bod_subpages(INDEX_HTML, "base/", 10, 17, 2, Path("/tmp"))
+        assert subs is not None
         # s301 was never linked in the TOC but is gap-filled between s300 and s302.
         assert "s301.htm" in subs
         assert subs == ["s100.htm", "s101.htm", "s300.htm", "s301.htm", "s302.htm"]
