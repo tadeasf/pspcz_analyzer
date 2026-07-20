@@ -127,8 +127,9 @@ class AdminAuthMiddleware(BaseHTTPMiddleware):
         """Check IP whitelist, then session, redirect to login if needed."""
         path = request.url.path
 
-        # Allow login page and static assets without auth
-        if path in ("/admin/login", "/admin/static"):
+        # Allow login page, static assets, and the health endpoint without a
+        # session (still IP-whitelisted) — docker healthchecks need it.
+        if path in ("/admin/login", "/admin/static", "/admin/api/health"):
             return await self._check_ip_then_proceed(request, call_next)
 
         return await self._check_ip_then_proceed(request, call_next, require_session=True)

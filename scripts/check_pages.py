@@ -106,7 +106,7 @@ def main() -> int:
         for page in PAGES:
             for lang in ("cs", "en"):
                 path = f"{page}?period={args.period}"
-                ok, detail = check(client, path, lang=lang, markers=('<main id="main-content">',))
+                ok, detail = check(client, path, lang=lang, markers=('id="main-content"',))
                 results.append((f"{page} [{lang}]", ok, detail))
 
         for partial in PARTIALS:
@@ -120,9 +120,11 @@ def main() -> int:
             results.append((f"chart {chart}", ok, detail))
 
         details = discover_details(client, args.period)
+        # Law detail: the timeline only exists for bills with scraped history,
+        # so only assert the page renders (200 + no server error).
         detail_markers = {
-            "law": ("status-pill", "timeline"),
-            "vote": ("vote-detail",),
+            "law": (),
+            "vote": ("stat-card-green",),
             "amendment": ("driver-badge",),
         }
         for kind, path in details.items():
@@ -133,10 +135,10 @@ def main() -> int:
 
     if args.admin_url:
         with httpx.Client(base_url=args.admin_url, timeout=args.timeout) as client:
-            ok, detail = check(client, "/api/health")
-            results.append(("admin /api/health", ok, detail))
-            ok, detail = check(client, "/login", markers=("password",))
-            results.append(("admin /login", ok, detail))
+            ok, detail = check(client, "/admin/api/health", markers=('"status"',))
+            results.append(("admin /admin/api/health", ok, detail))
+            ok, detail = check(client, "/admin/login", markers=("password",))
+            results.append(("admin /admin/login", ok, detail))
 
     failures = 0
     for name, ok, detail in results:

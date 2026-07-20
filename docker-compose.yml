@@ -39,7 +39,7 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('ADMIN_PORT','8001')+'/api/health', timeout=5)\""]
+      test: ["CMD-SHELL", "python -c \"import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('ADMIN_PORT','8001')+'/admin/api/health', timeout=5)\""]
       interval: 30s
       timeout: 10s
       retries: 5
