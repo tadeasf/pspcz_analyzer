@@ -136,11 +136,13 @@ def main() -> int:
         suffix="_official",
     )
     missing = joined.filter(pl.col("schuze_official").is_null())
+    # bod=0 means "unassigned" in psp.cz data — the resolver accepts those,
+    # so they are not integrity violations.
     mismatched = joined.filter(
         pl.col("schuze_official").is_not_null()
         & (
             (pl.col("schuze") != pl.col("schuze_official"))
-            | (pl.col("bod") != pl.col("bod_official"))
+            | ((pl.col("bod_official") != 0) & (pl.col("bod") != pl.col("bod_official")))
         )
     )
     print("\n=== Referential integrity ===")
@@ -171,9 +173,11 @@ def main() -> int:
     print("\n=== Accounting ===")
     placeholders = 0 if is_placeholder is None else int(is_placeholder.sum())
     unlinked_bills = bills.filter(pl.col("unlinked") > 0)
-    bad_unlinked = unlinked_bills.filter(pl.col("rows") > 0)
+    # A final-vote row alongside unlinked amendments is legitimate (the final
+    # vote is stored separately from amendment rows), so exclude final rows.
+    bad_unlinked = unlinked_bills.filter(pl.col("rows") - pl.col("final_rows") > 0)
     print(f"placeholder rows: {placeholders}")
-    print(f"bills with unlinked counts: {unlinked_bills.height} (must have zero amendment rows)")
+    print(f"bills with unlinked counts: {unlinked_bills.height} (must have zero non-final rows)")
     print(f"  violations: {bad_unlinked.height}")
     print(f"bills in cache: {bills.height}")
     for row in unlinked_bills.iter_rows(named=True):

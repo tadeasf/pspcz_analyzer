@@ -780,3 +780,23 @@ class TestResultPhrasingCoverage:
         amendments, _conf, _warns = parse_steno_amendments(STENO_FINAL_CONSENT)
         vote_69 = next(a for a in amendments if a.vote_number == 69)
         assert not vote_69.is_final_vote
+
+    def test_unanimous_tally_without_result_phrase(self):
+        # The chair sometimes announces only the tally ("pro 171, proti
+        # žádný") with no explicit result phrase — the unanimous tally is
+        # the result, and the next vote must not be swallowed.
+        html = (
+            "<html><body><p>Přikročíme k hlasování o pozměňovacích návrzích.</p>"
+            "<p>Pozměňovací návrh písmenem A.</p>"
+            "<p>Hlasování číslo 54. Kdo je pro? Kdo je proti? "
+            "Hlasování číslo 54, přihlášeno 171 poslanců, pro 171 poslanců, "
+            "proti žádný. Můžeme pokračovat.</p>"
+            "<p>Pozměňovací návrh písmenem B.</p>"
+            "<p>Hlasování číslo 55. Kdo je pro? Kdo je proti? "
+            "Hlasování číslo 55, přihlášeno 172 poslanců, pro 171 poslanců. "
+            "Návrh byl přijat.</p></body></html>"
+        )
+        amendments, _conf, _warns = parse_steno_amendments(html)
+        by_num = {a.vote_number: a.result for a in amendments if a.vote_number}
+        assert by_num.get(54) == "accepted"
+        assert by_num.get(55) == "accepted"

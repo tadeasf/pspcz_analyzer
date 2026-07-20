@@ -98,7 +98,13 @@ _VOTE_RESULT_RE = re.compile(
     r"|[Nn]ávrh\s+(?:také\s+|rovněž\s+)?(?:procedury\s+)?(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
     r"|[Kk]onstatuji[,\s]+že\s+návrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
     # Final-passage consent: "s návrhem (zákona) byl vysloven souhlas"
-    r"|s\s+návrhem\s+(?:zákona\s+)?(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas))",
+    r"|s\s+návrhem\s+(?:zákona\s+)?(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas)"
+    # Unanimous tally announced without an explicit result phrase —
+    # "pro 171 poslanců, proti žádný" (accepted) / "pro žádný, proti 150"
+    # (rejected). Only matches extreme tallies, so votes with an explicit
+    # result phrase still resolve via the alternatives above.
+    r"|pro\s+\d+(?:\s+poslanc\w*)?\s*,\s*proti\s+(?:žádn\w*|0)"
+    r"|pro\s+(?:žádn\w*|0)\s*,\s*proti\s+\d+(?:\s+poslanc\w*)?)",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -269,6 +275,12 @@ def _normalize_result(raw: str) -> str:
         return "rejected"
     if "souhlas" in lower:
         return "accepted"
+    # Unanimous tallies announced without an explicit result phrase
+    # ("pro 171 poslanců, proti žádný" / "pro žádný, proti 150").
+    if re.search(r"proti\s+(?:žádn\w*|0)", lower) and re.search(r"pro\s+\d", lower):
+        return "accepted"
+    if re.search(r"pro\s+(?:žádn\w*|0)", lower) and re.search(r"proti\s+\d", lower):
+        return "rejected"
     return "unknown"
 
 
