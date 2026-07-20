@@ -164,10 +164,14 @@ def main() -> int:
     expected = set(_SPOT_CHECK["cislo_range"])
     missing_cislo = sorted(expected - set(matched_cislo))
     print("\n=== Ground truth: tisk 82 (17,2), cislo 46-70 ===")
-    print(
-        f"matched {len(set(matched_cislo) & expected)}/{len(expected)}: {sorted(set(matched_cislo) & expected)}"
-    )
-    print(f"missing: {missing_cislo}")
+    if not spot.height:
+        print("spot-check bill not present in this period's cache — skipped")
+    else:
+        print(
+            f"matched {len(set(matched_cislo) & expected)}/{len(expected)}: "
+            f"{sorted(set(matched_cislo) & expected)}"
+        )
+        print(f"missing: {missing_cislo}")
 
     # --- Check 4: accounting — no silent drops --------------------------
     print("\n=== Accounting ===")
