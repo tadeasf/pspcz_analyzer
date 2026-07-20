@@ -177,11 +177,14 @@ def main() -> int:
     print("\n=== Accounting ===")
     placeholders = 0 if is_placeholder is None else int(is_placeholder.sum())
     unlinked_bills = bills.filter(pl.col("unlinked") > 0)
-    # A final-vote row alongside unlinked amendments is legitimate (the final
-    # vote is stored separately from amendment rows), so exclude final rows.
-    bad_unlinked = unlinked_bills.filter(pl.col("rows") - pl.col("final_rows") > 0)
+    # Unlinked bills may legitimately carry a final-vote row and unvoted
+    # steno leftovers — only VOTED non-final rows contradict an unlinked
+    # count (a vote means steno did find recorded votes for this bill).
+    bad_unlinked = unlinked_bills.filter(pl.col("voted") - pl.col("final_rows") > 0)
     print(f"placeholder rows: {placeholders}")
-    print(f"bills with unlinked counts: {unlinked_bills.height} (must have zero non-final rows)")
+    print(
+        f"bills with unlinked counts: {unlinked_bills.height} (must have zero voted non-final rows)"
+    )
     print(f"  violations: {bad_unlinked.height}")
     print(f"bills in cache: {bills.height}")
     for row in unlinked_bills.iter_rows(named=True):
