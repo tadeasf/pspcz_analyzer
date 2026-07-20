@@ -112,6 +112,37 @@ class TestResolveVoteIdsWarnings:
         assert bill.amendments[0].id_hlasovani == 999
         assert bill.parse_warnings == []
 
+    def test_bod_mismatch_left_unlinked_with_warning(self):
+        # Vote officially belongs to bod 89, not the bill's bod 90 — the
+        # steno span overshot a bod boundary; refuse the link.
+        votes = pl.DataFrame({"schuze": [17], "cislo": [63], "id_hlasovani": [999], "bod": [89]})
+        period_data = SimpleNamespace(votes=votes)
+        bill = _bill(bod=90, amendments=[AmendmentVote(letter="A", vote_number=63)])
+
+        _resolve_vote_ids([bill], period_data)  # type: ignore[arg-type]
+
+        assert bill.amendments[0].id_hlasovani is None
+        assert any("bod 89" in w for w in bill.parse_warnings)
+
+    def test_bod_zero_unassigned_accepted(self):
+        # bod=0 means "unassigned" in psp.cz data — accept the link.
+        votes = pl.DataFrame({"schuze": [17], "cislo": [65], "id_hlasovani": [998], "bod": [0]})
+        period_data = SimpleNamespace(votes=votes)
+        bill = _bill(amendments=[AmendmentVote(letter="A", vote_number=65)])
+
+        _resolve_vote_ids([bill], period_data)  # type: ignore[arg-type]
+
+        assert bill.amendments[0].id_hlasovani == 998
+
+    def test_matching_bod_accepted(self):
+        votes = pl.DataFrame({"schuze": [17], "cislo": [54], "id_hlasovani": [997], "bod": [2]})
+        period_data = SimpleNamespace(votes=votes)
+        bill = _bill(amendments=[AmendmentVote(letter="A", vote_number=54)])
+
+        _resolve_vote_ids([bill], period_data)  # type: ignore[arg-type]
+
+        assert bill.amendments[0].id_hlasovani == 997
+
 
 class TestExactNameMatch:
     def test_exact_match_short_circuits(self):

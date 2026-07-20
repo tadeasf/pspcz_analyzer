@@ -42,6 +42,29 @@ STENO_CHALLENGE = """
 </body></html>
 """
 
+STENO_TAKE_RESULT = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh písmenem A.</p>
+<p>Hlasování číslo 47. Kdo je pro? Kdo je proti?
+Návrh také nebyl přijat.</p>
+<p>Pozměňovací návrh písmenem B.</p>
+<p>Hlasování číslo 48. Kdo je pro? Kdo je proti?
+Návrh nebyl přijat.</p>
+</body></html>
+"""
+
+STENO_FINAL_CONSENT = """
+<html><body>
+<p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
+<p>Pozměňovací návrh písmenem A.</p>
+<p>Hlasování číslo 69. Kdo je pro? Kdo je proti? Návrh byl přijat.</p>
+<p>Poslanec Novák: přečtěme zákon jako celek, ať to máme z krku.</p>
+<p>Hlasování číslo 70. Kdo je pro? Kdo je proti?
+Konstatuji, že s návrhem zákona byl vysloven souhlas.</p>
+</body></html>
+"""
+
 STENO_WITHDRAWAL = """
 <html><body>
 <p>Přikročíme k hlasování o pozměňovacích návrzích.</p>
@@ -721,3 +744,39 @@ class TestMultiDayAndPhrasings:
         amendments, _conf, _warns = parse_steno_amendments(STENO_LETTER_VARIANTS)
         by_num = {a.vote_number: a.letter for a in amendments}
         assert by_num.get(71) == ""  # "Mgr. A. Novák" must not yield letter "A"
+
+
+class TestResultPhrasingCoverage:
+    """Regression tests for result phrasings that used to swallow votes."""
+
+    def test_take_phrasing_does_not_swallow_next_vote(self):
+        # "Návrh také nebyl přijat" — the "také" used to make the match
+        # overreach into the next vote's block, losing vote 48.
+        amendments, _conf, _warns = parse_steno_amendments(STENO_TAKE_RESULT)
+        by_num = {a.vote_number: a.result for a in amendments if a.vote_number}
+        assert by_num == {47: "rejected", 48: "rejected"}
+
+    def test_procedure_result_phrasing(self):
+        html = (
+            "<html><body><p>Přikročíme k hlasování.</p>"
+            "<p>Hlasování číslo 52. Kdo je pro? Kdo je proti? "
+            "Návrh procedury byl přijat.</p></body></html>"
+        )
+        amendments, _conf, _warns = parse_steno_amendments(html)
+        assert amendments[0].vote_number == 52
+        assert amendments[0].result == "accepted"
+
+    def test_final_consent_formula(self):
+        # "Konstatuji, že s návrhem zákona byl vysloven souhlas" is the
+        # chair's passage announcement — the final vote of the bod.
+        amendments, _conf, _warns = parse_steno_amendments(STENO_FINAL_CONSENT)
+        finals = [a for a in amendments if a.is_final_vote]
+        assert [a.vote_number for a in finals] == [70]
+        assert finals[0].result == "accepted"
+
+    def test_debate_zakon_jako_celku_not_final(self):
+        # Bare "zákon jako celek" (no "návrh" prefix) appears in debate and
+        # vote-list readings — it must NOT flag the containing block final.
+        amendments, _conf, _warns = parse_steno_amendments(STENO_FINAL_CONSENT)
+        vote_69 = next(a for a in amendments if a.vote_number == 69)
+        assert not vote_69.is_final_vote

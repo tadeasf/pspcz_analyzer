@@ -94,15 +94,21 @@ _VOTE_RESULT_RE = re.compile(
     r".*?"
     r"(Přijato"
     r"|Zamítnuto"
-    r"|[Nn]ávrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
+    # "Návrh (také/rovněž) (ne)byl přijat/zamítnut", incl. "návrh procedury"
+    r"|[Nn]ávrh\s+(?:také\s+|rovněž\s+)?(?:procedury\s+)?(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
     r"|[Kk]onstatuji[,\s]+že\s+návrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
-    r"|s\s+návrhem\s+(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas))",
+    # Final-passage consent: "s návrhem (zákona) byl vysloven souhlas"
+    r"|s\s+návrhem\s+(?:zákona\s+)?(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas))",
     re.IGNORECASE | re.DOTALL,
 )
 
-# Final passage vote — "zákon jako celku"
+# Final passage vote — "návrh zákona jako celku" or the chair's consent
+# formula "s návrhem zákona byl vysloven souhlas". The "návrh" prefix is
+# REQUIRED: bare "zákon jako celku" appears in debate and in the
+# rapporteur's vote-list reading, which must not flag amendment blocks.
 _FINAL_VOTE_RE = re.compile(
-    r"návrhu?\s+zákona\s+jako\s+celku",
+    r"návrhu?\s+zákona\s+jako\s+celku"
+    r"|s\s+návrhem\s+zákona\s+byl\s+vysloven\s+souhlas",
     re.IGNORECASE,
 )
 

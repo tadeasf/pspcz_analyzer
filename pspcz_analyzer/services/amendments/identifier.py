@@ -156,13 +156,17 @@ def _resolve_vote_ids(
 ) -> None:
     """Resolve vote_number (cislo) to id_hlasovani via the votes DataFrame.
 
-    Mutates the AmendmentVote objects in-place. Unresolved votes are recorded
+    Mutates the AmendmentVote objects in-place. A match is only accepted when
+    the official vote belongs to the same agenda item (bod) — guarding against
+    steno spans overshooting into a neighbouring bod; votes with bod=0 are
+    unassigned in psp.cz data and are accepted. Unresolved votes are recorded
     in the bill's parse_warnings so the gap is visible instead of silent.
 
     Args:
         amendments: List of bill amendment data with parsed votes.
         period_data: Period data containing the votes DataFrame.
     """
+    has_bod_column = "bod" in period_data.votes.columns
     for bill in amendments:
         schuze_votes = period_data.votes.filter(pl.col("schuze") == bill.schuze)
 
@@ -174,8 +178,27 @@ def _resolve_vote_ids(
             if amend.vote_number == 0:
                 continue
             match = schuze_votes.filter(pl.col("cislo") == amend.vote_number)
-            if match.height > 0:
-                amend.id_hlasovani = match.item(0, "id_hlasovani")
+            if match.height == 0:
+                continue
+            row = match.row(0, named=True)
+            official_bod = row.get("bod") if has_bod_column else None
+            if official_bod not in (None, 0, bill.bod):
+                bill.parse_warnings.append(
+                    f"Vote {amend.vote_number} officially belongs to bod "
+                    f"{official_bod}, not bod {bill.bod} — left unlinked"
+                )
+                logger.warning(
+                    "Bill {}/{} (period {}): vote {} officially belongs to "
+                    "bod {} (expected bod {}) — left unlinked",
+                    bill.schuze,
+                    bill.bod,
+                    bill.period,
+                    amend.vote_number,
+                    official_bod,
+                    bill.bod,
+                )
+                continue
+            amend.id_hlasovani = row["id_hlasovani"]
 
         unresolved = [a for a in all_amends if a.vote_number > 0 and a.id_hlasovani is None]
         if unresolved:
