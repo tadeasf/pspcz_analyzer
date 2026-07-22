@@ -1624,6 +1624,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../routes/context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../routes/feedback/" class="md-nav__link">
         
   
@@ -4683,8 +4711,7 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/io/history_scraper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-413">413</a></span>
-<span class="normal"><a href="#__codelineno-0-414">414</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-414">414</a></span>
 <span class="normal"><a href="#__codelineno-0-415">415</a></span>
 <span class="normal"><a href="#__codelineno-0-416">416</a></span>
 <span class="normal"><a href="#__codelineno-0-417">417</a></span>
@@ -4699,23 +4726,24 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 <span class="normal"><a href="#__codelineno-0-426">426</a></span>
 <span class="normal"><a href="#__codelineno-0-427">427</a></span>
 <span class="normal"><a href="#__codelineno-0-428">428</a></span>
-<span class="normal"><a href="#__codelineno-0-429">429</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="k">def</span><span class="w"> </span><span class="nf">history_from_dict</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TiskHistory</span><span class="p">:</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Deserialize a dict to TiskHistory.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-415" name="__codelineno-0-415"></a>    <span class="n">stages</span> <span class="o">=</span> <span class="p">[</span><span class="n">TiskHistoryStage</span><span class="p">(</span><span class="o">**</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stages&quot;</span><span class="p">,</span> <span class="p">[])]</span>
-<a id="__codelineno-0-416" name="__codelineno-0-416"></a>    <span class="k">return</span> <span class="n">TiskHistory</span><span class="p">(</span>
-<a id="__codelineno-0-417" name="__codelineno-0-417"></a>        <span class="n">ct</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;ct&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-418" name="__codelineno-0-418"></a>        <span class="n">period</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;period&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-419" name="__codelineno-0-419"></a>        <span class="n">submitter</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submitter&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-420" name="__codelineno-0-420"></a>        <span class="n">submitter_date</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submitter_date&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-421" name="__codelineno-0-421"></a>        <span class="n">government_opinion</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;government_opinion&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-422" name="__codelineno-0-422"></a>        <span class="n">stages</span><span class="o">=</span><span class="n">stages</span><span class="p">,</span>
-<a id="__codelineno-0-423" name="__codelineno-0-423"></a>        <span class="n">current_status</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_status&quot;</span><span class="p">,</span> <span class="s2">&quot;projednáváno&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-424" name="__codelineno-0-424"></a>        <span class="n">law_number</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;law_number&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-425" name="__codelineno-0-425"></a>        <span class="n">scraped_at</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scraped_at&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-426" name="__codelineno-0-426"></a>        <span class="n">law_changes</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;law_changes&quot;</span><span class="p">,</span> <span class="p">[]),</span>
-<a id="__codelineno-0-427" name="__codelineno-0-427"></a>        <span class="n">amendment_tisk_ct1</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;amendment_tisk_ct1&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-428" name="__codelineno-0-428"></a>        <span class="n">amendment_tisk_idd</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;amendment_tisk_idd&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-429" name="__codelineno-0-429"></a>    <span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-429">429</a></span>
+<span class="normal"><a href="#__codelineno-0-430">430</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="k">def</span><span class="w"> </span><span class="nf">history_from_dict</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TiskHistory</span><span class="p">:</span>
+<a id="__codelineno-0-415" name="__codelineno-0-415"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Deserialize a dict to TiskHistory.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-416" name="__codelineno-0-416"></a>    <span class="n">stages</span> <span class="o">=</span> <span class="p">[</span><span class="n">TiskHistoryStage</span><span class="p">(</span><span class="o">**</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stages&quot;</span><span class="p">,</span> <span class="p">[])]</span>
+<a id="__codelineno-0-417" name="__codelineno-0-417"></a>    <span class="k">return</span> <span class="n">TiskHistory</span><span class="p">(</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418"></a>        <span class="n">ct</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;ct&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419"></a>        <span class="n">period</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;period&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-420" name="__codelineno-0-420"></a>        <span class="n">submitter</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submitter&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421"></a>        <span class="n">submitter_date</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submitter_date&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-422" name="__codelineno-0-422"></a>        <span class="n">government_opinion</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;government_opinion&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-423" name="__codelineno-0-423"></a>        <span class="n">stages</span><span class="o">=</span><span class="n">stages</span><span class="p">,</span>
+<a id="__codelineno-0-424" name="__codelineno-0-424"></a>        <span class="n">current_status</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_status&quot;</span><span class="p">,</span> <span class="s2">&quot;projednáváno&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-425" name="__codelineno-0-425"></a>        <span class="n">law_number</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;law_number&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-426" name="__codelineno-0-426"></a>        <span class="n">scraped_at</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scraped_at&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-427" name="__codelineno-0-427"></a>        <span class="n">law_changes</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;law_changes&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+<a id="__codelineno-0-428" name="__codelineno-0-428"></a>        <span class="n">amendment_tisk_ct1</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;amendment_tisk_ct1&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-429" name="__codelineno-0-429"></a>        <span class="n">amendment_tisk_idd</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;amendment_tisk_idd&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-430" name="__codelineno-0-430"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4738,11 +4766,11 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/io/history_scraper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-408">408</a></span>
-<span class="normal"><a href="#__codelineno-0-409">409</a></span>
-<span class="normal"><a href="#__codelineno-0-410">410</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-408" name="__codelineno-0-408"></a><span class="k">def</span><span class="w"> </span><span class="nf">history_to_dict</span><span class="p">(</span><span class="n">h</span><span class="p">:</span> <span class="n">TiskHistory</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-0-409" name="__codelineno-0-409"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize TiskHistory to a JSON-compatible dict.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-410" name="__codelineno-0-410"></a>    <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-409">409</a></span>
+<span class="normal"><a href="#__codelineno-0-410">410</a></span>
+<span class="normal"><a href="#__codelineno-0-411">411</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-409" name="__codelineno-0-409"></a><span class="k">def</span><span class="w"> </span><span class="nf">history_to_dict</span><span class="p">(</span><span class="n">h</span><span class="p">:</span> <span class="n">TiskHistory</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize TiskHistory to a JSON-compatible dict.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-411" name="__codelineno-0-411"></a>    <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4765,8 +4793,7 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/io/history_scraper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-439">439</a></span>
-<span class="normal"><a href="#__codelineno-0-440">440</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-440">440</a></span>
 <span class="normal"><a href="#__codelineno-0-441">441</a></span>
 <span class="normal"><a href="#__codelineno-0-442">442</a></span>
 <span class="normal"><a href="#__codelineno-0-443">443</a></span>
@@ -4775,17 +4802,18 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 <span class="normal"><a href="#__codelineno-0-446">446</a></span>
 <span class="normal"><a href="#__codelineno-0-447">447</a></span>
 <span class="normal"><a href="#__codelineno-0-448">448</a></span>
-<span class="normal"><a href="#__codelineno-0-449">449</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="k">def</span><span class="w"> </span><span class="nf">load_history_json</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TiskHistory</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a TiskHistory from JSON file.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-441" name="__codelineno-0-441"></a>    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-<a id="__codelineno-0-442" name="__codelineno-0-442"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-<a id="__codelineno-0-443" name="__codelineno-0-443"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-444" name="__codelineno-0-444"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-445" name="__codelineno-0-445"></a>        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-446" name="__codelineno-0-446"></a>        <span class="k">return</span> <span class="n">history_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<a id="__codelineno-0-447" name="__codelineno-0-447"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-0-448" name="__codelineno-0-448"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to load history from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-<a id="__codelineno-0-449" name="__codelineno-0-449"></a>        <span class="k">return</span> <span class="kc">None</span>
+<span class="normal"><a href="#__codelineno-0-449">449</a></span>
+<span class="normal"><a href="#__codelineno-0-450">450</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="k">def</span><span class="w"> </span><span class="nf">load_history_json</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TiskHistory</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-441" name="__codelineno-0-441"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a TiskHistory from JSON file.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-442" name="__codelineno-0-442"></a>    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-0-443" name="__codelineno-0-443"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-0-444" name="__codelineno-0-444"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-445" name="__codelineno-0-445"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-446" name="__codelineno-0-446"></a>        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+<a id="__codelineno-0-447" name="__codelineno-0-447"></a>        <span class="k">return</span> <span class="n">history_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<a id="__codelineno-0-448" name="__codelineno-0-448"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-449" name="__codelineno-0-449"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to load history from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-0-450" name="__codelineno-0-450"></a>        <span class="k">return</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4808,15 +4836,15 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/io/history_scraper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-432">432</a></span>
-<span class="normal"><a href="#__codelineno-0-433">433</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-433">433</a></span>
 <span class="normal"><a href="#__codelineno-0-434">434</a></span>
 <span class="normal"><a href="#__codelineno-0-435">435</a></span>
-<span class="normal"><a href="#__codelineno-0-436">436</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-432" name="__codelineno-0-432"></a><span class="k">def</span><span class="w"> </span><span class="nf">save_history_json</span><span class="p">(</span><span class="n">h</span><span class="p">:</span> <span class="n">TiskHistory</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Save a TiskHistory as JSON.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-434" name="__codelineno-0-434"></a>    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-<a id="__codelineno-0-435" name="__codelineno-0-435"></a>    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">history_to_dict</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-436">436</a></span>
+<span class="normal"><a href="#__codelineno-0-437">437</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="k">def</span><span class="w"> </span><span class="nf">save_history_json</span><span class="p">(</span><span class="n">h</span><span class="p">:</span> <span class="n">TiskHistory</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-434" name="__codelineno-0-434"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Save a TiskHistory as JSON.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-435" name="__codelineno-0-435"></a>    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-437" name="__codelineno-0-437"></a>    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">history_to_dict</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4840,8 +4868,7 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/io/history_scraper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-359">359</a></span>
-<span class="normal"><a href="#__codelineno-0-360">360</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-360">360</a></span>
 <span class="normal"><a href="#__codelineno-0-361">361</a></span>
 <span class="normal"><a href="#__codelineno-0-362">362</a></span>
 <span class="normal"><a href="#__codelineno-0-363">363</a></span>
@@ -4886,53 +4913,54 @@ as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.</p>
 <span class="normal"><a href="#__codelineno-0-402">402</a></span>
 <span class="normal"><a href="#__codelineno-0-403">403</a></span>
 <span class="normal"><a href="#__codelineno-0-404">404</a></span>
-<span class="normal"><a href="#__codelineno-0-405">405</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="k">def</span><span class="w"> </span><span class="nf">scrape_tisk_history</span><span class="p">(</span><span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ct</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TiskHistory</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scrape the legislative history page for a tisk.</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a><span class="sd">    Returns TiskHistory with stages, or None if the page couldn&#39;t be fetched.</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>    <span class="n">url</span> <span class="o">=</span> <span class="n">PSP_HISTORIE_URL_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span> <span class="n">ct</span><span class="o">=</span><span class="n">ct</span><span class="p">)</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Scraping tisk history: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368"></a>        <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369"></a>            <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370"></a>            <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373"></a>            <span class="s2">&quot;Failed to fetch history for tisk </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374"></a>            <span class="n">period</span><span class="p">,</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375"></a>            <span class="n">ct</span><span class="p">,</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a>        <span class="p">)</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378"></a>
-<a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="n">full_text</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a>
-<a id="__codelineno-0-382" name="__codelineno-0-382"></a>    <span class="n">stages</span> <span class="o">=</span> <span class="n">_parse_stages</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="n">submitter</span><span class="p">,</span> <span class="n">submitter_date</span> <span class="o">=</span> <span class="n">_extract_submitter</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="n">gov_opinion</span> <span class="o">=</span> <span class="n">_extract_government_opinion</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385"></a>    <span class="n">law_number</span> <span class="o">=</span> <span class="n">_law_number_from_stages</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386"></a>    <span class="n">status</span> <span class="o">=</span> <span class="n">_determine_status</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387"></a>
-<a id="__codelineno-0-388" name="__codelineno-0-388"></a>    <span class="c1"># Extract amendment sub-tisk reference (e.g. &quot;tisk 410/4&quot;)</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="n">amendment_ct1</span><span class="p">,</span> <span class="n">amendment_idd</span> <span class="o">=</span> <span class="n">_extract_amendment_tisk_reference</span><span class="p">(</span><span class="n">full_text</span><span class="p">)</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390"></a>    <span class="k">if</span> <span class="n">amendment_ct1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">amendment_idd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391"></a>        <span class="n">amendment_idd</span> <span class="o">=</span> <span class="n">_resolve_amendment_tisk_idd</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">amendment_ct1</span><span class="p">)</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392"></a>
-<a id="__codelineno-0-393" name="__codelineno-0-393"></a>    <span class="k">return</span> <span class="n">TiskHistory</span><span class="p">(</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394"></a>        <span class="n">ct</span><span class="o">=</span><span class="n">ct</span><span class="p">,</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395"></a>        <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396"></a>        <span class="n">submitter</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397"></a>        <span class="n">submitter_date</span><span class="o">=</span><span class="n">submitter_date</span><span class="p">,</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398"></a>        <span class="n">government_opinion</span><span class="o">=</span><span class="n">gov_opinion</span><span class="p">,</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399"></a>        <span class="n">stages</span><span class="o">=</span><span class="n">stages</span><span class="p">,</span>
-<a id="__codelineno-0-400" name="__codelineno-0-400"></a>        <span class="n">current_status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401"></a>        <span class="n">law_number</span><span class="o">=</span><span class="n">law_number</span><span class="p">,</span>
-<a id="__codelineno-0-402" name="__codelineno-0-402"></a>        <span class="n">scraped_at</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
-<a id="__codelineno-0-403" name="__codelineno-0-403"></a>        <span class="n">amendment_tisk_ct1</span><span class="o">=</span><span class="n">amendment_ct1</span><span class="p">,</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404"></a>        <span class="n">amendment_tisk_idd</span><span class="o">=</span><span class="n">amendment_idd</span><span class="p">,</span>
-<a id="__codelineno-0-405" name="__codelineno-0-405"></a>    <span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-405">405</a></span>
+<span class="normal"><a href="#__codelineno-0-406">406</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="k">def</span><span class="w"> </span><span class="nf">scrape_tisk_history</span><span class="p">(</span><span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ct</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TiskHistory</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scrape the legislative history page for a tisk.</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="sd">    Returns TiskHistory with stages, or None if the page couldn&#39;t be fetched.</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365"></a>    <span class="n">url</span> <span class="o">=</span> <span class="n">PSP_HISTORIE_URL_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span> <span class="n">ct</span><span class="o">=</span><span class="n">ct</span><span class="p">)</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Scraping tisk history: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367"></a>
+<a id="__codelineno-0-368" name="__codelineno-0-368"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a>        <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a>            <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a>            <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a>            <span class="s2">&quot;Failed to fetch history for tisk </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375"></a>            <span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a>            <span class="n">ct</span><span class="p">,</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377"></a>        <span class="p">)</span>
+<a id="__codelineno-0-378" name="__codelineno-0-378"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a>    <span class="n">full_text</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382"></a>
+<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="n">stages</span> <span class="o">=</span> <span class="n">_parse_stages</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="n">submitter</span><span class="p">,</span> <span class="n">submitter_date</span> <span class="o">=</span> <span class="n">_extract_submitter</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385"></a>    <span class="n">gov_opinion</span> <span class="o">=</span> <span class="n">_extract_government_opinion</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386"></a>    <span class="n">law_number</span> <span class="o">=</span> <span class="n">_law_number_from_stages</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387"></a>    <span class="n">status</span> <span class="o">=</span> <span class="n">_determine_status</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388"></a>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="c1"># Extract amendment sub-tisk reference (e.g. &quot;tisk 410/4&quot;)</span>
+<a id="__codelineno-0-390" name="__codelineno-0-390"></a>    <span class="n">amendment_ct1</span><span class="p">,</span> <span class="n">amendment_idd</span> <span class="o">=</span> <span class="n">_extract_amendment_tisk_reference</span><span class="p">(</span><span class="n">full_text</span><span class="p">)</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391"></a>    <span class="k">if</span> <span class="n">amendment_ct1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">amendment_idd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392"></a>        <span class="n">amendment_idd</span> <span class="o">=</span> <span class="n">_resolve_amendment_tisk_idd</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">amendment_ct1</span><span class="p">)</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393"></a>
+<a id="__codelineno-0-394" name="__codelineno-0-394"></a>    <span class="k">return</span> <span class="n">TiskHistory</span><span class="p">(</span>
+<a id="__codelineno-0-395" name="__codelineno-0-395"></a>        <span class="n">ct</span><span class="o">=</span><span class="n">ct</span><span class="p">,</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396"></a>        <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-397" name="__codelineno-0-397"></a>        <span class="n">submitter</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398"></a>        <span class="n">submitter_date</span><span class="o">=</span><span class="n">submitter_date</span><span class="p">,</span>
+<a id="__codelineno-0-399" name="__codelineno-0-399"></a>        <span class="n">government_opinion</span><span class="o">=</span><span class="n">gov_opinion</span><span class="p">,</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400"></a>        <span class="n">stages</span><span class="o">=</span><span class="n">stages</span><span class="p">,</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401"></a>        <span class="n">current_status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+<a id="__codelineno-0-402" name="__codelineno-0-402"></a>        <span class="n">law_number</span><span class="o">=</span><span class="n">law_number</span><span class="p">,</span>
+<a id="__codelineno-0-403" name="__codelineno-0-403"></a>        <span class="n">scraped_at</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a>        <span class="n">amendment_tisk_ct1</span><span class="o">=</span><span class="n">amendment_ct1</span><span class="p">,</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405"></a>        <span class="n">amendment_tisk_idd</span><span class="o">=</span><span class="n">amendment_idd</span><span class="p">,</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

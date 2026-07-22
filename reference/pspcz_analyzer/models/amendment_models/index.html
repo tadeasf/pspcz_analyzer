@@ -1736,6 +1736,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../routes/context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../routes/feedback/" class="md-nav__link">
         
   
@@ -4074,7 +4102,7 @@ and their aggregation per bill.</p>
 
 
 <h3 id="pspcz_analyzer.models.amendment_models.BillAmendmentData" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">BillAmendmentData</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">schuze</span><span class="p">,</span> <span class="n">bod</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">tisk_nazev</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">steno_url</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">amendments</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">final_vote</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_confidence</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bill_summary</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">bill_summary_en</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">parse_warnings</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">amendment_tisk_ct1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amendment_tisk_idd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amendment_pdf_text</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
+              <code class="highlight language-python"><span class="n">BillAmendmentData</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">schuze</span><span class="p">,</span> <span class="n">bod</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">tisk_nazev</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">steno_url</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">amendments</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">final_vote</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_confidence</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bill_summary</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">bill_summary_en</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">parse_warnings</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">amendment_tisk_ct1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amendment_tisk_idd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amendment_pdf_text</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">unlinked_amendment_count</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></code>
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
@@ -4270,6 +4298,19 @@ and their aggregation per bill.</p>
             <td>
               <div class="doc-md-description">
                 <p>Full raw PDF text for bill-level summary.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="pspcz_analyzer.models.amendment_models.BillAmendmentData.unlinked_amendment_count">unlinked_amendment_count</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of PDF-detected amendments that could
+not be linked to any recorded vote (steno parsing found no votes
+for this bill). 0 when all amendments are linked.</p>
               </div>
             </td>
           </tr>

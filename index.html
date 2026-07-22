@@ -1830,6 +1830,34 @@
   
   
     <li class="md-nav__item">
+      <a href="reference/pspcz_analyzer/routes/context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="reference/pspcz_analyzer/routes/feedback/" class="md-nav__link">
         
   
@@ -4014,6 +4042,11 @@
 <td>Set to <code>1</code> for hot reload, <code>0</code> for production</td>
 </tr>
 <tr>
+<td><code>PSPCZ_CACHE_HOST_DIR</code></td>
+<td><code>./cache-data</code></td>
+<td>Docker only: host directory bind-mounted to <code>/data/cache</code></td>
+</tr>
+<tr>
 <td><code>PORT</code></td>
 <td><code>8000</code></td>
 <td>Server port (used by both local dev and Docker)</td>
@@ -4138,7 +4171,7 @@
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Build and start</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
 </code></pre></div>
-<p>The app is available at <code>http://localhost:8000</code> (or the port set by <code>PORT</code>). Data cache is persisted via a bind mount at <code>./cache-data/</code>. The LLM runs separately — configure the connection via <code>OLLAMA_BASE_URL</code> (for Ollama) or <code>OPENAI_BASE_URL</code> + <code>OPENAI_API_KEY</code> (for OpenAI-compatible APIs) in <code>.env</code>.</p>
+<p>The app is available at <code>http://localhost:8000</code> (or the port set by <code>PORT</code>). Data cache is persisted via a bind mount at <code>./cache-data/</code> — set <code>PSPCZ_CACHE_HOST_DIR</code> in <code>.env</code> to place it on any disk (useful when the system disk is small). Both containers share the mount with the SELinux <code>:z</code> label, so it works on Fedora out of the box. Containers run as root, so cached files are root-owned on the host (<code>sudo chown -R $USER ./cache-data</code> if you need host-side access). The LLM runs separately — configure the connection via <code>OLLAMA_BASE_URL</code> (for Ollama) or <code>OPENAI_BASE_URL</code> + <code>OPENAI_API_KEY</code> (for OpenAI-compatible APIs) in <code>.env</code>.</p>
 <p>To use a custom port:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">PORT</span><span class="o">=</span><span class="m">9000</span><span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
 </code></pre></div>
