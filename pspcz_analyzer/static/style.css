@@ -1095,6 +1095,14 @@ button.topic-badge-link {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 100;
 }
+
+/* Author `display: flex` above overrides the UA `[hidden] { display: none }`,
+   so the box stayed visible even with the hidden attribute (and the close
+   button / auto-hide could never dismiss it). Re-assert hiding here. */
+.error-box[hidden] {
+    display: none;
+}
+
 .error-box-close {
     background: none;
     border: none;
