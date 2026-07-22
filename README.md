@@ -147,6 +147,26 @@ uv run pre-commit install
 
 See [Testing & CI/CD](docs/testing.md) for full details on the test suite, CI pipelines, and contributing guidelines.
 
+### Building & shipping a pre-processed cache
+
+To build a fully-enriched cache (tisk FULL + amendment FULL) for a set of
+periods and pack it into a single archive for deployment, run:
+
+```bash
+# Default: periods 10 9 8 7 6 5 → ./pspcz-cache-<timestamp>.tar.gz
+uv run python scripts/build_and_backup_cache.py
+
+# Subset / no archive / resume without re-downloading
+uv run python scripts/build_and_backup_cache.py --periods 10 9
+uv run python scripts/build_and_backup_cache.py --no-backup
+uv run python scripts/build_and_backup_cache.py --skip-download
+```
+
+The archive stores paths relative to the cache dir, so on the production
+host you can extract it straight over `PSPCZ_CACHE_DIR` (stop the app first):
+`tar xzf pspcz-cache-*.tar.gz -C "$PSPCZ_CACHE_DIR"`. This deploys a new
+version with all data pre-processed — no re-download or re-processing needed.
+
 ## Tech Stack
 
 | Layer                  | Technology                           |
