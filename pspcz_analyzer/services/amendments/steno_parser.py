@@ -94,15 +94,27 @@ _VOTE_RESULT_RE = re.compile(
     r".*?"
     r"(Přijato"
     r"|Zamítnuto"
-    r"|[Nn]ávrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
+    # "Návrh (také/rovněž) (ne)byl přijat/zamítnut", incl. "návrh procedury"
+    r"|[Nn]ávrh\s+(?:také\s+|rovněž\s+)?(?:procedury\s+)?(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
     r"|[Kk]onstatuji[,\s]+že\s+návrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
-    r"|s\s+návrhem\s+(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas))",
+    # Final-passage consent: "s návrhem (zákona) byl vysloven souhlas"
+    r"|s\s+návrhem\s+(?:zákona\s+)?(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas)"
+    # Unanimous tally announced without an explicit result phrase —
+    # "pro 171 poslanců, proti žádný" (accepted) / "pro žádný, proti 150"
+    # (rejected). Only matches extreme tallies, so votes with an explicit
+    # result phrase still resolve via the alternatives above.
+    r"|pro\s+\d+(?:\s+poslanc\w*)?\s*,\s*proti\s+(?:žádn\w*|0)"
+    r"|pro\s+(?:žádn\w*|0)\s*,\s*proti\s+\d+(?:\s+poslanc\w*)?)",
     re.IGNORECASE | re.DOTALL,
 )
 
-# Final passage vote — "zákon jako celku"
+# Final passage vote — "návrh zákona jako celku" or the chair's consent
+# formula "s návrhem zákona byl vysloven souhlas". The "návrh" prefix is
+# REQUIRED: bare "zákon jako celku" appears in debate and in the
+# rapporteur's vote-list reading, which must not flag amendment blocks.
 _FINAL_VOTE_RE = re.compile(
-    r"návrhu?\s+zákona\s+jako\s+celku",
+    r"návrhu?\s+zákona\s+jako\s+celku"
+    r"|s\s+návrhem\s+zákona\s+byl\s+vysloven\s+souhlas",
     re.IGNORECASE,
 )
 
@@ -263,6 +275,12 @@ def _normalize_result(raw: str) -> str:
         return "rejected"
     if "souhlas" in lower:
         return "accepted"
+    # Unanimous tallies announced without an explicit result phrase
+    # ("pro 171 poslanců, proti žádný" / "pro žádný, proti 150").
+    if re.search(r"proti\s+(?:žádn\w*|0)", lower) and re.search(r"pro\s+\d", lower):
+        return "accepted"
+    if re.search(r"pro\s+(?:žádn\w*|0)", lower) and re.search(r"proti\s+\d", lower):
+        return "rejected"
     return "unknown"
 
 

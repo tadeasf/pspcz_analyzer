@@ -15,7 +15,12 @@ First run takes ~17 min (1011 history scrapes @ 1s each).
 Subsequent runs are near-instant (everything cached).
 
 Usage:
-    uv run python scripts/test_amendments.py [--period N]
+    uv run python scripts/test_amendments.py [--period N] [--mode full|parse|summarize]
+
+Modes: full (default) runs parsing + LLM summaries; parse skips the LLM
+(no network to the model, fast); summarize tops up summaries from the
+cached parquet — use it to resume an interrupted full run without
+re-scraping psp.cz.
 """
 
 # ruff: noqa: E402
@@ -40,6 +45,7 @@ from pspcz_analyzer.config import (
     TISKY_HISTORIE_DIR,
     TISKY_META_DIR,
 )
+from pspcz_analyzer.models.pipeline_progress import AmendmentMode
 from pspcz_analyzer.services.amendments.identifier import _identify_third_reading_bods
 from pspcz_analyzer.services.amendments.pipeline import _run_pipeline_sync
 from pspcz_analyzer.services.amendments.progress import AmendmentProgress
@@ -92,9 +98,14 @@ def _inject_histories(ds: DataService, period: int) -> int:
     return injected
 
 
-def _run_test(period: int) -> None:
+def _run_test(period: int, mode: AmendmentMode = AmendmentMode.FULL) -> None:
     """Run the amendment pipeline test for the given period."""
-    logger.info("=== Amendment pipeline test — period {} ({}) ===", period, PERIOD_YEARS[period])
+    logger.info(
+        "=== Amendment pipeline test — period {} ({}), mode={} ===",
+        period,
+        PERIOD_YEARS[period],
+        mode.value,
+    )
 
     # Step 1: Load data
     logger.info("Step 1/4: Loading period data...")
@@ -124,11 +135,11 @@ def _run_test(period: int) -> None:
     if len(candidates) > 10:
         logger.info("  ... and {} more", len(candidates) - 10)
 
-    # Step 4: Run full pipeline
-    logger.info("Step 4/4: Running amendment pipeline...")
+    # Step 4: Run pipeline (mode: full / parse / summarize)
+    logger.info("Step 4/4: Running amendment pipeline (mode={})...", mode.value)
     progress = AmendmentProgress()
     t0 = time.perf_counter()
-    bills = _run_pipeline_sync(period, pd, DEFAULT_CACHE_DIR, progress)
+    bills = _run_pipeline_sync(period, pd, DEFAULT_CACHE_DIR, progress, mode=mode)
     elapsed = time.perf_counter() - t0
 
     # Summary
@@ -163,13 +174,22 @@ def main() -> None:
         default=9,
         help="Electoral period to test (default: 9)",
     )
+    parser.add_argument(
+        "--mode",
+        choices=["full", "parse", "summarize"],
+        default="full",
+        help=(
+            "full = parse + LLM summaries; parse = scraping/parsing only "
+            "(no LLM); summarize = top up summaries from cached parquet"
+        ),
+    )
     args = parser.parse_args()
 
     if args.period not in PERIOD_YEARS:
         logger.error("Unknown period {}. Available: {}", args.period, list(PERIOD_YEARS.keys()))
         sys.exit(1)
 
-    _run_test(args.period)
+    _run_test(args.period, AmendmentMode(args.mode))
 
 
 if __name__ == "__main__":

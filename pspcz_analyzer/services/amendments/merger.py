@@ -142,15 +142,16 @@ def _pdf_download_and_parse(
 
 
 def _pop_numeric_variants(
-    steno_by_letter: dict[str, AmendmentVote],
+    steno_by_letter: dict[str, list[AmendmentVote]],
     pdf_letter: str,
 ) -> list[AmendmentVote]:
     """Pop ALL steno amendments matching numeric variants of a PDF letter.
 
-    E.g., PDF letter "A" matches steno "A1", "A2", "A3" — all are returned.
+    E.g., PDF letter "A" matches steno "A1", "A2", "A3" — every entry under
+    those keys is returned (a key can hold several entries, e.g. revotes).
 
     Args:
-        steno_by_letter: Mutable dict of steno amendments keyed by letter.
+        steno_by_letter: Mutable dict of steno amendment lists keyed by letter.
         pdf_letter: PDF amendment letter (e.g. "A").
 
     Returns:
@@ -163,8 +164,30 @@ def _pop_numeric_variants(
         if key.startswith(pdf_letter) and key[len(pdf_letter) :].isdigit()
     ]
     for key in keys_to_pop:
-        matches.append(steno_by_letter.pop(key))
+        matches.extend(steno_by_letter.pop(key))
     return matches
+
+
+def _pop_letter(
+    steno_by_letter: dict[str, list[AmendmentVote]],
+    letter_key: str,
+) -> AmendmentVote | None:
+    """Pop the first steno entry for a letter key, if any.
+
+    Args:
+        steno_by_letter: Mutable dict of steno amendment lists keyed by letter.
+        letter_key: Uppercase, stripped letter key.
+
+    Returns:
+        The first AmendmentVote under the key, or None; empty keys are deleted.
+    """
+    entries = steno_by_letter.get(letter_key)
+    if not entries:
+        return None
+    entry = entries.pop(0)
+    if not entries:
+        del steno_by_letter[letter_key]
+    return entry
 
 
 def _merge_pdf_and_steno(
@@ -197,11 +220,18 @@ def _merge_pdf_and_steno(
         # as unvoted rows.
         has_steno_votes = any(a.vote_number for a in bill.amendments)
 
-        # Build steno lookup by letter (uppercase, stripped)
-        steno_by_letter: dict[str, AmendmentVote] = {}
+        if not has_steno_votes:
+            # PDF amendments exist but steno parsing found no recorded votes —
+            # don't dump them as rows, but remember the count for the UI.
+            bill.unlinked_amendment_count = len(pdf_amendments)
+
+        # Build steno lookup by letter (uppercase, stripped). A letter key can
+        # hold several entries — letter-less entries ("") and same-letter
+        # revotes — so keep them all in a list; a match consumes the first.
+        steno_by_letter: dict[str, list[AmendmentVote]] = {}
         for amend in bill.amendments:
             key = amend.letter.strip().upper()
-            steno_by_letter[key] = amend
+            steno_by_letter.setdefault(key, []).append(amend)
 
         merged: list[AmendmentVote] = []
 
@@ -209,22 +239,24 @@ def _merge_pdf_and_steno(
             pdf_key = pdf_amend.letter.strip().upper()
 
             # Try exact match first
-            steno = steno_by_letter.pop(pdf_key, None)
+            steno = _pop_letter(steno_by_letter, pdf_key)
             steno_matches: list[AmendmentVote] = [steno] if steno else []
 
             # Try numeric variants: "A" matches steno "A1", "A2", "A3"
             if not steno_matches:
                 steno_matches = _pop_numeric_variants(steno_by_letter, pdf_key)
 
-            # Also check grouped_with: if steno has grouped_with letters,
-            # try to match those PDF letters too
+            # Also check grouped_with: pull grouped letters into the en-bloc
+            # match so they are merged with the PDF text — previously they
+            # were popped and silently discarded.
             for s in list(steno_matches):
                 for grouped_letter in s.grouped_with:
                     gl = grouped_letter.strip().upper()
                     # Extract base letter (e.g. "F2" -> "F")
                     base = gl.rstrip("0123456789")
-                    if base and base in steno_by_letter:
-                        steno_by_letter.pop(base)
+                    grouped_entry = _pop_letter(steno_by_letter, base) if base else None
+                    if grouped_entry is not None and grouped_entry not in steno_matches:
+                        steno_matches.append(grouped_entry)
 
             if steno_matches:
                 # Enrich all matching steno entries with PDF data.
@@ -256,10 +288,12 @@ def _merge_pdf_and_steno(
                 # No steno votes at all for this bill → don't dump the PDF.
                 total_pdf_only += 1
 
-        # Append steno-only leftovers (oral amendments not in PDF)
-        for steno_leftover in steno_by_letter.values():
-            merged.append(steno_leftover)
-            total_steno_only += 1
+        # Append steno-only leftovers (oral amendments not in PDF), including
+        # letter-less entries and unconsumed duplicate letters.
+        for entries in steno_by_letter.values():
+            for steno_leftover in entries:
+                merged.append(steno_leftover)
+                total_steno_only += 1
 
         bill.amendments = merged
 

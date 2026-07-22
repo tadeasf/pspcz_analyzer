@@ -1,11 +1,18 @@
 {# Shared UI macros. Import with: {% from "macros.html" import driver_badge %} #}
 
-{% macro driver_badge(driver) %}
+{% macro driver_badge(driver, tooltip="") %}
+{#- Renders nothing for driver == 'unknown' (e.g. periods where the governing
+    coalition cannot be derived) — a neutral gray badge on every row would be
+    noise. Pass tooltip= to expose the submitters on hover. -#}
 {%- if driver == 'government' -%}
-<span class="driver-badge driver-government">{{ _("driver.government") }}</span>
+<span class="driver-badge driver-government"{% if tooltip %} title="{{ tooltip }}"{% endif %}>{{ _("driver.government") }}</span>
 {%- elif driver == 'opposition' -%}
-<span class="driver-badge driver-opposition">{{ _("driver.opposition") }}</span>
+<span class="driver-badge driver-opposition"{% if tooltip %} title="{{ tooltip }}"{% endif %}>{{ _("driver.opposition") }}</span>
 {%- elif driver == 'mixed' -%}
-<span class="driver-badge driver-mixed">{{ _("driver.mixed") }}</span>
+<span class="driver-badge driver-mixed"{% if tooltip %} title="{{ tooltip }}"{% endif %}>{{ _("driver.mixed") }}</span>
 {%- endif -%}
+{% endmacro %}
+
+{% macro status_badge(status) %}
+<span class="status-pill status-pill-{{ status|status_category }}">{{ status }}</span>
 {% endmacro %}

@@ -42,7 +42,7 @@
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
 <div class="chart-container">
-    <img src="/charts/loyalty.png?period={{ period }}" alt="{{ _('loyalty.title') }}" loading="lazy">
+    <img class="chart-img" src="/charts/loyalty.png?period={{ period }}" alt="{{ _('loyalty.title') }}" loading="lazy">
 </div>
 
 <div id="results" hx-get="/api/loyalty?top=30&period={{ period }}" hx-trigger="load" hx-indicator="#loading">

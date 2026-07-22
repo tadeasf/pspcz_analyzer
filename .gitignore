@@ -15,5 +15,11 @@ wheels/
 .playwright-mcp
 .coverage
 site/
+
+# Docker bind-mount cache directory
+cache-data/
 scripts/test_llm_curl.sh
 scripts/benchmark_llm.py
+
+# Cache archives produced by scripts/build_and_backup_cache.py
+/pspcz-cache-*.tar.gz

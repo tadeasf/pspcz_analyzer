@@ -1,3 +1,6 @@
+{% if not rows %}
+<p>{{ _("votes.no_data") }}</p>
+{% else %}
 <p><strong>{{ _("votes_found").format(total=total, page=page, total_pages=total_pages) }}</strong></p>
 
 <div class="overflow-auto">
@@ -26,7 +29,7 @@
                     <em>{{ _("session_vote").format(session=row.schuze, number=row.cislo) }}</em>
                     {% endif %}
                     {% if row.tisk_url %}
-                    <br><small><a href="{{ row.tisk_url }}" target="_blank">Tisk {{ row.tisk_ct }}</a></small>
+                    <br><small><a href="{{ row.tisk_url }}" target="_blank">{{ _("th.tisk") }} {{ row.tisk_ct }}</a></small>
                     {% endif %}
                     {% if row.tisk_topics %}
                     <br>{% for t in row.tisk_topics %}<span class="topic-badge">{{ t }}</span>{% endfor %}
@@ -55,15 +58,16 @@
 </div>
 
 {% if total_pages > 1 %}
-<div class="pagination">
+<nav class="pagination" aria-label="{{ _('pagination.label') }}">
     {% if page > 1 %}
-    <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
-       hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</a>
+    <button hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
+            hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</button>
     {% endif %}
     <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
     {% if page < total_pages %}
-    <a href="#" hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
-       hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</a>
+    <button hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
+            hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</button>
     {% endif %}
-</div>
+</nav>
+{% endif %}
 {% endif %}

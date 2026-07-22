@@ -14,6 +14,9 @@ from pspcz_analyzer.utils.text import normalize_czech
 
 # Minimum similarity ratio for a name match (handles instrumental case)
 _MATCH_THRESHOLD = 0.7
+# Ratio at which a name match is considered exact — short-circuits the scan
+# so ties between several MPs (same surname) can't misattribute the match.
+_EXACT_MATCH_RATIO = 0.99
 
 
 def _match_name_to_mp(
@@ -37,6 +40,8 @@ def _match_name_to_mp(
         prijmeni = row.get("prijmeni", "")
         norm_prijmeni = normalize_czech(prijmeni)
         ratio = difflib.SequenceMatcher(None, norm_name, norm_prijmeni).ratio()
+        if ratio >= _EXACT_MATCH_RATIO:
+            return (row["id_poslanec"], row.get("party", ""))
         if ratio > best_ratio:
             best_ratio = ratio
             best_match = (row["id_poslanec"], row.get("party", ""))

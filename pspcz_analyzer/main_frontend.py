@@ -1,6 +1,5 @@
 """Frontend entrypoint — public web app with read-only data access."""
 
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -15,7 +14,7 @@ from loguru import logger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, PORT
+from pspcz_analyzer.config import DEFAULT_PERIOD, DEV, PORT
 from pspcz_analyzer.i18n import setup_jinja2_i18n
 from pspcz_analyzer.i18n.middleware import LocaleMiddleware
 from pspcz_analyzer.logging_config import setup_logging
@@ -24,6 +23,7 @@ from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.amendments import router as amendments_router
 from pspcz_analyzer.routes.amendments import templates as amendments_templates
 from pspcz_analyzer.routes.charts import router as charts_router
+from pspcz_analyzer.routes.context import data_freshness_processor
 from pspcz_analyzer.routes.feedback import router as feedback_router
 from pspcz_analyzer.routes.feedback import templates as feedback_templates
 from pspcz_analyzer.routes.health import router as health_router
@@ -36,6 +36,7 @@ from pspcz_analyzer.routes.tisk import templates as tisk_templates
 from pspcz_analyzer.routes.voting import router as voting_router
 from pspcz_analyzer.routes.voting import templates as voting_templates
 from pspcz_analyzer.services.data_reader import DataReader
+from pspcz_analyzer.utils.text import status_category
 
 setup_logging()
 
@@ -115,17 +116,18 @@ for t in (
     feedback_templates,
 ):
     t.env.filters["markdown"] = _md_filter
+    t.env.filters["status_category"] = status_category
+    t.context_processors.append(data_freshness_processor)
     setup_jinja2_i18n(t.env)
 
 
 def main() -> None:
     """Run the frontend server."""
-    dev_mode = os.environ.get("PSPCZ_DEV", "1") == "1"
     uvicorn.run(
         "pspcz_analyzer.main_frontend:app",
         host="0.0.0.0",
         port=PORT,
-        reload=dev_mode,
+        reload=DEV,
     )
 
 

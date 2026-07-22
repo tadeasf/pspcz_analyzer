@@ -11,7 +11,7 @@
 }
 
 html {
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.6;
     -webkit-text-size-adjust: 100%;
 }
@@ -823,6 +823,20 @@ button.topic-badge-link {
     font-size: 0.9rem;
 }
 
+.pagination button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #426c95;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.pagination button:hover {
+    color: #bd292f;
+}
+
 /* ============================================================
    Footer
    ============================================================ */
@@ -1058,13 +1072,87 @@ button.topic-badge-link {
 .driver-government { background: #EBF1F8; color: #1A4677; border-color: #BCD0E6; }
 .driver-opposition { background: #FBE7E7; color: #B00007; border-color: #E6BCBC; }
 .driver-mixed { background: #FFF3E0; color: #b35a00; border-color: #EAD2A8; }
+.driver-unknown { background: #F0F0F0; color: #555; border-color: #D8D8D8; }
 .driver-line { font-size: 0.9rem; color: #555; }
+
+.unlinked-note { color: #8a6d3b; font-style: italic; }
+.confidence-cell { cursor: help; }
+
+.error-box {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 36rem;
+    background: #FBE7E7;
+    color: #B00007;
+    border: 1px solid #E6BCBC;
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+}
+
+/* Author `display: flex` above overrides the UA `[hidden] { display: none }`,
+   so the box stayed visible even with the hidden attribute (and the close
+   button / auto-hide could never dismiss it). Re-assert hiding here. */
+.error-box[hidden] {
+    display: none;
+}
+
+.error-box-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 0.2rem;
+}
+
+.footer-updated {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.35rem;
+}
+
+/* Accessibility: skip link, keyboard focus, chart layout-shift guards */
+.skip-link {
+    position: absolute;
+    left: -999px;
+    top: 0;
+    background: #3C71AC;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 4px 0;
+    z-index: 200;
+}
+
+.skip-link:focus {
+    left: 0;
+}
+
+:focus-visible {
+    outline: 2px solid #3C71AC;
+    outline-offset: 2px;
+}
+
+.chart-container {
+    min-height: 420px;
+}
+
+.chart-img {
+    max-width: 100%;
+    height: auto;
+}
 
 /* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 768px) {
-    html { font-size: 12px; }
+    html { font-size: 13px; }
 
     .hero { padding: 1.5rem 1.1rem; }
     .hero-title { font-size: 1.5rem; }

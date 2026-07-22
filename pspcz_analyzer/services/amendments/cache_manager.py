@@ -44,6 +44,8 @@ AMENDMENTS_SCHEMA = {
     "parse_warnings": pl.Utf8,
     "amendment_tisk_ct1": pl.Int64,
     "amendment_tisk_idd": pl.Int64,
+    "unlinked_amendment_count": pl.Int64,
+    "is_placeholder": pl.Boolean,
 }
 
 
@@ -89,6 +91,50 @@ def _deserialize_list(raw: str) -> list:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
         return []
+
+
+def _placeholder_row(bill: BillAmendmentData) -> dict:
+    """Build a placeholder row for a bill with unlinked PDF amendments only.
+
+    Keeps the bill in the parquet cache (it would otherwise have zero rows)
+    so the UI can surface the unlinked amendment count.
+    """
+    return {
+        "period": bill.period,
+        "schuze": bill.schuze,
+        "bod": bill.bod,
+        "ct": bill.ct,
+        "tisk_nazev": bill.tisk_nazev,
+        "steno_url": bill.steno_url,
+        "letter": "",
+        "vote_number": 0,
+        "id_hlasovani": None,
+        "submitter_names": "",
+        "submitter_ids": "",
+        "description": "",
+        "committee_stance": "",
+        "proposer_stance": "",
+        "result": "",
+        "is_revote": False,
+        "original_vote_number": None,
+        "is_withdrawn": False,
+        "grouped_with": "",
+        "is_final_vote": False,
+        "is_leg_tech": False,
+        "amendment_text": "",
+        "summary": "",
+        "summary_en": "",
+        "pdf_submitter_names": "",
+        "submitter_parties": "",
+        "bill_summary": bill.bill_summary,
+        "bill_summary_en": bill.bill_summary_en,
+        "parse_confidence": bill.parse_confidence,
+        "parse_warnings": _serialize_list(bill.parse_warnings),
+        "amendment_tisk_ct1": bill.amendment_tisk_ct1,
+        "amendment_tisk_idd": bill.amendment_tisk_idd,
+        "unlinked_amendment_count": bill.unlinked_amendment_count,
+        "is_placeholder": True,
+    }
 
 
 def save_amendments(
@@ -146,8 +192,15 @@ def save_amendments(
                     "parse_warnings": _serialize_list(bill.parse_warnings),
                     "amendment_tisk_ct1": bill.amendment_tisk_ct1,
                     "amendment_tisk_idd": bill.amendment_tisk_idd,
+                    "unlinked_amendment_count": bill.unlinked_amendment_count,
+                    "is_placeholder": False,
                 }
             )
+
+        if not all_amendments and bill.unlinked_amendment_count > 0:
+            # Bill has PDF amendments but no recorded votes — keep a
+            # placeholder row so the unlinked count survives the round-trip.
+            rows.append(_placeholder_row(bill))
 
     if not rows:
         logger.debug("No amendment rows to save for period {}", period)
@@ -229,6 +282,8 @@ def load_amendments(
         final_vote: AmendmentVote | None = None
 
         for row in rows:
+            if row.get("is_placeholder", False):
+                continue
             amend = _row_to_amendment(row)
             if amend.is_final_vote:
                 final_vote = amend
@@ -250,6 +305,7 @@ def load_amendments(
             parse_warnings=_deserialize_list(first.get("parse_warnings", "")),
             amendment_tisk_ct1=first.get("amendment_tisk_ct1"),
             amendment_tisk_idd=first.get("amendment_tisk_idd"),
+            unlinked_amendment_count=first.get("unlinked_amendment_count", 0),
         )
         result[(schuze, bod)] = bill  # type: ignore[index]
 

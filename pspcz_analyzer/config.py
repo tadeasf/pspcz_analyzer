@@ -167,6 +167,9 @@ DAILY_REFRESH_HOUR = int(os.environ.get("DAILY_REFRESH_HOUR", "3"))
 # Server port (overridable for Docker and deployment)
 PORT = int(os.environ.get("PORT", "8000"))
 
+# Development mode — uvicorn hot reload ("1" local dev, "0" Docker/production)
+DEV = os.environ.get("PSPCZ_DEV", "1") == "1"
+
 # Amendment voting analysis — steno record parsing
 AMENDMENTS_ENABLED = os.environ.get("AMENDMENTS_ENABLED", "1") == "1"
 AMENDMENT_CACHE_SUBDIR = "amendments"

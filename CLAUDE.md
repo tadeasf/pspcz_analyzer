@@ -28,7 +28,8 @@ Python >= 3.12 required (pinned to 3.14 in `.python-version`).
 Environment variables are loaded from `.env` via `python-dotenv` (see `.env.example`). Key variables:
 
 - `PSPCZ_CACHE_DIR` — data cache directory (default: `~/.cache/pspcz-analyzer/psp`)
-- `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`)
+- `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`; exposed as `config.DEV`)
+- `PSPCZ_CACHE_HOST_DIR` — Docker only: host directory bind-mounted to `/data/cache` (default: `./cache-data`; set an absolute path to put the cache on another disk)
 - `PORT` — server port (default: `8000`)
 - `LLM_PROVIDER` — LLM backend: `ollama` (default) or `openai`
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
@@ -134,7 +135,7 @@ Provides data for the laws browser. Loads tisk metadata and legislative historie
 
 ### Amendment Service (`services/amendment_service.py`)
 
-High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point). Each amendment/bill dict is tagged with a `driver` (`government`/`opposition`/`mixed`/`unknown`) via `affiliation`.
+High-level service for web routes. Provides `get_amendment_bills()` (list bills with amendments) and `get_amendment_detail()` (full amendment data for a session/agenda point). Each amendment/bill dict is tagged with a `driver` (`government`/`opposition`/`mixed`/`unknown`) via `affiliation`. The `driver_badge` macro (macros.html) renders per-amendment and per-bill badges and is **deliberately silent for `unknown`** (e.g. periods where the coalition cannot be derived from the confidence vote) — a neutral badge on every row would be noise; the `.driver-unknown` style and `driver.unknown` key exist for the rare cases a badge is wanted anyway.
 
 ### Affiliation Service (`services/affiliation.py`)
 

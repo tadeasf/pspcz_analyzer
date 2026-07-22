@@ -211,6 +211,7 @@ class LLMClient:
                 )
             return found
         except Exception:
+            logger.opt(exception=True).debug("[ollama] Native model availability probe failed")
             return False
 
     def _check_openai_compat(self) -> bool:
@@ -224,6 +225,7 @@ class LLMClient:
             resp.raise_for_status()
             return True
         except Exception:
+            logger.opt(exception=True).debug("[llm] OpenAI-compatible /models probe failed")
             return False
 
     # ── Generation dispatch ───────────────────────────────────────────

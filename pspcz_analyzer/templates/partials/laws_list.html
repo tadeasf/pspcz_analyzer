@@ -32,10 +32,10 @@
                 </td>
                 <td><small>{{ row.submitter }}</small></td>
                 <td>
-                    {% set sl = row.status.lower() %}
-                    {% if 'vyhlášeno' in sl or 'podepsáno' in sl or 'schváleno' in sl or 'přijat' in sl %}
+                    {% set cat = row.status|status_category %}
+                    {% if cat == 'pass' %}
                     <span class="vote-yes">{{ row.status }}</span>
-                    {% elif 'zamítnuto' in sl or 'staženo' in sl %}
+                    {% elif cat == 'fail' %}
                     <span class="vote-no">{{ row.status }}</span>
                     {% else %}
                     <span class="vote-passive">{{ row.status }}</span>
@@ -63,7 +63,7 @@
 </div>
 
 {% if total_pages > 1 %}
-<nav class="pagination">
+<nav class="pagination" aria-label="{{ _('pagination.label') }}">
     {% if page > 1 %}
     <button hx-get="/api/laws?period={{ period }}&search={{ search }}&status={{ status_filter }}&topic={{ topic }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
         {{ _("pagination.previous") }}

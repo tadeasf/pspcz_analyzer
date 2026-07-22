@@ -1,16 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ _("nav.dashboard") }} — {{ _("site.short_title") }}{% endblock %}
 
-{% macro status_badge(status) %}
-{% set sl = status.lower() %}
-{% if 'vyhlášeno' in sl or 'podepsáno' in sl or 'schváleno' in sl or 'přijat' in sl %}
-<span class="status-pill status-pill-pass">{{ status }}</span>
-{% elif 'zamítnuto' in sl or 'staženo' in sl or 'zamítnut' in sl %}
-<span class="status-pill status-pill-fail">{{ status }}</span>
-{% else %}
-<span class="status-pill status-pill-active">{{ status }}</span>
-{% endif %}
-{% endmacro %}
+{% from "macros.html" import status_badge %}
 
 {% macro driver_badge(driver) %}
 {% if driver == 'government' %}
@@ -100,19 +91,19 @@
     <h2>{{ _("index.dataset").format(period=stats.period, label=stats.label) }}</h2>
     <div class="stat-grid">
         <article class="stat-card stat-card-blue">
-            <h3>{{ "{:,}".format(stats.total_votes) }}</h3>
+            <h3>{{ stats.total_votes|thousands }}</h3>
             <p>{{ _("index.total_votes") }}</p>
         </article>
         <article class="stat-card stat-card-blue">
-            <h3>{{ "{:,}".format(stats.total_mps) }}</h3>
+            <h3>{{ stats.total_mps|thousands }}</h3>
             <p>{{ _("index.mps") }}</p>
         </article>
         <article class="stat-card stat-card-blue">
-            <h3>{{ "{:,}".format(stats.total_mp_records) }}</h3>
+            <h3>{{ stats.total_mp_records|thousands }}</h3>
             <p>{{ _("index.individual_records") }}</p>
         </article>
         <article class="stat-card stat-card-gray">
-            <h3>{{ "{:,}".format(stats.void_votes) }}</h3>
+            <h3>{{ stats.void_votes|thousands }}</h3>
             <p>{{ _("index.void_votes") }}</p>
         </article>
     </div>

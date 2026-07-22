@@ -1,6 +1,5 @@
 """Backend entrypoint — admin dashboard with pipeline management."""
 
-import os
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -12,7 +11,7 @@ from pspcz_analyzer.admin.auth import AdminAuthMiddleware
 from pspcz_analyzer.admin.log_stream import log_broadcaster
 from pspcz_analyzer.admin.pipeline_history import PipelineHistory
 from pspcz_analyzer.admin.routes import router as admin_router
-from pspcz_analyzer.config import ADMIN_PASSWORD_HASH, ADMIN_PORT, DEFAULT_PERIOD
+from pspcz_analyzer.config import ADMIN_PASSWORD_HASH, ADMIN_PORT, DEFAULT_PERIOD, DEV
 from pspcz_analyzer.logging_config import setup_logging
 from pspcz_analyzer.services.daily_refresh_service import DailyRefreshService
 from pspcz_analyzer.services.data_service import DataService
@@ -83,12 +82,11 @@ async def root_redirect() -> RedirectResponse:
 
 def main() -> None:
     """Run the backend admin server."""
-    dev_mode = os.environ.get("PSPCZ_DEV", "1") == "1"
     uvicorn.run(
         "pspcz_analyzer.main_backend:app",
         host="0.0.0.0",
         port=ADMIN_PORT,
-        reload=dev_mode,
+        reload=DEV,
     )
 
 
