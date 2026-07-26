@@ -9,6 +9,7 @@ import polars as pl
 from pspcz_analyzer.i18n import gettext as _
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.labels import mp_vote_label
 from pspcz_analyzer.utils.text import normalize_czech
 
 # Keys into i18n translations, resolved at call time
@@ -282,21 +283,12 @@ def _build_party_breakdown(mp_detail: pl.DataFrame) -> list[dict]:
 
 def _build_mp_breakdown(mp_detail: pl.DataFrame) -> list[dict]:
     """Build per-MP vote list with human-readable labels."""
-    vote_labels = {
-        VoteResult.YES: "YES",
-        VoteResult.NO: "NO",
-        VoteResult.ABSTAINED: "ABSTAINED",
-        VoteResult.DID_NOT_VOTE: "Passive",
-        VoteResult.ABSENT: "Absent",
-        VoteResult.EXCUSED: "Excused",
-    }
-
     mp_list = mp_detail.select("jmeno", "prijmeni", "party", "vysledek").sort(
         "party", "prijmeni", "jmeno"
     )
     mp_dicts = mp_list.to_dicts()
     for m in mp_dicts:
-        m["vote_label"] = vote_labels.get(m["vysledek"], m["vysledek"] or "?")
+        m["vote_label"] = mp_vote_label(m["vysledek"] or "")
     return mp_dicts
 
 

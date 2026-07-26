@@ -578,7 +578,11 @@ class LLMClient:
             return _parse_consolidation_json(data, all_topics)
 
         prompt = _CONSOLIDATION_PROMPT_TEMPLATE.format(n=len(all_topics), topics_list=topics_list)
-        response = self._generate(prompt, _CONSOLIDATION_SYSTEM)
+        response = self._generate_with_retry(
+            prompt,
+            _CONSOLIDATION_SYSTEM,
+            validator=lambda r: bool(r.strip()),
+        )
         if not response:
             return {t: t for t in all_topics}
         return self._parse_consolidation_response(response, all_topics)
@@ -642,7 +646,11 @@ class LLMClient:
         prompt = _CONSOLIDATION_PROMPT_TEMPLATE_EN.format(
             n=len(all_topics), topics_list=topics_list
         )
-        response = self._generate(prompt, _CONSOLIDATION_SYSTEM_EN)
+        response = self._generate_with_retry(
+            prompt,
+            _CONSOLIDATION_SYSTEM_EN,
+            validator=lambda r: bool(r.strip()),
+        )
         if not response:
             return {t: t for t in all_topics}
         return self._parse_consolidation_response(response, all_topics)
@@ -889,7 +897,11 @@ class LLMClient:
             en = _render_comparison_markdown_en(data) if data else ""
         else:
             prompt = _COMPARISON_PROMPT_TEMPLATE_EN.format(**fmt_kwargs)
-            response = self._generate(prompt, _COMPARISON_SYSTEM_EN)
+            response = self._generate_with_retry(
+                prompt,
+                _COMPARISON_SYSTEM_EN,
+                validator=lambda r: bool(r.strip()),
+            )
             en = self._strip_think(response) if response else ""
 
         return {"cs": cs, "en": en}

@@ -9,6 +9,7 @@ from loguru import logger
 
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.party_voting import party_majority_direction
 
 
 def _compute_party_agreement_on_amendments(
@@ -49,22 +50,7 @@ def _compute_party_agreement_on_amendments(
     )
 
     # Compute party majority direction per vote
-    party_majority = (
-        active.group_by(["id_hlasovani", "party"])
-        .agg(
-            (pl.col("vysledek") == VoteResult.YES).sum().alias("yes_count"),
-            (pl.col("vysledek") == VoteResult.NO).sum().alias("no_count"),
-        )
-        .with_columns(
-            pl.when(pl.col("yes_count") > pl.col("no_count"))
-            .then(pl.lit("YES"))
-            .when(pl.col("no_count") > pl.col("yes_count"))
-            .then(pl.lit("NO"))
-            .otherwise(pl.lit(None))
-            .alias("direction")
-        )
-        .filter(pl.col("direction").is_not_null())
-    )
+    party_majority = party_majority_direction(active, direction_alias="direction")
 
     # Self-join to get party pairs per vote
     pairs = party_majority.join(

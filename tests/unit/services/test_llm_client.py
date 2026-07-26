@@ -1380,3 +1380,37 @@ class TestGenerateWithRetry:
         ):
             result = client.classify_topics("text about budget", "Budget Act")
         assert result == ["Rozpočet", "Zdraví"]
+
+    def test_consolidate_topics_retries_on_empty_response(self):
+        """Integration: consolidate_topics free-text path retries empty responses."""
+        client = self._make_client(structured=False)
+        responses = ["", "Dane -> Daně\nPoplatky -> Daně"]
+        with (
+            patch.object(client, "_generate", side_effect=responses),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
+        ):
+            result = client.consolidate_topics(["Dane", "Poplatky"])
+        assert result == {"Dane": "Daně", "Poplatky": "Daně"}
+
+    def test_consolidate_topics_en_retries_on_empty_response(self):
+        """Integration: consolidate_topics_en free-text path retries empty responses."""
+        client = self._make_client(structured=False)
+        responses = ["", "Taxes -> Taxation"]
+        with (
+            patch.object(client, "_generate", side_effect=responses),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
+        ):
+            result = client.consolidate_topics_en(["Taxes", "Taxation"])
+        assert result == {"Taxes": "Taxation", "Taxation": "Taxation"}
+
+    def test_compare_versions_bilingual_retries_empty_en(self):
+        """Integration: compare_versions_bilingual EN free-text retries empty."""
+        client = self._make_client(structured=False)
+        responses = ["", "English diff summary"]
+        with (
+            patch.object(client, "compare_versions", return_value="CS souhrn"),
+            patch.object(client, "_generate", side_effect=responses),
+            patch("pspcz_analyzer.services.llm.client.LLM_EMPTY_RETRIES", 2),
+        ):
+            result = client.compare_versions_bilingual("old", "new", 1, 2)
+        assert result == {"cs": "CS souhrn", "en": "English diff summary"}

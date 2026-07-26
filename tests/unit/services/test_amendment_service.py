@@ -94,6 +94,12 @@ class TestListAmendmentBills:
         # All bills contain "zákon" in their name
         assert result["total"] == 3
 
+    def test_search_folds_diacritics(self):
+        data = _make_data_with_amendments()
+        # ASCII query must match "zákon o testování"
+        assert list_amendment_bills(data, search="zakon")["total"] == 3
+        assert list_amendment_bills(data, search="testovani")["total"] == 3
+
     def test_pagination(self):
         data = _make_data_with_amendments()
         result = list_amendment_bills(data, per_page=2, page=1)
