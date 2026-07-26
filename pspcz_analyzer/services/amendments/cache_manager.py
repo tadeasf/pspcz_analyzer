@@ -9,6 +9,7 @@ from pathlib import Path
 import polars as pl
 from loguru import logger
 
+from pspcz_analyzer.fileio import write_parquet_atomic
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 
 AMENDMENTS_SCHEMA = {
@@ -208,7 +209,8 @@ def save_amendments(
 
     df = pl.DataFrame(rows, schema=AMENDMENTS_SCHEMA)
     path = _cache_path(cache_dir, period)
-    df.write_parquet(path)
+    # Atomic — the frontend may read this parquet at any moment.
+    write_parquet_atomic(df, path)
     logger.info(
         "Saved {} amendment rows for {} bills (period {}) to {}",
         len(rows),

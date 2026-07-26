@@ -9,6 +9,7 @@ from pathlib import Path
 from loguru import logger
 
 from pspcz_analyzer.config import DEFAULT_CACHE_DIR
+from pspcz_analyzer.fileio import write_json_atomic
 
 _HISTORY_FILENAME = "pipeline_history.json"
 _MAX_ENTRIES_PER_PERIOD = 20
@@ -46,9 +47,8 @@ class PipelineHistory:
             logger.opt(exception=True).warning("[pipeline-history] Failed to load {}", self._path)
 
     def _save(self) -> None:
-        """Persist history to JSON file."""
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.write_text(json.dumps(dict(self._runs), indent=2) + "\n", encoding="utf-8")
+        """Persist history to JSON file (atomic — never leaves a torn file)."""
+        write_json_atomic(dict(self._runs), self._path)
 
     def record(self, run: PipelineRun) -> None:
         """Record a completed pipeline run."""

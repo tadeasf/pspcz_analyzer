@@ -24,7 +24,10 @@ def parse_unl(
         logger.info("Skipping empty file {}", file_path.name)
         return pl.DataFrame({c: pl.Series([], dtype=pl.Utf8) for c in columns})
 
-    text = raw_bytes.decode(UNL_ENCODING)
+    # Windows-1250 leaves five byte values undefined (0x81, 0x83, 0x88, 0x90,
+    # 0x98); a stray one must not crash the whole period load. Replace them
+    # with U+FFFD instead of raising.
+    text = raw_bytes.decode(UNL_ENCODING, errors="replace")
     utf8_bytes = text.encode("utf-8")
 
     # UNL has trailing pipe -> extra column

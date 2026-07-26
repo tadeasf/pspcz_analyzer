@@ -17,6 +17,7 @@ from pspcz_analyzer.config import (
     TISKY_URL,
     VOTING_URL_TEMPLATE,
 )
+from pspcz_analyzer.fileio import assert_zip_intact, stream_to_atomic
 
 
 def _ensure_dirs(cache_dir: Path) -> tuple[Path, Path]:
@@ -28,7 +29,12 @@ def _ensure_dirs(cache_dir: Path) -> tuple[Path, Path]:
 
 
 def _download_file(url: str, dest: Path, force: bool = False) -> Path:
-    """Download a file if it doesn't exist or force is True."""
+    """Download a file if it doesn't exist or force is True.
+
+    The payload is streamed to a temp file and moved into place atomically,
+    then verified as an intact ZIP, so ``dest`` is either a complete archive
+    or absent — never a truncated partial download.
+    """
     if dest.exists() and not force:
         logger.info("Using cached {}", dest.name)
         return dest
@@ -37,12 +43,29 @@ def _download_file(url: str, dest: Path, force: bool = False) -> Path:
     with httpx.Client(timeout=120, follow_redirects=True) as client:
         with client.stream("GET", url) as response:
             response.raise_for_status()
-            with open(dest, "wb") as f:
-                for chunk in response.iter_bytes(chunk_size=65536):
-                    f.write(chunk)
+            stream_to_atomic(response, dest)
 
+    _verify_zip(dest)
     logger.info("Downloaded {} ({:.1f} MB)", dest.name, dest.stat().st_size / 1e6)
     return dest
+
+
+def _verify_zip(zip_path: Path) -> None:
+    """Verify a freshly downloaded archive, discarding it if corrupt.
+
+    A truncated download would otherwise pass the mtime freshness check and
+    fail extraction on every subsequent run. Removing it here makes the
+    failure loud now and self-heals with a clean re-download next run.
+
+    Raises:
+        zipfile.BadZipFile: If the archive is corrupt (after deleting it).
+    """
+    try:
+        assert_zip_intact(zip_path)
+    except zipfile.BadZipFile:
+        logger.error("Downloaded archive {} is corrupt — removing for re-download", zip_path.name)
+        zip_path.unlink(missing_ok=True)
+        raise
 
 
 def _extract_zip(zip_path: Path, dest_dir: Path) -> Path:

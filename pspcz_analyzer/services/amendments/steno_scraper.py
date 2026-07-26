@@ -28,6 +28,7 @@ from pspcz_analyzer.config import (
     PERIOD_YEARS,
     PSP_REQUEST_DELAY,
     STENO_MAX_SUBPAGES_PER_BOD,
+    STENO_NEGATIVE_CACHE_TTL,
     STENO_SUBPAGE_GAP_FILL,
     UNL_ENCODING,
 )
@@ -98,40 +99,104 @@ def _steno_cache_dir(cache_dir: Path, period: int) -> Path:
 _NEGATIVE_CACHE_MARKER = "<<NEGATIVE_CACHE>>"
 
 
+def _parse_negative_expiry(content: str) -> float | None:
+    """Interpret cached file content as a negative-cache marker.
+
+    Args:
+        content: Full content of a steno cache file.
+
+    Returns:
+        None if the content is real HTML (a positive cache hit), otherwise
+        the marker's expiry epoch in seconds. The bare legacy marker written
+        by older versions (no expiry suffix) is reported as ``0.0`` — i.e.
+        already expired — so permanently-poisoned caches retry once.
+    """
+    if content == _NEGATIVE_CACHE_MARKER:
+        return 0.0
+    prefix = f"{_NEGATIVE_CACHE_MARKER}:"
+    if not content.startswith(prefix):
+        return None
+    try:
+        return float(content[len(prefix) :])
+    except ValueError:
+        # Unparseable marker — treat as expired so it is retried and rewritten.
+        return 0.0
+
+
+def _write_negative_cache(cache_file: Path) -> None:
+    """Write a negative-cache marker that expires after STENO_NEGATIVE_CACHE_TTL."""
+    expires = time.time() + STENO_NEGATIVE_CACHE_TTL
+    cache_file.write_text(f"{_NEGATIVE_CACHE_MARKER}:{expires}", encoding="utf-8")
+
+
+def _fetch_steno_page(url: str) -> str | None:
+    """Fetch a URL, caching 404s negatively but leaving transient failures retryable.
+
+    Args:
+        url: URL to download.
+
+    Returns:
+        Decoded HTML, or None if the page is missing or the request failed.
+    """
+    try:
+        resp = httpx.get(url, timeout=30.0, follow_redirects=True)
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 404:
+            # Genuinely missing — cache the miss so reruns skip the request.
+            logger.warning("[amendment pipeline] Not found (404): {}", url)
+            raise
+        # 5xx etc. are transient; don't poison the cache.
+        logger.warning("[amendment pipeline] HTTP {} for {}", exc.response.status_code, url)
+        return None
+    except httpx.HTTPError:
+        # Timeouts / connection errors are transient; don't poison the cache.
+        logger.warning("[amendment pipeline] Failed to fetch: {}", url)
+        return None
+
+    html = _detect_decode(resp.content)
+    time.sleep(PSP_REQUEST_DELAY)
+    return html
+
+
 def _download_cached(
     url: str,
     cache_file: Path,
 ) -> str | None:
-    """Download a URL with caching and rate limiting.
+    """Download a URL with positive caching and TTL-bounded negative caching.
 
-    Uses negative caching: when a download fails (404, timeout, etc.),
-    a sentinel marker file is written so subsequent calls skip the HTTP
-    request entirely.
+    Only genuine HTTP 404s are negative-cached (with an expiry), so a page
+    psp.cz publishes later is picked up after STENO_NEGATIVE_CACHE_TTL.
+    Transient failures (timeouts, 5xx) return None without writing a marker
+    and are retried on the next pipeline run — previously ANY HTTP error
+    poisoned the cache permanently.
 
     Args:
         url: URL to download.
         cache_file: Local file to cache the result.
 
     Returns:
-        HTML content as string, or None on failure.
+        HTML content as string, or None on failure or negative-cached miss.
     """
     if cache_file.exists():
         content = cache_file.read_text(encoding="utf-8", errors="replace")
-        if content == _NEGATIVE_CACHE_MARKER:
+        expiry = _parse_negative_expiry(content)
+        if expiry is None:
+            return content
+        if time.time() < expiry:
             return None
-        return content
+        # Expired negative marker — fall through and retry the download.
 
     try:
-        resp = httpx.get(url, timeout=30.0, follow_redirects=True)
-        resp.raise_for_status()
-        html = _detect_decode(resp.content)
-        cache_file.write_text(html, encoding="utf-8")
-        time.sleep(PSP_REQUEST_DELAY)
-        return html
-    except httpx.HTTPError:
-        logger.warning("[amendment pipeline] Failed to fetch: {}", url)
-        cache_file.write_text(_NEGATIVE_CACHE_MARKER, encoding="utf-8")
+        html = _fetch_steno_page(url)
+    except httpx.HTTPStatusError:
+        _write_negative_cache(cache_file)
         return None
+
+    if html is None:
+        return None
+    cache_file.write_text(html, encoding="utf-8")
+    return html
 
 
 # ── Index page parsing ────────────────────────────────────────────────────

@@ -90,6 +90,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `ADMIN_COOKIE_SECURE`     | `1` (off in dev mode)         | Send the admin session cookie only over HTTPS                  |
 | `ADMIN_BIND_ADDR`         | `127.0.0.1`                   | Docker only: host address the admin port is bound to           |
 | `RATE_LIMIT_TRUSTED_PROXIES` | _(empty)_                  | Proxies whose `X-Forwarded-For` may key rate-limit buckets     |
+| `STENO_NEGATIVE_CACHE_TTL`   | `604800` (7 days)          | Seconds a steno-page 404 stays negatively cached               |
 
 ## Docker
 

@@ -56,6 +56,7 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `ADMIN_TRUSTED_PROXIES` — comma-separated IP/CIDR of reverse proxies whose `X-Forwarded-For` is trusted to identify the client (default: `127.0.0.1,::1`; XFF from any other peer is ignored)
 - `ADMIN_COOKIE_SECURE` — send the admin session cookie only over HTTPS (default: `1` outside dev mode)
 - `RATE_LIMIT_TRUSTED_PROXIES` — comma-separated IP/CIDR of proxies whose `X-Forwarded-For` may key rate-limit buckets (default: empty — buckets key on the TCP peer, spoof-proof; set to the proxy's address behind a reverse proxy)
+- `STENO_NEGATIVE_CACHE_TTL` — seconds a missing steno page (HTTP 404) stays negatively cached (default: `604800` = 7 days; only 404s are cached — timeouts/5xx always retry)
 
 ## Architecture
 
@@ -64,6 +65,8 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 1. **`data/downloader.py`** — Downloads ZIP files from `psp.cz/eknih/cdrom/opendata` (voting, MPs, sessions, prints) via httpx
 2. **`data/parser.py`** — Parses UNL files (pipe-delimited, Windows-1250 encoded, no headers, trailing pipe) into Polars DataFrames
 3. **`data/cache.py`** — Parquet caching layer; re-parses only when source files are newer than cached parquet
+
+All pipeline writes go through **`fileio.py`** — atomic (same-dir temp + `os.replace`) helpers `write_parquet_atomic` / `write_json_atomic` / `stream_to_atomic` plus `assert_zip_intact`, so the frontend file watcher can never read a torn file and a crashed/interrupted download never leaves a partial archive.
 
 Column definitions for all UNL tables live in `models/schemas.py`. Column names are Czech (matching psp.cz docs) for traceability.
 

@@ -7,6 +7,7 @@ import polars as pl
 from loguru import logger
 
 from pspcz_analyzer.config import TISKY_META_DIR
+from pspcz_analyzer.fileio import write_parquet_atomic
 from pspcz_analyzer.services.llm import (
     LLMClient,
     create_llm_client,
@@ -111,8 +112,8 @@ def classify_and_save(
         records.append(record)
 
         # Save after every tisk so progress is never lost
-        df = pl.DataFrame(records)
-        df.write_parquet(parquet_path)
+        # (atomic — the frontend may read this parquet at any moment)
+        write_parquet_atomic(pl.DataFrame(records), parquet_path)
 
         if progress_callback is not None:
             progress_callback(i, total)
@@ -296,9 +297,8 @@ def consolidate_topics(
         new_topics_en = _apply_topic_mapping(old_topics_en, mapping_en)
         r["topic_en"] = serialize_topics(new_topics_en)
 
-    # Re-write parquet
-    df = pl.DataFrame(records)
-    df.write_parquet(parquet_path)
+    # Re-write parquet (atomic — the frontend may read it at any moment)
+    write_parquet_atomic(pl.DataFrame(records), parquet_path)
 
     # Write marker so we don't re-consolidate on next startup
     consolidated_marker.touch()

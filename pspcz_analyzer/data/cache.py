@@ -7,6 +7,7 @@ import polars as pl
 from loguru import logger
 
 from pspcz_analyzer.config import DEFAULT_CACHE_DIR, PARQUET_DIR
+from pspcz_analyzer.fileio import write_parquet_atomic
 
 
 def _parquet_dir(cache_dir: Path) -> Path:
@@ -38,7 +39,8 @@ def get_or_parse(
 
     logger.info("Parsing {} (cache miss or stale)", table_name)
     df = parse_fn()
-    df.write_parquet(parquet_path)
+    # Atomic: the frontend file watcher may read this path at any moment.
+    write_parquet_atomic(df, parquet_path)
     logger.info("Cached {} ({} rows)", table_name, df.height)
     return df
 
