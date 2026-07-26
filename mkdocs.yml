@@ -32,6 +32,7 @@ nav:
   - Home: index.md
   - User Guide:
       - Data Model: data-model.md
+      - Deployment: deployment.md
       - Routes: routes.md
       - Services: services.md
       - Templates: templates.md

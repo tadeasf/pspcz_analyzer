@@ -23,3 +23,6 @@ scripts/benchmark_llm.py
 
 # Cache archives produced by scripts/build_and_backup_cache.py
 /pspcz-cache-*.tar.gz
+
+# Transfer logs produced by scripts/upload_cache.sh
+/upload-cache-*.log

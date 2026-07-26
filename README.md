@@ -163,9 +163,22 @@ uv run python scripts/build_and_backup_cache.py --skip-download
 ```
 
 The archive stores paths relative to the cache dir, so on the production
-host you can extract it straight over `PSPCZ_CACHE_DIR` (stop the app first):
-`tar xzf pspcz-cache-*.tar.gz -C "$PSPCZ_CACHE_DIR"`. This deploys a new
-version with all data pre-processed — no re-download or re-processing needed.
+host it extracts straight over `PSPCZ_CACHE_DIR` (stop the app first). To
+ship it over a slow or flaky uplink, use the resumable, checksum-verifying
+upload wrapper:
+
+```bash
+./scripts/upload_cache.sh                          # newest archive → SSH host "master"
+./scripts/upload_cache.sh --dry-run                # preflight checks only
+./scripts/upload_cache.sh host --extract --remote-cache-dir /data/psp-cache
+```
+
+The script resumes interrupted transfers, retries with backoff, verifies the
+remote sha256, and — with `--extract` — preserves production's
+`runtime_config.json`/`pipeline_history.json` by default. See the
+[deployment guide](https://tadeasf.github.io/pspcz_analyzer/deployment/)
+(`docs/deployment.md`) for the full workflow, overnight-tmux recipe, state
+file semantics, and rollback procedure.
 
 ## Tech Stack
 
