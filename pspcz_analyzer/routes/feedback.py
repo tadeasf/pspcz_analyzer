@@ -2,7 +2,6 @@
 
 import asyncio
 from pathlib import Path
-from urllib.parse import urlparse
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
@@ -10,24 +9,12 @@ from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import GITHUB_FEEDBACK_ENABLED
 from pspcz_analyzer.i18n import gettext as _t
+from pspcz_analyzer.middleware import is_same_origin
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.feedback_service import GitHubFeedbackClient
 
 router = APIRouter(tags=["Feedback"])
 templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
-
-
-def _validate_origin(request: Request) -> bool:
-    """Check that Origin or Referer matches the request host."""
-    expected = request.url.hostname
-    for header in ("origin", "referer"):
-        value = request.headers.get(header)
-        if value:
-            try:
-                return urlparse(value).hostname == expected
-            except ValueError:
-                return False
-    return False
 
 
 def _validate_feedback_fields(title: str, body: str) -> str | None:
@@ -50,7 +37,7 @@ async def feedback_api(
     lang = getattr(request.state, "lang", "cs")
     suffix = ""
 
-    if not _validate_origin(request):
+    if not is_same_origin(request):
         return templates.TemplateResponse(
             "partials/feedback_result.html",
             {

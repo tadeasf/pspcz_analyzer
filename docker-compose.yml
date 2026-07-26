@@ -25,8 +25,11 @@ services:
   backend:
     build: .
     command: ["python", "-m", "pspcz_analyzer.main_backend"]
+    # Loopback-only by default: the admin panel is not meant to be public.
+    # Behind a reverse proxy or for LAN access, set ADMIN_BIND_ADDR (e.g. 0.0.0.0)
+    # and lock admin access down with ADMIN_ALLOWED_IPS / ADMIN_TRUSTED_PROXIES.
     ports:
-      - "${ADMIN_PORT:-8001}:${ADMIN_PORT:-8001}"
+      - "${ADMIN_BIND_ADDR:-127.0.0.1}:${ADMIN_PORT:-8001}:${ADMIN_PORT:-8001}"
     volumes:
       - ${PSPCZ_CACHE_HOST_DIR:-./cache-data}:/data/cache:z
     env_file:

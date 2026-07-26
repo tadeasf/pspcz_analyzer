@@ -18,7 +18,7 @@ from pspcz_analyzer.admin.auth import (
 )
 from pspcz_analyzer.admin.log_stream import log_broadcaster
 from pspcz_analyzer.admin.pipeline_history import PipelineHistory
-from pspcz_analyzer.config import ADMIN_USERNAME, DEFAULT_CACHE_DIR
+from pspcz_analyzer.config import ADMIN_COOKIE_SECURE, ADMIN_USERNAME, DEFAULT_CACHE_DIR
 from pspcz_analyzer.models.pipeline_progress import (
     AmendmentMode,
     PipelineStage,
@@ -139,13 +139,14 @@ async def login_submit(
         create_session_cookie(username),
         httponly=True,
         samesite="lax",
+        secure=ADMIN_COOKIE_SECURE,
         max_age=86400,
     )
     return response
 
 
 @router.post("/logout")
-async def logout(request: Request) -> RedirectResponse:
+async def logout() -> RedirectResponse:
     """Clear admin session."""
     response = RedirectResponse(url="/admin/login", status_code=303)
     response.delete_cookie(_SESSION_COOKIE)
@@ -433,7 +434,7 @@ async def pipeline_history_endpoint(request: Request) -> list[dict]:
 
 
 @router.get("/api/pipeline/logs")
-async def pipeline_logs_sse(request: Request) -> StreamingResponse:
+async def pipeline_logs_sse() -> StreamingResponse:
     """SSE endpoint for real-time pipeline log streaming."""
     return StreamingResponse(
         log_broadcaster.subscribe(),

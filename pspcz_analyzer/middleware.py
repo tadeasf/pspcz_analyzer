@@ -6,6 +6,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from typing import Any
+from urllib.parse import urlparse
 
 from fastapi import HTTPException
 from loguru import logger
@@ -14,6 +15,32 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 _compute_pool = ThreadPoolExecutor(max_workers=2)
+
+
+def is_same_origin(request: Request) -> bool:
+    """Check that the request's Origin or Referer matches its own host.
+
+    Used as CSRF protection for state-changing endpoints: browsers send
+    Origin (or Referer) on cross-origin form posts, and a mismatch means
+    the request was triggered by a foreign site.
+
+    Args:
+        request: Incoming request.
+
+    Returns:
+        True if Origin or Referer parses to the same hostname as the
+        request URL. False when both headers are missing or unparseable
+        (fail closed).
+    """
+    expected = request.url.hostname
+    for header in ("origin", "referer"):
+        value = request.headers.get(header)
+        if value:
+            try:
+                return urlparse(value).hostname == expected
+            except ValueError:
+                return False
+    return False
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

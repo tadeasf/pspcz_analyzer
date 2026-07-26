@@ -85,7 +85,10 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `ADMIN_USERNAME`          | `admin`                       | Admin dashboard login username                                 |
 | `ADMIN_PASSWORD_HASH`     | _(empty)_                     | bcrypt hash of the admin password                              |
 | `ADMIN_SESSION_SECRET`    | _(auto-generated)_            | HMAC secret for signing admin session cookies                  |
-| `ADMIN_ALLOWED_IPS`       | `127.0.0.1,::1,172.16.0.0/12`| IP/CIDR whitelist for admin access                             |
+| `ADMIN_ALLOWED_IPS`       | `127.0.0.1,::1`               | IP/CIDR whitelist for admin access                             |
+| `ADMIN_TRUSTED_PROXIES`   | `127.0.0.1,::1`               | Proxies whose `X-Forwarded-For` may identify the real client   |
+| `ADMIN_COOKIE_SECURE`     | `1` (off in dev mode)         | Send the admin session cookie only over HTTPS                  |
+| `ADMIN_BIND_ADDR`         | `127.0.0.1`                   | Docker only: host address the admin port is bound to           |
 
 ## Docker
 

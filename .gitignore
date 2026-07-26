@@ -26,3 +26,6 @@ scripts/benchmark_llm.py
 
 # Transfer logs produced by scripts/upload_cache.sh
 /upload-cache-*.log
+
+# Local agent tooling state (worktrees, session data)
+.claude/
