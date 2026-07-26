@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/votes_service/">
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/cancellation/">
       
       
-        <link rel="prev" href="../tisk/version_service/">
+        <link rel="prev" href="../attendance_service/">
       
       
-        <link rel="next" href="../../utils/">
+        <link rel="next" href="../coalition_detector/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>votes_service - PSP.cz Analyzer</title>
+        <title>cancellation - PSP.cz Analyzer</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pspcz_analyzer.services.votes_service" class="md-skip">
+        <a href="#pspcz_analyzer.services.cancellation" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              votes_service
+              cancellation
             
           </span>
         </div>
@@ -2485,10 +2485,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../cancellation/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cancellation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -2504,6 +2529,102 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancellation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cancellation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.PipelineCancelled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PipelineCancelled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CancellationFlag
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CancellationFlag">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag.is_cancelled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_cancelled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag.check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -3526,35 +3647,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    votes_service
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../votes_service/" class="md-nav__link">
         
   
   
@@ -3570,63 +3666,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.votes_service" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        votes_service
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="votes_service">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.votes_service.list_votes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        list_votes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.votes_service.vote_detail" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        vote_detail
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3775,22 +3814,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.votes_service" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.cancellation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        votes_service
+        cancellation
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="votes_service">
+    <nav class="md-nav" aria-label="cancellation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.votes_service.list_votes" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.cancellation.PipelineCancelled" class="md-nav__link">
     <span class="md-ellipsis">
       
-        list_votes
+        PipelineCancelled
       
     </span>
   </a>
@@ -3798,13 +3837,52 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.services.votes_service.vote_detail" class="md-nav__link">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        vote_detail
+        CancellationFlag
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="CancellationFlag">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag.is_cancelled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_cancelled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.services.cancellation.CancellationFlag.check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -3833,21 +3911,28 @@
   
 
 
-  <h1>votes_service</h1>
+  <h1>cancellation</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<h2 id="pspcz_analyzer.services.votes_service" class="doc doc-heading">
-            <code>votes_service</code>
+<h2 id="pspcz_analyzer.services.cancellation" class="doc doc-heading">
+            <code>cancellation</code>
 
 
-<a href="#pspcz_analyzer.services.votes_service" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pspcz_analyzer.services.cancellation" class="headerlink" title="Permanent link">&para;</a></h2>
 
     <div class="doc doc-contents first">
 
-        <p>Votes / laws browser — search, list, and detail views of parliamentary votes.</p>
+        <p>Cooperative cancellation primitives for background pipelines.</p>
+<p>Pipeline bodies run in worker threads via <code>asyncio.to_thread</code>, where
+<code>asyncio.Task.cancel()</code> cannot interrupt them — the awaiting coroutine
+is released, but the thread itself keeps running to completion. Instead,
+each running period owns a :class:<code>CancellationFlag</code>: HTTP handlers flip
+it instantly, and pipeline code calls :meth:<code>CancellationFlag.check</code> at
+every stage boundary and loop top, exiting promptly with
+:class:<code>PipelineCancelled</code>.</p>
 
 
 
@@ -3868,19 +3953,25 @@
 
 
 
+<div class="doc doc-object doc-class">
 
-<div class="doc doc-object doc-function">
 
 
-<h3 id="pspcz_analyzer.services.votes_service.list_votes" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">list_votes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">search</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">per_page</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">outcome_filter</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">topic_filter</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s1">&#39;cs&#39;</span><span class="p">)</span></code>
+<h3 id="pspcz_analyzer.services.cancellation.PipelineCancelled" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">PipelineCancelled</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
 
-<a href="#pspcz_analyzer.services.votes_service.list_votes" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.services.cancellation.PipelineCancelled" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="Exception">Exception</span></code></p>
 
-        <p>List votes with optional text search, topic filter, and pagination.</p>
+
+
+        <p>Raised inside a pipeline when its period has been cancelled.</p>
+
+        <p>Store the cancelled period on the exception.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3896,136 +3987,189 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>lang</code>
+                <code>period</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Language code for topic labels ('cs' or 'en').</p>
+                <p>Electoral period whose pipeline was cancelled.</p>
               </div>
             </td>
             <td>
-                  <code>&#39;cs&#39;</code>
+                <em>required</em>
             </td>
           </tr>
       </tbody>
     </table>
-        <p>Returns dict with keys: rows, total, page, per_page, total_pages.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>pspcz_analyzer/services/cancellation.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Store the cancelled period on the exception.</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">        period: Electoral period whose pipeline was cancelled.</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">period</span> <span class="o">=</span> <span class="n">period</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pipeline for period </span><span class="si">{</span><span class="n">period</span><span class="si">}</span><span class="s2"> cancelled&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pspcz_analyzer.services.cancellation.CancellationFlag" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">CancellationFlag</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.services.cancellation.CancellationFlag" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Thread-safe cooperative cancellation flag for one pipeline period.</p>
+<p><code>cancel()</code> may be called from any thread (typically an HTTP
+handler on the event loop); <code>is_cancelled()</code> / <code>check()</code> are
+read from worker threads at stage boundaries. The flag is one-shot
+and single-period: pipeline services create a fresh flag per run.</p>
+
+        <p>Create an uncancelled flag for a period.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>period</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Electoral period this flag governs.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>pspcz_analyzer/services/cancellation.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an uncancelled flag for a period.</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        period: Electoral period this flag governs.</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">period</span> <span class="o">=</span> <span class="n">period</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.cancellation.CancellationFlag.cancel" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">cancel</span><span class="p">()</span></code>
+
+<a href="#pspcz_analyzer.services.cancellation.CancellationFlag.cancel" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Request cancellation. Idempotent and thread-safe.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/votes_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-150">150</a></span>
-<span class="normal"><a href="#__codelineno-0-151">151</a></span>
-<span class="normal"><a href="#__codelineno-0-152">152</a></span>
-<span class="normal"><a href="#__codelineno-0-153">153</a></span>
-<span class="normal"><a href="#__codelineno-0-154">154</a></span>
-<span class="normal"><a href="#__codelineno-0-155">155</a></span>
-<span class="normal"><a href="#__codelineno-0-156">156</a></span>
-<span class="normal"><a href="#__codelineno-0-157">157</a></span>
-<span class="normal"><a href="#__codelineno-0-158">158</a></span>
-<span class="normal"><a href="#__codelineno-0-159">159</a></span>
-<span class="normal"><a href="#__codelineno-0-160">160</a></span>
-<span class="normal"><a href="#__codelineno-0-161">161</a></span>
-<span class="normal"><a href="#__codelineno-0-162">162</a></span>
-<span class="normal"><a href="#__codelineno-0-163">163</a></span>
-<span class="normal"><a href="#__codelineno-0-164">164</a></span>
-<span class="normal"><a href="#__codelineno-0-165">165</a></span>
-<span class="normal"><a href="#__codelineno-0-166">166</a></span>
-<span class="normal"><a href="#__codelineno-0-167">167</a></span>
-<span class="normal"><a href="#__codelineno-0-168">168</a></span>
-<span class="normal"><a href="#__codelineno-0-169">169</a></span>
-<span class="normal"><a href="#__codelineno-0-170">170</a></span>
-<span class="normal"><a href="#__codelineno-0-171">171</a></span>
-<span class="normal"><a href="#__codelineno-0-172">172</a></span>
-<span class="normal"><a href="#__codelineno-0-173">173</a></span>
-<span class="normal"><a href="#__codelineno-0-174">174</a></span>
-<span class="normal"><a href="#__codelineno-0-175">175</a></span>
-<span class="normal"><a href="#__codelineno-0-176">176</a></span>
-<span class="normal"><a href="#__codelineno-0-177">177</a></span>
-<span class="normal"><a href="#__codelineno-0-178">178</a></span>
-<span class="normal"><a href="#__codelineno-0-179">179</a></span>
-<span class="normal"><a href="#__codelineno-0-180">180</a></span>
-<span class="normal"><a href="#__codelineno-0-181">181</a></span>
-<span class="normal"><a href="#__codelineno-0-182">182</a></span>
-<span class="normal"><a href="#__codelineno-0-183">183</a></span>
-<span class="normal"><a href="#__codelineno-0-184">184</a></span>
-<span class="normal"><a href="#__codelineno-0-185">185</a></span>
-<span class="normal"><a href="#__codelineno-0-186">186</a></span>
-<span class="normal"><a href="#__codelineno-0-187">187</a></span>
-<span class="normal"><a href="#__codelineno-0-188">188</a></span>
-<span class="normal"><a href="#__codelineno-0-189">189</a></span>
-<span class="normal"><a href="#__codelineno-0-190">190</a></span>
-<span class="normal"><a href="#__codelineno-0-191">191</a></span>
-<span class="normal"><a href="#__codelineno-0-192">192</a></span>
-<span class="normal"><a href="#__codelineno-0-193">193</a></span>
-<span class="normal"><a href="#__codelineno-0-194">194</a></span>
-<span class="normal"><a href="#__codelineno-0-195">195</a></span>
-<span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span>
-<span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span>
-<span class="normal"><a href="#__codelineno-0-201">201</a></span>
-<span class="normal"><a href="#__codelineno-0-202">202</a></span>
-<span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="k">def</span><span class="w"> </span><span class="nf">list_votes</span><span class="p">(</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151"></a>    <span class="n">data</span><span class="p">:</span> <span class="n">PeriodData</span><span class="p">,</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152"></a>    <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153"></a>    <span class="n">page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154"></a>    <span class="n">per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="n">outcome_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="n">topic_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-157" name="__codelineno-0-157"></a>    <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;List votes with optional text search, topic filter, and pagination.</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160"></a>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">        lang: Language code for topic labels (&#39;cs&#39; or &#39;en&#39;).</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163"></a>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a><span class="sd">    Returns dict with keys: rows, total, page, per_page, total_pages.</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="n">void_ids</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">void_votes</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">~</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">void_ids</span><span class="p">))</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">_apply_vote_filters</span><span class="p">(</span><span class="n">votes</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">search</span><span class="p">,</span> <span class="n">outcome_filter</span><span class="p">,</span> <span class="n">topic_filter</span><span class="p">)</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170"></a>
-<a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="n">total</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">height</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="n">total_pages</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">total</span> <span class="o">+</span> <span class="n">per_page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">per_page</span><span class="p">)</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="n">page</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">total_pages</span><span class="p">))</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="n">votes</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">per_page</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="n">page_rows</span> <span class="o">=</span> <span class="n">votes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">per_page</span><span class="p">)</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="n">rows</span> <span class="o">=</span> <span class="n">page_rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="s2">&quot;id_hlasovani&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="s2">&quot;datum&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="s2">&quot;cas&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="s2">&quot;schuze&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="s2">&quot;cislo&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>        <span class="s2">&quot;bod&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="s2">&quot;nazev_dlouhy&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="s2">&quot;nazev_kratky&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="s2">&quot;vysledek&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="s2">&quot;pro&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="s2">&quot;proti&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="s2">&quot;zdrzel&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="s2">&quot;nehlasoval&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="s2">&quot;prihlaseno&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="p">)</span><span class="o">.</span><span class="n">to_dicts</span><span class="p">()</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="n">_enrich_vote_rows</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">lang</span><span class="p">)</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="s2">&quot;rows&quot;</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="n">total</span><span class="p">,</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a>        <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a>        <span class="s2">&quot;per_page&quot;</span><span class="p">:</span> <span class="n">per_page</span><span class="p">,</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="s2">&quot;total_pages&quot;</span><span class="p">:</span> <span class="n">total_pages</span><span class="p">,</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="p">}</span>
+              <summary>Source code in <code>pspcz_analyzer/services/cancellation.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Request cancellation. Idempotent and thread-safe.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span> <span class="o">=</span> <span class="kc">True</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4035,57 +4179,80 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pspcz_analyzer.services.votes_service.vote_detail" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">vote_detail</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">vote_id</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s1">&#39;cs&#39;</span><span class="p">)</span></code>
+<h4 id="pspcz_analyzer.services.cancellation.CancellationFlag.is_cancelled" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">is_cancelled</span><span class="p">()</span></code>
 
-<a href="#pspcz_analyzer.services.votes_service.vote_detail" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pspcz_analyzer.services.cancellation.CancellationFlag.is_cancelled" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>Get full detail for a single vote: metadata + per-party + per-MP breakdown.</p>
+        <p>Whether cancellation has been requested.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/services/votes_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-303">303</a></span>
-<span class="normal"><a href="#__codelineno-0-304">304</a></span>
-<span class="normal"><a href="#__codelineno-0-305">305</a></span>
-<span class="normal"><a href="#__codelineno-0-306">306</a></span>
-<span class="normal"><a href="#__codelineno-0-307">307</a></span>
-<span class="normal"><a href="#__codelineno-0-308">308</a></span>
-<span class="normal"><a href="#__codelineno-0-309">309</a></span>
-<span class="normal"><a href="#__codelineno-0-310">310</a></span>
-<span class="normal"><a href="#__codelineno-0-311">311</a></span>
-<span class="normal"><a href="#__codelineno-0-312">312</a></span>
-<span class="normal"><a href="#__codelineno-0-313">313</a></span>
-<span class="normal"><a href="#__codelineno-0-314">314</a></span>
-<span class="normal"><a href="#__codelineno-0-315">315</a></span>
-<span class="normal"><a href="#__codelineno-0-316">316</a></span>
-<span class="normal"><a href="#__codelineno-0-317">317</a></span>
-<span class="normal"><a href="#__codelineno-0-318">318</a></span>
-<span class="normal"><a href="#__codelineno-0-319">319</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="k">def</span><span class="w"> </span><span class="nf">vote_detail</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PeriodData</span><span class="p">,</span> <span class="n">vote_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get full detail for a single vote: metadata + per-party + per-MP breakdown.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="n">vote_row</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">vote_id</span><span class="p">)</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a>    <span class="k">if</span> <span class="n">vote_row</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="n">info</span> <span class="o">=</span> <span class="n">_build_vote_info</span><span class="p">(</span><span class="n">vote_row</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">lang</span><span class="p">)</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a>    <span class="c1"># Individual MP votes for this vote</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a>    <span class="n">mp_rows</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mp_votes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_hlasovani&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">vote_id</span><span class="p">)</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="n">mp_detail</span> <span class="o">=</span> <span class="n">mp_rows</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">mp_info</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;id_poslanec&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">info</span><span class="p">,</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="s2">&quot;party_breakdown&quot;</span><span class="p">:</span> <span class="n">_build_party_breakdown</span><span class="p">(</span><span class="n">mp_detail</span><span class="p">),</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="s2">&quot;mp_votes&quot;</span><span class="p">:</span> <span class="n">_build_mp_breakdown</span><span class="p">(</span><span class="n">mp_detail</span><span class="p">),</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a>    <span class="p">}</span>
+              <summary>Source code in <code>pspcz_analyzer/services/cancellation.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_cancelled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether cancellation has been requested.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
 
 </div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pspcz_analyzer.services.cancellation.CancellationFlag.check" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">check</span><span class="p">()</span></code>
+
+<a href="#pspcz_analyzer.services.cancellation.CancellationFlag.check" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Raise PipelineCancelled if cancellation was requested.</p>
+<p>Called at stage boundaries and loop tops inside worker threads.
+Reads without the lock — bool reads are atomic under the GIL
+and this sits on the hot path of long-running loops.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/services/cancellation.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise PipelineCancelled if cancellation was requested.</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    Called at stage boundaries and loop tops inside worker threads.</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    Reads without the lock — bool reads are atomic under the GIL</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    and this sits on the hot path of long-running loops.</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="k">raise</span> <span class="n">PipelineCancelled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
 
 
 
