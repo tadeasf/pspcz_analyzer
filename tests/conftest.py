@@ -6,8 +6,17 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
+from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.data_service import DataService
 from tests.fixtures.sample_data import make_period_data
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """Keep the global slowapi limiter from leaking bucket state between tests."""
+    limiter.reset()
+    yield
+    limiter.reset()
 
 
 @pytest.fixture()

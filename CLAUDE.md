@@ -55,6 +55,7 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `ADMIN_ALLOWED_IPS` — comma-separated IP/CIDR whitelist for admin access (default: `127.0.0.1,::1` — loopback only; the old default included `172.16.0.0/12`)
 - `ADMIN_TRUSTED_PROXIES` — comma-separated IP/CIDR of reverse proxies whose `X-Forwarded-For` is trusted to identify the client (default: `127.0.0.1,::1`; XFF from any other peer is ignored)
 - `ADMIN_COOKIE_SECURE` — send the admin session cookie only over HTTPS (default: `1` outside dev mode)
+- `RATE_LIMIT_TRUSTED_PROXIES` — comma-separated IP/CIDR of proxies whose `X-Forwarded-For` may key rate-limit buckets (default: empty — buckets key on the TCP peer, spoof-proof; set to the proxy's address behind a reverse proxy)
 
 ## Architecture
 

@@ -122,6 +122,25 @@ def test_login_wrong_password_returns_401(client, request: pytest.FixtureRequest
     assert response.status_code == 401
 
 
+def test_login_brute_force_rate_limited(client, admin_password):
+    """The 6th login attempt within a minute is rejected — even with the right password."""
+    for _ in range(5):
+        response = client.post(
+            "/admin/login",
+            data={"username": "admin", "password": "wrong"},
+            headers=ORIGIN,
+        )
+        assert response.status_code == 401
+
+    response = client.post(
+        "/admin/login",
+        data={"username": "admin", "password": admin_password},
+        headers=ORIGIN,
+    )
+    assert response.status_code == 429
+    assert "Too Many Requests" in response.text
+
+
 def test_login_success_sets_secure_cookie(client, admin_password):
     response = client.post(
         "/admin/login",

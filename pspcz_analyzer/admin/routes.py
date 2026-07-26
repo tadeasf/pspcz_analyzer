@@ -24,6 +24,7 @@ from pspcz_analyzer.models.pipeline_progress import (
     PipelineStage,
     TiskMode,
 )
+from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.data_service import DataService
 from pspcz_analyzer.services.pipeline_lock import pipeline_lock
 from pspcz_analyzer.services.runtime_config import (
@@ -120,12 +121,13 @@ async def login_page(request: Request) -> HTMLResponse:
 
 
 @router.post("/login", response_model=None)
+@limiter.limit("5/minute")
 async def login_submit(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
 ) -> RedirectResponse | HTMLResponse:
-    """Authenticate admin user."""
+    """Authenticate admin user (rate-limited: 5 attempts/minute per client IP)."""
     if username != ADMIN_USERNAME or not verify_password(password):
         return templates.TemplateResponse(
             "login.html",
@@ -146,7 +148,8 @@ async def login_submit(
 
 
 @router.post("/logout")
-async def logout() -> RedirectResponse:
+@limiter.limit("10/minute")
+async def logout(request: Request) -> RedirectResponse:  # request: used by slowapi's limiter
     """Clear admin session."""
     response = RedirectResponse(url="/admin/login", status_code=303)
     response.delete_cookie(_SESSION_COOKIE)
@@ -434,8 +437,9 @@ async def pipeline_history_endpoint(request: Request) -> list[dict]:
 
 
 @router.get("/api/pipeline/logs")
+@limiter.exempt
 async def pipeline_logs_sse() -> StreamingResponse:
-    """SSE endpoint for real-time pipeline log streaming."""
+    """SSE endpoint for real-time pipeline log streaming (exempt: long-lived connection)."""
     return StreamingResponse(
         log_broadcaster.subscribe(),
         media_type="text/event-stream",
@@ -475,6 +479,7 @@ async def get_config(request: Request) -> dict:
 
 
 @router.post("/api/config")
+@limiter.limit("10/minute")
 async def update_config(request: Request) -> dict:
     """Update runtime config from form data."""
     svc = request.app.state.data
