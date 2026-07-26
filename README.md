@@ -89,6 +89,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `ADMIN_TRUSTED_PROXIES`   | `127.0.0.1,::1`               | Proxies whose `X-Forwarded-For` may identify the real client   |
 | `ADMIN_COOKIE_SECURE`     | `1` (off in dev mode)         | Send the admin session cookie only over HTTPS                  |
 | `ADMIN_BIND_ADDR`         | `127.0.0.1`                   | Docker only: host address the admin port is bound to           |
+| `RATE_LIMIT_TRUSTED_PROXIES` | _(empty)_                  | Proxies whose `X-Forwarded-For` may key rate-limit buckets     |
 
 ## Docker
 
@@ -251,7 +252,7 @@ A password-protected admin backend runs on a separate port (default 8001):
 - **Runtime Config** — edit LLM provider, model, and processing settings without restart
 - **Log Streaming** — real-time SSE-based log viewer
 - **System Status** — cache size, disk space, loaded periods, pipeline history
-- **Authentication** — bcrypt password + IP whitelist + session cookies
+- **Authentication** — bcrypt password + IP whitelist + session cookies + rate-limited login (5 attempts/minute)
 
 ## Documentation
 

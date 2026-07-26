@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from loguru import logger
+from slowapi.errors import RateLimitExceeded
 from starlette.responses import RedirectResponse
 
 from pspcz_analyzer.admin.auth import AdminAuthMiddleware
@@ -13,6 +14,7 @@ from pspcz_analyzer.admin.pipeline_history import PipelineHistory
 from pspcz_analyzer.admin.routes import router as admin_router
 from pspcz_analyzer.config import ADMIN_PASSWORD_HASH, ADMIN_PORT, DEFAULT_PERIOD, DEV
 from pspcz_analyzer.logging_config import setup_logging
+from pspcz_analyzer.rate_limit import html_rate_limit_exceeded_handler, limiter
 from pspcz_analyzer.services.daily_refresh_service import DailyRefreshService
 from pspcz_analyzer.services.data_service import DataService
 from pspcz_analyzer.services.runtime_config import (
@@ -66,6 +68,10 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
+
+# Security: rate limiting (login brute-force protection; 60/min default elsewhere)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, html_rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Admin auth: IP whitelist + session
 app.add_middleware(AdminAuthMiddleware)

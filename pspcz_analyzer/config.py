@@ -202,3 +202,10 @@ ADMIN_PORT = int(os.environ.get("ADMIN_PORT", "8001"))
 # Mark the session cookie Secure so it is never sent over plain HTTP.
 # Defaults off in dev mode (plain-HTTP localhost), on everywhere else.
 ADMIN_COOKIE_SECURE = os.environ.get("ADMIN_COOKIE_SECURE", "0" if DEV else "1") == "1"
+
+# Rate limiting — slowapi bucket keys (both processes share the key function)
+# Proxies whose X-Forwarded-For may identify the real client for rate-limit
+# bucketing. Empty by default: buckets key on the TCP peer, so limit keys can
+# never be spoofed. Behind a reverse proxy, set this to the proxy's IP/CIDR —
+# otherwise every visitor shares one bucket and limits trip for all of them.
+RATE_LIMIT_TRUSTED_PROXIES = os.environ.get("RATE_LIMIT_TRUSTED_PROXIES", "")
