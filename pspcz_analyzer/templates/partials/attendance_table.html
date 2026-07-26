@@ -28,7 +28,8 @@
                 <td>{{ "{:,}".format(row.passive) }}</td>
                 <td>{{ "{:,}".format(row.absent) }}</td>
                 <td>{{ "{:,}".format(row.excused) }}</td>
-                <td>{{ "%.1f"|format(row.attendance_pct) }}%</td>
+                {# Fully-excused MPs have no defined attendance rate (null) #}
+                <td>{% if row.attendance_pct is not none %}{{ "%.1f"|format(row.attendance_pct) }}%{% else %}—{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>

@@ -57,6 +57,8 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `ADMIN_COOKIE_SECURE` — send the admin session cookie only over HTTPS (default: `1` outside dev mode)
 - `RATE_LIMIT_TRUSTED_PROXIES` — comma-separated IP/CIDR of proxies whose `X-Forwarded-For` may key rate-limit buckets (default: empty — buckets key on the TCP peer, spoof-proof; set to the proxy's address behind a reverse proxy)
 - `STENO_NEGATIVE_CACHE_TTL` — seconds a missing steno page (HTTP 404) stays negatively cached (default: `604800` = 7 days; only 404s are cached — timeouts/5xx always retry)
+- `COMPUTE_POOL_WORKERS` — thread-pool size behind `run_with_timeout` (default: `0` = Python's `min(32, cpu_count + 4)`; previously hard-coded to 2)
+- `ANALYSIS_CACHE_MAX_ENTRIES` — max analysis cache entries before LRU eviction (default: `512`)
 
 ## Architecture
 

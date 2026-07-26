@@ -110,11 +110,15 @@ async def votes_api(
     pd = data_svc.get_period(period)
     lang = getattr(request.state, "lang", "cs")
     key = f"votes:{period}:{search}:{outcome}:{topic}:{page}:{lang}"
-    result = analysis_cache.get_or_compute(
-        key,
-        lambda: list_votes(
-            pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic, lang=lang
+    result = await run_with_timeout(
+        lambda: analysis_cache.get_or_compute(
+            key,
+            lambda: list_votes(
+                pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic, lang=lang
+            ),
         ),
+        timeout=15.0,
+        label="votes search",
     )
     return templates.TemplateResponse(
         "partials/votes_list.html",

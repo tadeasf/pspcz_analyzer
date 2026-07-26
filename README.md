@@ -91,6 +91,8 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `ADMIN_BIND_ADDR`         | `127.0.0.1`                   | Docker only: host address the admin port is bound to           |
 | `RATE_LIMIT_TRUSTED_PROXIES` | _(empty)_                  | Proxies whose `X-Forwarded-For` may key rate-limit buckets     |
 | `STENO_NEGATIVE_CACHE_TTL`   | `604800` (7 days)          | Seconds a steno-page 404 stays negatively cached               |
+| `COMPUTE_POOL_WORKERS`       | `0` (Python default)       | Analysis thread-pool size (`0` = `min(32, cpu_count + 4)`)     |
+| `ANALYSIS_CACHE_MAX_ENTRIES` | `512`                      | Max entries in the analysis cache (LRU eviction)               |
 
 ## Docker
 

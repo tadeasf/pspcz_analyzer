@@ -208,6 +208,18 @@ ADMIN_PORT = int(os.environ.get("ADMIN_PORT", "8001"))
 # Defaults off in dev mode (plain-HTTP localhost), on everywhere else.
 ADMIN_COOKIE_SECURE = os.environ.get("ADMIN_COOKIE_SECURE", "0" if DEV else "1") == "1"
 
+# Computation thread pool — size of the executor behind run_with_timeout
+# (analysis + chart endpoints). 0 = Python's default min(32, cpu_count + 4).
+# The old hard-coded 2 meant two slow computations exhausted capacity and
+# every other analysis request queued behind them (timed-out work keeps
+# occupying its worker until it finishes — futures cannot be killed).
+COMPUTE_POOL_WORKERS = int(os.environ.get("COMPUTE_POOL_WORKERS", "0"))
+
+# Upper bound on entries in the in-memory analysis cache (LRU eviction).
+# Keys include user-controlled strings (e.g. free-text vote search), so
+# without a cap the cache could grow without limit.
+ANALYSIS_CACHE_MAX_ENTRIES = int(os.environ.get("ANALYSIS_CACHE_MAX_ENTRIES", "512"))
+
 # Rate limiting — slowapi bucket keys (both processes share the key function)
 # Proxies whose X-Forwarded-For may identify the real client for rate-limit
 # bucketing. Empty by default: buckets key on the TCP peer, so limit keys can
