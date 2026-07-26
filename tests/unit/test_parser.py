@@ -100,3 +100,16 @@ class TestParseUnl:
         )
         assert df["a"].to_list() == [42]
         assert df["b"].to_list() == [100]
+
+    def test_undefined_cp1250_bytes_replaced(self, tmp_path):
+        """Bytes undefined in Windows-1250 (0x81 etc.) must not crash parsing.
+
+        Regression: a single stray byte used to raise UnicodeDecodeError and
+        abort the whole period load; it should decode to U+FFFD instead.
+        """
+        path = tmp_path / "bad_byte.unl"
+        path.write_bytes(b"Jan\x81K|42|")
+        df = parse_unl(path, ["name", "num"])
+        assert df.height == 1
+        assert "�" in df["name"].to_list()[0]
+        assert df["num"].to_list() == ["42"]

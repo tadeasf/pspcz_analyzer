@@ -7,6 +7,7 @@ from pathlib import Path
 from loguru import logger
 
 from pspcz_analyzer.config import DEFAULT_CACHE_DIR
+from pspcz_analyzer.fileio import write_json_atomic
 
 _RUNTIME_CONFIG_FILENAME = "runtime_config.json"
 
@@ -124,10 +125,9 @@ def load_runtime_config(cache_dir: Path = DEFAULT_CACHE_DIR) -> RuntimeConfig:
 
 
 def save_runtime_config(config: RuntimeConfig, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
-    """Persist runtime config to JSON file."""
+    """Persist runtime config to JSON file (atomic — never leaves a torn file)."""
     path = _config_path(cache_dir)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(config.to_dict(), indent=2) + "\n", encoding="utf-8")
+    write_json_atomic(config.to_dict(), path)
     logger.info("[runtime-config] Saved to {}", path)
 
 

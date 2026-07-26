@@ -12,7 +12,20 @@ from pspcz_analyzer.config import (
     PSP_REQUEST_DELAY,
     TISKY_PDF_DIR,
 )
+from pspcz_analyzer.fileio import stream_to_atomic
 from pspcz_analyzer.services.tisk.io.scraper import get_best_pdf
+
+
+def _stream_pdf(url: str, dest: Path) -> None:
+    """Stream a URL to ``dest`` atomically.
+
+    On failure ``dest`` is left untouched (never a partial PDF), so a stale
+    cached copy survives a failed re-download.
+    """
+    with httpx.Client(timeout=60, follow_redirects=True) as client:
+        with client.stream("GET", url) as response:
+            response.raise_for_status()
+            stream_to_atomic(response, dest)
 
 
 def download_tisk_pdf(
@@ -39,15 +52,9 @@ def download_tisk_pdf(
     logger.info("Downloading PDF tisk {}/{} (idd={}) ...", period, ct, doc.idd)
 
     try:
-        with httpx.Client(timeout=60, follow_redirects=True) as client:
-            with client.stream("GET", url) as response:
-                response.raise_for_status()
-                with open(dest, "wb") as f:
-                    for chunk in response.iter_bytes(chunk_size=65536):
-                        f.write(chunk)
+        _stream_pdf(url, dest)
     except httpx.HTTPError:
         logger.exception("Failed to download tisk {}/{}", period, ct)
-        dest.unlink(missing_ok=True)
         return None
 
     logger.info("Downloaded {} ({:.1f} KB)", dest.name, dest.stat().st_size / 1e3)
@@ -75,15 +82,9 @@ def download_subtisk_pdf(
     logger.info("Downloading sub-tisk PDF {}/{}/{} (idd={}) ...", period, ct, ct1, idd)
 
     try:
-        with httpx.Client(timeout=60, follow_redirects=True) as client:
-            with client.stream("GET", url) as response:
-                response.raise_for_status()
-                with open(dest, "wb") as f:
-                    for chunk in response.iter_bytes(chunk_size=65536):
-                        f.write(chunk)
+        _stream_pdf(url, dest)
     except httpx.HTTPError:
         logger.exception("Failed to download sub-tisk {}/{}/{}", period, ct, ct1)
-        dest.unlink(missing_ok=True)
         return None
 
     logger.info("Downloaded {} ({:.1f} KB)", dest.name, dest.stat().st_size / 1e3)

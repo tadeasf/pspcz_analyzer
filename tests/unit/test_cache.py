@@ -1,5 +1,6 @@
 """Tests for parquet caching layer."""
 
+import os
 import time
 
 import polars as pl
@@ -12,8 +13,9 @@ class TestGetOrParse:
         """Data should be cached as parquet and loaded back identically."""
         source = tmp_path / "source.unl"
         source.write_text("dummy")
-        # Ensure source mtime is settled before creating the cache
-        time.sleep(0.05)
+        # Pin the source mtime far in the past so the parquet written below is
+        # guaranteed newer — deterministic, no sleep-based mtime races.
+        os.utime(source, (0, 0))
 
         df_orig = pl.DataFrame({"id": [1, 2, 3], "name": ["a", "b", "c"]})
         result = get_or_parse(
@@ -49,9 +51,10 @@ class TestGetOrParse:
         df_v1 = pl.DataFrame({"val": [1]})
         get_or_parse("stale_test", source, lambda: df_v1, cache_dir=test_cache_dir)
 
-        # Make source newer than cache
-        time.sleep(0.1)
+        # Make the source newer than the cache by bumping its mtime forward.
         source.write_text("v2")
+        future = time.time() + 60
+        os.utime(source, (future, future))
 
         df_v2 = pl.DataFrame({"val": [2]})
         result = get_or_parse("stale_test", source, lambda: df_v2, cache_dir=test_cache_dir)

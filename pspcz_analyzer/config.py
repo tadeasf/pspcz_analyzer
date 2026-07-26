@@ -124,6 +124,11 @@ STENO_MAX_SUBPAGES_PER_BOD = 250
 # s017212 between s017211 and s017213 is fetched. Small bound keeps it from
 # bridging unrelated segments (e.g. votes split across two sitting days).
 STENO_SUBPAGE_GAP_FILL = 3
+# Negative-cache TTL for steno pages that genuinely don't exist (HTTP 404),
+# in seconds. Only 404s are negative-cached — transient failures (timeouts,
+# 5xx) are retried on the next pipeline run. Markers expire after this TTL so
+# pages psp.cz publishes later are picked up by a future run.
+STENO_NEGATIVE_CACHE_TTL = int(os.environ.get("STENO_NEGATIVE_CACHE_TTL", str(7 * 24 * 3600)))
 
 # LLM provider selection: "ollama" (default) or "openai" (any OpenAI-compatible API)
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
