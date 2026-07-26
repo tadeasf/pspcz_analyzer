@@ -1,5 +1,8 @@
 # PSP.cz Analyzer
 
+[![CI](https://github.com/tadeasf/pspcz_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/tadeasf/pspcz_analyzer/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, and visualizes open voting data from the [Czech Chamber of Deputies](https://www.psp.cz/). Built with FastAPI, Polars, and HTMX.
 
 * You can find at: https://snemovna.hlidacstatu.cz
@@ -259,4 +262,7 @@ A password-protected admin backend runs on a separate port (default 8001):
 
 ## License
 
-Educational / OSINT project. Parliamentary data is public domain per Czech law.
+This project is licensed under the [MIT License](LICENSE).
+
+Educational / OSINT project. Parliamentary source data is public domain per
+Czech law and is not covered by this license — it remains in the public domain.
