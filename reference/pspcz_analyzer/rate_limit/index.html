@@ -1601,6 +1601,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="rate_limit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.rate_limit.get_rate_limit_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_rate_limit_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.rate_limit.html_rate_limit_exceeded_handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        html_rate_limit_exceeded_handler
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -3697,6 +3725,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="rate_limit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.rate_limit.get_rate_limit_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_rate_limit_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pspcz_analyzer.rate_limit.html_rate_limit_exceeded_handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        html_rate_limit_exceeded_handler
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -3754,6 +3810,104 @@
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pspcz_analyzer.rate_limit.get_rate_limit_key" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_rate_limit_key</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></code>
+
+<a href="#pspcz_analyzer.rate_limit.get_rate_limit_key" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Bucket key: the TCP peer, or the XFF client behind a trusted proxy.</p>
+<p>With <code>RATE_LIMIT_TRUSTED_PROXIES</code> empty (the default) X-Forwarded-For
+is never honored, so limit keys cannot be spoofed. Behind a reverse
+proxy, list the proxy's address to bucket by the real client instead
+of sharing one bucket across every visitor.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/rate_limit.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_rate_limit_key</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bucket key: the TCP peer, or the XFF client behind a trusted proxy.</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="sd">    With ``RATE_LIMIT_TRUSTED_PROXIES`` empty (the default) X-Forwarded-For</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="sd">    is never honored, so limit keys cannot be spoofed. Behind a reverse</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="sd">    proxy, list the proxy&#39;s address to bucket by the real client instead</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    of sharing one bucket across every visitor.</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">_trusted_proxies</span><span class="p">:</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>        <span class="n">client</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">client</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>        <span class="k">return</span> <span class="n">client</span><span class="o">.</span><span class="n">host</span> <span class="k">if</span> <span class="n">client</span> <span class="k">else</span> <span class="s2">&quot;0.0.0.0&quot;</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="k">return</span> <span class="n">extract_client_ip</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">_trusted_proxies</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pspcz_analyzer.rate_limit.html_rate_limit_exceeded_handler" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">html_rate_limit_exceeded_handler</span><span class="p">(</span><span class="n">_request</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#pspcz_analyzer.rate_limit.html_rate_limit_exceeded_handler" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render a plain HTML 429 for browser-facing apps (the admin dashboard).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pspcz_analyzer/rate_limit.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">html_rate_limit_exceeded_handler</span><span class="p">(</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">_request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="n">RateLimitExceeded</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HTMLResponse</span><span class="p">:</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Render a plain HTML 429 for browser-facing apps (the admin dashboard).&quot;&quot;&quot;</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="k">return</span> <span class="n">HTMLResponse</span><span class="p">(</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="n">content</span><span class="o">=</span><span class="p">(</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>            <span class="s2">&quot;&lt;h1&gt;429 &amp;mdash; Too Many Requests&lt;/h1&gt;&quot;</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>            <span class="sa">f</span><span class="s2">&quot;&lt;p&gt;</span><span class="si">{</span><span class="n">exc</span><span class="o">.</span><span class="n">detail</span><span class="si">}</span><span class="s2">&lt;/p&gt;&quot;</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>            <span class="s2">&quot;&lt;p&gt;Slow down and try again in a minute.&lt;/p&gt;&quot;</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>        <span class="p">),</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>        <span class="n">status_code</span><span class="o">=</span><span class="mi">429</span><span class="p">,</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
