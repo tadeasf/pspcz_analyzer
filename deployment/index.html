@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/logging_config/">
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/deployment/">
       
       
-        <link rel="prev" href="../i18n/translations/">
+        <link rel="prev" href="../data-model/">
       
       
-        <link rel="next" href="../main_backend/">
+        <link rel="next" href="../routes/">
       
       
         
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>logging_config - PSP.cz Analyzer</title>
+        <title>Deployment - PSP.cz Analyzer</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,9 +53,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pspcz_analyzer.logging_config" class="md-skip">
+        <a href="#deployment-shipping-a-pre-processed-cache" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="PSP.cz Analyzer" class="md-header__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+    <a href=".." title="PSP.cz Analyzer" class="md-header__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              logging_config
+              Deployment
             
           </span>
         </div>
@@ -221,7 +221,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -238,11 +238,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../../data-model/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../data-model/" class="md-tabs__link">
           
   
   
@@ -258,13 +260,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../reference/pspcz_analyzer/" class="md-tabs__link">
           
   
   
@@ -304,7 +304,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="PSP.cz Analyzer" class="md-nav__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+    <a href=".." title="PSP.cz Analyzer" class="md-nav__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -334,7 +334,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -358,26 +358,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -395,7 +400,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -413,7 +418,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../data-model/" class="md-nav__link">
+      <a href="../data-model/" class="md-nav__link">
         
   
   
@@ -438,10 +443,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../deployment/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -457,6 +489,126 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#production-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production topology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-build-the-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Build the archive
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-upload-scriptsupload_cachesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Upload (scripts/upload_cache.sh)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2 — Upload (scripts/upload_cache.sh)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-overnight-on-a-slow-uplink" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running overnight on a slow uplink
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-extract-and-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Extract and verify
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3 — Extract and verify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#state-files-runtime_configjson-pipeline_historyjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        State files: runtime_config.json / pipeline_history.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-restart-and-health-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Restart and health-check
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -469,7 +621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../routes/" class="md-nav__link">
+      <a href="../routes/" class="md-nav__link">
         
   
   
@@ -497,7 +649,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../services/" class="md-nav__link">
+      <a href="../services/" class="md-nav__link">
         
   
   
@@ -525,7 +677,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../templates/" class="md-nav__link">
+      <a href="../templates/" class="md-nav__link">
         
   
   
@@ -553,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../testing/" class="md-nav__link">
+      <a href="../testing/" class="md-nav__link">
         
   
   
@@ -585,31 +737,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -627,7 +774,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -642,10 +789,8 @@
                 
   
   
-    
   
   
-  
     
     
     
@@ -653,21 +798,18 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/" class="md-nav__link ">
               
   
   
@@ -685,13 +827,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -726,7 +868,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../admin/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/admin/" class="md-nav__link ">
               
   
   
@@ -768,7 +910,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../admin/auth/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/admin/auth/" class="md-nav__link">
         
   
   
@@ -796,7 +938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../admin/log_stream/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/admin/log_stream/" class="md-nav__link">
         
   
   
@@ -824,7 +966,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../admin/pipeline_history/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/admin/pipeline_history/" class="md-nav__link">
         
   
   
@@ -852,7 +994,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../admin/routes/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/admin/routes/" class="md-nav__link">
         
   
   
@@ -888,7 +1030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../config/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/config/" class="md-nav__link">
         
   
   
@@ -933,7 +1075,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../data/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/data/" class="md-nav__link ">
               
   
   
@@ -975,7 +1117,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data/cache/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/data/cache/" class="md-nav__link">
         
   
   
@@ -1003,7 +1145,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data/downloader/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/data/downloader/" class="md-nav__link">
         
   
   
@@ -1031,7 +1173,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data/parser/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/data/parser/" class="md-nav__link">
         
   
   
@@ -1084,7 +1226,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../i18n/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/i18n/" class="md-nav__link ">
               
   
   
@@ -1126,7 +1268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../i18n/middleware/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/i18n/middleware/" class="md-nav__link">
         
   
   
@@ -1154,7 +1296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../i18n/translations/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/i18n/translations/" class="md-nav__link">
         
   
   
@@ -1187,35 +1329,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    logging_config
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/logging_config/" class="md-nav__link">
         
   
   
@@ -1231,52 +1348,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pspcz_analyzer.logging_config" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        logging_config
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="logging_config">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pspcz_analyzer.logging_config.setup_logging" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        setup_logging
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1289,7 +1360,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../main_backend/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/main_backend/" class="md-nav__link">
         
   
   
@@ -1317,7 +1388,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../main_frontend/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/main_frontend/" class="md-nav__link">
         
   
   
@@ -1345,7 +1416,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../middleware/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/middleware/" class="md-nav__link">
         
   
   
@@ -1390,7 +1461,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../models/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/models/" class="md-nav__link ">
               
   
   
@@ -1432,7 +1503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/amendment_models/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/models/amendment_models/" class="md-nav__link">
         
   
   
@@ -1460,7 +1531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/enums/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/models/enums/" class="md-nav__link">
         
   
   
@@ -1488,7 +1559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/pipeline_progress/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/models/pipeline_progress/" class="md-nav__link">
         
   
   
@@ -1516,7 +1587,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/schemas/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/models/schemas/" class="md-nav__link">
         
   
   
@@ -1544,7 +1615,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/tisk_models/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/models/tisk_models/" class="md-nav__link">
         
   
   
@@ -1580,7 +1651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rate_limit/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/rate_limit/" class="md-nav__link">
         
   
   
@@ -1625,7 +1696,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../routes/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/routes/" class="md-nav__link ">
               
   
   
@@ -1667,7 +1738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/amendments/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/amendments/" class="md-nav__link">
         
   
   
@@ -1695,7 +1766,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/charts/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/charts/" class="md-nav__link">
         
   
   
@@ -1723,7 +1794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/context/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/context/" class="md-nav__link">
         
   
   
@@ -1751,7 +1822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/feedback/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/feedback/" class="md-nav__link">
         
   
   
@@ -1779,7 +1850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/health/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/health/" class="md-nav__link">
         
   
   
@@ -1807,7 +1878,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/laws/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/laws/" class="md-nav__link">
         
   
   
@@ -1835,7 +1906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/pages/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/pages/" class="md-nav__link">
         
   
   
@@ -1863,7 +1934,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/tisk/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/tisk/" class="md-nav__link">
         
   
   
@@ -1891,7 +1962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/utils/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/utils/" class="md-nav__link">
         
   
   
@@ -1919,7 +1990,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../routes/voting/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/routes/voting/" class="md-nav__link">
         
   
   
@@ -1972,7 +2043,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../services/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/services/" class="md-nav__link ">
               
   
   
@@ -2014,7 +2085,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/affiliation/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/affiliation/" class="md-nav__link">
         
   
   
@@ -2042,7 +2113,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendment_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendment_service/" class="md-nav__link">
         
   
   
@@ -2087,7 +2158,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../services/amendments/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/services/amendments/" class="md-nav__link ">
               
   
   
@@ -2129,7 +2200,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/cache_manager/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/cache_manager/" class="md-nav__link">
         
   
   
@@ -2157,7 +2228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/coalition_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/coalition_service/" class="md-nav__link">
         
   
   
@@ -2185,7 +2256,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/identifier/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/identifier/" class="md-nav__link">
         
   
   
@@ -2213,7 +2284,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/merger/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/merger/" class="md-nav__link">
         
   
   
@@ -2241,7 +2312,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/pdf_parser/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/pdf_parser/" class="md-nav__link">
         
   
   
@@ -2269,7 +2340,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/pipeline/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/pipeline/" class="md-nav__link">
         
   
   
@@ -2297,7 +2368,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/progress/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/progress/" class="md-nav__link">
         
   
   
@@ -2325,7 +2396,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/steno_parser/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/steno_parser/" class="md-nav__link">
         
   
   
@@ -2353,7 +2424,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/steno_scraper/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/steno_scraper/" class="md-nav__link">
         
   
   
@@ -2381,7 +2452,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/submitter_resolver/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/submitter_resolver/" class="md-nav__link">
         
   
   
@@ -2409,7 +2480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/amendments/summarizer/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/amendments/summarizer/" class="md-nav__link">
         
   
   
@@ -2445,7 +2516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/analysis_cache/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/analysis_cache/" class="md-nav__link">
         
   
   
@@ -2473,7 +2544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/attendance_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/attendance_service/" class="md-nav__link">
         
   
   
@@ -2501,7 +2572,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/coalition_detector/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/coalition_detector/" class="md-nav__link">
         
   
   
@@ -2529,7 +2600,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/daily_refresh_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/daily_refresh_service/" class="md-nav__link">
         
   
   
@@ -2557,7 +2628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/data_reader/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/data_reader/" class="md-nav__link">
         
   
   
@@ -2585,7 +2656,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/data_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/data_service/" class="md-nav__link">
         
   
   
@@ -2613,7 +2684,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/feedback_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/feedback_service/" class="md-nav__link">
         
   
   
@@ -2641,7 +2712,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/law_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/law_service/" class="md-nav__link">
         
   
   
@@ -2669,7 +2740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/legislation_overview/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/legislation_overview/" class="md-nav__link">
         
   
   
@@ -2714,7 +2785,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../services/llm/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/services/llm/" class="md-nav__link ">
               
   
   
@@ -2756,7 +2827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/llm/client/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/llm/client/" class="md-nav__link">
         
   
   
@@ -2784,7 +2855,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/llm/helpers/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/llm/helpers/" class="md-nav__link">
         
   
   
@@ -2812,7 +2883,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/llm/parsers/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/llm/parsers/" class="md-nav__link">
         
   
   
@@ -2840,7 +2911,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/llm/prompts/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/llm/prompts/" class="md-nav__link">
         
   
   
@@ -2876,7 +2947,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/loyalty_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/loyalty_service/" class="md-nav__link">
         
   
   
@@ -2904,7 +2975,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/mp_builder/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/mp_builder/" class="md-nav__link">
         
   
   
@@ -2932,7 +3003,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/pipeline_lock/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/pipeline_lock/" class="md-nav__link">
         
   
   
@@ -2960,7 +3031,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/runtime_config/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/runtime_config/" class="md-nav__link">
         
   
   
@@ -2988,7 +3059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/similarity_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/similarity_service/" class="md-nav__link">
         
   
   
@@ -3033,7 +3104,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../services/tisk/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/services/tisk/" class="md-nav__link ">
               
   
   
@@ -3075,7 +3146,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/cache_manager/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/cache_manager/" class="md-nav__link">
         
   
   
@@ -3103,7 +3174,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/classifier/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/classifier/" class="md-nav__link">
         
   
   
@@ -3131,7 +3202,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/downloader_pipeline/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/downloader_pipeline/" class="md-nav__link">
         
   
   
@@ -3176,7 +3247,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../services/tisk/io/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/services/tisk/io/" class="md-nav__link ">
               
   
   
@@ -3218,7 +3289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/io/downloader/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/io/downloader/" class="md-nav__link">
         
   
   
@@ -3246,7 +3317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/io/extractor/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/io/extractor/" class="md-nav__link">
         
   
   
@@ -3274,7 +3345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/io/history_scraper/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/io/history_scraper/" class="md-nav__link">
         
   
   
@@ -3302,7 +3373,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/io/law_changes_scraper/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/io/law_changes_scraper/" class="md-nav__link">
         
   
   
@@ -3330,7 +3401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/io/scraper/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/io/scraper/" class="md-nav__link">
         
   
   
@@ -3366,7 +3437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/lookup_builder/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/lookup_builder/" class="md-nav__link">
         
   
   
@@ -3394,7 +3465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/metadata_scraper/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/metadata_scraper/" class="md-nav__link">
         
   
   
@@ -3422,7 +3493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/pipeline/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/pipeline/" class="md-nav__link">
         
   
   
@@ -3450,7 +3521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/text_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/text_service/" class="md-nav__link">
         
   
   
@@ -3478,7 +3549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/tisk/version_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/tisk/version_service/" class="md-nav__link">
         
   
   
@@ -3514,7 +3585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../services/votes_service/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/services/votes_service/" class="md-nav__link">
         
   
   
@@ -3567,7 +3638,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../utils/" class="md-nav__link ">
+            <a href="../reference/pspcz_analyzer/utils/" class="md-nav__link ">
               
   
   
@@ -3609,7 +3680,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/text/" class="md-nav__link">
+      <a href="../reference/pspcz_analyzer/utils/text/" class="md-nav__link">
         
   
   
@@ -3670,6 +3741,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -3678,22 +3751,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pspcz_analyzer.logging_config" class="md-nav__link">
+  <a href="#production-topology" class="md-nav__link">
     <span class="md-ellipsis">
       
-        logging_config
+        Production topology
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="logging_config">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-build-the-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Build the archive
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-upload-scriptsupload_cachesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Upload (scripts/upload_cache.sh)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2 — Upload (scripts/upload_cache.sh)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pspcz_analyzer.logging_config.setup_logging" class="md-nav__link">
+  <a href="#running-overnight-on-a-slow-uplink" class="md-nav__link">
     <span class="md-ellipsis">
       
-        setup_logging
+        Running overnight on a slow uplink
       
     </span>
   </a>
@@ -3702,6 +3797,56 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-extract-and-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Extract and verify
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3 — Extract and verify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#state-files-runtime_configjson-pipeline_historyjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        State files: runtime_config.json / pipeline_history.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-restart-and-health-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Restart and health-check
+      
+    </span>
+  </a>
   
 </li>
       
@@ -3725,106 +3870,154 @@
   
 
 
-  <h1>logging_config</h1>
-
-<div class="doc doc-object doc-module">
-
-
-
-<h2 id="pspcz_analyzer.logging_config" class="doc doc-heading">
-            <code>logging_config</code>
-
-
-<a href="#pspcz_analyzer.logging_config" class="headerlink" title="Permanent link">&para;</a></h2>
-
-    <div class="doc doc-contents first">
-
-        <p>Application-wide logging configuration using loguru.</p>
-<p>Intercepts all standard-library logging (from uvicorn, httpx, etc.)
-and routes it through loguru for consistent colorful output.</p>
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="pspcz_analyzer.logging_config.setup_logging" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">setup_logging</span><span class="p">()</span></code>
-
-<a href="#pspcz_analyzer.logging_config.setup_logging" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Configure loguru as the sole logging handler for the entire application.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>pspcz_analyzer/logging_config.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="k">def</span><span class="w"> </span><span class="nf">setup_logging</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configure loguru as the sole logging handler for the entire application.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>        <span class="nb">format</span><span class="o">=</span><span class="p">(</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>            <span class="s2">&quot;&lt;green&gt;{time:YYYY-MM-DD HH:mm:ss}&lt;/green&gt; | &quot;</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a>            <span class="s2">&quot;&lt;level&gt;</span><span class="si">{level: &lt;8}</span><span class="s2">&lt;/level&gt; | &quot;</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>            <span class="s2">&quot;&lt;cyan&gt;</span><span class="si">{name}</span><span class="s2">&lt;/cyan&gt;:&lt;cyan&gt;</span><span class="si">{function}</span><span class="s2">&lt;/cyan&gt;:&lt;cyan&gt;</span><span class="si">{line}</span><span class="s2">&lt;/cyan&gt; - &quot;</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>            <span class="s2">&quot;&lt;level&gt;</span><span class="si">{message}</span><span class="s2">&lt;/level&gt;&quot;</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="p">),</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="n">colorize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="n">level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="p">)</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="c1"># Intercept all standard logging (uvicorn, httpx, etc.)</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">handlers</span><span class="o">=</span><span class="p">[</span><span class="n">_InterceptHandler</span><span class="p">()],</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
-
-</div>
+<h1 id="deployment-shipping-a-pre-processed-cache">Deployment: shipping a pre-processed cache<a class="headerlink" href="#deployment-shipping-a-pre-processed-cache" title="Permanent link">&para;</a></h1>
+<p>The analyzer's data pipeline (downloads from psp.cz, PDF text extraction, LLM
+classification and summarization, amendment parsing) takes <strong>hours</strong> to run
+from scratch. Production deployments therefore ship a <em>pre-processed cache</em>
+instead: build it once on a machine with the LLM backend configured, archive
+the cache directory, upload the archive, and extract it over the production
+cache dir. No re-download or re-processing happens on the server.</p>
+<h2 id="production-topology">Production topology<a class="headerlink" href="#production-topology" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Two containers from one image (<code>docker compose up</code>): the public <strong>frontend</strong>
+  (port 8000) and the password-protected <strong>backend/admin</strong> (port 8001).</li>
+<li>Both mount the same host directory as the cache:
+  <code>${PSPCZ_CACHE_HOST_DIR:-./cache-data}:/data/cache</code> (see
+  <a href="../#configuration">Configuration</a>).</li>
+<li>LLM summaries are generated by the configured provider — production runs
+  vLLM behind an OpenAI-compatible endpoint (<code>LLM_PROVIDER=openai</code>,
+  <code>OPENAI_BASE_URL</code>, <code>OPENAI_MODEL</code> in <code>.env</code>).</li>
+<li>The frontend hot-reloads when cache files change. <strong>Always stop the app
+  before touching the cache dir</strong> — extracting under a running app triggers
+  reloads from partially-written files.</li>
+</ul>
+<h2 id="step-1-build-the-archive">Step 1 — Build the archive<a class="headerlink" href="#step-1-build-the-archive" title="Permanent link">&para;</a></h2>
+<p>On a machine with network access to psp.cz and a working LLM backend:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Default: periods 10 9 8 7 6 5 → ./pspcz-cache-&lt;timestamp&gt;.tar.gz</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/build_and_backup_cache.py
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Subset / no archive / resume without re-downloading</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/build_and_backup_cache.py<span class="w"> </span>--periods<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">9</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/build_and_backup_cache.py<span class="w"> </span>--no-backup
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/build_and_backup_cache.py<span class="w"> </span>--skip-download
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># Long build? Detach it:</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>nohup<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/build_and_backup_cache.py<span class="w"> </span>&gt;<span class="w"> </span>build.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">&amp;</span>
+</code></pre></div>
+<p>See <a href="../">Building &amp; shipping a pre-processed cache</a> in the README
+section and the module docstring of <code>scripts/build_and_backup_cache.py</code> for
+details. The archive stores paths <strong>relative to the cache dir</strong>, so it
+extracts cleanly over any <code>PSPCZ_CACHE_DIR</code> layout.</p>
+<h2 id="step-2-upload-scriptsupload_cachesh">Step 2 — Upload (<code>scripts/upload_cache.sh</code>)<a class="headerlink" href="#step-2-upload-scriptsupload_cachesh" title="Permanent link">&para;</a></h2>
+<p>A hardened rsync wrapper built for slow, flaky uplinks: it resumes
+interrupted transfers (<code>--partial --append-verify</code>), retries with backoff,
+and verifies the remote checksum before declaring success.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Upload the newest ./pspcz-cache-*.tar.gz to SSH host &quot;master&quot;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>./scripts/upload_cache.sh
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Explicit archive + host, custom staging dir</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>./scripts/upload_cache.sh<span class="w"> </span>pspcz-cache-20260722-051522.tar.gz<span class="w"> </span>prod-host<span class="w"> </span>--remote-dir<span class="w"> </span>~/cache-upload
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Simulate: preflight checks + dry-run rsync, changes nothing</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>./scripts/upload_cache.sh<span class="w"> </span>--dry-run
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># Upload AND extract into the production cache dir (app must be stopped)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>./scripts/upload_cache.sh<span class="w"> </span>prod-host<span class="w"> </span>--extract<span class="w"> </span>--remote-cache-dir<span class="w"> </span>/data/psp-cache
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Argument / option</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TARBALL</code></td>
+<td>newest <code>./pspcz-cache-*.tar.gz</code></td>
+<td>Archive to upload</td>
+</tr>
+<tr>
+<td><code>REMOTE_HOST</code></td>
+<td><code>$PSPCZ_REMOTE</code> or <code>master</code></td>
+<td>SSH host alias or <code>user@host</code></td>
+</tr>
+<tr>
+<td><code>--remote-dir DIR</code></td>
+<td><code>~/cache-upload</code></td>
+<td>Remote staging directory</td>
+</tr>
+<tr>
+<td><code>--extract</code></td>
+<td>off</td>
+<td>Extract after verified upload</td>
+</tr>
+<tr>
+<td><code>--remote-cache-dir DIR</code></td>
+<td>— (required with <code>--extract</code>)</td>
+<td>Absolute remote <code>PSPCZ_CACHE_DIR</code> to extract into</td>
+</tr>
+<tr>
+<td><code>--clobber-state</code></td>
+<td>off</td>
+<td>Also overwrite <code>runtime_config.json</code> / <code>pipeline_history.json</code></td>
+</tr>
+<tr>
+<td><code>--attempts N</code></td>
+<td><code>10</code></td>
+<td>Max transfer attempts before giving up</td>
+</tr>
+<tr>
+<td><code>--dry-run</code></td>
+<td>off</td>
+<td>Preflight + simulated rsync only</td>
+</tr>
+</tbody>
+</table>
+<p>Every run is tee'd to <code>./upload-cache-&lt;timestamp&gt;.log</code>.</p>
+<h3 id="running-overnight-on-a-slow-uplink">Running overnight on a slow uplink<a class="headerlink" href="#running-overnight-on-a-slow-uplink" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>tmux<span class="w"> </span>new<span class="w"> </span>-s<span class="w"> </span>cache-upload
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>./scripts/upload_cache.sh<span class="w">          </span><span class="c1"># e.g. 8.7 GB @ 3 MB/s ≈ 50 min of transfer</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Ctrl-b d — detach; the transfer continues without your terminal</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>tmux<span class="w"> </span>attach<span class="w"> </span>-t<span class="w"> </span>cache-upload<span class="w">        </span><span class="c1"># reattach later; look for &quot;VERIFIED&quot;</span>
+</code></pre></div>
+<p>If the connection drops, the retry loop reconnects automatically and resumes
+from the last complete block — a failed run never loses progress. Re-running
+the same command after any failure is always safe.</p>
+<h2 id="step-3-extract-and-verify">Step 3 — Extract and verify<a class="headerlink" href="#step-3-extract-and-verify" title="Permanent link">&para;</a></h2>
+<p>If you did not pass <code>--extract</code>, extract manually on the production host
+(<strong>app stopped first</strong>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>stop
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>tar<span class="w"> </span>xzf<span class="w"> </span>~/cache-upload/pspcz-cache-*.tar.gz<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PSPCZ_CACHE_HOST_DIR</span><span class="s2">&quot;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</code></pre></div>
+<h3 id="state-files-runtime_configjson-pipeline_historyjson">State files: <code>runtime_config.json</code> / <code>pipeline_history.json</code><a class="headerlink" href="#state-files-runtime_configjson-pipeline_historyjson" title="Permanent link">&para;</a></h3>
+<p>The archive contains the <em>build machine's</em> <code>runtime_config.json</code> (admin
+config-editor state, including LLM provider/model settings) and
+<code>pipeline_history.json</code>. Extracting them over production would <strong>silently
+replace production's configuration</strong>.</p>
+<ul>
+<li><code>scripts/upload_cache.sh --extract</code> <strong>excludes both files by default</strong>.
+  Pass <code>--clobber-state</code> only when you deliberately want a full reset.</li>
+<li>For manual <code>tar</code> extraction, exclude them explicitly if production already
+  has config you want to keep:
+  <code>tar xzf archive.tar.gz --exclude=runtime_config.json --exclude=pipeline_history.json -C "$DIR"</code></li>
+</ul>
+<h3 id="rollback">Rollback<a class="headerlink" href="#rollback" title="Permanent link">&para;</a></h3>
+<p>Before extracting, move the current cache aside rather than overwriting it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mv<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PSPCZ_CACHE_HOST_DIR</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PSPCZ_CACHE_HOST_DIR</span><span class="si">}</span><span class="s2">.old&quot;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PSPCZ_CACHE_HOST_DIR</span><span class="s2">&quot;</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>tar<span class="w"> </span>xzf<span class="w"> </span>pspcz-cache-*.tar.gz<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PSPCZ_CACHE_HOST_DIR</span><span class="s2">&quot;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># healthy? rm -rf &quot;${PSPCZ_CACHE_HOST_DIR}.old&quot;   # only after verification</span>
+</code></pre></div>
+<h2 id="step-4-restart-and-health-check">Step 4 — Restart and health-check<a class="headerlink" href="#step-4-restart-and-health-check" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:8000/api/health<span class="w">          </span><span class="c1"># frontend</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:8001/admin/api/health<span class="w">    </span><span class="c1"># backend (IP-whitelisted)</span>
+</code></pre></div>
+<p>Both containers use a 300 s healthcheck start period — a cold cache loads
+shared tables and per-period data on first boot, which takes a while.</p>
 
 
 
@@ -3880,10 +4073,10 @@ and routes it through loguru for consistent colorful output.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.instant", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.instant", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
