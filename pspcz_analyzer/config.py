@@ -188,6 +188,17 @@ GITHUB_FEEDBACK_LABELS = os.environ.get("GITHUB_FEEDBACK_LABELS", "user-feedback
 # Admin dashboard — backend-only authentication and access control
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
-ADMIN_ALLOWED_IPS = os.environ.get("ADMIN_ALLOWED_IPS", "127.0.0.1,::1,172.16.0.0/12")
+# Loopback only by default. The old default included 172.16.0.0/12, which
+# admitted every Docker-bridge container and LAN host in that range to the
+# login page — add the needed CIDR back explicitly if your deployment needs it.
+ADMIN_ALLOWED_IPS = os.environ.get("ADMIN_ALLOWED_IPS", "127.0.0.1,::1")
+# Proxies whose X-Forwarded-For header may be trusted to identify the real
+# client IP. Requests from any other peer ignore X-Forwarded-For entirely
+# (otherwise a remote attacker could spoof "127.0.0.1" and pass the whitelist).
+# Behind a reverse proxy, set this to the proxy's IP/CIDR.
+ADMIN_TRUSTED_PROXIES = os.environ.get("ADMIN_TRUSTED_PROXIES", "127.0.0.1,::1")
 ADMIN_SESSION_SECRET = os.environ.get("ADMIN_SESSION_SECRET", "")
 ADMIN_PORT = int(os.environ.get("ADMIN_PORT", "8001"))
+# Mark the session cookie Secure so it is never sent over plain HTTP.
+# Defaults off in dev mode (plain-HTTP localhost), on everywhere else.
+ADMIN_COOKIE_SECURE = os.environ.get("ADMIN_COOKIE_SECURE", "0" if DEV else "1") == "1"

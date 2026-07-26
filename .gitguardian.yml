@@ -1,0 +1,9 @@
+# GitGuardian secret-scanning configuration.
+#
+# The files below are test fixtures that deliberately contain FAKE credentials
+# (a dummy login password and a bcrypt hash generated at test time). They are
+# not real secrets — they exist only to exercise the admin auth flows. Ignore
+# them so the "Username Password" / "Generic Password" detectors don't fail CI.
+paths_ignore:
+  - tests/api/test_admin.py
+  - tests/unit/test_admin_auth.py

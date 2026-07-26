@@ -2,7 +2,6 @@
 
 import hashlib
 import hmac
-import ipaddress
 import secrets
 import time
 from typing import Any
@@ -17,55 +16,32 @@ from pspcz_analyzer.config import (
     ADMIN_ALLOWED_IPS,
     ADMIN_PASSWORD_HASH,
     ADMIN_SESSION_SECRET,
+    ADMIN_TRUSTED_PROXIES,
 )
+from pspcz_analyzer.middleware import is_same_origin
+from pspcz_analyzer.proxy import extract_client_ip, is_ip_allowed, parse_ip_networks
 
 _SESSION_COOKIE = "pspcz_admin_session"
 _SESSION_TTL = 86400  # 24 hours
 
+# HTTP methods that need no CSRF origin check (safe, side-effect-free).
+_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
 # Auto-generate secret if not provided (ephemeral — sessions lost on restart)
 _session_secret = ADMIN_SESSION_SECRET or secrets.token_hex(32)
 
-
-def _parse_ip_whitelist(raw: str) -> list[ipaddress.IPv4Network | ipaddress.IPv6Network]:
-    """Parse comma-separated IP/CIDR whitelist into network objects."""
-    networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
-    for entry in raw.split(","):
-        entry = entry.strip()
-        if not entry:
-            continue
-        try:
-            networks.append(ipaddress.ip_network(entry, strict=False))
-        except ValueError:
-            logger.warning("[admin-auth] Invalid IP/CIDR in whitelist: {}", entry)
-    return networks
-
-
-_allowed_networks = _parse_ip_whitelist(ADMIN_ALLOWED_IPS)
+_allowed_networks = parse_ip_networks(ADMIN_ALLOWED_IPS)
+_trusted_proxies = parse_ip_networks(ADMIN_TRUSTED_PROXIES)
 
 
 def _client_ip(request: Request) -> str:
-    """Extract client IP from request, respecting X-Forwarded-For behind proxies."""
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    client = request.client
-    return client.host if client else "0.0.0.0"
+    """Extract the real client IP, trusting X-Forwarded-For only from known proxies."""
+    return extract_client_ip(request, _trusted_proxies)
 
 
 def _is_ip_allowed(ip_str: str) -> bool:
-    """Check if client IP is in the allowed networks.
-
-    Handles IPv4-mapped IPv6 addresses (e.g. ::ffff:192.168.1.1)
-    by normalizing them to plain IPv4 before matching.
-    """
-    try:
-        addr = ipaddress.ip_address(ip_str)
-    except ValueError:
-        return False
-    # Normalize IPv4-mapped IPv6 (::ffff:x.x.x.x) to plain IPv4
-    if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped:
-        addr = addr.ipv4_mapped
-    return any(addr in net for net in _allowed_networks)
+    """Check if client IP is in the allowed networks."""
+    return is_ip_allowed(ip_str, _allowed_networks)
 
 
 def _sign_session(username: str, expires: int) -> str:
@@ -127,9 +103,9 @@ class AdminAuthMiddleware(BaseHTTPMiddleware):
         """Check IP whitelist, then session, redirect to login if needed."""
         path = request.url.path
 
-        # Allow login page, static assets, and the health endpoint without a
-        # session (still IP-whitelisted) — docker healthchecks need it.
-        if path in ("/admin/login", "/admin/static", "/admin/api/health"):
+        # Allow the login page and the health endpoint without a session
+        # (still IP-whitelisted) — docker healthchecks need the latter.
+        if path in ("/admin/login", "/admin/api/health"):
             return await self._check_ip_then_proceed(request, call_next)
 
         return await self._check_ip_then_proceed(request, call_next, require_session=True)
@@ -141,7 +117,7 @@ class AdminAuthMiddleware(BaseHTTPMiddleware):
         *,
         require_session: bool = False,
     ) -> Response:
-        """Verify IP whitelist, optionally check session."""
+        """Verify IP whitelist and CSRF origin, optionally check session."""
         ip = _client_ip(request)
         if not _is_ip_allowed(ip):
             xff = request.headers.get("x-forwarded-for", "(none)")
@@ -151,6 +127,18 @@ class AdminAuthMiddleware(BaseHTTPMiddleware):
                 ip,
                 xff,
                 client_host,
+            )
+            return Response("Forbidden", status_code=403)
+
+        # CSRF: state-changing requests must originate from our own origin.
+        # SameSite=Lax cookies remain a backstop; this blocks cross-origin
+        # form posts outright (e.g. a malicious site triggering a pipeline).
+        if request.method not in _SAFE_METHODS and not is_same_origin(request):
+            logger.warning(
+                "[admin-auth] Blocked cross-origin {} {} from IP={}",
+                request.method,
+                request.url.path,
+                ip,
             )
             return Response("Forbidden", status_code=403)
 

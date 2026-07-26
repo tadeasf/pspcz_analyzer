@@ -52,7 +52,9 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `ADMIN_USERNAME` — admin dashboard login username (default: `admin`)
 - `ADMIN_PASSWORD_HASH` — bcrypt hash of the admin password (default: empty — login rejects all)
 - `ADMIN_SESSION_SECRET` — HMAC secret for signing admin session cookies (default: auto-generated)
-- `ADMIN_ALLOWED_IPS` — comma-separated IP/CIDR whitelist for admin access (default: `127.0.0.1,::1,172.16.0.0/12`)
+- `ADMIN_ALLOWED_IPS` — comma-separated IP/CIDR whitelist for admin access (default: `127.0.0.1,::1` — loopback only; the old default included `172.16.0.0/12`)
+- `ADMIN_TRUSTED_PROXIES` — comma-separated IP/CIDR of reverse proxies whose `X-Forwarded-For` is trusted to identify the client (default: `127.0.0.1,::1`; XFF from any other peer is ignored)
+- `ADMIN_COOKIE_SECURE` — send the admin session cookie only over HTTPS (default: `1` outside dev mode)
 
 ## Architecture
 
