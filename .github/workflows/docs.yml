@@ -40,4 +40,4 @@ jobs:
             mkdocs-material-
 
       - name: Build and deploy docs
-        run: uv run mkdocs gh-deploy --force
+        run: uv run mkdocs gh-deploy --force --strict

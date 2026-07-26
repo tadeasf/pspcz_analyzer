@@ -31,7 +31,6 @@ jobs:
 
       - name: Pyright
         run: uv run pyright
-        continue-on-error: true  # Informational — codebase not fully typed yet
 
   test-unit:
     name: Unit Tests
@@ -56,3 +55,19 @@ jobs:
           name: coverage-report
           path: .coverage
           retention-days: 7
+
+  docs:
+    name: Docs Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra docs
+
+      - name: Build docs (strict)
+        run: uv run mkdocs build --strict
