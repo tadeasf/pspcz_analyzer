@@ -9,7 +9,6 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import (
-    DEFAULT_CACHE_DIR,
     DEFAULT_PERIOD,
     GITHUB_FEEDBACK_ENABLED,
     TISKY_PDF_DIR,
@@ -133,7 +132,7 @@ async def related_bills_api(
     if idsb <= 0:
         return HTMLResponse(f"<p>{html_mod.escape(_t('related.invalid'))}</p>")
 
-    cache_dir = DEFAULT_CACHE_DIR
+    cache_dir = request.app.state.data.cache_dir
     cached = load_related_bills_json(idsb, cache_dir)
     if cached is not None:
         bills = [asdict(b) for b in cached]

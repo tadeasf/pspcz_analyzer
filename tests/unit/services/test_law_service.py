@@ -1,5 +1,7 @@
 """Tests for the law listing and detail service."""
 
+from pathlib import Path
+
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.law_service import (
@@ -14,6 +16,9 @@ from tests.fixtures.sample_data import (
     make_void_votes,
     make_votes,
 )
+
+# Cache dir that never exists — law_detail only checks PDF presence there.
+_NO_CACHE_DIR = Path(__file__).parent / "no-such-cache-dir"
 
 
 def _make_tisk(
@@ -270,18 +275,18 @@ class TestGetAllStatusLabels:
 class TestLawDetail:
     def test_returns_dict_for_existing_ct(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=200)
+        result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
         assert isinstance(result, dict)
         assert result["ct"] == 200
 
     def test_not_found_returns_none(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=999)
+        result = law_detail(data, ct=999, cache_dir=_NO_CACHE_DIR)
         assert result is None
 
     def test_contains_bill_info(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=200)
+        result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
         assert result is not None
         assert result["nazev"] == "Zákon o daních"
         assert result["status"] == "vyhlášeno"
@@ -289,19 +294,19 @@ class TestLawDetail:
 
     def test_contains_summary(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=200)
+        result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
         assert result is not None
         assert result["summary"] == "Shrnutí zákona."
 
     def test_english_summary(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=200, lang="en")
+        result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR, lang="en")
         assert result is not None
         assert result["summary"] == "Bill summary."
 
     def test_contains_amendment_entries(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=200)
+        result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
         assert result is not None
         assert result["has_amendments"] is True
         assert len(result["amendment_entries"]) == 1
@@ -309,13 +314,13 @@ class TestLawDetail:
 
     def test_no_amendments_for_bill(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=300)
+        result = law_detail(data, ct=300, cache_dir=_NO_CACHE_DIR)
         assert result is not None
         assert result["has_amendments"] is False
         assert len(result["amendment_entries"]) == 0
 
     def test_contains_topics(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=200)
+        result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
         assert result is not None
         assert "Ekonomika" in result["topics"]

@@ -15,6 +15,12 @@ from pspcz_analyzer.services.llm import (
     serialize_topics,
 )
 
+# How many newly classified tisky to accumulate before flushing the parquet.
+# Writing after every single tisk rewrites the whole period file — O(n²) I/O
+# that turns re-classification of a large cache into hours. Batching keeps
+# crash-resume cheap (at most this many classifications are redone).
+_SAVE_EVERY_TISKS = 25
+
 
 def classify_and_save(
     period: int,
@@ -27,9 +33,9 @@ def classify_and_save(
     """Run topic classification on extracted texts, save parquet, return maps.
 
     Uses LLM when available (free-form topics), falls back to keyword matching.
-    Saves incrementally after each tisk and resumes from where it left off.
-    Smart caching: tisks with topics but no summary are re-processed for
-    summaries only (2 LLM calls instead of 4).
+    Saves periodically (every _SAVE_EVERY_TISKS new records, plus once at the
+    end) and resumes from where it left off. Smart caching: tisks with topics
+    but no summary are re-processed for summaries only (2 LLM calls instead of 4).
 
     Args:
         force_cts: Tisk numbers to fully re-classify + re-summarize even if
@@ -96,6 +102,7 @@ def classify_and_save(
         # Without LLM, return whatever we have cached
         return _build_topic_summary_maps(records, period)
 
+    new_since_save = 0
     for i, (ct, text_path) in enumerate(sorted(remaining.items()), fully_done + 1):
         if cancel_check:
             cancel_check()
@@ -110,13 +117,20 @@ def classify_and_save(
             cancel_check=cancel_check,
         )
         records.append(record)
+        new_since_save += 1
 
-        # Save after every tisk so progress is never lost
-        # (atomic — the frontend may read this parquet at any moment)
-        write_parquet_atomic(pl.DataFrame(records), parquet_path)
+        # Periodic atomic save (the frontend may read this parquet at any
+        # moment) so a crash redoes at most _SAVE_EVERY_TISKS classifications
+        if new_since_save >= _SAVE_EVERY_TISKS:
+            write_parquet_atomic(pl.DataFrame(records), parquet_path)
+            new_since_save = 0
 
         if progress_callback is not None:
             progress_callback(i, total)
+
+    # Flush any records not yet written
+    if new_since_save:
+        write_parquet_atomic(pl.DataFrame(records), parquet_path)
 
     # Build return maps from all records (existing + new)
     return _build_topic_summary_maps(records, period)
@@ -325,27 +339,20 @@ def _build_topic_summary_maps(
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Build topic, summary, and summary_en maps from classification records.
 
-    Also populates the topic_en_map on the module-level _topic_en_maps dict
-    so it can be retrieved by the cache manager.
+    English topics are not returned here — consumers read the ``topic_en``
+    parquet column through TiskCacheManager.topic_en_cache instead.
     """
     topic_map: dict[int, list[str]] = {}
-    topic_en_map: dict[int, list[str]] = {}
     summary_map: dict[int, str] = {}
     summary_en_map: dict[int, str] = {}
     for r in records:
         parsed = deserialize_topics(r.get("topic", ""))
         if parsed:
             topic_map[r["ct"]] = parsed
-        parsed_en = deserialize_topics(r.get("topic_en", ""))
-        if parsed_en:
-            topic_en_map[r["ct"]] = parsed_en
         if r.get("summary"):
             summary_map[r["ct"]] = r["summary"]
         if r.get("summary_en"):
             summary_en_map[r["ct"]] = r["summary_en"]
-
-    # Store English topic map for retrieval by cache manager
-    _topic_en_maps[period] = topic_en_map
 
     if log:
         classified = len(topic_map)
@@ -360,12 +367,3 @@ def _build_topic_summary_maps(
         )
 
     return topic_map, summary_map, summary_en_map
-
-
-# Module-level store for English topic maps (populated by _build_topic_summary_maps)
-_topic_en_maps: dict[int, dict[int, list[str]]] = {}
-
-
-def get_topic_en_map(period: int) -> dict[int, list[str]]:
-    """Get the English topic map for a period (populated during classify_and_save)."""
-    return _topic_en_maps.get(period, {})

@@ -18,6 +18,12 @@ from pspcz_analyzer.services.amendments.cache_manager import save_amendments
 from pspcz_analyzer.services.amendments.progress import AmendmentProgress
 from pspcz_analyzer.services.llm import LLMClient, create_llm_client
 
+# How many summarized bills to accumulate before flushing the parquet +
+# notifying the UI. Saving after every single bill rewrites the whole period
+# file — O(n²) I/O — while batching by 10 keeps the admin UI's incremental
+# refresh responsive.
+_SAVE_EVERY_BILLS = 10
+
 
 def _summarize_bill_text(
     llm: LLMClient,
@@ -234,7 +240,9 @@ def _summarize_amendments(
         cache_dir: Base cache directory for intermediate saves.
         period: Electoral period number.
         progress: Progress tracker (mutated in-place).
-        on_progress: Optional callback(period, bills) for incremental UI refresh.
+        on_progress: Optional callback(period, bills) for incremental UI
+            refresh, fired after each periodic save (every
+            _SAVE_EVERY_BILLS summarized bills and once at the end).
         period_data: Loaded period data for tisk summary lookup.
         ct_to_pdf_text: Mapping of ct -> raw PDF text (transient, not cached).
         cancel_check: Optional cancellation hook raised between bills.
@@ -260,6 +268,7 @@ def _summarize_amendments(
     pdf_text_map = ct_to_pdf_text or {}
     tisk_reused = 0
     llm_generated = 0
+    summarized_since_save = 0
 
     for i, bill in enumerate(bills):
         if cancel_check:
@@ -326,11 +335,21 @@ def _summarize_amendments(
 
         progress.done_items = i + 1
 
-        # Save + notify after each bill so UI updates incrementally
+        # Save + notify periodically so the UI updates incrementally without
+        # rewriting the whole period parquet after every single bill
         if bill.bill_summary:
-            save_amendments(cache_dir, period, bills)
-            if on_progress:
-                on_progress(period, bills)
+            summarized_since_save += 1
+            if summarized_since_save >= _SAVE_EVERY_BILLS:
+                save_amendments(cache_dir, period, bills)
+                if on_progress:
+                    on_progress(period, bills)
+                summarized_since_save = 0
+
+    # Flush any summaries not yet written
+    if summarized_since_save:
+        save_amendments(cache_dir, period, bills)
+        if on_progress:
+            on_progress(period, bills)
 
     elapsed = progress.elapsed
     logger.info(

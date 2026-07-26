@@ -591,7 +591,6 @@ def find_steno_for_bod(
     period: int,
     schuze: int,
     bod: int,
-    _bod_nazev: str,
     cache_dir: Path,
 ) -> tuple[str | None, str, StenoFailure | None]:
     """Find and download steno transcript pages for a specific agenda item.
@@ -606,7 +605,6 @@ def find_steno_for_bod(
         period: Electoral period number.
         schuze: Session number.
         bod: Agenda item number.
-        _bod_nazev: Title/name of the agenda item (unused, kept for API compat).
         cache_dir: Base cache directory.
 
     Returns:

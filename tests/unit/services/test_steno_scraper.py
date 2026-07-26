@@ -99,7 +99,7 @@ class TestCollectBodSubpages:
 class TestFindStenoForBod:
     def test_concatenates_all_subpages(self, monkeypatch):
         _patch_downloads(monkeypatch, day_pages={"17-1.html": DAY1_HTML, "17-3.html": DAY3_HTML})
-        html, first_url, failure = find_steno_for_bod(10, 17, 2, "", Path("/tmp"))
+        html, first_url, failure = find_steno_for_bod(10, 17, 2, Path("/tmp"))
         assert failure is None
         assert html is not None
         assert first_url.endswith("s100.htm")
@@ -108,14 +108,14 @@ class TestFindStenoForBod:
 
     def test_bod_not_in_index(self, monkeypatch):
         _patch_downloads(monkeypatch, day_pages={"17-1.html": DAY1_HTML, "17-3.html": DAY3_HTML})
-        html, _url, failure = find_steno_for_bod(10, 17, 9, "", Path("/tmp"))
+        html, _url, failure = find_steno_for_bod(10, 17, 9, Path("/tmp"))
         assert html is None
         assert failure is StenoFailure.BOD_NOT_IN_INDEX
 
     def test_keeps_last_n_when_over_cap(self, monkeypatch):
         _patch_downloads(monkeypatch, day_pages={"17-1.html": DAY1_HTML, "17-3.html": DAY3_HTML})
         monkeypatch.setattr(steno_scraper, "STENO_MAX_SUBPAGES_PER_BOD", 2)
-        html, first_url, failure = find_steno_for_bod(10, 17, 2, "", Path("/tmp"))
+        html, first_url, failure = find_steno_for_bod(10, 17, 2, Path("/tmp"))
         assert failure is None
         assert html is not None
         # Voting is at the end -> keep the last 2 (s300, s301), drop s100/s101.

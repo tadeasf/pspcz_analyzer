@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pspcz_analyzer.models.amendment_models import AmendmentVote
-from pspcz_analyzer.services.amendments.summarizer import _build_amendment_meta
+import pymupdf
+
+from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
+from pspcz_analyzer.services.amendments import summarizer
+from pspcz_analyzer.services.amendments.progress import AmendmentProgress
+from pspcz_analyzer.services.amendments.summarizer import (
+    _build_amendment_meta,
+    _summarize_amendments,
+)
 from pspcz_analyzer.services.llm.parsers import (
     _format_amendments_list,
     _normalize_amendment_letter,
@@ -231,3 +238,108 @@ class TestExtractTextFromPdfHtmlFallback:
         result = extract_text_from_pdf(pdf_path)
         # Should extract something (even with encoding fallback)
         assert "republika" in result
+
+    def test_closes_doc_even_when_extraction_raises(self, tmp_path: Path, monkeypatch) -> None:
+        """The PyMuPDF document must be closed when page iteration raises."""
+        closed: list[bool] = []
+
+        class _FakeDoc:
+            def __iter__(self):
+                raise RuntimeError("malformed PDF")
+
+            def close(self) -> None:
+                closed.append(True)
+
+        monkeypatch.setattr(pymupdf, "open", lambda _path: _FakeDoc())
+        pdf_path = tmp_path / "bad.pdf"
+        pdf_path.write_bytes(b"not pdf, not html")
+        assert extract_text_from_pdf(pdf_path) == ""
+        assert closed == [True]
+
+
+class TestSummarizeAmendmentsBatching:
+    """_summarize_amendments must flush parquet periodically, not per bill."""
+
+    @staticmethod
+    def _make_bills(n: int) -> list[BillAmendmentData]:
+        return [
+            BillAmendmentData(
+                period=10,
+                schuze=1,
+                bod=i,
+                ct=100 + i,
+                tisk_nazev=f"tisk {i}",
+                amendments=[AmendmentVote(letter="A", vote_number=1, amendment_text="text A")],
+            )
+            for i in range(n)
+        ]
+
+    @staticmethod
+    def _patch_summarizer(monkeypatch, summary: str = "sum") -> list[int]:
+        """Fake the LLM client, per-bill summaries, and save_amendments.
+
+        Returns:
+            List that records len(bills) for every save_amendments call.
+        """
+
+        class _FakeLLM:
+            provider = "fake"
+            model = "fake-model"
+
+            def is_available(self) -> bool:
+                return True
+
+        saves: list[int] = []
+        monkeypatch.setattr(summarizer, "create_llm_client", lambda: _FakeLLM())
+        monkeypatch.setattr(
+            summarizer,
+            "_summarize_bill_text",
+            lambda llm, text, title, bill_index, total_bills: (summary, summary),
+        )
+        monkeypatch.setattr(
+            summarizer,
+            "_summarize_per_amendment",
+            lambda llm, bill, bill_index, total_bills, bill_context="", pdf_text="": 1,
+        )
+        monkeypatch.setattr(
+            summarizer,
+            "save_amendments",
+            lambda cache_dir, period, bills: saves.append(len(bills)),
+        )
+        return saves
+
+    def test_saves_every_10_bills_plus_final(self, tmp_path: Path, monkeypatch) -> None:
+        saves = self._patch_summarizer(monkeypatch)
+        notified: list[int] = []
+        bills = self._make_bills(12)
+        progress = AmendmentProgress()
+
+        _summarize_amendments(
+            bills,
+            tmp_path,
+            10,
+            progress,
+            on_progress=lambda p, b: notified.append(len(b)),
+        )
+
+        # 12 summarized bills -> one flush at 10 + one final flush (not 12 saves)
+        assert len(saves) == 2
+        assert saves == [12, 12]
+        assert notified == [12, 12]
+        assert progress.done_items == 12
+
+    def test_single_final_flush_under_threshold(self, tmp_path: Path, monkeypatch) -> None:
+        saves = self._patch_summarizer(monkeypatch)
+        bills = self._make_bills(5)
+
+        _summarize_amendments(bills, tmp_path, 10, AmendmentProgress())
+
+        assert saves == [5]
+
+    def test_no_saves_when_no_summaries(self, tmp_path: Path, monkeypatch) -> None:
+        saves = self._patch_summarizer(monkeypatch, summary="")
+        bills = self._make_bills(5)
+
+        _summarize_amendments(bills, tmp_path, 10, AmendmentProgress())
+
+        assert saves == []

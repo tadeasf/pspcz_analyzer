@@ -16,11 +16,12 @@ from dataclasses import dataclass, field
 
 from loguru import logger
 
-# Top-level letter header: "A. Poslanec Jan Novák" or "B. Poslankyně Jana Nová"
-# Also handles "Poslanci" (plural) and "Poslankyně" (plural feminine)
+# Top-level letter header: "A. Poslanec Jan Novák" or "B. Poslankyně Jana Nová".
+# "Poslanci" covers the masculine plural; "Poslankyně" is identical in the
+# feminine singular and plural, so it covers both.
 _LETTER_HEADER_RE = re.compile(
     r"^([A-Z])\.?\s+"
-    r"(Poslanec|Poslankyně|Poslanci|Poslankyně)\s+"
+    r"(Poslanec|Poslankyně|Poslanci)\s+"
     r"(.+?)$",
     re.MULTILINE,
 )

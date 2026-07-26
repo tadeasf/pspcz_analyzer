@@ -927,7 +927,7 @@ class LLMClient:
 
         amendments_with_text = sum(1 for a in amendments if a.get("amendment_text"))
         logger.debug(
-            "%s summarize_amendments(%s): %d/%d amendments have per-amendment text",
+            "{} summarize_amendments({}): {}/{} amendments have per-amendment text",
             self._log_prefix,
             lang,
             amendments_with_text,
