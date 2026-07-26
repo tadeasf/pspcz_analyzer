@@ -221,6 +221,7 @@ def _summarize_amendments(
     on_progress: Callable[[int, list[BillAmendmentData]], None] | None = None,
     period_data: PeriodData | None = None,
     ct_to_pdf_text: dict[int, str] | None = None,
+    cancel_check: Callable[[], None] | None = None,
 ) -> None:
     """Generate bill summaries (reusing tisk summaries) and per-amendment LLM summaries.
 
@@ -236,6 +237,7 @@ def _summarize_amendments(
         on_progress: Optional callback(period, bills) for incremental UI refresh.
         period_data: Loaded period data for tisk summary lookup.
         ct_to_pdf_text: Mapping of ct -> raw PDF text (transient, not cached).
+        cancel_check: Optional cancellation hook raised between bills.
     """
     llm = create_llm_client()
     if not llm.is_available():
@@ -260,6 +262,8 @@ def _summarize_amendments(
     llm_generated = 0
 
     for i, bill in enumerate(bills):
+        if cancel_check:
+            cancel_check()
         # Use transient PDF text dict or fall back to per-amendment text
         text = pdf_text_map.get(bill.ct, "") or next(
             (a.amendment_text for a in bill.amendments if a.amendment_text), ""

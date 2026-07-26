@@ -54,9 +54,13 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Graceful shutdown
+    # Graceful shutdown: request cooperative cancellation of both
+    # pipelines, then wait for their worker threads to drain
     await refresh_svc.stop()
-    await svc.tisk_pipeline.cancel_all()
+    svc.tisk_pipeline.cancel_all()
+    svc.amendment_pipeline.cancel_all()
+    await svc.tisk_pipeline.wait_stopped()
+    await svc.amendment_pipeline.wait_stopped()
     log_broadcaster.stop()
 
 

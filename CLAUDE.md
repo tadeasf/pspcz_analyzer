@@ -137,6 +137,10 @@ Background pipeline for third-reading amendment voting analysis. Runs as asyncio
 - **`coalition_service.py`** — Analyzes voting coalitions: which parties voted together per amendment
 - **`cache_manager.py`** — Loads/saves amendment pipeline outputs as Parquet and JSON files
 
+### Pipeline Cancellation (`services/cancellation.py`)
+
+Shared cooperative cancellation for both pipeline services. Pipeline bodies run in worker threads (`asyncio.to_thread`), where `asyncio.Task.cancel()` cannot interrupt them — so each running period owns a `CancellationFlag` that `cancel_period()`/`cancel_all()` flip instantly; pipeline stages call `check()` at every stage boundary and loop top, exiting promptly with `PipelineCancelled` (caught by the service → `CANCELLED` status). Both services also expose `async wait_stopped(timeout)` to drain tasks after `cancel_all()` (hard-cancelling whatever is still running after the timeout); used by the admin stop endpoint, daily refresh, and backend lifespan shutdown.
+
 ### Law Service (`services/law_service.py`)
 
 Provides data for the laws browser. Loads tisk metadata and legislative histories, returns paginated/filterable bill lists. Each law row carries its linked amendment count, `(schuze, bod)` link, and gov/opposition `driver` (via `affiliation`).

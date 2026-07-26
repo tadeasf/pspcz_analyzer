@@ -6,6 +6,7 @@ and merging PDF-parsed amendments with steno-parsed vote data.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 from loguru import logger
@@ -80,6 +81,7 @@ def _pdf_download_and_parse(
     period: int,
     cache_dir: Path,
     period_data: PeriodData,
+    cancel_check: Callable[[], None] | None = None,
 ) -> tuple[dict[int, list[PdfAmendment]], dict[int, str]]:
     """Download amendment PDFs and parse their structure.
 
@@ -91,6 +93,7 @@ def _pdf_download_and_parse(
         period: Electoral period number.
         cache_dir: Base cache directory.
         period_data: Period data with tisk_lookup for history access.
+        cancel_check: Optional cancellation hook raised between downloads.
 
     Returns:
         Tuple of (ct -> list[PdfAmendment], ct -> raw PDF text).
@@ -108,6 +111,8 @@ def _pdf_download_and_parse(
     unique_cts = sorted({bill.ct for bill in bills})
 
     for ct in unique_cts:
+        if cancel_check:
+            cancel_check()
         history = ct_history.get(ct)
         amendment_ct1 = history.amendment_tisk_ct1 if history else None
         amendment_idd = history.amendment_tisk_idd if history else None

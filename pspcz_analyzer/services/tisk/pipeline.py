@@ -28,6 +28,7 @@ from pspcz_analyzer.models.pipeline_progress import (
     StageProgress,
     TiskMode,
 )
+from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
 from pspcz_analyzer.services.llm import deserialize_topics
 from pspcz_analyzer.services.tisk.classifier import classify_and_save, consolidate_topics
 from pspcz_analyzer.services.tisk.downloader_pipeline import process_period_sync
@@ -41,14 +42,6 @@ from pspcz_analyzer.services.tisk.version_service import (
 )
 
 
-class PeriodCancelled(Exception):
-    """Raised when a running period is cancelled at a stage boundary."""
-
-    def __init__(self, period: int) -> None:
-        self.period = period
-        super().__init__(f"Period {period} cancelled")
-
-
 class TiskPipelineService:
     """Manages background tisk processing for loaded periods."""
 
@@ -56,10 +49,12 @@ class TiskPipelineService:
         self.cache_dir = cache_dir
         self._tasks: dict[int, asyncio.Task] = {}
         self._all_task: asyncio.Task | None = None
+        self._flags: dict[int, CancellationFlag] = {}
         self._progress = PipelineProgress()
         self._progress_lock = threading.Lock()
         self._skip_periods: set[int] = set()
-        self._cancel_current: int | None = None
+        # Set by cancel_all(); makes flags created afterwards start
+        # pre-cancelled, so runs started mid-shutdown die immediately.
         self._cancel_all_flag: bool = False
 
     @property
@@ -90,6 +85,7 @@ class TiskPipelineService:
             self._run_period(period, ct_numbers, on_complete, mode, refresh_active),
             name=f"tisk-pipeline-{period}",
         )
+        task.add_done_callback(lambda t: self._on_period_done(period, t))
         self._tasks[period] = task
         logger.info(
             "[tisk pipeline] Started background processing for period {} ({} tisky, mode={})",
@@ -121,6 +117,7 @@ class TiskPipelineService:
             self._run_all_periods(period_ct_numbers, on_complete, mode),
             name="tisk-pipeline-all",
         )
+        self._all_task.add_done_callback(self._on_all_task_done)
         total_tisky = sum(len(cts) for _, cts in period_ct_numbers)
         logger.info(
             "[tisk pipeline] Started sequential processing of {} periods ({} tisky total, mode={})",
@@ -129,10 +126,41 @@ class TiskPipelineService:
             mode.value,
         )
 
+    def _flag_for(self, period: int) -> CancellationFlag:
+        """Get or create the cancellation flag for a period.
+
+        Reusing an existing flag matters: a cancel request that arrives
+        between start_period() and the task body starting must still be
+        honored by the run that follows.
+        """
+        flag = self._flags.get(period)
+        if flag is None:
+            flag = CancellationFlag(period)
+            if self._cancel_all_flag:
+                flag.cancel()
+            self._flags[period] = flag
+        return flag
+
+    def _on_period_done(self, period: int, task: asyncio.Task) -> None:
+        """Prune a finished period's task + flag.
+
+        Only removes the dict entries if this task is still the current
+        one — a restart for the same period may have replaced them
+        before this done-callback fired.
+        """
+        if self._tasks.get(period) is task:
+            self._tasks.pop(period, None)
+            self._flags.pop(period, None)
+
+    def _on_all_task_done(self, task: asyncio.Task) -> None:
+        """Clear _all_task once the sequential run finishes."""
+        if self._all_task is task:
+            self._all_task = None
+
     def _init_progress(self, period_ct_numbers: list[tuple[int, list[int]]]) -> None:
         """Initialize progress tracking for a new pipeline run."""
         self._skip_periods.clear()
-        self._cancel_current = None
+        self._cancel_all_flag = False
         with self._progress_lock:
             self._progress = PipelineProgress(
                 running=True,
@@ -179,30 +207,20 @@ class TiskPipelineService:
                 pp.current_stage = None
 
     def _check_period_cancelled(self, period: int) -> None:
-        """Check if the current period was cancelled and raise if so.
+        """Raise PipelineCancelled if the period was cancelled.
 
-        Called between stages in _run_period(). Safe to call from the event
-        loop thread — _cancel_current is only written from HTTP handlers
-        and read at await boundaries.
+        Called between stages in _run_period() on the event loop thread.
         """
-        if self._cancel_all_flag or self._cancel_current == period:
-            self._cancel_current = None
-            raise PeriodCancelled(period)
+        self._flag_for(period).check()
 
     def _make_cancel_check(self, period: int) -> Callable[[], None]:
         """Create a cancellation checker for use inside worker threads.
 
-        Returns a closure that reads _cancel_current and raises
-        PeriodCancelled if the given period was cancelled. Safe to call
-        from worker threads — single-variable reads are atomic under the GIL.
+        Returns the period flag's bound check(), which raises
+        PipelineCancelled once cancellation is requested. Safe to call
+        from worker threads — flag reads are atomic under the GIL.
         """
-
-        def check() -> None:
-            if self._cancel_all_flag or self._cancel_current == period:
-                self._cancel_current = None
-                raise PeriodCancelled(period)
-
-        return check
+        return self._flag_for(period).check
 
     def remove_pending_period(self, period: int) -> bool:
         """Remove a pending period from the queue before it starts.
@@ -223,31 +241,39 @@ class TiskPipelineService:
         """Cancel a single period — pending or in-progress.
 
         For pending periods, marks SKIPPED immediately.
-        For in-progress periods, sets _cancel_current flag checked at next
-        stage boundary.
+        For in-progress periods, flips the period's cancellation flag;
+        the run stops cooperatively at its next checkpoint.
 
         Returns True if a cancellation action was taken.
         """
         with self._progress_lock:
             pp = self._progress.periods.get(period)
-            if pp is None:
-                return False
-            match pp.status:
-                case PeriodStatus.PENDING:
-                    pp.status = PeriodStatus.SKIPPED
-                    pp.current_stage = None
-                    self._skip_periods.add(period)
-                    logger.info("[tisk pipeline] Removed pending period {}", period)
-                    return True
-                case PeriodStatus.IN_PROGRESS:
-                    self._cancel_current = period
-                    logger.info(
-                        "[tisk pipeline] Cancellation requested for running period {}",
-                        period,
-                    )
-                    return True
-                case _:
-                    return False
+            if pp is not None:
+                match pp.status:
+                    case PeriodStatus.PENDING:
+                        pp.status = PeriodStatus.SKIPPED
+                        pp.current_stage = None
+                        self._skip_periods.add(period)
+                        logger.info("[tisk pipeline] Removed pending period {}", period)
+                        return True
+                    case PeriodStatus.IN_PROGRESS:
+                        self._flag_for(period).cancel()
+                        logger.info(
+                            "[tisk pipeline] Cancellation requested for running period {}",
+                            period,
+                        )
+                        return True
+                    case _:
+                        pass
+        # Runs without progress tracking (direct start_period): cancel via flag
+        if self.is_running(period):
+            self._flag_for(period).cancel()
+            logger.info(
+                "[tisk pipeline] Cancellation requested for running period {}",
+                period,
+            )
+            return True
+        return False
 
     async def _run_all_periods(
         self,
@@ -258,6 +284,10 @@ class TiskPipelineService:
         """Process periods one by one, sequentially."""
         try:
             for period, ct_numbers in period_ct_numbers:
+                # cancel_all() marks every remaining queued period cancelled
+                if self._cancel_all_flag:
+                    self._set_period_status(period, PeriodStatus.CANCELLED)
+                    continue
                 # Check if period was removed from queue
                 if period in self._skip_periods:
                     self._skip_periods.discard(period)
@@ -274,12 +304,7 @@ class TiskPipelineService:
                     mode.value,
                 )
                 self._set_period_status(period, PeriodStatus.IN_PROGRESS)
-                try:
-                    await self._run_period(period, ct_numbers, on_complete, mode)
-                except PeriodCancelled:
-                    self._set_period_status(period, PeriodStatus.CANCELLED)
-                    logger.info("[tisk pipeline] Period {} cancelled, continuing to next", period)
-                    continue
+                await self._run_period(period, ct_numbers, on_complete, mode)
             completed = sum(
                 1 for pp in self._progress.periods.values() if pp.status == PeriodStatus.COMPLETED
             )
@@ -352,7 +377,7 @@ class TiskPipelineService:
     ) -> None:
         """Run pipeline stages based on mode. Runs heavy work in threads."""
         n = len(ct_numbers)
-        cancel_check = self._make_cancel_check(period)
+        cancel_check = self._flag_for(period).check
         active_cts: set[int] | None = None
         try:
             histories: dict = {}
@@ -520,14 +545,17 @@ class TiskPipelineService:
                     subtisk_map,
                     version_diffs,
                 )
-        except PeriodCancelled:
-            raise
+        except PipelineCancelled:
+            self._set_period_status(period, PeriodStatus.CANCELLED)
+            logger.info("[tisk pipeline] Period {} cancelled", period)
         except asyncio.CancelledError:
             logger.info("[tisk pipeline] Pipeline cancelled for period {}", period)
             raise
         except Exception:
             self._set_period_status(period, PeriodStatus.FAILED)
             logger.opt(exception=True).error("[tisk pipeline] Failed for period {}", period)
+        finally:
+            self._flags.pop(period, None)
 
     def is_running(self, period: int) -> bool:
         """Check whether the pipeline is running for a given period."""
@@ -541,35 +569,46 @@ class TiskPipelineService:
             return task
         return None
 
-    async def cancel_all(self) -> None:
-        """Cancel all running pipeline tasks and wait for them to finish."""
-        self._skip_periods.clear()
-        self._cancel_current = None
+    def cancel_all(self) -> None:
+        """Request cancellation of all running pipelines.
+
+        Flips every period flag (and pre-cancels any flag created
+        afterwards) — running stages stop cooperatively at their next
+        checkpoint, and queued periods are skipped by the sequential
+        loop. Await wait_stopped() to let the tasks drain.
+        """
         self._cancel_all_flag = True
+        for flag in self._flags.values():
+            flag.cancel()
+        logger.info("[tisk pipeline] Cancellation requested for all pipelines")
 
-        tasks_to_cancel: list[asyncio.Task] = []
+    async def wait_stopped(self, timeout: float = 10.0) -> None:
+        """Wait for pipeline tasks to drain after cancel_all().
 
+        Tasks still running after *timeout* are hard-cancelled — that
+        releases the event-loop side immediately; worker threads exit
+        at their next cancellation checkpoint. Clears task/flag state
+        and marks the run as no longer running.
+        """
+        tasks = [t for t in self._tasks.values() if not t.done()]
         if self._all_task is not None and not self._all_task.done():
-            self._all_task.cancel()
-            tasks_to_cancel.append(self._all_task)
+            tasks.append(self._all_task)
+        if tasks:
+            _, pending = await asyncio.wait(tasks, timeout=timeout)
+            if pending:
+                logger.warning(
+                    "[tisk pipeline] {} tasks still draining after {}s — forcing cancellation",
+                    len(pending),
+                    timeout,
+                )
+                for t in pending:
+                    t.cancel()
+                await asyncio.gather(*pending, return_exceptions=True)
 
-        for task in self._tasks.values():
-            if not task.done():
-                task.cancel()
-                tasks_to_cancel.append(task)
-
-        if tasks_to_cancel:
-            logger.info("[tisk pipeline] Cancelling {} tasks ...", len(tasks_to_cancel))
-            await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
-            logger.info("[tisk pipeline] All tasks cancelled")
-
-        # Grace period: keep _cancel_all_flag set so thread pool threads
-        # still running their current LLM call will notice it at the next
-        # cancel_check() and exit cleanly.
-        await asyncio.sleep(0.5)
-        self._cancel_all_flag = False
         self._tasks.clear()
+        self._flags.clear()
         self._all_task = None
+        self._cancel_all_flag = False
 
         with self._progress_lock:
             self._progress.running = False

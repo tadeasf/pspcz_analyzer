@@ -6,6 +6,7 @@ third-reading agenda items that likely had amendment votes.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import polars as pl
@@ -27,6 +28,7 @@ def _ensure_tisk_histories(
     period_data: PeriodData,
     cache_dir: Path,
     refresh_active: bool = False,
+    cancel_check: Callable[[], None] | None = None,
 ) -> None:
     """Ensure tisk history data exists and is loaded into memory.
 
@@ -42,6 +44,7 @@ def _ensure_tisk_histories(
         refresh_active: When True, re-scrape histories of active (non-terminal)
             bills so newly third-read bills enter the candidate set during the
             daily refresh.
+        cancel_check: Optional cancellation hook raised between tisky.
     """
     hist_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_HISTORIE_DIR
     needs_scrape = not hist_dir.exists() or not any(hist_dir.glob("*.json"))
@@ -57,7 +60,7 @@ def _ensure_tisk_histories(
             period,
             len(ct_numbers),
         )
-        scrape_histories_sync(period, ct_numbers, cache_dir)
+        scrape_histories_sync(period, ct_numbers, cache_dir, cancel_check=cancel_check)
 
     # Always load histories into in-memory TiskInfo objects
     cache_mgr = TiskCacheManager(cache_dir)

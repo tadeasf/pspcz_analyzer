@@ -21,10 +21,12 @@ from pspcz_analyzer.admin.pipeline_history import PipelineHistory
 from pspcz_analyzer.config import ADMIN_COOKIE_SECURE, ADMIN_USERNAME, DEFAULT_CACHE_DIR
 from pspcz_analyzer.models.pipeline_progress import (
     AmendmentMode,
+    PeriodStatus,
     PipelineStage,
     TiskMode,
 )
 from pspcz_analyzer.rate_limit import limiter
+from pspcz_analyzer.services.amendments.progress import AmendmentStatus
 from pspcz_analyzer.services.data_service import DataService
 from pspcz_analyzer.services.pipeline_lock import pipeline_lock
 from pspcz_analyzer.services.runtime_config import (
@@ -238,6 +240,30 @@ async def pipeline_status_partial(request: Request) -> HTMLResponse:
     )
 
 
+def _pipeline_was_cancelled(svc: DataService, pipeline_type: str, period: int) -> bool:
+    """Check whether a completed pipeline run ended by cooperative cancellation.
+
+    Cooperatively cancelled runs finish their task normally (the service
+    catches PipelineCancelled and records CANCELLED status), so the
+    outcome must be read from progress state, not the task exception.
+    """
+    match pipeline_type:
+        case "tisk_download" | "tisk_classify" | "tisk_diffs":
+            pp = svc.tisk_pipeline.progress.periods.get(period)
+            return pp is not None and pp.status == PeriodStatus.CANCELLED
+        case "amendment_parse" | "amendment_summarize":
+            ap = svc.amendment_pipeline.progress.get(period)
+            return ap is not None and ap.status == AmendmentStatus.CANCELLED
+        case "full":
+            tisk_pp = svc.tisk_pipeline.progress.periods.get(period)
+            amend_ap = svc.amendment_pipeline.progress.get(period)
+            return (tisk_pp is not None and tisk_pp.status == PeriodStatus.CANCELLED) or (
+                amend_ap is not None and amend_ap.status == AmendmentStatus.CANCELLED
+            )
+        case _:
+            return False
+
+
 async def _monitor_pipeline(
     svc: DataService,
     pipeline_type: str,
@@ -256,8 +282,12 @@ async def _monitor_pipeline(
             amendment_task = svc.amendment_pipeline.get_task(period)
             if amendment_task is not None and not amendment_task.done():
                 await amendment_task
-        history.finish_run(run_data, "success")
-        logger.info("[admin] Pipeline {} finished successfully", label)
+        if _pipeline_was_cancelled(svc, pipeline_type, period):
+            history.finish_run(run_data, "cancelled")
+            logger.info("[admin] Pipeline {} cancelled", label)
+        else:
+            history.finish_run(run_data, "success")
+            logger.info("[admin] Pipeline {} finished successfully", label)
     except asyncio.CancelledError:
         history.finish_run(run_data, "cancelled")
         logger.info("[admin] Pipeline {} cancelled", label)
@@ -357,9 +387,11 @@ async def start_pipeline(
 async def stop_pipeline(request: Request) -> dict:
     """Stop the currently running pipeline.
 
-    Cancels all pipeline tasks. The _monitor_pipeline coroutine catches
-    CancelledError and handles lock release + history recording. If the
-    monitor doesn't release within 2 seconds, force-release as a safety net.
+    Requests cooperative cancellation of all pipeline tasks and waits
+    for them to drain. The _monitor_pipeline coroutine observes the
+    cancellation (status or CancelledError) and handles lock release +
+    history recording. If the monitor doesn't release within 2 seconds,
+    force-release as a safety net.
     """
     svc: DataService = request.app.state.data
 
@@ -367,8 +399,10 @@ async def stop_pipeline(request: Request) -> dict:
         return {"status": "ok", "message": "No pipeline running"}
 
     try:
-        await svc.tisk_pipeline.cancel_all()
+        svc.tisk_pipeline.cancel_all()
         svc.amendment_pipeline.cancel_all()
+        await svc.tisk_pipeline.wait_stopped(timeout=5.0)
+        await svc.amendment_pipeline.wait_stopped(timeout=5.0)
 
         # Yield to event loop so monitor coroutine can process cancellation
         await asyncio.sleep(0)
