@@ -127,6 +127,14 @@ class TestListLaws:
         result = list_laws(data, search="ZÁKON")
         assert result["total"] == 3
 
+    def test_search_folds_diacritics(self):
+        data = _make_data_with_laws()
+        # ASCII query must match "Zákon o daních"; vice versa too
+        result = list_laws(data, search="danich")
+        assert result["total"] == 1
+        assert result["rows"][0]["ct"] == 200
+        assert list_laws(data, search="zákon o danich")["total"] == 1
+
     def test_status_filter_exact_match(self):
         data = _make_data_with_laws()
         result = list_laws(data, status_filter="vyhlášeno")

@@ -9,6 +9,8 @@ import polars as pl
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.affiliation import amendment_driver
+from pspcz_analyzer.services.labels import mp_vote_label
+from pspcz_analyzer.utils.text import normalize_czech
 
 
 def _amendment_to_dict(amend: AmendmentVote, coalition: frozenset[str]) -> dict:
@@ -104,10 +106,10 @@ def list_amendment_bills(
     """
     bills = list(data.amendment_data.values())
 
-    # Filter by search text
+    # Filter by search text (diacritics-insensitive, like the votes search)
     if search:
-        search_lower = search.lower()
-        bills = [b for b in bills if search_lower in b.tisk_nazev.lower()]
+        q = normalize_czech(search.strip())
+        bills = [b for b in bills if q in normalize_czech(b.tisk_nazev)]
 
     # Sort by schuze desc, then bod desc
     bills.sort(key=lambda b: (b.schuze, b.bod), reverse=True)
@@ -259,32 +261,6 @@ def amendment_detail(
     }
 
 
-def _vote_label(code: str) -> str:
-    """Map psp.cz vote result code to display label.
-
-    Args:
-        code: Single-character vote code (A, B, C, F, @, M).
-
-    Returns:
-        Human-readable label.
-    """
-    match code:
-        case "A":
-            return "YES"
-        case "B":
-            return "NO"
-        case "C":
-            return "ABSTAINED"
-        case "F":
-            return "DID_NOT_VOTE"
-        case "@":
-            return "Absent"
-        case "M":
-            return "Excused"
-        case _:
-            return "Unknown"
-
-
 def amendment_mp_votes(
     data: PeriodData,
     id_hlasovani: int,
@@ -335,7 +311,7 @@ def amendment_mp_votes(
                 "prijmeni": row.get("prijmeni", ""),
                 "party": row.get("party", ""),
                 "vote_code": row.get("vysledek", ""),
-                "vote_label": _vote_label(row.get("vysledek", "")),
+                "vote_label": mp_vote_label(row.get("vysledek", "")),
             }
         )
 

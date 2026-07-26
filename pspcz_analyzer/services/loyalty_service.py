@@ -4,6 +4,7 @@ import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.party_voting import party_majority_direction
 
 
 def compute_loyalty(
@@ -34,22 +35,7 @@ def compute_loyalty(
     )
 
     # For each vote + party, compute majority direction
-    party_majority = (
-        active_votes.group_by(["id_hlasovani", "party"])
-        .agg(
-            (pl.col("vysledek") == VoteResult.YES).sum().alias("yes_count"),
-            (pl.col("vysledek") == VoteResult.NO).sum().alias("no_count"),
-        )
-        .with_columns(
-            pl.when(pl.col("yes_count") > pl.col("no_count"))
-            .then(pl.lit(VoteResult.YES))
-            .when(pl.col("no_count") > pl.col("yes_count"))
-            .then(pl.lit(VoteResult.NO))
-            .otherwise(pl.lit(None))
-            .alias("party_direction")
-        )
-        .filter(pl.col("party_direction").is_not_null())
-    )
+    party_majority = party_majority_direction(active_votes)
 
     # Join back to individual votes
     with_direction = active_votes.join(

@@ -6,6 +6,8 @@ from pspcz_analyzer.config import TISKY_PDF_DIR
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
+from pspcz_analyzer.services.labels import vote_outcome_label
+from pspcz_analyzer.utils.text import normalize_czech
 
 
 def _tisk_pdf_exists(cache_dir: Path, period: int, ct: int) -> bool:
@@ -186,10 +188,10 @@ def list_laws(
     """
     tisky = _deduplicate_tisky(data)
 
-    # Filter by search text
+    # Filter by search text (diacritics-insensitive, like the votes search)
     if search:
-        search_lower = search.lower()
-        tisky = [t for t in tisky if search_lower in t.nazev.lower()]
+        q = normalize_czech(search.strip())
+        tisky = [t for t in tisky if q in normalize_czech(t.nazev)]
 
     # Filter by status (exact match)
     if status_filter and status_filter != "all":
@@ -247,16 +249,7 @@ def _find_votes_for_ct(data: PeriodData, ct: int) -> list[dict]:
     for _, row in enumerate(data.votes.iter_rows(named=True)):
         key = (row.get("schuze"), row.get("bod"))
         if key in schuze_bod_pairs:
-            vysledek = row.get("vysledek", "")
-            match vysledek:
-                case "A":
-                    result_label = "passed"
-                case "R":
-                    result_label = "rejected"
-                case "Z":
-                    result_label = "void"
-                case _:
-                    result_label = vysledek
+            result_label = vote_outcome_label(row.get("vysledek", ""))
             votes_list.append(
                 {
                     "id_hlasovani": row.get("id_hlasovani"),
