@@ -39,7 +39,7 @@ def _make_blocking_find_steno(
     """Fake find_steno_for_bod: blocks on the first call until released."""
 
     def fake_find_steno(
-        period: int, schuze: int, bod: int, nazev: str, cache_dir: Path
+        period: int, schuze: int, bod: int, cache_dir: Path
     ) -> tuple[None, None, None]:
         calls.append((schuze, bod))
         if len(calls) == 1:

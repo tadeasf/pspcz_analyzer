@@ -74,15 +74,18 @@ def extract_text_from_pdf(pdf_path: Path) -> str:
     When PyMuPDF fails or returns empty text (common for HTML files saved
     as .pdf by psp.cz), falls back to BeautifulSoup HTML parsing.
     """
+    doc = None
     try:
         doc = pymupdf.open(pdf_path)
         pages = [str(page.get_text()) for page in doc]
-        doc.close()
         text = "\n\n".join(pages)
         if text.strip():
             return text
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("PyMuPDF could not extract from {} ({}), trying fallback", pdf_path.name, exc)
+    finally:
+        if doc is not None:
+            doc.close()
 
     # Fallback: check if file is actually HTML
     html_text = _extract_text_from_html(pdf_path)

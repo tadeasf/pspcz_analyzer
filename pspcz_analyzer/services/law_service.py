@@ -1,22 +1,26 @@
 """Service functions for the laws/bills (zákony) page."""
 
-from pspcz_analyzer.config import DEFAULT_CACHE_DIR, TISKY_PDF_DIR
+from pathlib import Path
+
+from pspcz_analyzer.config import TISKY_PDF_DIR
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
 
 
-def _tisk_pdf_exists(period: int, ct: int) -> bool:
+def _tisk_pdf_exists(cache_dir: Path, period: int, ct: int) -> bool:
     """Check whether a cached bill PDF exists for this tisk.
 
     Args:
+        cache_dir: Base cache directory (the configured one, so the
+            Docker bind-mount layout is respected).
         period: Electoral period number.
         ct: Tisk number.
 
     Returns:
         True if {cache}/tisky_pdf/{period}/{ct}.pdf is present.
     """
-    return (DEFAULT_CACHE_DIR / TISKY_PDF_DIR / str(period) / f"{ct}.pdf").exists()
+    return (cache_dir / TISKY_PDF_DIR / str(period) / f"{ct}.pdf").exists()
 
 
 def _bill_driver(bill: BillAmendmentData, coalition: frozenset[str]) -> str:
@@ -272,6 +276,7 @@ def _find_votes_for_ct(data: PeriodData, ct: int) -> list[dict]:
 def law_detail(
     data: PeriodData,
     ct: int,
+    cache_dir: Path,
     lang: str = "cs",
 ) -> dict | None:
     """Get full detail for a single bill by tisk number.
@@ -279,6 +284,7 @@ def law_detail(
     Args:
         data: Period data.
         ct: Tisk number (cislo tisku).
+        cache_dir: Base cache directory for PDF existence checks.
         lang: Language code for summaries/topics.
 
     Returns:
@@ -332,7 +338,7 @@ def law_detail(
         "submitter": submitter,
         "law_number": law_number,
         "history": history,
-        "has_pdf": _tisk_pdf_exists(tisk.period, ct),
+        "has_pdf": _tisk_pdf_exists(cache_dir, tisk.period, ct),
         "pdf_url": f"/api/tisk-pdf/{tisk.period}/{ct}",
         "amendment_entries": amendment_entries,
         "has_amendments": len(amendment_entries) > 0,

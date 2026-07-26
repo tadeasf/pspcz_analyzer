@@ -240,7 +240,7 @@ def _run_parse_stages(
                     len(candidates),
                 )
 
-            html, steno_url, failure = find_steno_for_bod(period, schuze, bod, nazev, cache_dir)
+            html, steno_url, failure = find_steno_for_bod(period, schuze, bod, cache_dir)
             if html is None:
                 if failure is not None:
                     failure_counts[failure] += 1

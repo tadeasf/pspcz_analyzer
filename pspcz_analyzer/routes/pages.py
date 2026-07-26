@@ -188,7 +188,7 @@ async def law_detail_page(request: Request, ct: int, period: int = DEFAULT_PERIO
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
     lang = getattr(request.state, "lang", "cs")
-    detail = get_law_detail(pd, ct, lang)
+    detail = get_law_detail(pd, ct, data_svc.cache_dir, lang)
     if detail is None:
         return templates.TemplateResponse(
             "laws.html",

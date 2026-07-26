@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+from dataclasses import dataclass
 from pathlib import Path
 
 import polars as pl
@@ -56,6 +57,24 @@ from pspcz_analyzer.services.tisk import (
 )
 
 _WATCH_INTERVAL_S = 30
+
+
+@dataclass(frozen=True)
+class SharedTables:
+    """Shared cross-period tables, narrowed to non-Optional after loading.
+
+    ``_ensure_shared_loaded`` returns these so callers hold locally-typed
+    references — pyright does not narrow instance attributes across method
+    calls, which otherwise forces redundant asserts at every call site.
+    """
+
+    schuze: pl.DataFrame
+    bod_schuze: pl.DataFrame
+    tisky: pl.DataFrame
+    persons: pl.DataFrame
+    mps: pl.DataFrame
+    organs: pl.DataFrame
+    memberships: pl.DataFrame
 
 
 def _collect_parquet_mtimes(cache_dir: Path) -> dict[str, float]:
@@ -267,8 +286,13 @@ class DataReader:
             self._tisky.height,
         )
 
-    def _ensure_shared_loaded(self) -> None:
-        """Assert that shared tables have been loaded (narrows Optional types)."""
+    def _ensure_shared_loaded(self) -> SharedTables:
+        """Assert that shared tables have been loaded and return them.
+
+        Returns:
+            The shared tables as a SharedTables bundle, so callers hold
+            non-Optional references without redundant local asserts.
+        """
         assert self._schuze is not None, "Call _load_shared_tables first"
         assert self._bod_schuze is not None
         assert self._tisky is not None
@@ -276,6 +300,15 @@ class DataReader:
         assert self._mps is not None
         assert self._organs is not None
         assert self._memberships is not None
+        return SharedTables(
+            schuze=self._schuze,
+            bod_schuze=self._bod_schuze,
+            tisky=self._tisky,
+            persons=self._persons,
+            mps=self._mps,
+            organs=self._organs,
+            memberships=self._memberships,
+        )
 
     def _load_period(self, period: int) -> None:
         """Load voting data for a specific period."""
@@ -325,25 +358,20 @@ class DataReader:
             logger.info("No void votes file for period {}", period)
             void_votes = pl.DataFrame({"id_hlasovani": pl.Series([], dtype=pl.Int64)})
 
-        self._ensure_shared_loaded()
-        assert self._mps is not None
-        assert self._persons is not None
-        assert self._organs is not None
-        assert self._memberships is not None
-        assert self._schuze is not None
-        assert self._bod_schuze is not None
-        assert self._tisky is not None
+        shared = self._ensure_shared_loaded()
 
-        mp_info = build_mp_info(period, self._mps, self._persons, self._organs, self._memberships)
+        mp_info = build_mp_info(
+            period, shared.mps, shared.persons, shared.organs, shared.memberships
+        )
 
         # Pre-load topic cache for tisk lookup builder
         self._cache_mgr.load_topic_cache(period)
         tisk_lookup = build_tisk_lookup(
             period,
             votes,
-            self._schuze,
-            self._bod_schuze,
-            self._tisky,
+            shared.schuze,
+            shared.bod_schuze,
+            shared.tisky,
             self.tisk_text,
             self._cache_mgr.topic_cache,
             self._cache_mgr.summary_cache,
