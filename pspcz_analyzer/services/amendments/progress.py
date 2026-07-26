@@ -33,6 +33,7 @@ class AmendmentStatus(StrEnum):
     IDLE = "idle"
     RUNNING = "running"
     COMPLETED = "completed"
+    CANCELLED = "cancelled"
     FAILED = "failed"
 
 

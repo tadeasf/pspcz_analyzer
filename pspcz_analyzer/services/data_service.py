@@ -311,9 +311,12 @@ class DataService(DataReader):
         async with self._refresh_lock:
             logger.info("[daily-refresh] Starting full data refresh ...")
 
-            # 1. Cancel tisk and amendment pipelines
-            await self.tisk_pipeline.cancel_all()
+            # 1. Cancel tisk and amendment pipelines (cooperative), then
+            #    wait for the worker threads to stop at their next checkpoint
+            self.tisk_pipeline.cancel_all()
             self.amendment_pipeline.cancel_all()
+            await self.tisk_pipeline.wait_stopped()
+            await self.amendment_pipeline.wait_stopped()
 
             # 2. Re-download and reload shared tables
             try:
