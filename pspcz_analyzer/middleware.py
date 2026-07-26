@@ -14,7 +14,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-_compute_pool = ThreadPoolExecutor(max_workers=2)
+from pspcz_analyzer.config import COMPUTE_POOL_WORKERS
+
+# max_workers=None (COMPUTE_POOL_WORKERS=0) lets Python size the pool as
+# min(32, cpu_count + 4). The previous hard-coded 2 made two slow/timed-out
+# computations starve every other analysis request.
+_compute_pool = ThreadPoolExecutor(max_workers=COMPUTE_POOL_WORKERS or None)
 
 
 def is_same_origin(request: Request) -> bool:
@@ -83,6 +88,11 @@ async def run_with_timeout(
 
     Propagates ContextVars (incl. locale) into the worker thread.
     Returns the result or raises HTTP 503 on timeout.
+
+    Note: a timed-out computation keeps running in its worker thread and its
+    result is discarded — futures cannot be cancelled mid-flight. The pool is
+    sized with headroom (COMPUTE_POOL_WORKERS) so such zombies don't starve
+    subsequent requests.
     """
     loop = asyncio.get_running_loop()
     ctx = contextvars.copy_context()

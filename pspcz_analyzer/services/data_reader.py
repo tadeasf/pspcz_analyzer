@@ -435,12 +435,17 @@ class DataReader:
         return max(stamps) if stamps else None
 
     async def _watch_loop(self) -> None:
-        """Poll parquet file mtimes and reload periods with changed data."""
+        """Poll parquet file mtimes and reload periods with changed data.
+
+        The filesystem scan and any period reloads run in worker threads so
+        a large reload (re-parsing several periods) never blocks the event
+        loop — HTTP requests keep being served during a refresh.
+        """
         while True:
             await asyncio.sleep(_WATCH_INTERVAL_S)
             try:
-                self._check_for_updates()
-                self._check_amendment_updates()
+                await asyncio.to_thread(self._check_for_updates)
+                await asyncio.to_thread(self._check_amendment_updates)
             except Exception:
                 logger.opt(exception=True).warning("[file-watcher] Error during check")
 

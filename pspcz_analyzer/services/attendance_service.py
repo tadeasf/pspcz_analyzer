@@ -39,10 +39,15 @@ def compute_attendance(
         pl.len().alias("total"),
     )
 
+    # Fully-excused MPs have a zero denominator — active / 0 = inf used to
+    # rank them as having PERFECT attendance. Leave the rate undefined (null)
+    # instead; sorting uses nulls_last so they never top either ranking.
+    denom = (pl.col("total") - pl.col("excused")).cast(pl.Float64)
     per_mp = per_mp.with_columns(
-        (pl.col("active") / (pl.col("total") - pl.col("excused")).cast(pl.Float64) * 100).alias(
-            "attendance_pct"
-        )
+        pl.when(denom > 0)
+        .then(pl.col("active") / denom * 100)
+        .otherwise(None)
+        .alias("attendance_pct")
     )
 
     # Join with MP info
@@ -65,7 +70,7 @@ def compute_attendance(
         "most_no": ("no_votes", True),
     }
     col, desc = sort_config.get(sort, ("attendance_pct", False))
-    result = result.sort(col, descending=desc).head(top)
+    result = result.sort(col, descending=desc, nulls_last=True).head(top)
 
     return result.select(
         "jmeno",
