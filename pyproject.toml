@@ -18,7 +18,7 @@ dependencies = [
     # Starlette 1.x drops the legacy TemplateResponse(name, {"request": ...})
     # signature that every route here uses, and FastAPI itself still requires
     # <1.0.0. Lift once the call sites are migrated to (request, name, context).
-    "starlette<1",
+    "starlette<2",
     "uvicorn>=0.34",
     "jinja2>=3.1",
     "python-multipart",
