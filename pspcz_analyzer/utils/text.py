@@ -1,6 +1,10 @@
 """Text normalization utilities for Czech diacritics."""
 
+import re
 import unicodedata
+
+_TISK_NUMBER_RE = re.compile(r"^(?:(?:tisk|st|ct)\s*\.?\s*)?(\d{1,5})$")
+_WORD_RE = re.compile(r"[a-z0-9]+")
 
 
 def strip_diacritics(text: str) -> str:
@@ -12,6 +16,48 @@ def strip_diacritics(text: str) -> str:
 def normalize_czech(text: str) -> str:
     """Lowercase and strip diacritics — suitable for search matching."""
     return strip_diacritics(text.lower())
+
+
+def tisk_number_query(query: str) -> int | None:
+    """Parse "246", "tisk 246" or "ST 246" as a tisk number.
+
+    Args:
+        query: Raw search text.
+
+    Returns:
+        The tisk number, or None when the query is not a tisk number.
+    """
+    m = _TISK_NUMBER_RE.match(normalize_czech(query.strip()))
+    return int(m.group(1)) if m else None
+
+
+def search_tokens(query: str) -> list[str]:
+    """Split a query into normalised word prefixes for inflection-tolerant matching.
+
+    Each word is cut to max(4, len - 2) characters, so "poplatky" matches
+    "poplatcích" and "česká" matches "české" (no full Czech morphology).
+
+    Args:
+        query: Raw search text.
+
+    Returns:
+        Word prefixes (normalised, no diacritics).
+    """
+    return [w[: max(4, len(w) - 2)] for w in _WORD_RE.findall(normalize_czech(query))]
+
+
+def matches_tokens(tokens: list[str], *texts: str | None) -> bool:
+    """True when every token is a prefix of some word in the given texts.
+
+    Args:
+        tokens: Output of search_tokens.
+        *texts: Texts to search (None is skipped).
+
+    Returns:
+        Whether all tokens match.
+    """
+    words = _WORD_RE.findall(normalize_czech(" ".join(t for t in texts if t)))
+    return all(any(w.startswith(tok) for w in words) for tok in tokens)
 
 
 # Legislative status keywords (Czech) for pass/fail classification.

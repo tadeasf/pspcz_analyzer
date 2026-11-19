@@ -10,7 +10,7 @@ from pspcz_analyzer.i18n import gettext as _
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.labels import mp_vote_label
 from pspcz_analyzer.services.vote_codes import category_count_exprs
-from pspcz_analyzer.utils.text import normalize_czech
+from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 # Keys into i18n translations, resolved at call time
 _OUTCOME_KEYS: dict[str, str] = {
@@ -85,6 +85,22 @@ def _match_vote_to_stage(
     return None
 
 
+def _search_mask(votes: pl.DataFrame, data: PeriodData, search: str) -> pl.Series:
+    """Vote rows matching a tisk number or inflection-tolerant words (#95)."""
+    number = tisk_number_query(search)
+    tokens = search_tokens(search)
+    mask: list[bool] = []
+    for schuze, bod, long_name, short_name in votes.select(
+        "schuze", "bod", "nazev_dlouhy", "nazev_kratky"
+    ).iter_rows():
+        tisk = data.get_tisk(schuze, bod) if bod and bod > 0 else None
+        if number is not None:
+            mask.append(tisk is not None and tisk.ct == number)
+        else:
+            mask.append(matches_tokens(tokens, long_name, short_name, tisk.nazev if tisk else None))
+    return pl.Series(mask, dtype=pl.Boolean)
+
+
 def _apply_vote_filters(
     votes: pl.DataFrame,
     data: PeriodData,
@@ -100,17 +116,7 @@ def _apply_vote_filters(
     )
 
     if search.strip():
-        q = normalize_czech(search.strip())
-        votes = votes.filter(
-            pl.col("nazev_dlouhy").map_elements(
-                lambda s: q in normalize_czech(s or ""),
-                return_dtype=pl.Boolean,
-            )
-            | pl.col("nazev_kratky").map_elements(
-                lambda s: q in normalize_czech(s or ""),
-                return_dtype=pl.Boolean,
-            )
-        )
+        votes = votes.filter(_search_mask(votes, data, search))
 
     if outcome_filter:
         votes = votes.filter(pl.col("vysledek") == outcome_filter)

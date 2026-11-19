@@ -7,7 +7,7 @@ from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
 from pspcz_analyzer.services.labels import vote_outcome_label
-from pspcz_analyzer.utils.text import normalize_czech
+from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 
 def _tisk_pdf_exists(cache_dir: Path, period: int, ct: int) -> bool:
@@ -188,10 +188,17 @@ def list_laws(
     """
     tisky = _deduplicate_tisky(data)
 
-    # Filter by search text (diacritics-insensitive, like the votes search)
-    if search:
-        q = normalize_czech(search.strip())
-        tisky = [t for t in tisky if q in normalize_czech(t.nazev)]
+    # Search: tisk number, or inflection/diacritics-tolerant words (#95)
+    if search.strip():
+        number = tisk_number_query(search)
+        tokens = search_tokens(search)
+        tisky = [
+            t
+            for t in tisky
+            if (
+                t.ct == number if number is not None else matches_tokens(tokens, t.nazev, *t.topics)
+            )
+        ]
 
     # Filter by status (exact match)
     if status_filter and status_filter != "all":

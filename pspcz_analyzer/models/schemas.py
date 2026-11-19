@@ -253,7 +253,7 @@ TISKY_COLUMNS: list[str] = [
     "datum_rozeslani",
     "cas_doruceni",
     "lhuta",
-    "id_stav",
+    "nazev_cely",  # full official title (was mislabelled "id_stav" and cast to int, so null)
     "nazev_cast",
     "popis",
     "dalsi_cast",
@@ -274,5 +274,4 @@ TISKY_DTYPES: PolarsSchemaDict = {
     "id_org": pl.Int32,
     "id_obdobi": pl.Int32,
     "id_navrhovatele": pl.Int64,
-    "id_stav": pl.Int32,
 }
