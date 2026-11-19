@@ -87,23 +87,29 @@ Unit tests must run on saved snapshots (HTML history pages, opendata files); the
 
 All of these need a **full re-scrape of history JSON** after [#87]. It is cheap: no LLM, about 300 pages for period 10.
 
-- [ ] **[#87] History parser keys stages on the mark only, not the section** (P0, M). Correct: `_MARK_MAP` at `history_scraper.py:28` ignores the section, and `_parse_stages` (`:190-201`) reads only `section-content`.
+- [x] **[#87] History parser keys stages on the mark only, not the section** (P0, M). Correct: `_MARK_MAP` at `history_scraper.py:28` ignores the section, and `_parse_stages` (`:190-201`) reads only `section-content`.
+  - Done `b2766d1`: stages typed by (section, mark), publication stage and number from `p.status`; snapshot tests 82, 167, 246.
   - Fix: pass the section heading into `_build_stage` and key on (section, mark). Parse `p.status` for "Zákon vyhlášen ... N/RRRR Sb.".
   - The `p.status` placement is the reporter's claim. It is consistent with the cache, but unverified until there is an HTML snapshot; save snapshots as fixtures.
-- [ ] **[#86] Wrong statuses and "106/1999 Sb." frozen in the cache** (P0, S, after #87/#88/#90). Correct (`config.py:106`, `metadata_scraper.py:70-76`).
+- [x] **[#86] Wrong statuses and "106/1999 Sb." frozen in the cache** (P0, S, after #87/#88/#90). Correct (`config.py:106`, `metadata_scraper.py:70-76`).
+  - Done `cd49500`: `parser_version` (missing = 0), outdated histories re-scraped even when terminal; a pipeline run is still needed to replace the cache.
   - The local cache (current parser) has no 106/1999, so production data comes from an older parser.
   - Fix: add `parser_version` to `TiskHistory` (`history_from_dict` defaults to 0) and re-scrape whenever it is below the current version, terminal or not.
-- [ ] **[#88] "vyhlášeno" set already when the law is sent for publication** (P1, S). Correct (`:253`).
+- [x] **[#88] "vyhlášeno" set already when the law is sent for publication** (P1, S). Correct (`:253`).
+  - Done `2579ec6`: "vyhlášeno" only from the publication sentence, Sbírka entry alone = "odesláno k vyhlášení"; snapshot 246.
   - Also, "Schválený" substring-matches "schválen" (`:50`, `:106`), so all 10 "vyhlášeno" items in the cache have outcome "schválen" and no law number.
   - Fix: set "vyhlášeno" only from the `p.status` sentence, and add a non-terminal "odesláno k vyhlášení" status.
-- [ ] **[#89] Stage date is the first date in the paragraph** (P1, S/M). Correct (`:119` and `:122` work independently). Reproduced on tisk 82.
+- [x] **[#89] Stage date is the first date in the paragraph** (P1, S/M). Correct (`:119` and `:122` work independently). Reproduced on tisk 82.
+  - Done `39253c2` (S fix): date from the outcome sentence or the nearest earlier dated one; 82 signature 16. 7. 2026. Per-event split (M) not done.
   - Fix: split into sentences and take the date from the sentence that matched the outcome (S). Full per-event splitting changes the stage model and timeline template (M).
-- [ ] **[#90] Missing statuses: Senate, President, rejected after return** (P1, M). Correct (`:246-271`). "podepsáno" is unreachable because the text says "podepsal".
+- [x] **[#90] Missing statuses: Senate, President, rejected after return** (P1, M). Correct (`:246-271`). "podepsáno" is unreachable because the text says "podepsal".
+  - Done `511fa2b`: status from the last decisive stage, new statuses and terminal set, opinion from the Vláda section (the whole-page read gave 82, a government bill, "souhlas"); "zamítnutí"/"stažen z pořadu" guarded by whole-word patterns, not seen in the snapshots.
   - Fix: status follows the last stage typed by section (needs #87). Extend `TERMINAL_TISK_STATUSES`, the status filter and the translations.
   - Unverified suspicions to check on real snapshots:
     - `"zamítnut"`/`"stažen"` also match "zamítnutí" and "stažen z pořadu".
     - `_extract_government_opinion` (`:234-243`) reads the whole page text, the same boilerplate risk as the old 106/1999 bug.
-- [ ] **[#98] Laws list contains interpellations/reports; "Předkladatel" holds the document type** (P1, S-M). Correct.
+- [x] **[#98] Laws list contains interpellations/reports; "Předkladatel" holds the document type** (P1, S-M). Correct.
+  - Data part done `ef56d0d`: `id_druh` in `TiskInfo` and law rows, submitter fixed. Default druh filter + toggle in the list is still open (UI).
   - Period-10 counts by `id_druh`: 1: 55, 2: 86, 3: 2, 4: 19, 5: 58, 6: 39.
   - Fix:
     - Carry `id_druh` into `TiskInfo` (`lookup_builder.py:109-120, 170`) and default the filter to druh 1/2/3 with a toggle.
