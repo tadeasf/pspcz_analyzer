@@ -1,5 +1,6 @@
 """Tests for the daily-refresh re-scrape gate in the tisk metadata scraper."""
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -8,8 +9,11 @@ import pytest
 from pspcz_analyzer.config import TISKY_HISTORIE_DIR, TISKY_META_DIR
 from pspcz_analyzer.services.tisk import metadata_scraper
 from pspcz_analyzer.services.tisk.io.history_scraper import (
+    HISTORY_PARSER_VERSION,
     TiskHistory,
     TiskHistoryStage,
+    history_from_dict,
+    load_history_json,
     save_history_json,
 )
 
@@ -76,3 +80,23 @@ def test_no_force_serves_from_cache(cache_dir: Path, monkeypatch: pytest.MonkeyP
     assert calls == []
     assert result[1].current_status == "projednáváno"
     assert result[2].current_status == "vyhlášeno"
+
+
+def test_old_parser_version_rescrapes_even_terminal(
+    cache_dir: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # A history written before versioning (no parser_version key) is stale,
+    # even with a terminal status and without force_active.
+    path = _hist_path(cache_dir, 2)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    del data["parser_version"]
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    assert history_from_dict(data).parser_version == 0
+
+    calls = _patch_scraper(monkeypatch)
+    result = metadata_scraper.scrape_histories_sync(PERIOD, [1, 2], cache_dir, force_active=False)
+    assert calls == [2]
+    assert result[2].current_status == "schváleno sněmovnou"
+    reloaded = load_history_json(path)
+    assert reloaded is not None
+    assert reloaded.parser_version == HISTORY_PARSER_VERSION

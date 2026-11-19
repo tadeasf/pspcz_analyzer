@@ -29,6 +29,11 @@ from pspcz_analyzer.services.tisk.io.history_stages import (
     _parse_stages,
 )
 
+# Bump whenever parsing changes what is stored. Cached histories with a lower
+# version (0 = written before versioning) are re-scraped, terminal or not, so
+# stale statuses and law numbers never stay frozen in the cache.
+HISTORY_PARSER_VERSION = 1
+
 
 @dataclass
 class TiskHistory:
@@ -46,6 +51,7 @@ class TiskHistory:
     law_changes: list[dict] = field(default_factory=list)
     amendment_tisk_ct1: int | None = None
     amendment_tisk_idd: int | None = None
+    parser_version: int = HISTORY_PARSER_VERSION
 
 
 def _extract_submitter(soup: BeautifulSoup) -> tuple[str, str | None]:
@@ -248,6 +254,7 @@ def history_from_dict(d: dict) -> TiskHistory:
         law_changes=d.get("law_changes", []),
         amendment_tisk_ct1=d.get("amendment_tisk_ct1"),
         amendment_tisk_idd=d.get("amendment_tisk_idd"),
+        parser_version=d.get("parser_version", 0),
     )
 
 

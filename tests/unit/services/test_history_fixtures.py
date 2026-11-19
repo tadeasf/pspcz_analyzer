@@ -66,6 +66,11 @@ class TestSectionTyping:
         for ct in (231, 201):
             assert _parse(10, ct).law_number is None
 
+    def test_page_boilerplate_gives_no_terminal_status(self):
+        # #86: 231 and 201 were cached as "staženo"/"vyhlášeno" + 106/1999 Sb.
+        for ct in (231, 201):
+            assert _parse(10, ct).current_status == "projednáváno"
+
 
 class TestSentForPublication:
     """#88: "vyhlášeno" only once the page states the law was published."""

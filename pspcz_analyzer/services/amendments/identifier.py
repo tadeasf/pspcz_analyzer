@@ -20,6 +20,7 @@ from pspcz_analyzer.config import (
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.tisk.cache_manager import TiskCacheManager
+from pspcz_analyzer.services.tisk.io import HISTORY_PARSER_VERSION
 from pspcz_analyzer.services.tisk.metadata_scraper import scrape_histories_sync
 
 
@@ -67,12 +68,14 @@ def _ensure_tisk_histories(
     cache_mgr.invalidate(period)
     history_map = cache_mgr.load_history_cache(period)
 
-    # Re-scrape histories that are stale (missing amendment sub-tisk data) or,
+    # Re-scrape histories that are stale (missing amendment sub-tisk data or
+    # parsed by an older parser) or,
     # during a daily refresh, still active (so new third readings are detected).
     stale_cts = [
         ct
         for ct, h in history_map.items()
         if (h.amendment_tisk_ct1 is None and h.stages)
+        or h.parser_version < HISTORY_PARSER_VERSION
         or (refresh_active and h.current_status not in TERMINAL_TISK_STATUSES)
     ]
     if stale_cts:
