@@ -176,6 +176,12 @@ TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "0") == "1"
 LLM_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 LLM_HEALTH_TIMEOUT = 5.0  # connectivity check
 LLM_EMPTY_RETRIES = int(os.environ.get("LLM_EMPTY_RETRIES", "2"))
+# Qwen3-style thinking switch sent as chat_template_kwargs (vLLM): "0" off, "1" on,
+# unset = not sent (plain OpenAI rejects the field). Qwen3 thinking can run away on long prompts.
+LLM_ENABLE_THINKING = os.environ.get("LLM_ENABLE_THINKING", "")
+# Reply cap per request; without it the hlidacstatu proxy reserves 131072 reply tokens,
+# which halves the usable prompt of a 262k-context model.
+LLM_MAX_OUTPUT_TOKENS = int(os.environ.get("LLM_MAX_OUTPUT_TOKENS", "8192"))
 LLM_MAX_TEXT_CHARS = int(
     os.environ.get("LLM_MAX_TEXT_CHARS", "240000")
 )  # ~80k tokens @ 3 chars/tok (Czech text)

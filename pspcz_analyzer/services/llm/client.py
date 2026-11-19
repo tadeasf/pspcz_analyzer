@@ -12,7 +12,9 @@ from loguru import logger
 
 from pspcz_analyzer.config import (
     LLM_EMPTY_RETRIES,
+    LLM_ENABLE_THINKING,
     LLM_HEALTH_TIMEOUT,
+    LLM_MAX_OUTPUT_TOKENS,
     LLM_MAX_COMPARISON_CHARS,
     LLM_TIMEOUT,
 )
@@ -326,9 +328,12 @@ class LLMClient:
                 {"role": "user", "content": prompt},
             ],
             "stream": False,
+            "max_tokens": LLM_MAX_OUTPUT_TOKENS,
         }
         if response_format is not None:
             payload["response_format"] = response_format
+        if LLM_ENABLE_THINKING:
+            payload["chat_template_kwargs"] = {"enable_thinking": LLM_ENABLE_THINKING == "1"}
         try:
             resp = httpx.post(
                 f"{self.base_url}/chat/completions",
