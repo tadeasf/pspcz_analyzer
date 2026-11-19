@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#117] Attendance per the mockup: new definition (logged in / all votes in the mandate, excused shown separately), mandate column, small-sample flag under 50 votes, table and two SVG charts. Links from each number to its vote list are not done yet | `e39ea3e` | Screenshot of the chart view, period 10; 630 tests |
 | 2026-11-19 | [#115] (Ne)loajalita per the mockup (explanation, chart, sortable list, /loyalty/all); [#116] similarity as a tab with an SVG map in club colours and top-5 pair tables; `/similarity` redirects; [#107] club colours in config. "Jen o celých zákonech" toggle waits for #102 | `862dcd1` | Screenshots of both tabs, period 10; 631 tests |
 | 2026-11-19 | [#106] (part) Czech number, percent and date filters and the agreed terms (Prošlo/Neprošlo, Pro/Proti, Nepřihlášen, Nepřijat, Shrnutí AI). Left: glossary tooltips from one source (with #118), "Spolehlivost parseru" texts move to the admin with #100/#112, status labels with the history-parser branch | `a385912` | Filter unit tests; 630 tests |
 | 2026-11-19 | [#104] Similarity pairs show real agreement (% and "stejně v X z Y", min. 100 shared votes) and a government × opposition table (sides on the vote date) | `3012847` | Unit test 100 of 100 = 100 %; periods 9 and 10 compute in ~1 s |
