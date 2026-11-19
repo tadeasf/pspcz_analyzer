@@ -6,8 +6,15 @@ from pspcz_analyzer.config import TISKY_PDF_DIR
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
-from pspcz_analyzer.services.labels import vote_outcome_label
-from pspcz_analyzer.services.law_filters import TABS, last_step, phase_of, submitter_kind, tab_of
+from pspcz_analyzer.services.law_filters import (
+    TABS,
+    decisive_vote,
+    find_votes_for_ct,
+    last_step,
+    phase_of,
+    submitter_kind,
+    tab_of,
+)
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 # Bill status (as stored, Czech) -> translation key. Templates render
@@ -229,7 +236,9 @@ def list_laws(
             t
             for t in tisky
             if (
-                t.ct == number if number is not None else matches_tokens(tokens, t.nazev, *t.topics)
+                t.ct == number
+                if number is not None
+                else matches_tokens(tokens, t.nazev, t.nazev_cely, *t.topics)
             )
         ]
 
@@ -284,46 +293,6 @@ def list_laws(
     }
 
 
-def _find_votes_for_ct(data: PeriodData, ct: int) -> list[dict]:
-    """Find all votes linked to a given tisk ct number.
-
-    Args:
-        data: Period data with tisk_lookup and votes DataFrame.
-        ct: Tisk number.
-
-    Returns:
-        List of vote dicts with id, session, number, date, description, result.
-    """
-    # Collect (schuze, bod) pairs for this ct
-    schuze_bod_pairs: set[tuple[int, int]] = set()
-    for (schuze, bod), tisk in data.tisk_lookup.items():
-        if tisk.ct == ct:
-            schuze_bod_pairs.add((schuze, bod))
-
-    if not schuze_bod_pairs:
-        return []
-
-    votes_list: list[dict] = []
-    for _, row in enumerate(data.votes.iter_rows(named=True)):
-        key = (row.get("schuze"), row.get("bod"))
-        if key in schuze_bod_pairs:
-            result_label = vote_outcome_label(row.get("vysledek", ""))
-            votes_list.append(
-                {
-                    "id_hlasovani": row.get("id_hlasovani"),
-                    "schuze": row.get("schuze"),
-                    "cislo": row.get("cislo"),
-                    "datum": row.get("datum"),
-                    "nazev_dlouhy": row.get("nazev_dlouhy", ""),
-                    "result": result_label,
-                }
-            )
-
-    # Sort by id_hlasovani descending
-    votes_list.sort(key=lambda v: v.get("id_hlasovani", 0) or 0, reverse=True)
-    return votes_list
-
-
 def law_detail(
     data: PeriodData,
     ct: int,
@@ -376,7 +345,7 @@ def law_detail(
             )
 
     # Find related votes
-    related_votes = _find_votes_for_ct(data, ct)
+    related_votes = find_votes_for_ct(data, ct)
 
     return {
         "ct": tisk.ct,
@@ -395,4 +364,9 @@ def law_detail(
         "amendment_entries": amendment_entries,
         "has_amendments": len(amendment_entries) > 0,
         "related_votes": related_votes,
+        "decisive_vote": decisive_vote(history, related_votes),
+        "nazev_cely": tisk.nazev_cely,
+        "kind": submitter_kind(tisk),
+        "tab": tab_of(tisk),
+        "last_step": last_step(tisk),
     }

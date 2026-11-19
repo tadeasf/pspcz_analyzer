@@ -277,7 +277,7 @@ class DataService(DataReader):
             "schuze",
             "schuze_stav",
             "bod_schuze",
-            "tisky",
+            "tisky_v2",
         ):
             invalidate_parquet(table, self.cache_dir)
 

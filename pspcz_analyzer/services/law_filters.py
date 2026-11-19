@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import re
 
-from pspcz_analyzer.models.tisk_models import TiskInfo
+from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
+from pspcz_analyzer.services.labels import vote_outcome_label
 
 _CZ_DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
 
@@ -111,3 +112,58 @@ def last_step(tisk: TiskInfo) -> dict | None:
             text = stage.outcome or stage.label
             best = {"sort": parsed, "date": stage.date or "", "text": text}
     return best
+
+
+def find_votes_for_ct(data: PeriodData, ct: int) -> list[dict]:
+    """Find all votes linked to a given tisk ct number.
+
+    Args:
+        data: Period data with tisk_lookup and votes DataFrame.
+        ct: Tisk number.
+
+    Returns:
+        List of vote dicts with id, session, number, date, description, result.
+    """
+    # Collect (schuze, bod) pairs for this ct
+    schuze_bod_pairs: set[tuple[int, int]] = set()
+    for (schuze, bod), tisk in data.tisk_lookup.items():
+        if tisk.ct == ct:
+            schuze_bod_pairs.add((schuze, bod))
+
+    if not schuze_bod_pairs:
+        return []
+
+    votes_list: list[dict] = []
+    for _, row in enumerate(data.votes.iter_rows(named=True)):
+        key = (row.get("schuze"), row.get("bod"))
+        if key in schuze_bod_pairs:
+            result_label = vote_outcome_label(row.get("vysledek", ""))
+            votes_list.append(
+                {
+                    "id_hlasovani": row.get("id_hlasovani"),
+                    "schuze": row.get("schuze"),
+                    "cislo": row.get("cislo"),
+                    "datum": row.get("datum"),
+                    "nazev_dlouhy": row.get("nazev_dlouhy", ""),
+                    "result": result_label,
+                    "vysledek": row.get("vysledek", ""),
+                    "pro": row.get("pro"),
+                    "kvorum": row.get("kvorum"),
+                    "prihlaseno": row.get("prihlaseno"),
+                }
+            )
+
+    # Sort by id_hlasovani descending
+    votes_list.sort(key=lambda v: v.get("id_hlasovani", 0) or 0, reverse=True)
+    return votes_list
+
+
+def decisive_vote(history: object, votes: list[dict]) -> dict | None:
+    """The 3rd-reading vote on the bill as a whole, matched by sitting and vote number."""
+    stages = getattr(history, "stages", None) or []
+    keys = {
+        (s.session_number, s.vote_number)
+        for s in stages
+        if s.stage_type == "3_cteni" and s.vote_number
+    }
+    return next((v for v in votes if (v["schuze"], v["cislo"]) in keys), None)

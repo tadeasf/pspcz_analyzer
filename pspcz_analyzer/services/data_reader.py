@@ -278,7 +278,7 @@ class DataReader:
         )
 
         self._tisky = get_or_parse(
-            "tisky",
+            "tisky_v2",  # v2: column 15 is the full title, no longer cast to int (#95)
             tisky_dir,
             lambda: parse_unl(
                 self._find_file(tisky_dir, "tisky.unl"),
@@ -598,7 +598,7 @@ class DataReader:
                 "zarazeni",
                 "schuze",
                 "bod_schuze",
-                "tisky",
+                "tisky_v2",
             )
             base = fname.removesuffix(".parquet")
             if base in shared_names:

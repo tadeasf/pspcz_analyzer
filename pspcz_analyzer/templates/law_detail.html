@@ -1,154 +1,108 @@
 {% extends "base.html" %}
 {% from "macros.html" import driver_badge %}
-{% block title %}{{ _("laws.detail_title").format(ct=detail.ct) }} · {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ detail.nazev }} · {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("laws.detail_title").format(ct=detail.ct) }}</h1>
-    <p>{{ detail.nazev }}</p>
-</div>
+{% set sections = [
+    ("ld.sec_chamber", ["ps", "organizacni", "1_cteni", "vybor", "2_cteni", "garant", "3_cteni", "vlada"]),
+    ("ld.sec_senate", ["senat_postoupeno", "senat_organizacni", "senat_vybor", "senat"]),
+    ("ld.sec_president", ["prezident", "sbirka", "vyhlaseni"]),
+] %}
+{% set stages = detail.history.stages if detail.history else [] %}
 
-<article>
-    <div class="stat-grid">
-        <article class="stat-card stat-card-blue">
-            <h3>{{ detail.amendment_entries | length }}</h3>
-            <p>{{ _("laws.amendments_section") }}</p>
-        </article>
-        <article class="stat-card {% if detail.status and ('přijat' in detail.status.lower() or 'podepsal' in detail.status.lower()) %}stat-card-green{% elif 'zamítnut' in detail.status.lower() %}stat-card-red{% else %}stat-card-gray{% endif %}">
-            <h3>{{ detail.status }}</h3>
-            <p>{{ _("laws.current_status") }}</p>
-        </article>
-        <article class="stat-card stat-card-gray">
-            <h3>{{ detail.related_votes | length }}</h3>
-            <p>{{ _("laws.related_votes") }}</p>
-        </article>
+<div class="crumb"><a href="/laws?period={{ period }}">{{ _("nav.laws") }}</a> › {{ _("lw.in_period").format(p=period) }} › {{ _("ld.tisk_n").format(ct=detail.ct) }}</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px" class="ld-grid">
+<div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+    <div style="display:flex;flex-direction:column;gap:8px">
+        <div><span class="chip c-st">{% if detail.tab == "navrhy" %}{{ _("lw.kind_" ~ (detail.kind or "unknown")) }}{% else %}{{ _("lw.kind_tab_" ~ detail.tab) }}{% endif %}</span>
+            <span class="lbl">{{ _("ld.tisk_n").format(ct=detail.ct) }}{% if detail.history and detail.history.submitter_date %} · {{ _("ld.submitted").format(d=detail.history.submitter_date|cz_date) }}{% endif %}</span></div>
+        <h1 class="phead-h">{{ detail.nazev }}</h1>
+        {% if detail.nazev_cely %}<p class="lbl">{{ _("ld.official_title") }}: {{ detail.nazev_cely }}</p>{% endif %}
     </div>
 
-    {% if detail.topics %}
-    <p>
-        <strong>{{ _("detail.topics") }}</strong>
-        {% for t in detail.topics %}
-        <a href="/laws?period={{ period }}&topic={{ t | urlencode }}" class="topic-badge topic-badge-link" title="{{ _('laws.filter_by_topic') }}">{{ t }}</a>
+    <section class="box" style="background:#F1F6FC">
+        <h2 class="h2s">{{ _("ld.what_changes") }}</h2>
+        {% if detail.summary %}
+        {{ detail.summary|markdown }}
+        <div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("lw.ai_from").format(ct=detail.ct) }}</span></div>
+        {% else %}<p>{{ _("lw.no_summary") }}</p>{% endif %}
+    </section>
+
+    <section>
+        <h2 class="h2s">{{ _("ld.where") }}</h2>
+        {% if detail.status_key %}<p><span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(detail.status|status_category, 'c-wait') }}">{{ _(detail.status_key) }}</span>
+            {% if detail.last_step %}{{ detail.last_step.date|cz_date }} · {{ detail.last_step.text }}{% endif %}</p>{% endif %}
+        {% if stages %}
+        {% for key, types in sections %}
+        {% set items = stages|selectattr("stage_type", "in", types)|list %}
+        <h3 style="font-size:16px;margin:14px 0 6px">{{ _(key) }}</h3>
+        {% if items %}
+        <ol class="ld-timeline">
+            {% for s in items %}
+            <li><span class="lbl">{{ s.date|cz_date if s.date else "" }}</span>
+                <b>{{ s.label }}</b>{% if s.outcome %}: {{ s.outcome }}{% endif %}
+                {% if s.vote_number and s.session_number %}
+                {% set v = detail.related_votes|selectattr("schuze", "equalto", s.session_number)|selectattr("cislo", "equalto", s.vote_number)|first %}
+                {% if v %} · <a href="/votes/{{ v.id_hlasovani }}?period={{ period }}">{{ _("ld.how_voted") }}</a>{% endif %}
+                {% endif %}</li>
+            {% endfor %}
+        </ol>
+        {% elif key == "ld.sec_senate" and detail.status in ("u prezidenta", "podepsáno", "odesláno k vyhlášení", "vyhlášeno") %}
+        <p class="lbl">{{ _("ld.senate_silent") }}</p>
+        {% else %}<p class="lbl" style="border-left:2px dashed #AEBBCB;padding-left:8px">{{ _("ld.not_yet") }}</p>{% endif %}
         {% endfor %}
-    </p>
+        {% else %}<p>{{ _("ld.no_history") }}</p>{% endif %}
+    </section>
+
+    <section>
+        <h2 class="h2s">{{ _("ld.votes") }}</h2>
+        {% set dv = detail.decisive_vote %}
+        {% if dv %}
+        <div class="vrow" style="background:#F5F8FC;border:1px solid #D0DCE8">
+            <span class="lbl">{{ dv.datum|cz_date(short=True) }}</span>
+            <span><span class="chip c-st">{{ _("vl.kind_final") }}</span> <a href="/votes/{{ dv.id_hlasovani }}?period={{ period }}"><b>{{ _("vl.q_final") }}</b></a></span>
+            <div>{% if dv.prihlaseno %}<div class="meter"><span class="f" style="width:{{ '%.1f'|format(dv.pro * 100 / dv.prihlaseno) }}%"></span><span class="t" style="left:{{ '%.1f'|format([dv.kvorum * 100 / dv.prihlaseno, 100]|min) }}%"></span></div>{% endif %}
+                <span class="lbl">{{ _("vl.meter_text").format(pro=dv.pro, kvorum=dv.kvorum) }}</span></div>
+            <span class="chip {{ 'c-ok' if dv.vysledek == 'A' else 'c-no' }}" style="justify-self:end">{{ _("vd.passed") if dv.vysledek == "A" else _("vd.failed") }}</span>
+        </div>
+        {% endif %}
+        {% if detail.related_votes %}
+        <details><summary style="cursor:pointer">{{ _("ld.all_votes").format(n=detail.related_votes|length) }}</summary>
+            <ul style="margin:8px 0 0 1em;padding:0">{% for v in detail.related_votes %}
+                <li><a href="/votes/{{ v.id_hlasovani }}?period={{ period }}">{{ v.datum|cz_date }} · {{ _("vd.session_n").format(n=v.schuze) }} · {{ _("vd.number_n").format(n=v.cislo) }}</a> · {{ _("vd.passed") if v.vysledek == "A" else _("vd.failed") }}</li>{% endfor %}</ul>
+        </details>
+        {% else %}<p>{{ _("ld.no_votes") }}</p>{% endif %}
+    </section>
+
+    {% if detail.has_amendments %}
+    <section>
+        <h2 class="h2s">{{ _("ld.amendments") }}</h2>
+        {% for entry in detail.amendment_entries %}
+        <p>{{ _("lw.amendments_n").format(n=entry.amendment_count) }} {% if entry.driver != "unknown" %}· {{ _("driver.label") }}: {{ driver_badge(entry.driver) }}{% endif %}
+            · <a href="/amendments/{{ entry.schuze }}/{{ entry.bod }}?period={{ period }}">{{ _("ld.all_amendments") }}</a></p>
+        {% endfor %}
+    </section>
     {% endif %}
 
-    <p>
-        <a href="{{ detail.url }}" target="_blank" class="btn-outline btn-small">{{ _("laws.view_on_psp") }} &nearr;</a>
-    </p>
-</article>
-
-{% if detail.summary %}
-<div class="info-box">
-    <div class="info-box-header">
-        {{ _("detail.ai_bill_summary") }}
-        <small>{{ _("detail.ai_bill_summary_note") }}</small>
-    </div>
-    {{ detail.summary | markdown }}
-</div>
-{% endif %}
-
-{% if detail.has_pdf %}
-<div class="pdf-box">
-    <div class="pdf-box-header">
-        {{ _("laws.bill_pdf") }}
-        <a href="{{ detail.pdf_url }}" target="_blank" rel="noopener" class="btn-outline btn-small">{{ _("laws.open_pdf") }} &nearr;</a>
-    </div>
-    <iframe class="pdf-viewer" src="{{ detail.pdf_url }}" loading="lazy" title="{{ _('laws.bill_pdf') }}"></iframe>
-</div>
-{% endif %}
-
-{% if detail.history and detail.history.stages %}
-<div class="legis-box">
-    <div class="legis-box-header">
-        {{ _("detail.legislative_process") }}
-        {% if detail.submitter %}
-        <small>{{ _("laws.submitted_by") }} {{ detail.submitter }}</small>
+    <section>
+        <h2 class="h2s">{{ _("ld.documents") }}</h2>
+        <p><a href="{{ detail.url }}" rel="noopener">{{ _("ld.tisk_on_psp").format(ct=detail.ct) }} ↗</a></p>
+        {% if detail.has_pdf %}
+        <h3 style="font-size:16px;margin:10px 0 6px">{{ _("ld.pdf_title") }} <a href="{{ detail.pdf_url }}" target="_blank" rel="noopener" style="font-size:14px;font-weight:400">{{ _("ld.open_pdf") }} ↗</a></h3>
+        <iframe class="pdf-viewer" src="{{ detail.pdf_url }}" loading="lazy" title="{{ _('ld.pdf_title') }}" style="width:100%;height:560px;border:1px solid #D0DCE8"></iframe>
+        <p class="lbl">{{ _("ld.pdf_note") }}</p>
         {% endif %}
-        {% if detail.status %}
-        <span class="status-badge">{{ detail.status }}</span>
-        {% endif %}
-        {% if detail.law_number %}
-        <small class="law-number">{{ detail.law_number }}</small>
-        {% endif %}
-    </div>
-    <div class="legislative-timeline">
-        {% for stage in detail.history.stages %}
-        <div class="timeline-stage">
-            <div class="timeline-dot"></div>
-            <span class="timeline-label">{{ stage.label }}</span>
-            {% if stage.date %}
-            <span class="timeline-date">{{ stage.date }}</span>
-            {% endif %}
-            {% if stage.outcome %}
-            <div class="timeline-outcome {% set cat = stage.outcome|status_category %}{% if cat == 'pass' %}timeline-approved{% elif cat == 'fail' %}timeline-rejected{% endif %}">
-                {{ stage.outcome }}
-                {% if stage.vote_number %}
-                <small>({{ _("timeline.vote_number").format(number=stage.vote_number) }})</small>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
+    </section>
 </div>
-{% endif %}
 
-{% if detail.has_amendments %}
-<h2>{{ _("laws.amendments_section") }}</h2>
-{% for entry in detail.amendment_entries %}
-<article>
-    <p>
-        <strong>{{ _("laws.amendment_count").format(count=entry.amendment_count) }}</strong>
-        {{ driver_badge(entry.driver) }}
-        {% if entry.final_result == "accepted" %}
-        — <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
-        {% elif entry.final_result == "rejected" %}
-        — <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
-        {% endif %}
-    </p>
-    <a href="/amendments/{{ entry.schuze }}/{{ entry.bod }}?period={{ period }}" class="btn-outline btn-small">{{ _("laws.view_amendment_detail") }}</a>
-</article>
-{% endfor %}
-{% endif %}
-
-{% if detail.related_votes %}
-<h2>{{ _("laws.related_votes") }}</h2>
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("th.date") }}</th>
-                <th>{{ _("th.description") }}</th>
-                <th>{{ _("th.result") }}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for v in detail.related_votes %}
-            <tr>
-                <td><small>{{ v.datum }}</small></td>
-                <td><small>{{ v.nazev_dlouhy[:80] }}{% if v.nazev_dlouhy|length > 80 %}...{% endif %}</small></td>
-                <td>
-                    {% if v.result == "passed" %}
-                    <span class="vote-yes">{{ _("outcome.passed") }}</span>
-                    {% elif v.result == "rejected" %}
-                    <span class="vote-no">{{ _("outcome.rejected") }}</span>
-                    {% elif v.result == "void" %}
-                    <span class="vote-passive">{{ _("outcome.void") }}</span>
-                    {% else %}
-                    {{ v.result }}
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="/votes/{{ v.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<aside class="box" style="align-self:start;display:flex;flex-direction:column;gap:10px;font-size:14px">
+    <div><b>{{ _("ld.submitter") }}</b><br>{{ detail.submitter or _("unknown_yet") }}</div>
+    <div><b>{{ _("ld.law_number") }}</b><br>{{ detail.law_number or _("ld.no_law_number") }}</div>
+    <a href="#" onclick="event.preventDefault();navigator.clipboard.writeText(location.href)">{{ _("vd.copy_link") }}</a>
+    <a href="{{ detail.url }}" rel="noopener">{{ _("ld.history_psp") }} ↗</a>
+    <a href="/nahlasit-chybu?period={{ period }}">{{ _("ld.report") }}</a>
+    {% if histories_loaded %}<span class="lbl">{{ _("ld.as_of").format(d=histories_loaded) }}</span>{% endif %}
+</aside>
 </div>
-{% endif %}
-
-<p><a href="/laws?period={{ period }}">&larr; {{ _("laws.back_to_list") }}</a></p>
 {% endblock %}
