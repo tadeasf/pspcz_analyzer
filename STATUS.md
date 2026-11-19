@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#108] Homepage per the mockup: intro with illustration and search, tiles, under-debate / recently-passed / newest blocks from real data. "Teď se o tom mluví" hidden until the steno speech counts exist; last steps are the raw history outcome, not yet full sentences | `5e16538` | Screenshot, period 10; 668 tests |
 | 2026-11-19 | [#110] Laws list with document-type tabs and counts, phase and submitter filters, sorting by latest move, cards; [#111] law detail with the Chamber / Senate / President timeline, decisive vote meter, documents and side panel; official title from tisky.unl (parquet key `tisky_v2`) | `c3dabcb`, `6735e96` | Screenshots of the list and tisk 246 with locally scraped period-10 histories (186 tisky) |
 | 2026-11-19 | History-parser branch merged (#86-#90, #98, done by a sub-agent with psp.cz snapshots as fixtures) | `15f5047` | 666 tests at merge |
 | 2026-11-19 | [#98] `id_druh` carried into `TiskInfo` and law rows; submitter only from the Předkladatel section ("... vládou předložen" = Vláda, document type = empty, no whole-page fallback). Laws list filter/UI not changed | `ef56d0d` | Snapshot tests: 324 = Vláda, 314 and 142 empty, no fixture submitter is a druh name; lookup test for `id_druh` |
