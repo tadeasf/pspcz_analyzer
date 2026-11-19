@@ -41,7 +41,7 @@ async def loyalty_api(
     )
     return templates.TemplateResponse(
         "partials/loyalty_table.html",
-        {"request": request, "tables": rows, "lang": getattr(request.state, "lang", "cs")},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 
@@ -67,7 +67,7 @@ async def attendance_api(
     )
     return templates.TemplateResponse(
         "partials/attendance_table.html",
-        {"request": request, "tables": rows, "lang": getattr(request.state, "lang", "cs")},
+        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
     )
 
 

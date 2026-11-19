@@ -21,11 +21,13 @@ class TestHTMXPartials:
         resp = client.get("/api/loyalty?period=1")
         assert resp.status_code == 200
         assert "text/html" in resp.headers["content-type"]
+        assert "Nová" in resp.text  # rows reach the template
 
     def test_attendance_api(self, client):
         resp = client.get("/api/attendance?period=1")
         assert resp.status_code == 200
         assert "text/html" in resp.headers["content-type"]
+        assert "Nová" in resp.text  # rows reach the template
 
     def test_similarity_api(self, client):
         resp = client.get("/api/similarity?period=1")
