@@ -48,20 +48,27 @@ _PUBLISHED_RE = re.compile(
     re.DOTALL,
 )
 
-# (regex, outcome label), matched as whole words so "schválen" does not match
-# "Schválený zákon odeslán k publikaci".
+# (regex, outcome label) in priority order: the first pattern found in any
+# sentence of an entry is its outcome. Matched as whole words, so "schválen" does
+# not match "Schválený zákon odeslán k publikaci" and "zamítnut" not "zamítnutí".
 _OUTCOME_PATTERNS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"\bschválen\b"), "schválen"),
-    (re.compile(r"\bzamítnut\b"), "zamítnut"),
-    (re.compile(r"\bpřikázán\b"), "přikázán výborům"),
-    (re.compile(r"\bdoporučuje schválit\b"), "doporučuje schválit"),
-    (re.compile(r"\bnedoporučuje\b"), "nedoporučuje schválit"),
-    (re.compile(r"\bpodepsal\b"), "podepsal"),
-    (re.compile(r"\bvrátil\b"), "vrátil"),
-    (re.compile(r"\bpřerušuje\b"), "přerušeno"),
-    (re.compile(r"\bstažen\b"), "stažen"),
     (re.compile(r"\bvzat zpět\b"), "vzat zpět"),
+    (re.compile(r"\bzákon nepřijala\b"), "nepřijat"),
+    (re.compile(r"\bzamítnut\b"), "zamítnut"),
+    (re.compile(r"\bnávrh zamítl\b"), "zamítl"),
+    (re.compile(r"\bvrátil\b"), "vrátil"),
+    (re.compile(r"\bsetrvala\b"), "setrvala na původním návrhu"),
+    (re.compile(r"\bpodepsal\b"), "podepsal"),
+    (re.compile(r"\bschválen\b|\bzákona (?:byl )?přijat\b|\bzákon přijala\b"), "schválen"),
+    (re.compile(r"\bnávrh schválil\b"), "schválil"),
+    (re.compile(r"\bpostoupila\b"), "postoupeno Senátu"),
     (re.compile(r"\bodeslán k publikaci\b"), "odesláno k publikaci"),
+    (re.compile(r"\bdoručen prezidentovi\b"), "doručeno prezidentovi"),
+    (re.compile(r"\bpřikázán[a]?\b"), "přikázán výborům"),
+    (re.compile(r"\bnedoporučuje\b"), "nedoporučuje schválit"),
+    (re.compile(r"\bdoporučuje schválit\b"), "doporučuje schválit"),
+    (re.compile(r"\bpřerušuje\b"), "přerušeno"),
+    (re.compile(r"\bneprojednal\b"), "neprojednal"),
 ]
 
 
@@ -91,6 +98,26 @@ def _extract_first_date(text: str) -> str | None:
     return None
 
 
+def _sentence_date(sentences: list[str], index: int) -> str | None:
+    """Date of sentence *index*, else of the nearest earlier sentence with one.
+
+    "O návrhu zákona vráceném Senátem hlasováno 9. 9. 2026 na 30. schůzi.
+    Sněmovna setrvala ..." states the vote date one sentence before the result.
+
+    Args:
+        sentences: Sentences of one entry.
+        index: Index of the sentence stating the outcome.
+
+    Returns:
+        The date, or None when no sentence up to *index* has one.
+    """
+    for sentence in reversed(sentences[: index + 1]):
+        date = _extract_first_date(sentence)
+        if date:
+            return date
+    return None
+
+
 def _extract_outcome(text: str) -> tuple[str | None, str | None]:
     """Find the stage outcome and the date of the sentence that states it.
 
@@ -106,9 +133,9 @@ def _extract_outcome(text: str) -> tuple[str | None, str | None]:
     """
     sentences = _SENTENCE_SPLIT_RE.split(text)
     for pattern, label in _OUTCOME_PATTERNS:
-        for sentence in sentences:
+        for i, sentence in enumerate(sentences):
             if pattern.search(sentence.lower()):
-                return label, _extract_first_date(sentence)
+                return label, _sentence_date(sentences, i)
     return None, None
 
 
@@ -140,8 +167,7 @@ def _build_stage(section: str, mark_text: str, content_text: str) -> TiskHistory
 
     stage_type, label = mapping
     outcome, outcome_date = _extract_outcome(content_text)
-    # The outcome sentence's own date; else the entry's first date (e.g. "Čtení
-    # proběhlo 3. 6. 2026 ... Návrh zákona schválen" dates the reading).
+    # The outcome sentence's date; without an outcome, the entry's first date
     date = outcome_date or _extract_first_date(content_text)
     session_m = _SESSION_RE.search(content_text)
     vote_m = _VOTE_RE.search(content_text)
@@ -262,36 +288,61 @@ def _parse_stages(soup: BeautifulSoup) -> list[TiskHistoryStage]:
     return stages
 
 
-def _determine_status(stages: list[TiskHistoryStage]) -> str:
-    """Determine the current overall status from the parsed legislative stages.
+def _stage_status(stage: TiskHistoryStage) -> str | None:
+    """Map one stage to the bill status it establishes, if any.
 
-    Only the structured stages (the document-log items) are inspected, never the
-    full page text, which contains boilerplate like "ke stažení" (download) and a
-    reference to zákon 106/1999 Sb. that would otherwise yield false positives.
+    Args:
+        stage: A parsed stage (typed by section) with its outcome.
+
+    Returns:
+        The status this stage moves the bill into, or None when the stage does
+        not change the status (committee work, government opinion, ...).
     """
-    # Published only when the page states it ("Zákon vyhlášen ... pod číslem");
-    # a Sbírka zákonů entry alone means it was only sent for publication.
-    if any(s.stage_type == "vyhlaseni" for s in stages):
-        return "vyhlášeno"
-    if any(s.stage_type == "sbirka" for s in stages):
-        return "odesláno k vyhlášení"
-
-    # Walk the legislative log newest-first; the latest decisive outcome wins.
-    for stage in reversed(stages):
-        outcome = (stage.outcome or "").lower()
-        if not outcome:
-            continue
-        if "zamítnut" in outcome:
+    match (stage.stage_type, stage.outcome):
+        case (_, "vzat zpět"):
+            return "vzato zpět"
+        case (_, "nepřijat"):
+            return "nepřijato"
+        case ("1_cteni" | "2_cteni" | "3_cteni", "zamítnut"):
             return "zamítnuto"
-        if "stažen" in outcome or "vzat zpět" in outcome:
-            return "staženo"
-        if "schválen" in outcome:
-            if stage.stage_type == "prezident":
-                return "podepsáno"
-            if stage.stage_type == "3_cteni":
-                return "schváleno sněmovnou"
+        case ("1_cteni" | "3_cteni" | "ps", "schválen" | "setrvala na původním návrhu"):
+            return "schváleno sněmovnou"
+        case ("senat_postoupeno", "postoupeno Senátu"):
+            return "v Senátu"
+        case ("senat", "schválil"):
+            return "schváleno Senátem"
+        case ("senat", "vrátil"):
+            return "vráceno Senátem"
+        case ("senat", "zamítl"):
+            return "zamítnuto Senátem"
+        case ("prezident", "doručeno prezidentovi"):
+            return "u prezidenta"
+        case ("prezident", "podepsal"):
+            return "podepsáno"
+        case ("prezident", "vrátil"):
+            return "vráceno prezidentem"
+        case ("sbirka", _):
+            return "odesláno k vyhlášení"
+        case ("vyhlaseni", _):
+            return "vyhlášeno"
+        case _:
+            return None
 
-    return "projednáváno"
+
+def _determine_status(stages: list[TiskHistoryStage]) -> str:
+    """Determine the current status: the one set by the last decisive stage.
+
+    Stages are in page order (chronological by section), with the publication
+    stage last. Only the structured stages are inspected, never the full page
+    text, which contains boilerplate like "ke stažení" (download) and a
+    reference to zákon 106/1999 Sb. that would otherwise yield false positives.
+    "vyhlášeno" therefore needs the "Zákon vyhlášen ... pod číslem" sentence; a
+    Sbírka zákonů entry alone only means "odesláno k vyhlášení".
+    """
+    status = "projednáváno"
+    for stage in stages:
+        status = _stage_status(stage) or status
+    return status
 
 
 def _law_number_from_stages(stages: list[TiskHistoryStage]) -> str | None:

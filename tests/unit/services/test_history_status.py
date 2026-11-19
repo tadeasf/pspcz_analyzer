@@ -38,13 +38,13 @@ class TestDetermineStatus:
         assert _determine_status(stages) == "schváleno sněmovnou"
 
     def test_president_signed(self):
-        assert _determine_status([_stage("prezident", outcome="podepsal schválen")]) == "podepsáno"
+        assert _determine_status([_stage("prezident", outcome="podepsal")]) == "podepsáno"
 
     def test_rejected(self):
         assert _determine_status([_stage("3_cteni", outcome="zamítnut")]) == "zamítnuto"
 
     def test_withdrawn(self):
-        assert _determine_status([_stage("1_cteni", outcome="vzat zpět")]) == "staženo"
+        assert _determine_status([_stage("1_cteni", outcome="vzat zpět")]) == "vzato zpět"
 
     def test_empty_is_in_progress(self):
         assert _determine_status([]) == "projednáváno"

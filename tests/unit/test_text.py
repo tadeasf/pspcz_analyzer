@@ -27,6 +27,10 @@ def test_status_category_pass(status: str) -> None:
         "Zamítnuto",
         "Staženo",
         "zamítnut sněmovnou",
+        # contains the pass word "přijat"
+        "nepřijato",
+        "vzato zpět",
+        "zamítnuto Senátem",
         # "nedoporučuje" contains "doporučuje" — fail must win (template
         # substring checks used to style this as approved)
         "Výbor nedoporučuje",

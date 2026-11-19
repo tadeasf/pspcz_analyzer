@@ -140,6 +140,7 @@ class TestListLaws:
         result = list_laws(data, status_filter="vyhlášeno")
         assert result["total"] == 1
         assert result["rows"][0]["status"] == "vyhlášeno"
+        assert result["rows"][0]["status_key"] == "laws.status.published"
 
     def test_status_filter_zamítnuto(self):
         data = _make_data_with_laws()

@@ -17,7 +17,8 @@ def normalize_czech(text: str) -> str:
 # Legislative status keywords (Czech) for pass/fail classification.
 # Fail is checked FIRST: "nedoporučuje" contains "doporučuje", so pass-first
 # would misclassify a negative committee recommendation as approval.
-_STATUS_FAIL = ("zamítnuto", "zamítnut", "staženo", "nedoporučuje")
+# "nepřijat" must be here too: it contains the pass word "přijat".
+_STATUS_FAIL = ("zamítnuto", "zamítnut", "zamítl", "nepřijat", "staženo", "vzat", "nedoporučuje")
 _STATUS_PASS = (
     "vyhlášeno",
     "podepsáno",

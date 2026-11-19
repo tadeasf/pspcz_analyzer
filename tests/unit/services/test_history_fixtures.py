@@ -8,7 +8,9 @@ signed and sent for publication).
 
 from pathlib import Path
 
+from pspcz_analyzer.config import TERMINAL_TISK_STATUSES
 from pspcz_analyzer.services.tisk.io.history_scraper import TiskHistory, parse_tisk_history
+from pspcz_analyzer.services.tisk.io.history_stages import _stage_status
 
 _FIXTURES = Path(__file__).parents[2] / "fixtures" / "history"
 
@@ -101,3 +103,123 @@ class TestOutcomeDate:
         third = next(s for s in _parse(10, 82).stages if s.stage_type == "3_cteni")
         assert third.outcome == "schválen"
         assert third.date == "3. 6. 2026"
+
+
+def _section_page(*sections: tuple[str, str, str]) -> str:
+    """Build a minimal history page from (heading, mark, text) sections."""
+    body = "".join(
+        f'<div class="section"><h2 class="section-title">{heading}</h2>'
+        f'<div class="section-content"><ul class="document-log">'
+        f'<li class="document-log-item"><span class="mark">{mark}</span><p>{text}</p></li>'
+        f"</ul></div></div>"
+        for heading, mark, text in sections
+    )
+    return f"<html><body>{body}</body></html>"
+
+
+_PASSED = ("Poslanecká sněmovna", "3", "3. Čtení proběhlo 1. 2. 2026. Návrh zákona schválen.")
+_SENATE_OK = ("Senát", "S", "Návrh projednán dne 1. 3. 2026. Senát návrh schválil.")
+
+
+class TestStatusLadder:
+    """#90: the status follows the last stage, typed by section."""
+
+    def test_status_progression_167(self):
+        stages = _parse(10, 167).stages
+        seen = [stage_status for s in stages if (stage_status := _stage_status(s))]
+        assert seen == [
+            "schváleno sněmovnou",
+            "v Senátu",
+            "schváleno Senátem",
+            "podepsáno",
+            "odesláno k vyhlášení",
+            "vyhlášeno",
+        ]
+
+    def test_senate_not_deciding_keeps_senate_then_president_246(self):
+        h = _parse(10, 246)
+        senat = next(s for s in h.stages if s.stage_type == "senat")
+        assert senat.outcome == "neprojednal"
+        assert _stage_status(senat) is None
+
+    def test_not_passed_after_senate_rejection_85(self):
+        h = _parse(10, 85)
+        last = h.stages[-1]
+        assert (last.stage_type, last.outcome, last.date, last.vote_number) == (
+            "ps",
+            "nepřijat",
+            "24. 3. 2026",
+            46,
+        )
+        assert h.current_status == "nepřijato"
+        assert h.current_status in TERMINAL_TISK_STATUSES
+
+    def test_chamber_overrides_senate_rejection_67(self):
+        stages = _parse(10, 67).stages
+        senat = next(s for s in stages if s.stage_type == "senat")
+        assert _stage_status(senat) == "zamítnuto Senátem"
+        returned = [s for s in stages if s.stage_type == "ps"][-1]
+        assert (returned.outcome, returned.date) == ("setrvala na původním návrhu", "9. 9. 2026")
+
+    def test_returned_by_senate_and_accepted_57(self):
+        stages = _parse(10, 57).stages
+        senat = next(s for s in stages if s.stage_type == "senat")
+        assert _stage_status(senat) == "vráceno Senátem"
+        assert _parse(10, 57).current_status == "vyhlášeno"
+
+    def test_withdrawn_65(self):
+        h = _parse(10, 65)
+        assert h.current_status == "vzato zpět"
+        assert h.current_status in TERMINAL_TISK_STATUSES
+
+    def test_in_committee_231(self):
+        assert _parse(10, 231).current_status == "projednáváno"
+        assert "projednáváno" not in TERMINAL_TISK_STATUSES
+
+    def test_with_president(self):
+        page = _section_page(
+            _PASSED,
+            _SENATE_OK,
+            ("Prezident republiky", "P", "Zákon doručen prezidentovi k podepsání 5. 3. 2026."),
+        )
+        h = parse_tisk_history(page, 10, 1)
+        assert h.current_status == "u prezidenta"
+        assert h.stages[-1].date == "5. 3. 2026"
+
+    def test_returned_by_president(self):
+        page = _section_page(
+            _PASSED,
+            _SENATE_OK,
+            (
+                "Prezident republiky",
+                "P",
+                "Zákon doručen prezidentovi k podepsání 5. 3. 2026. "
+                "Prezident zákon vrátil 12. 3. 2026.",
+            ),
+        )
+        h = parse_tisk_history(page, 10, 1)
+        assert h.current_status == "vráceno prezidentem"
+        assert h.stages[-1].date == "12. 3. 2026"
+
+    def test_rejected_in_first_reading_is_terminal(self):
+        page = _section_page(
+            ("Poslanecká sněmovna", "1", "Čtení proběhlo 1. 2. 2026. Návrh zákona zamítnut."),
+        )
+        h = parse_tisk_history(page, 10, 1)
+        assert h.current_status == "zamítnuto"
+        assert h.current_status in TERMINAL_TISK_STATUSES
+
+    def test_rejection_proposal_is_not_rejection(self):
+        page = _section_page(
+            ("Poslanecká sněmovna", "1", "Návrh na zamítnutí nebyl přijat 1. 2. 2026."),
+        )
+        assert parse_tisk_history(page, 10, 1).current_status == "projednáváno"
+
+
+class TestGovernmentOpinion:
+    def test_opinion_read_from_government_section_201(self):
+        assert _parse(10, 201).government_opinion == "souhlas"
+
+    def test_government_bill_has_no_opinion_82(self):
+        # 82 is a government bill; "souhlas" elsewhere on the page is unrelated
+        assert _parse(10, 82).government_opinion is None

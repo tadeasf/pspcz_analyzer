@@ -76,15 +76,29 @@ def _extract_submitter(soup: BeautifulSoup) -> tuple[str, str | None]:
     return "", None
 
 
+_GOV_OPINION_RE = re.compile(r"\(\s*(souhlas|nesouhlas|neutrální)\s*\)")
+
+
 def _extract_government_opinion(soup: BeautifulSoup) -> str | None:
-    """Look for government opinion (souhlas/nesouhlas/neutrální)."""
-    text = soup.get_text(" ", strip=True).lower()
-    if "souhlas" in text and "nesouhlas" not in text:
-        return "souhlas"
-    if "nesouhlas" in text:
-        return "nesouhlas"
-    if "neutrální" in text:
-        return "neutrální"
+    """Read the government opinion from the Vláda section only.
+
+    The opinion is the parenthesised word after "Stanovisko vlády rozesláno
+    poslancům ... jako tisk N/1 ( souhlas )". The rest of the page contains
+    unrelated "souhlas" wording (e.g. "Sněmovna souhlasila s projednáváním"),
+    and government bills have no Vláda section at all.
+
+    Args:
+        soup: Parsed history page.
+
+    Returns:
+        "souhlas", "nesouhlas" or "neutrální", or None when not stated.
+    """
+    for section in soup.find_all("div", class_="section"):
+        heading = section.find(["h2", "h3"])
+        if heading and heading.get_text(strip=True) == "Vláda":
+            m = _GOV_OPINION_RE.search(section.get_text(" ", strip=True))
+            if m:
+                return m.group(1)
     return None
 
 
