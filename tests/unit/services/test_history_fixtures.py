@@ -84,3 +84,20 @@ class TestSentForPublication:
         h = _parse(10, 67)
         assert h.current_status == "vyhlášeno"
         assert h.law_number == "215/2026 Sb."
+
+
+class TestOutcomeDate:
+    """#89: the stage date is the date of the sentence stating the outcome."""
+
+    def test_president_signature_date_82(self):
+        prezident = next(s for s in _parse(10, 82).stages if s.stage_type == "prezident")
+        assert prezident.outcome == "podepsal"
+        assert prezident.date == "16. 7. 2026"
+        # The delivery date stays in the entry text
+        details = prezident.details.replace("\xa0", " ")
+        assert "doručen prezidentovi k podepsání 13. 7. 2026" in details
+
+    def test_reading_without_dated_outcome_sentence_keeps_entry_date_82(self):
+        third = next(s for s in _parse(10, 82).stages if s.stage_type == "3_cteni")
+        assert third.outcome == "schválen"
+        assert third.date == "3. 6. 2026"

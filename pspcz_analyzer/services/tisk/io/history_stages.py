@@ -39,6 +39,10 @@ _SECTION_STAGES: dict[tuple[str, str], tuple[str, str]] = {
 _DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
 _SESSION_RE = re.compile(r"(\d+)\.\s*sch[ůu]zi")
 _VOTE_RE = re.compile(r"hlasov[áa]n[ií]\s*[čc]\.\s*(\d+)")
+# Sentence boundary: "." or ")" then whitespace then an upper-case letter. Dates
+# ("13. 7. 2026") and abbreviations ("č. 70") are followed by a digit or a
+# lower-case word, so they do not split.
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.)])\s+(?=[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ])")
 _PUBLISHED_RE = re.compile(
     r"Zákon\s+vyhlášen\s+(\d{1,2}\.\s*\d{1,2}\.\s*\d{4}).*?pod\s+číslem\s+(\d+/\d{4})\s*Sb\.",
     re.DOTALL,
@@ -87,13 +91,25 @@ def _extract_first_date(text: str) -> str | None:
     return None
 
 
-def _extract_outcome(text: str) -> str | None:
-    """Match known outcome patterns in text."""
-    lower = text.lower()
+def _extract_outcome(text: str) -> tuple[str | None, str | None]:
+    """Find the stage outcome and the date of the sentence that states it.
+
+    One entry often describes several events ("Zákon doručen prezidentovi ...
+    13. 7. 2026. Prezident zákon podepsal 16. 7. 2026."), so the outcome and
+    its date are taken from the same sentence.
+
+    Args:
+        text: Content text of one document-log entry.
+
+    Returns:
+        (outcome label, date of the matching sentence), each None when absent.
+    """
+    sentences = _SENTENCE_SPLIT_RE.split(text)
     for pattern, label in _OUTCOME_PATTERNS:
-        if pattern.search(lower):
-            return label
-    return None
+        for sentence in sentences:
+            if pattern.search(sentence.lower()):
+                return label, _extract_first_date(sentence)
+    return None, None
 
 
 def _stage_mapping(section: str, mark: str) -> tuple[str, str] | None:
@@ -123,10 +139,12 @@ def _build_stage(section: str, mark_text: str, content_text: str) -> TiskHistory
         return None
 
     stage_type, label = mapping
-    date = _extract_first_date(content_text)
+    outcome, outcome_date = _extract_outcome(content_text)
+    # The outcome sentence's own date; else the entry's first date (e.g. "Čtení
+    # proběhlo 3. 6. 2026 ... Návrh zákona schválen" dates the reading).
+    date = outcome_date or _extract_first_date(content_text)
     session_m = _SESSION_RE.search(content_text)
     vote_m = _VOTE_RE.search(content_text)
-    outcome = _extract_outcome(content_text)
 
     return TiskHistoryStage(
         stage_type=stage_type,
