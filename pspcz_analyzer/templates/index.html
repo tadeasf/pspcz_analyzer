@@ -45,7 +45,7 @@
             {% if t.status_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(t.status|status_category, 'c-wait') }}">{{ _(t.status_key) }}</span>{% endif %}</div>
         <h3 style="font-size:22px;margin:0"><a href="/laws/{{ t.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ t.nazev }}</a></h3>
         {% if t.summary %}<p style="margin:0">{{ t.summary }}</p>{% endif %}
-        {% if t.last_step %}<p class="lbl" style="margin:0">{{ t.last_step.date|cz_date(short=True) }} · {{ t.last_step.text }}</p>{% endif %}
+        <ol class="phase">{% for s in t.steps %}<li class="{{ s.state }}"><b>{{ _(s.key) }}</b>{% if s.date %}<br>{{ s.date|cz_date(short=True) }}{% elif s.state == "now" %}<br>{{ _("ph.now") }}{% endif %}</li>{% endfor %}</ol>
         <p class="lbl" style="margin:0">{{ _("home.talked_why").format(n=t.speeches) }}</p>
     </div>
 </div>

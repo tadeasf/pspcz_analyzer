@@ -47,6 +47,49 @@ def _by_last_step(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: (r["last_step"] or {}).get("sort", (0, 0, 0)), reverse=True)
 
 
+# Mockup stepper: (label key, history stage types that complete the step)
+_STEPS = (
+    ("ph.submitted", ()),
+    ("ph.reading1", ("1_cteni",)),
+    ("ph.committees", ("vybor", "garant")),
+    ("ph.reading2", ("2_cteni",)),
+    ("ph.reading3", ("3_cteni",)),
+    ("ph.senate", ("senat", "senat_postoupeno", "senat_vybor", "senat_organizacni")),
+    ("ph.president", ("prezident", "sbirka", "vyhlaseni")),
+)
+
+
+def phase_steps(tisk: TiskInfo) -> list[dict]:
+    """Stepper rows for a bill: done / now / next, with the first date of each step.
+
+    Args:
+        tisk: Bill with its legislative history.
+
+    Returns:
+        One dict per step with ``key``, ``state`` and ``date`` (or None).
+    """
+    stages = tisk.history.stages if tisk.history else []
+    submitted = tisk.history.submitter_date if tisk.history else None
+    dates = [submitted] + [
+        next((s.date for s in stages if s.stage_type in types), None) for _, types in _STEPS[1:]
+    ]
+    done = [True] + [any(s.stage_type in types for s in stages) for _, types in _STEPS[1:]]
+    last = max(i for i, d in enumerate(done) if d)
+    terminal = phase_of(tisk.history.current_status if tisk.history else "") not in (
+        "chamber",
+        "senate",
+        "president",
+    )
+    return [
+        {
+            "key": key,
+            "date": dates[i] if done[i] else None,
+            "state": "done" if i <= last else ("now" if i == last + 1 and not terminal else "next"),
+        }
+        for i, (key, _) in enumerate(_STEPS)
+    ]
+
+
 def talked_about(data: PeriodData, lang: str, days: int = 14) -> dict | None:
     """Bill with the most speeches in the Chamber over the last ``days`` days (#108).
 
@@ -67,7 +110,9 @@ def talked_about(data: PeriodData, lang: str, days: int = 14) -> dict | None:
             per_ct[tisk.ct] = per_ct.get(tisk.ct, 0) + n
     ct, n = max(per_ct.items(), key=lambda kv: kv[1], default=(0, 0))
     tisk = next((t for t in _bills(data) if t.ct == ct), None)
-    return {**_row(tisk, lang), "speeches": n} if tisk and n else None
+    if not tisk or not n:
+        return None
+    return {**_row(tisk, lang), "speeches": n, "steps": phase_steps(tisk)}
 
 
 def homepage_blocks(data: PeriodData, lang: str = "cs") -> dict:
