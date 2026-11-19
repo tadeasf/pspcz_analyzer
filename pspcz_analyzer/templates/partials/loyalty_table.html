@@ -15,9 +15,9 @@
             <td>{{ loop.index }}</td>
             <td>{{ row.jmeno }} {{ row.prijmeni }}</td>
             <td>{{ row.party or "N/A" }}</td>
-            <td>{{ "{:,}".format(row.active_votes) }}</td>
-            <td>{{ "{:,}".format(row.rebellions) }}</td>
-            <td>{{ "%.1f"|format(row.rebellion_pct) }}%</td>
+            <td>{{ row.active_votes|num }}</td>
+            <td>{{ row.rebellions|num }}</td>
+            <td>{{ row.rebellion_pct|pct }}</td>
         </tr>
         {% if row.rebellion_votes %}
         <tr>
@@ -40,7 +40,7 @@
                             <tbody>
                                 {% for v in row.rebellion_votes %}
                                 <tr>
-                                    <td style="white-space: nowrap;">{{ v.datum }}</td>
+                                    <td style="white-space: nowrap;">{{ v.datum|cz_date }}</td>
                                     <td>{{ v.nazev_dlouhy[:120] }}{% if v.nazev_dlouhy|length > 120 %}&hellip;{% endif %}</td>
                                     <td>
                                         {% if v.mp_vote == "A" %}

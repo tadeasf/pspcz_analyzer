@@ -1,6 +1,7 @@
 """Internationalization support for Czech/English UI localization."""
 
 import contextvars
+from datetime import date, datetime
 
 from jinja2 import Environment
 
@@ -50,8 +51,76 @@ def format_int(value: int) -> str:
     return grouped
 
 
+def format_number(value: float | int | None, decimals: int = 0) -> str:
+    """Format a number the site's way: "1 377" / "43,5" (cs) or "1,377" / "43.5" (en) (#106).
+
+    Args:
+        value: Number to format (None renders as an empty string).
+        decimals: Digits after the decimal point.
+
+    Returns:
+        Locale-formatted number.
+    """
+    if value is None:
+        return ""
+    text = f"{value:,.{decimals}f}"
+    if get_locale() == "cs":
+        return text.replace(",", "\u00a0").replace(".", ",")
+    return text
+
+
+def format_percent(value: float | None, decimals: int = 1) -> str:
+    """Format a percentage value (0-100): "43,0 %" (cs) or "43.0%" (en).
+
+    Args:
+        value: Percentage (not a fraction); None renders as an empty string.
+        decimals: Digits after the decimal point.
+
+    Returns:
+        Locale-formatted percentage.
+    """
+    if value is None:
+        return ""
+    sep = "\u00a0" if get_locale() == "cs" else ""
+    return f"{format_number(value, decimals)}{sep}%"
+
+
+def _to_date(value: object) -> date | None:
+    """Parse a date from a date/datetime, "dd.mm.yyyy" or ISO "yyyy-mm-dd" string."""
+    if isinstance(value, date):
+        return value
+    text = str(value or "").strip()[:10]
+    for fmt in ("%d.%m.%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def format_date_cz(value: object, short: bool = False) -> str:
+    """Format a date the site's way: "23. 9. 2026" or "23. 9." (cs), "Sep 23, 2026" (en).
+
+    Args:
+        value: Date, datetime or date string; unparseable input is returned as is.
+        short: Omit the year (within the current year).
+
+    Returns:
+        Locale-formatted date.
+    """
+    d = _to_date(value)
+    if d is None:
+        return str(value or "")
+    if get_locale() == "cs":
+        return f"{d.day}. {d.month}." if short else f"{d.day}. {d.month}. {d.year}"
+    return d.strftime("%b %-d") if short else d.strftime("%b %-d, %Y")
+
+
 def setup_jinja2_i18n(env: Environment) -> None:
     """Install gettext callables and locale-aware filters on a Jinja2 environment."""
     env.add_extension("jinja2.ext.i18n")
     env.install_gettext_callables(gettext, ngettext, newstyle=False)  # type: ignore[attr-defined]
     env.filters["thousands"] = format_int  # type: ignore[attr-defined]
+    env.filters["num"] = format_number  # type: ignore[attr-defined]
+    env.filters["pct"] = format_percent  # type: ignore[attr-defined]
+    env.filters["cz_date"] = format_date_cz  # type: ignore[attr-defined]

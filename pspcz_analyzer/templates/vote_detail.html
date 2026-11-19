@@ -12,7 +12,7 @@
 {% set passed = info.vysledek == "A" %}
 {% set icons = {"YES": ("✓", "i-a", "vd.yes"), "NO": ("✕", "i-n", "vd.no"), "ABSTAINED": ("–", "i-z", "vd.abstained_short"), "Absent": ("∅", "i-0", "vd.absent"), "Excused": ("O", "i-m", "vd.excused")} %}
 
-<div class="crumb"><a href="/votes?period={{ period }}">{{ _("nav.votes") }}</a> › {{ _("vd.session_n").format(n=info.schuze) }} › {{ _("vd.number_n").format(n=info.cislo) }} · {{ info.datum }}, {{ info.cas }}</div>
+<div class="crumb"><a href="/votes?period={{ period }}">{{ _("nav.votes") }}</a> › {{ _("vd.session_n").format(n=info.schuze) }} › {{ _("vd.number_n").format(n=info.cislo) }} · {{ info.datum|cz_date }}, {{ info.cas }}</div>
 
 <div style="display:flex;flex-direction:column;gap:10px;max-width:820px">
     <div>

@@ -6,7 +6,7 @@
 {% for g in groups %}
 <details class="vg{% if g.all_void %} zm{% endif %}" {% if loop.index <= 4 %}open{% endif %}>
     <summary class="vg-h">
-        <span class="lbl">{{ g.datum }} · {{ _("vd.session_n").format(n=g.schuze) }} · {{ _("vl.n_votes").format(n=g.rows|length) }}</span>
+        <span class="lbl">{{ g.datum|cz_date }} · {{ _("vd.session_n").format(n=g.schuze) }} · {{ _("vl.n_votes").format(n=g.rows|length) }}</span>
         <span style="font:700 18px Georgia,serif;color:#1A4677">
             {% if g.tisk_ct %}<a href="/laws/{{ g.tisk_ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ g.title }}</a>
             <span style="font:400 14px Arial,sans-serif;color:#5a6573">{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}</span>

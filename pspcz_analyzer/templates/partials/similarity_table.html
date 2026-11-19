@@ -6,7 +6,7 @@
     <tbody>
     {% for row in rows %}
     <tr><td>{{ loop.index }}</td><td>{{ row.mp1_name }}</td><td>{{ row.mp1_party|club_name }}</td><td>{{ row.mp2_name }}</td><td>{{ row.mp2_party|club_name }}</td>
-        <td><b>{{ "%.1f"|format(row.agreement * 100) }} %</b> <span class="lbl">{{ _("sim.same_of").format(same=row.same, shared=row.shared) }}</span></td></tr>
+        <td><b>{{ (row.agreement * 100)|pct }}</b> <span class="lbl">{{ _("sim.same_of").format(same=row.same|num, shared=row.shared|num) }}</span></td></tr>
     {% endfor %}
     </tbody>
 </table></div>

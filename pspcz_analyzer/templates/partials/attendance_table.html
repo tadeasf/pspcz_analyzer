@@ -20,14 +20,14 @@
                 <td>{{ loop.index }}</td>
                 <td>{{ row.jmeno }} {{ row.prijmeni }}</td>
                 <td>{{ row.party or "?" }}</td>
-                <td><strong>{{ "{:,}".format(row.active) }}</strong></td>
-                <td class="vote-yes">{{ "{:,}".format(row.yes_votes) }}</td>
-                <td class="vote-no">{{ "{:,}".format(row.no_votes) }}</td>
-                <td class="vote-abstained">{{ "{:,}".format(row.abstained) }}</td>
-                <td>{{ "{:,}".format(row.absent) }}</td>
-                <td>{{ "{:,}".format(row.excused) }}</td>
+                <td><strong>{{ row.active|num }}</strong></td>
+                <td class="vote-yes">{{ row.yes_votes|num }}</td>
+                <td class="vote-no">{{ row.no_votes|num }}</td>
+                <td class="vote-abstained">{{ row.abstained|num }}</td>
+                <td>{{ row.absent|num }}</td>
+                <td>{{ row.excused|num }}</td>
                 {# Fully-excused MPs have no defined attendance rate (null) #}
-                <td>{% if row.attendance_pct is not none %}{{ "%.1f"|format(row.attendance_pct) }}%{% else %}—{% endif %}</td>
+                <td>{% if row.attendance_pct is not none %}{{ row.attendance_pct|pct }}{% else %}{{ _("unknown_yet") }}{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>
