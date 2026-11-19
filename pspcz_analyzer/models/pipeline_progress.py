@@ -30,6 +30,7 @@ class PipelineStage(StrEnum):
     DOWNLOAD_PDFS = "download_pdfs"
     CLASSIFY = "classify_and_summarize"
     CONSOLIDATE_TOPICS = "consolidate_topics"
+    BRIEFS = "briefs"
     SCRAPE_LAW_CHANGES = "scrape_law_changes"
     DOWNLOAD_VERSIONS = "download_versions"
     ANALYZE_DIFFS = "analyze_diffs"

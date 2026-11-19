@@ -16,6 +16,7 @@ from pspcz_analyzer.services.law_filters import (
     submitter_kind,
     tab_of,
 )
+from pspcz_analyzer.services.tisk.brief import brief_view
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 # Bill status (as stored, Czech) -> translation key. Templates render
@@ -36,6 +37,12 @@ STATUS_KEYS: dict[str, str] = {
     "nepřijato": "laws.status.not_passed",
     "vzato zpět": "laws.status.withdrawn",
 }
+
+
+def _brief_texts(tisk: TiskInfo) -> tuple[str, str]:
+    """Czech AI title and summary, so search also finds the plain-language words."""
+    cs = (tisk.brief or {}).get("cs") or {}
+    return cs.get("nazev", ""), cs.get("shrnuti", "")
 
 
 def _tisk_pdf_exists(cache_dir: Path, period: int, ct: int) -> bool:
@@ -155,13 +162,15 @@ def _build_law_row(
         amendment_link = {"schuze": amendments["schuze"], "bod": amendments["bod"]}
 
     # Summary — truncated for list view
-    summary = tisk.summary_en if (lang == "en" and tisk.summary_en) else tisk.summary
+    brief = brief_view(tisk.brief, lang)
+    summary = brief["shrnuti"] if brief else ""
     summary_truncated = (summary[:150] + "...") if len(summary) > 150 else summary
 
     return {
         "ct": tisk.ct,
-        "nazev": tisk.nazev,
+        "nazev": (brief and brief["nazev"]) or tisk.nazev,
         "id_druh": tisk.id_druh,
+        "brief": brief,
         "topics": topics,
         "submitter": submitter,
         "status": status,
@@ -242,7 +251,7 @@ def list_laws(
             if (
                 t.ct == number
                 if number is not None
-                else matches_tokens(tokens, t.nazev, t.nazev_cely, *t.topics)
+                else matches_tokens(tokens, t.nazev, t.nazev_cely, *t.topics, *_brief_texts(t))
             )
         ]
 
@@ -328,7 +337,7 @@ def law_detail(
     submitter = _tisk_submitter(tisk)
     law_number = _tisk_law_number(tisk)
     topics = tisk.topics_en if (lang == "en" and tisk.topics_en) else tisk.topics
-    summary = tisk.summary_en if (lang == "en" and tisk.summary_en) else tisk.summary
+    brief = brief_view(tisk.brief, lang)
 
     # Legislative history stages
     history = tisk.history
@@ -338,11 +347,11 @@ def law_detail(
 
     return {
         "ct": tisk.ct,
-        "nazev": tisk.nazev,
+        "nazev": (brief and brief["nazev"]) or tisk.nazev,
         "period": tisk.period,
         "url": tisk.url,
         "topics": topics,
-        "summary": summary,
+        "brief": brief,
         "status": status,
         "status_key": STATUS_KEYS.get(status, ""),
         "submitter": submitter,

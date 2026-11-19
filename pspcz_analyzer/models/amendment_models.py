@@ -53,6 +53,7 @@ class AmendmentVote:
     amendment_text: str = ""
     summary: str = ""
     summary_en: str = ""
+    summary_warning: bool = False  # automatic check (#97) found a possible error
     pdf_submitter_names: list[str] = field(default_factory=list)
     pdf_letter_raw_text: str = ""
 

@@ -301,17 +301,27 @@ class TestLawDetail:
         assert result["status"] == "vyhlášeno"
         assert result["submitter"] == "Vláda"
 
-    def test_contains_summary(self):
+    def test_old_critical_summary_not_shown(self):
         data = _make_data_with_laws()
         result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
         assert result is not None
-        assert result["summary"] == "Shrnutí zákona."
+        assert result["brief"] is None
 
-    def test_english_summary(self):
+    def test_brief_title_and_summary(self):
         data = _make_data_with_laws()
-        result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR, lang="en")
-        assert result is not None
-        assert result["summary"] == "Bill summary."
+        for t in data.tisk_lookup.values():
+            if t.ct == 200:
+                t.brief = {
+                    "status": "ok",
+                    "cs": {"nazev": "Nižší daně", "shrnuti": "Sníží daně."},
+                    "en": {"nazev": "Lower taxes", "shrnuti": "Cuts taxes."},
+                }
+        cs = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
+        en = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR, lang="en")
+        assert cs is not None and en is not None
+        assert (cs["nazev"], cs["brief"]["shrnuti"]) == ("Nižší daně", "Sníží daně.")
+        assert en["brief"]["shrnuti"] == "Cuts taxes."
+        assert list_laws(data, search="nižší")["rows"][0]["ct"] == 200
 
     def test_contains_amendment_entries(self):
         data = _make_data_with_laws()

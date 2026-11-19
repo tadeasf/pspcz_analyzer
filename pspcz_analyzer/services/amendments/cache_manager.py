@@ -125,6 +125,7 @@ def _placeholder_row(bill: BillAmendmentData) -> dict:
         "amendment_text": "",
         "summary": "",
         "summary_en": "",
+        "summary_warning": False,
         "pdf_submitter_names": "",
         "submitter_parties": "",
         "bill_summary": bill.bill_summary,
@@ -185,6 +186,7 @@ def save_amendments(
                     "amendment_text": amend.amendment_text,
                     "summary": amend.summary,
                     "summary_en": amend.summary_en,
+                    "summary_warning": amend.summary_warning,
                     "pdf_submitter_names": _serialize_list(amend.pdf_submitter_names),
                     "submitter_parties": _serialize_list(amend.submitter_parties),
                     "bill_summary": bill.bill_summary,
@@ -248,6 +250,7 @@ def _row_to_amendment(row: dict) -> AmendmentVote:
         amendment_text=row.get("amendment_text", ""),
         summary=row.get("summary", ""),
         summary_en=row.get("summary_en", ""),
+        summary_warning=bool(row.get("summary_warning")),
         pdf_submitter_names=_deserialize_list(row.get("pdf_submitter_names", "")),
         submitter_parties=_deserialize_list(row.get("submitter_parties", "")),
     )

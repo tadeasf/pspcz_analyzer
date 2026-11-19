@@ -246,3 +246,4 @@ details.more[open] summary{margin-bottom:6px}
 }
 
 @media (max-width:760px){ main > .s-body{padding:16px} }
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:10px 0}.kv dt{font-weight:700;color:#3D4A5C}.kv dd{margin:0}@media(max-width:600px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}

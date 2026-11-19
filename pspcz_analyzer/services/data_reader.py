@@ -61,6 +61,7 @@ from pspcz_analyzer.services.tisk import (
     TiskTextService,
     build_tisk_lookup,
 )
+from pspcz_analyzer.services.tisk.brief import load_briefs
 from pspcz_analyzer.services.vote_codes import check_vote_totals, normalize_vote_codes
 
 _WATCH_INTERVAL_S = 30
@@ -174,10 +175,12 @@ class DataReader:
         law_changes_map = self._cache_mgr.load_law_changes_cache(period)
         subtisk_map = self._cache_mgr.load_subtisk_versions_cache(period)
         diffs_map, diffs_en_map = self._cache_mgr.load_version_diffs_cache(period)
+        brief_map = load_briefs(self.cache_dir, period)
         for tisk in pd.tisk_lookup.values():
             tisk.topics = topic_map.get(tisk.ct, [])
             tisk.summary = summary_map.get(tisk.ct, "")
             tisk.summary_en = summary_en_map.get(tisk.ct, "")
+            tisk.brief = brief_map.get(tisk.ct)
             tisk.has_text = self.tisk_text.has_text(period, tisk.ct)
             tisk.history = history_map.get(tisk.ct)
             tisk.law_changes = law_changes_map.get(tisk.ct, [])

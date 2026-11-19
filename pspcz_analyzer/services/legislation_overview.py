@@ -5,6 +5,7 @@ from __future__ import annotations
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.law_filters import last_step, phase_of, submitter_kind, tab_of
 from pspcz_analyzer.services.law_service import STATUS_KEYS
+from pspcz_analyzer.services.tisk.brief import brief_view
 
 
 def _bills(data: PeriodData) -> list[TiskInfo]:
@@ -26,17 +27,17 @@ def _first_sentence(text: str) -> str:
 def _row(tisk: TiskInfo, lang: str) -> dict:
     """Compact homepage row for one bill."""
     status = tisk.history.current_status if tisk.history else "projednáváno"
-    summary = tisk.summary_en if (lang == "en" and tisk.summary_en) else tisk.summary
+    brief = brief_view(tisk.brief, lang)
     return {
         "ct": tisk.ct,
-        "nazev": tisk.nazev,
+        "nazev": (brief and brief["nazev"]) or tisk.nazev,
         "status": status,
         "status_key": STATUS_KEYS.get(status, ""),
         "phase": phase_of(status),
         "kind": submitter_kind(tisk),
         "last_step": last_step(tisk),
         "submitted": tisk.history.submitter_date if tisk.history else None,
-        "summary": _first_sentence(summary),
+        "summary": _first_sentence(brief["shrnuti"]) if brief else "",
     }
 
 

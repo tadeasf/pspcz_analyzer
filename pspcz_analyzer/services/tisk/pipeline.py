@@ -30,6 +30,7 @@ from pspcz_analyzer.models.pipeline_progress import (
 )
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
 from pspcz_analyzer.services.llm import deserialize_topics
+from pspcz_analyzer.services.tisk.brief import generate_briefs_sync
 from pspcz_analyzer.services.tisk.classifier import classify_and_save, consolidate_topics
 from pspcz_analyzer.services.tisk.downloader_pipeline import process_period_sync
 from pspcz_analyzer.services.tisk.metadata_scraper import (
@@ -494,6 +495,15 @@ class TiskPipelineService:
                         consolidate_topics,
                         period,
                         self.cache_dir,
+                        cancel_check=cancel_check,
+                    )
+                    self._check_period_cancelled(period)
+                    self._set_stage(period, PipelineStage.BRIEFS)
+                    await asyncio.to_thread(
+                        generate_briefs_sync,
+                        period,
+                        self.cache_dir,
+                        progress_callback=_classify_cb,
                         cancel_check=cancel_check,
                     )
 

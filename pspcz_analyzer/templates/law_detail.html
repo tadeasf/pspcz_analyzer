@@ -23,9 +23,17 @@
 
     <section class="box" style="background:#F1F6FC">
         <h2 class="h2s">{{ _("ld.what_changes") }}</h2>
-        {% if detail.summary %}
-        {{ detail.summary|markdown }}
-        <div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("lw.ai_from").format(ct=detail.ct) }}</span></div>
+        {% set b = detail.brief %}
+        {% if b %}
+        <p style="font-size:17px">{{ b.shrnuti }}</p>
+        <dl class="kv">
+            {% if b.koho %}<dt>{{ _("ld.who") }}</dt><dd>{{ b.koho }}</dd>{% endif %}
+            {% if b.kolik %}<dt>{{ _("ld.how_much") }}</dt><dd>{{ b.kolik }}</dd>{% endif %}
+            {% if b.od_kdy %}<dt>{{ _("ld.from_when") }}</dt><dd>{{ _("ld.proposed") }} {{ b.od_kdy }}</dd>{% endif %}
+        </dl>
+        <div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("ld.ai_source").format(ct=detail.ct) }}{% if detail.history and detail.history.submitter_date %} ({{ detail.history.submitter_date|cz_date }}){% endif %}
+            · {% if b.status == "ok" %}{{ _("ai.check_ok") }}{% else %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}
+            {% if detail.amendments and detail.amendments.tally.accepted %} {{ _("ld.amended_note") }}{% endif %}</span></div>
         {% else %}<p>{{ _("lw.no_summary") }}</p>{% endif %}
     </section>
 

@@ -6,7 +6,7 @@
 {% macro letter_card(x, period, stances=false) %}
 <div class="card">
     <div class="top"><span class="lbl">{{ _("pn.what_changes") }}</span><span class="lbl">{{ _("pn.letter").format(l=x.letter) }}</span></div>
-    {% if x.summary %}<p style="font-size:16px">{{ x.summary }}</p><div class="ai"><b>{{ _("detail.ai_generated") }}</b></div>
+    {% if x.summary %}<p style="font-size:16px">{{ x.summary }}</p><div class="ai"><b>{{ _("detail.ai_generated") }}</b>{% if x.summary_warning %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}</div>
     {% elif x.description %}<p style="font-size:16px">{{ x.description }}</p><span class="lbl">{{ _("pn.from_steno") }}</span>
     {% else %}<p class="lbl">{{ _("pn.no_summary") }}</p>{% endif %}
     <div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;align-items:center">

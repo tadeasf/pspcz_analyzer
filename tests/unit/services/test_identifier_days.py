@@ -12,7 +12,7 @@ def test_parse_both_date_formats() -> None:
 
 
 def test_bod_without_vote_on_third_reading_day_is_not_a_candidate() -> None:
-    readings = [(31, date(2026, 9, 23))]
+    readings: list[tuple[int | None, date | None]] = [(31, date(2026, 9, 23))]
     assert _third_reading_match(readings, 13, ["25.03.2026"]) is None
     assert _third_reading_match(readings, 13, ["25.03.2026", "23.09.2026"]) == "day"
 

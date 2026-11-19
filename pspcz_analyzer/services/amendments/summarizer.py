@@ -17,6 +17,7 @@ from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.amendments.cache_manager import save_amendments
 from pspcz_analyzer.services.amendments.progress import AmendmentProgress
 from pspcz_analyzer.services.llm import LLMClient, create_llm_client
+from pspcz_analyzer.services.tisk.brief import text_issues
 
 # How many summarized bills to accumulate before flushing the parquet +
 # notifying the UI. Saving after every single bill rewrites the whole period
@@ -208,6 +209,9 @@ def _summarize_per_amendment(
             count += 1
         if en_summary:
             amend.summary_en = en_summary
+        amend.summary_warning = bool(
+            cs_summary and text_issues(cs_summary, en_summary, amend.amendment_text or text)
+        )
 
     logger.info(
         "[amendment pipeline] [{}/{}] per-amendment summaries: {}/{} amendments got summaries",
@@ -282,7 +286,12 @@ def _summarize_amendments(
         # --- Bill summary: try tisk reuse first, then LLM fallback ---
         tisk = period_data.get_tisk(bill.schuze, bill.bod) if period_data else None
 
-        if tisk and tisk.summary:
+        brief = (tisk.brief or {}) if tisk else {}
+        if brief.get("cs", {}).get("shrnuti"):
+            bill.bill_summary = brief["cs"]["shrnuti"]
+            bill.bill_summary_en = brief.get("en", {}).get("shrnuti", "")
+            tisk_reused += 1
+        elif tisk and tisk.summary:
             bill.bill_summary = tisk.summary
             bill.bill_summary_en = tisk.summary_en or ""
             tisk_reused += 1

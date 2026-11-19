@@ -64,6 +64,7 @@ def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
         "names": a.pdf_submitter_names or a.submitter_names,
         "parties": sorted(set(a.submitter_parties)),
         "summary": summary,
+        "summary_warning": a.summary_warning,
         "description": a.description,
         "id_hlasovani": a.id_hlasovani,
         "committee_stance": a.committee_stance,
