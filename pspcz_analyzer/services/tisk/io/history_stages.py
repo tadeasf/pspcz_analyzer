@@ -44,18 +44,20 @@ _PUBLISHED_RE = re.compile(
     re.DOTALL,
 )
 
-_OUTCOME_PATTERNS = [
-    ("schválen", "schválen"),
-    ("zamítnut", "zamítnut"),
-    ("přikázán", "přikázán výborům"),
-    ("doporučuje schválit", "doporučuje schválit"),
-    ("nedoporučuje", "nedoporučuje schválit"),
-    ("podepsal", "podepsal"),
-    ("vrátil", "vrátil"),
-    ("přerušuje", "přerušeno"),
-    ("stažen", "stažen"),
-    ("vzat zpět", "vzat zpět"),
-    ("vyhlášen", "vyhlášen"),
+# (regex, outcome label), matched as whole words so "schválen" does not match
+# "Schválený zákon odeslán k publikaci".
+_OUTCOME_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bschválen\b"), "schválen"),
+    (re.compile(r"\bzamítnut\b"), "zamítnut"),
+    (re.compile(r"\bpřikázán\b"), "přikázán výborům"),
+    (re.compile(r"\bdoporučuje schválit\b"), "doporučuje schválit"),
+    (re.compile(r"\bnedoporučuje\b"), "nedoporučuje schválit"),
+    (re.compile(r"\bpodepsal\b"), "podepsal"),
+    (re.compile(r"\bvrátil\b"), "vrátil"),
+    (re.compile(r"\bpřerušuje\b"), "přerušeno"),
+    (re.compile(r"\bstažen\b"), "stažen"),
+    (re.compile(r"\bvzat zpět\b"), "vzat zpět"),
+    (re.compile(r"\bodeslán k publikaci\b"), "odesláno k publikaci"),
 ]
 
 
@@ -89,7 +91,7 @@ def _extract_outcome(text: str) -> str | None:
     """Match known outcome patterns in text."""
     lower = text.lower()
     for pattern, label in _OUTCOME_PATTERNS:
-        if pattern in lower:
+        if pattern.search(lower):
             return label
     return None
 
@@ -249,8 +251,12 @@ def _determine_status(stages: list[TiskHistoryStage]) -> str:
     full page text, which contains boilerplate like "ke stažení" (download) and a
     reference to zákon 106/1999 Sb. that would otherwise yield false positives.
     """
-    if any(s.stage_type in ("sbirka", "vyhlaseni") for s in stages):
+    # Published only when the page states it ("Zákon vyhlášen ... pod číslem");
+    # a Sbírka zákonů entry alone means it was only sent for publication.
+    if any(s.stage_type == "vyhlaseni" for s in stages):
         return "vyhlášeno"
+    if any(s.stage_type == "sbirka" for s in stages):
+        return "odesláno k vyhlášení"
 
     # Walk the legislative log newest-first; the latest decisive outcome wins.
     for stage in reversed(stages):

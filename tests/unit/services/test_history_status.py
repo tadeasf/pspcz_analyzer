@@ -26,8 +26,12 @@ class TestDetermineStatus:
         stages = [_stage("ps"), _stage("vlada"), _stage("organizacni")]
         assert _determine_status(stages) == "projednáváno"
 
-    def test_sbirka_stage_is_published(self):
-        assert _determine_status([_stage("ps"), _stage("sbirka")]) == "vyhlášeno"
+    def test_sbirka_stage_is_only_sent_for_publication(self):
+        assert _determine_status([_stage("ps"), _stage("sbirka")]) == "odesláno k vyhlášení"
+
+    def test_publication_stage_is_published(self):
+        stages = [_stage("sbirka"), _stage("vyhlaseni", outcome="vyhlášen")]
+        assert _determine_status(stages) == "vyhlášeno"
 
     def test_third_reading_passed(self):
         stages = [_stage("1_cteni"), _stage("3_cteni", outcome="schválen")]

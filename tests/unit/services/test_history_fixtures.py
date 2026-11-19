@@ -63,3 +63,24 @@ class TestSectionTyping:
         # 231 and 201 are still in the Sněmovna; the footer cites 106/1999 Sb.
         for ct in (231, 201):
             assert _parse(10, ct).law_number is None
+
+
+class TestSentForPublication:
+    """#88: "vyhlášeno" only once the page states the law was published."""
+
+    def test_sent_but_not_published_246(self):
+        h = _parse(10, 246)
+        assert _dates(h, "sbirka") == ["9. 11. 2026"]
+        assert _dates(h, "vyhlaseni") == []
+        assert h.current_status == "odesláno k vyhlášení"
+        assert h.law_number is None
+
+    def test_sent_for_publication_is_not_approval(self):
+        # "Schválený zákon odeslán k publikaci" must not read as "schválen"
+        sbirka = next(s for s in _parse(10, 82).stages if s.stage_type == "sbirka")
+        assert sbirka.outcome == "odesláno k publikaci"
+
+    def test_published_67(self):
+        h = _parse(10, 67)
+        assert h.current_status == "vyhlášeno"
+        assert h.law_number == "215/2026 Sb."
