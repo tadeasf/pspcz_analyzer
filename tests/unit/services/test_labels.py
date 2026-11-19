@@ -8,8 +8,11 @@ class TestMpVoteLabel:
         assert mp_vote_label("A") == "YES"
         assert mp_vote_label("B") == "NO"
         assert mp_vote_label("C") == "ABSTAINED"
-        assert mp_vote_label("F") == "DID_NOT_VOTE"
+        assert mp_vote_label("F") == "ABSTAINED"
+        assert mp_vote_label("K") == "ABSTAINED"
+        assert mp_vote_label("N") == "NO"
         assert mp_vote_label("@") == "Absent"
+        assert mp_vote_label("W") == "Absent"
         assert mp_vote_label("M") == "Excused"
 
     def test_unknown_code_returns_raw(self) -> None:

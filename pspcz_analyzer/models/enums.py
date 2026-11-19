@@ -8,6 +8,7 @@ class VoteResult(StrEnum):
 
     YES = "A"
     NO = "B"
+    NO_ALT = "N"
     ABSTAINED = "C"
     DID_NOT_VOTE = "F"
     ABSENT = "@"

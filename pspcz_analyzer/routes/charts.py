@@ -185,7 +185,6 @@ async def attendance_chart(
         "least_active": ("active", "chart.attendance.least_active", "viridis"),
         "most_abstained": ("abstained", "chart.attendance.most_abstained", "YlOrRd"),
         "most_excused": ("excused", "chart.attendance.most_excused", "PuBuGn"),
-        "most_passive": ("passive", "chart.attendance.most_passive", "OrRd"),
         "most_absent": ("absent", "chart.attendance.most_absent", "Reds"),
         "most_yes": ("yes_votes", "chart.attendance.most_yes", "Greens"),
         "most_no": ("no_votes", "chart.attendance.most_no", "Blues"),

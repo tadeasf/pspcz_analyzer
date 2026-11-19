@@ -7,18 +7,16 @@ They must never be localized here — templates would silently fall
 through to their else branches.
 """
 
-from pspcz_analyzer.models.enums import VoteResult
+from pspcz_analyzer.services.vote_codes import vote_category
 
-# Per-MP vote code -> display token. vote_detail.html compares
-# YES/NO/ABSTAINED/Absent/Excused; any other value (incl. DID_NOT_VOTE)
-# renders in the neutral branch.
-_MP_VOTE_LABELS: dict[str, str] = {
-    VoteResult.YES: "YES",
-    VoteResult.NO: "NO",
-    VoteResult.ABSTAINED: "ABSTAINED",
-    VoteResult.DID_NOT_VOTE: "DID_NOT_VOTE",
-    VoteResult.ABSENT: "Absent",
-    VoteResult.EXCUSED: "Excused",
+# Vote category -> display token. vote_detail.html compares
+# YES/NO/ABSTAINED/Absent/Excused; anything else renders in the neutral branch.
+_CATEGORY_LABELS: dict[str, str] = {
+    "yes": "YES",
+    "no": "NO",
+    "abstained": "ABSTAINED",
+    "absent": "Absent",
+    "excused": "Excused",
 }
 
 # Aggregate vote outcome code (hl_hlasovani.vysledek) -> display token.
@@ -31,7 +29,7 @@ _VOTE_OUTCOME_LABELS: dict[str, str] = {
 
 
 def mp_vote_label(code: str) -> str:
-    """Map a psp.cz per-MP vote code (A/B/C/F/@/M) to a display token.
+    """Map a psp.cz per-MP vote code to a display token via its category.
 
     Args:
         code: Single-character vote result code (may be empty).
@@ -40,7 +38,7 @@ def mp_vote_label(code: str) -> str:
         The display token; the raw code for unknown non-empty codes,
         "?" for an empty code.
     """
-    if label := _MP_VOTE_LABELS.get(code):
+    if label := _CATEGORY_LABELS.get(vote_category(code)):
         return label
     return code or "?"
 

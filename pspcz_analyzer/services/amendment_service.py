@@ -4,12 +4,15 @@ Provides paginated listing and detail views for bills with amendment data,
 following the same pattern as votes_service.py.
 """
 
+from collections import Counter
+
 import polars as pl
 
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.affiliation import amendment_driver
 from pspcz_analyzer.services.labels import mp_vote_label
+from pspcz_analyzer.services.vote_codes import CATEGORY_KEYS, vote_category
 from pspcz_analyzer.utils.text import normalize_czech
 
 
@@ -288,17 +291,12 @@ def amendment_mp_votes(
     parties = mp_detail.get_column("party").unique().sort().to_list()
     for party in parties:
         party_df = mp_detail.filter(pl.col("party") == party)
-        results = party_df.get_column("vysledek").to_list()
+        counts = Counter(vote_category(c) for c in party_df.get_column("vysledek").to_list())
         party_breakdown.append(
             {
                 "party": party,
-                "yes": results.count("A"),
-                "no": results.count("B"),
-                "abstained": results.count("C"),
-                "passive": results.count("F"),
-                "absent": results.count("@"),
-                "excused": results.count("M"),
-                "total": len(results),
+                **{key: counts[key] for key in CATEGORY_KEYS},
+                "total": party_df.height,
             }
         )
 

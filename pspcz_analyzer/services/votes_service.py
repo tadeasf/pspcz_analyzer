@@ -7,9 +7,9 @@ import re
 import polars as pl
 
 from pspcz_analyzer.i18n import gettext as _
-from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.labels import mp_vote_label
+from pspcz_analyzer.services.vote_codes import category_count_exprs
 from pspcz_analyzer.utils.text import normalize_czech
 
 # Keys into i18n translations, resolved at call time
@@ -269,12 +269,7 @@ def _build_party_breakdown(mp_detail: pl.DataFrame) -> list[dict]:
     party_stats = (
         mp_detail.group_by("party")
         .agg(
-            (pl.col("vysledek") == VoteResult.YES).sum().alias("yes"),
-            (pl.col("vysledek") == VoteResult.NO).sum().alias("no"),
-            (pl.col("vysledek") == VoteResult.ABSTAINED).sum().alias("abstained"),
-            (pl.col("vysledek") == VoteResult.DID_NOT_VOTE).sum().alias("passive"),
-            (pl.col("vysledek") == VoteResult.ABSENT).sum().alias("absent"),
-            (pl.col("vysledek") == VoteResult.EXCUSED).sum().alias("excused"),
+            *category_count_exprs(),
             pl.len().alias("total"),
         )
         .sort("party")

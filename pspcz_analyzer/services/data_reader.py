@@ -13,6 +13,7 @@ from pspcz_analyzer.config import (
     DEFAULT_CACHE_DIR,
     DEFAULT_PERIOD,
     PERIOD_LABELS,
+    PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
 )
 from pspcz_analyzer.data.cache import get_or_parse
@@ -30,6 +31,8 @@ from pspcz_analyzer.models.schemas import (
     HL_HLASOVANI_DTYPES,
     HL_POSLANEC_COLUMNS,
     HL_POSLANEC_DTYPES,
+    OMLUVY_COLUMNS,
+    OMLUVY_DTYPES,
     ORGANY_COLUMNS,
     ORGANY_DTYPES,
     OSOBY_COLUMNS,
@@ -57,6 +60,7 @@ from pspcz_analyzer.services.tisk import (
     TiskTextService,
     build_tisk_lookup,
 )
+from pspcz_analyzer.services.vote_codes import check_vote_totals, normalize_vote_codes
 
 _WATCH_INTERVAL_S = 30
 _SCHUZE_STAV_UNAPPROVED = 2  # psp.cz: agenda not approved, session closed
@@ -327,6 +331,25 @@ class DataReader:
         )
         return all_void.join(votes.select("id_hlasovani"), on="id_hlasovani", how="semi")
 
+    def _load_excuses(self, period: int, voting_dir: Path) -> pl.DataFrame:
+        """Load this period's rows of the all-periods omluvy.unl (empty if missing)."""
+        try:
+            omluvy_file = self._find_file(voting_dir, "omluvy.unl")
+        except FileNotFoundError:
+            logger.error("omluvy.unl missing for period {}: excused MPs shown as absent", period)
+            return pl.DataFrame(
+                schema={"id_poslanec": pl.Int64, "den": pl.String, "od": pl.String, "do": pl.String}
+            )
+        organ_id = PERIOD_ORGAN_IDS[period]
+        return get_or_parse(
+            f"omluvy_{period}",
+            voting_dir,
+            lambda: parse_unl(omluvy_file, OMLUVY_COLUMNS, OMLUVY_DTYPES).filter(
+                pl.col("id_organ") == organ_id
+            ),
+            self.cache_dir,
+        )
+
     def _ensure_shared_loaded(self) -> SharedTables:
         """Assert that shared tables have been loaded and return them.
 
@@ -388,6 +411,8 @@ class DataReader:
         )
 
         void_votes = self._load_void_votes(period, voting_dir, votes)
+        mp_votes = normalize_vote_codes(mp_votes, votes, self._load_excuses(period, voting_dir))
+        check_vote_totals(period, votes, mp_votes)
 
         shared = self._ensure_shared_loaded()
 

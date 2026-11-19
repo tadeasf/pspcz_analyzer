@@ -9,7 +9,6 @@
                 <th>{{ _("th.yes") }}</th>
                 <th>{{ _("th.no") }}</th>
                 <th>{{ _("th.abstained") }}</th>
-                <th>{{ _("th.passive") }}</th>
                 <th>{{ _("th.absent") }}</th>
                 <th>{{ _("th.excused") }}</th>
                 <th>{{ _("th.attendance_pct") }}</th>
@@ -25,7 +24,6 @@
                 <td class="vote-yes">{{ "{:,}".format(row.yes_votes) }}</td>
                 <td class="vote-no">{{ "{:,}".format(row.no_votes) }}</td>
                 <td class="vote-abstained">{{ "{:,}".format(row.abstained) }}</td>
-                <td>{{ "{:,}".format(row.passive) }}</td>
                 <td>{{ "{:,}".format(row.absent) }}</td>
                 <td>{{ "{:,}".format(row.excused) }}</td>
                 {# Fully-excused MPs have no defined attendance rate (null) #}

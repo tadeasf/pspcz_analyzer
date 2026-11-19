@@ -156,6 +156,21 @@ ZMATECNE_DTYPES: PolarsSchemaDict = {
     "id_hlasovani": pl.Int64,
 }
 
+# ---- Excuses (omluvy.unl, all periods, in every hl-*.zip) ----
+
+OMLUVY_COLUMNS: list[str] = [
+    "id_organ",
+    "id_poslanec",
+    "den",
+    "od",
+    "do",
+]
+
+OMLUVY_DTYPES: PolarsSchemaDict = {
+    "id_organ": pl.Int32,
+    "id_poslanec": pl.Int64,
+}
+
 # ---- Sessions (schuze.unl from schuze.zip) ----
 
 SCHUZE_COLUMNS: list[str] = [

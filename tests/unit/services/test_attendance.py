@@ -50,15 +50,15 @@ class TestComputeAttendance:
     def test_attendance_pct_formula(self):
         """Verify: attendance = active / (total - excused) * 100.
 
-        MP 5 (Marie Nová): 1 YES + 1 ABSTAINED = 2 active, 1 ABSENT, 1 EXCUSED, 1 PASSIVE
-        total=5, excused=1, attendance = 2 / (5-1) * 100 = 50%
+        MP 5 (Marie Nová): 1 YES + 1 ABSTAINED + 1 DID_NOT_VOTE (F, logged in) = 3 active,
+        1 ABSENT, 1 EXCUSED; total=5, attendance = 3 / (5-1) * 100 = 75%
         """
         data = make_period_data()
         result = compute_attendance(data, top=50)
         marie = [r for r in result if r["prijmeni"] == "Nová"]
         assert len(marie) == 1
-        assert marie[0]["attendance_pct"] == 50.0
-        assert marie[0]["active"] == 2
+        assert marie[0]["attendance_pct"] == 75.0
+        assert marie[0]["active"] == 3
         assert marie[0]["excused"] == 1
 
     def test_sort_worst(self):
@@ -118,7 +118,6 @@ class TestComputeAttendance:
             "yes_votes",
             "no_votes",
             "abstained",
-            "passive",
             "absent",
             "excused",
             "attendance_pct",

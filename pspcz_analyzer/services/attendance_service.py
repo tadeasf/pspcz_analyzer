@@ -4,6 +4,7 @@ import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.vote_codes import category_count_exprs
 
 
 def compute_attendance(
@@ -14,35 +15,34 @@ def compute_attendance(
 ) -> list[dict]:
     """Compute attendance rates for MPs.
 
-    Categories:
-    - Active: voted YES (A), NO (B), or ABSTAINED (C)
-    - Passive: registered but didn't press a button (F)
-    - Absent: not registered (@)
-    - Excused: excused absence (M)
+    Categories come from ``vote_codes``:
+    - Active: logged in, i.e. YES, NO or abstained / did not vote (K)
+    - Absent: not logged in (@, or W before the oath)
+    - Excused: '@' covered by an omluvy interval (M)
 
-    Attendance % = active / (total - excused) x 100
+    Attendance % = active / (total - excused - before oath) x 100
     """
     # Exclude void votes
     void_ids = data.void_votes.get_column("id_hlasovani")
     mp_votes = data.mp_votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
 
-    active_set = {VoteResult.YES, VoteResult.NO, VoteResult.ABSTAINED}
-
-    per_mp = mp_votes.group_by("id_poslanec").agg(
-        pl.col("vysledek").is_in(active_set).sum().alias("active"),
-        (pl.col("vysledek") == VoteResult.YES).sum().alias("yes_votes"),
-        (pl.col("vysledek") == VoteResult.NO).sum().alias("no_votes"),
-        (pl.col("vysledek") == VoteResult.ABSTAINED).sum().alias("abstained"),
-        (pl.col("vysledek") == VoteResult.DID_NOT_VOTE).sum().alias("passive"),
-        (pl.col("vysledek") == VoteResult.ABSENT).sum().alias("absent"),
-        (pl.col("vysledek") == VoteResult.EXCUSED).sum().alias("excused"),
-        pl.len().alias("total"),
+    per_mp = (
+        mp_votes.group_by("id_poslanec")
+        .agg(
+            *category_count_exprs(),
+            (pl.col("vysledek") == VoteResult.BEFORE_OATH).sum().alias("before_oath"),
+            pl.len().alias("total"),
+        )
+        .rename({"yes": "yes_votes", "no": "no_votes"})
+        .with_columns(
+            (pl.col("yes_votes") + pl.col("no_votes") + pl.col("abstained")).alias("active")
+        )
     )
 
     # Fully-excused MPs have a zero denominator — active / 0 = inf used to
     # rank them as having PERFECT attendance. Leave the rate undefined (null)
     # instead; sorting uses nulls_last so they never top either ranking.
-    denom = (pl.col("total") - pl.col("excused")).cast(pl.Float64)
+    denom = (pl.col("total") - pl.col("excused") - pl.col("before_oath")).cast(pl.Float64)
     per_mp = per_mp.with_columns(
         pl.when(denom > 0)
         .then(pl.col("active") / denom * 100)
@@ -64,7 +64,6 @@ def compute_attendance(
         "least_active": ("active", False),
         "most_abstained": ("abstained", True),
         "most_excused": ("excused", True),
-        "most_passive": ("passive", True),
         "most_absent": ("absent", True),
         "most_yes": ("yes_votes", True),
         "most_no": ("no_votes", True),
@@ -80,7 +79,6 @@ def compute_attendance(
         "yes_votes",
         "no_votes",
         "abstained",
-        "passive",
         "absent",
         "excused",
         "attendance_pct",
