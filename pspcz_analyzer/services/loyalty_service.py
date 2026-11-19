@@ -1,15 +1,80 @@
 """Party loyalty / rebellion analysis."""
 
+from collections import Counter
+
 import polars as pl
 
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.party_voting import party_majority_direction
+from pspcz_analyzer.utils.text import matches_tokens, normalize_czech, search_tokens
+
+
+def _top_bod(votes: list[dict]) -> dict | None:
+    """Agenda item with the most votes against the club (repeated votes count once per vote)."""
+    counts = Counter((v["schuze"], v["bod"]) for v in votes if v["bod"] and v["bod"] > 0)
+    if not counts:
+        return None
+    (schuze, bod), n = counts.most_common(1)[0]
+    name = next(v["nazev_dlouhy"] for v in votes if (v["schuze"], v["bod"]) == (schuze, bod))
+    return {"schuze": schuze, "bod": bod, "nazev": name, "count": n}
+
+
+def filter_sort_page(
+    rows: list[dict], search: str, party: str, sort: str, page: int, per_page: int
+) -> dict:
+    """Filter, sort and paginate loyalty rows for the list views (#115).
+
+    Args:
+        rows: Output of compute_loyalty(top=None).
+        search: Name search (diacritics-insensitive, word prefixes).
+        party: Club abbreviation, empty for all.
+        sort: "rate" (highest first), "rate_asc", "name" or "club".
+        page: 1-based page.
+        per_page: Rows per page (0 = all).
+
+    Returns:
+        Dict with rows, total, page, total_pages, first, last.
+    """
+    tokens = search_tokens(search)
+    kept = [
+        r
+        for r in rows
+        if (not party or r["party"] == party)
+        and (not tokens or matches_tokens(tokens, r["jmeno"], r["prijmeni"]))
+    ]
+    match sort:
+        case "name":
+            kept.sort(
+                key=lambda r: (
+                    normalize_czech(r["prijmeni"] or ""),
+                    normalize_czech(r["jmeno"] or ""),
+                )
+            )
+        case "club":
+            kept.sort(key=lambda r: (r["party"] or "", -r["rebellion_pct"]))
+        case "rate_asc":
+            kept.sort(key=lambda r: r["rebellion_pct"])
+        case _:
+            kept.sort(key=lambda r: r["rebellion_pct"], reverse=True)
+    total = len(kept)
+    size = per_page or max(total, 1)
+    total_pages = max(1, (total + size - 1) // size)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * size
+    return {
+        "rows": kept[start : start + size],
+        "total": total,
+        "page": page,
+        "total_pages": total_pages,
+        "first": start + 1 if total else 0,
+        "last": min(start + size, total),
+    }
 
 
 def compute_loyalty(
     data: PeriodData,
-    top: int = 30,
+    top: int | None = 30,
     party_filter: str | None = None,
 ) -> list[dict]:
     """Compute rebellion rates for MPs.
@@ -105,7 +170,9 @@ def compute_loyalty(
     if party_filter:
         result = result.filter(pl.col("party").str.to_uppercase() == party_filter.upper())
 
-    result = result.sort("rebellion_pct", descending=True).head(top)
+    result = result.sort("rebellion_pct", descending=True)
+    if top:
+        result = result.head(top)
 
     rows = result.select(
         "id_poslanec",
@@ -122,6 +189,7 @@ def compute_loyalty(
         votes = rebellion_map.get(row["id_poslanec"], [])
         votes.sort(key=lambda v: v["id_hlasovani"], reverse=True)
         row["rebellion_votes"] = votes
+        row["top_bod"] = _top_bod(votes)
         del row["id_poslanec"]
 
     return rows

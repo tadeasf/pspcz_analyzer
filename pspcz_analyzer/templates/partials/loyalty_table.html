@@ -1,79 +1,46 @@
-<table>
-    <thead>
-        <tr>
-            <th>{{ _("th.rank") }}</th>
-            <th>{{ _("th.mp") }}</th>
-            <th>{{ _("th.party") }}</th>
-            <th>{{ _("th.active_votes") }}</th>
-            <th>{{ _("th.rebellions") }}</th>
-            <th>{{ _("th.rebellion_pct") }}</th>
-        </tr>
-    </thead>
+{% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&party=" ~ (party|urlencode) ~ "&per_page=" ~ per_page ~ ("&full=1" if full else "") %}
+{% if not full and chart %}
+<h2 class="h2s">{{ _("loyalty.chart_title") }}</h2>
+<div>
+    {% set max_pct = chart[0].rebellion_pct or 1 %}
+    {% for r in chart %}
+    <div class="hb">
+        <span class="hb-n">{{ r.jmeno }} {{ r.prijmeni }} <span class="lbl">({{ r.party|club_name }})</span></span>
+        <span class="hb-t"><span class="hb-f" style="width:{{ '%.1f'|format(r.rebellion_pct * 100 / max_pct) }}%"></span></span>
+        <span><b>{{ r.rebellion_pct|pct }}</b> <span class="lbl">{{ _("loyalty.x_of_y").format(x=r.rebellions|num, y=r.active_votes|num) }}</span></span>
+    </div>
+    {% endfor %}
+</div>
+<p class="lbl">{{ _("loyalty.chart_note").format(n=chart_min) }}</p>
+{% endif %}
+
+<h2 class="h2s">{{ _("loyalty.list_title") }}</h2>
+{% if not rows %}<p>{{ _("no_data") }}</p>{% else %}
+{% macro sort_th(label, key) -%}
+<th><a href="#" hx-get="/api/loyalty?{{ qs }}&sort={{ key }}" hx-target="#results" style="color:inherit">{{ label }}{% if sort == key or (key == 'rate' and sort == 'rate') %} ▼{% else %} ↕{% endif %}</a></th>
+{%- endmacro %}
+<div style="overflow-x:auto"><table class="t">
+    <thead><tr>{{ sort_th(_("th.mp"), "name") }}{{ sort_th(_("vd.club"), "club") }}<th>{{ _("loyalty.col_diff") }}</th><th>{{ _("loyalty.col_counted") }}</th>{{ sort_th(_("loyalty.col_rate"), "rate") }}<th>{{ _("loyalty.col_topbod") }}</th></tr></thead>
     <tbody>
-        {% for row in rows %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ row.jmeno }} {{ row.prijmeni }}</td>
-            <td>{{ row.party or "N/A" }}</td>
-            <td>{{ row.active_votes|num }}</td>
-            <td>{{ row.rebellions|num }}</td>
-            <td>{{ row.rebellion_pct|pct }}</td>
-        </tr>
-        {% if row.rebellion_votes %}
-        <tr>
-            <td colspan="6" style="padding: 0 0 0 2rem; border-top: none;">
-                <details>
-                    <summary>
-                        {{ _("rebellion_votes.show").format(count=row.rebellion_votes | length) }}
-                    </summary>
-                    <div class="overflow-auto">
-                        <table style="font-size: 0.85rem; margin: 0.5rem 0;">
-                            <thead>
-                                <tr>
-                                    <th>{{ _("th.date") }}</th>
-                                    <th>{{ _("th.description") }}</th>
-                                    <th>{{ _("th.mp_vote") }}</th>
-                                    <th>{{ _("th.party_vote") }}</th>
-                                    <th>{{ _("th.links") }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for v in row.rebellion_votes %}
-                                <tr>
-                                    <td style="white-space: nowrap;">{{ v.datum|cz_date }}</td>
-                                    <td>{{ v.nazev_dlouhy[:120] }}{% if v.nazev_dlouhy|length > 120 %}&hellip;{% endif %}</td>
-                                    <td>
-                                        {% if v.mp_vote == "A" %}
-                                        <span class="vote-yes">{{ _("vote.yes") }}</span>
-                                        {% elif v.mp_vote == "B" %}
-                                        <span class="vote-no">{{ _("vote.no") }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if v.party_direction == "A" %}
-                                        <span class="vote-yes">{{ _("vote.yes") }}</span>
-                                        {% elif v.party_direction == "B" %}
-                                        <span class="vote-no">{{ _("vote.no") }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td style="white-space: nowrap;">
-                                        <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ v.id_hlasovani }}" target="_blank">psp.cz</a>
-                                        {% if v.tisk_url %}
-                                        &middot; <a href="{{ v.tisk_url }}" target="_blank">tisk</a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </details>
-            </td>
-        </tr>
-        {% endif %}
-        {% endfor %}
+    {% for r in rows %}
+    <tr>
+        <td>{% if r.rebellion_votes %}<details><summary style="cursor:pointer">{{ r.jmeno }} {{ r.prijmeni }}</summary>
+            <ul class="lbl" style="margin:6px 0 0 1em;padding:0">{% for v in r.rebellion_votes[:30] %}<li><a href="/votes/{{ v.id_hlasovani }}?period={{ period }}">{{ v.datum|cz_date }}</a> {{ v.nazev_dlouhy[:90] }}</li>{% endfor %}
+            {% if r.rebellion_votes|length > 30 %}<li>{{ _("loyalty.more_votes").format(n=r.rebellion_votes|length - 30) }}</li>{% endif %}</ul></details>
+            {% else %}{{ r.jmeno }} {{ r.prijmeni }}{% endif %}</td>
+        <td>{{ r.party|club_name }}</td>
+        <td>{{ r.rebellions|num }}</td>
+        <td>{{ r.active_votes|num }}</td>
+        <td><b>{{ r.rebellion_pct|pct }}</b></td>
+        <td>{% if r.top_bod %}{{ r.top_bod.nazev[:70] }} <span class="lbl">({{ r.top_bod.count }}×)</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
     </tbody>
-</table>
-{% if not rows %}
-<p>{{ _("no_data_filters") }}</p>
+</table></div>
+<p class="lbl">{{ _("loyalty.shown").format(first=first, last=last, total=total) }} {{ _("loyalty.grouped_note") }}</p>
+<nav class="pagination" style="display:flex;gap:12px;align-items:center">
+    {% if page > 1 %}<button hx-get="/api/loyalty?{{ qs }}&sort={{ sort }}&page={{ page - 1 }}" hx-target="#results">&larr; {{ _("pagination.previous") }}</button>{% endif %}
+    {% if page < total_pages %}<button hx-get="/api/loyalty?{{ qs }}&sort={{ sort }}&page={{ page + 1 }}" hx-target="#results">{{ _("pagination.next") }} &rarr;</button>{% endif %}
+    {% if not full %}<a href="/loyalty/all?period={{ period }}">{{ _("loyalty.all_link").format(n=all_count) }}</a>{% endif %}
+</nav>
 {% endif %}

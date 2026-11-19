@@ -1,0 +1,20 @@
+{% set q = request.query_params %}
+<form class="filters" hx-get="/api/loyalty" hx-target="#results" hx-indicator="#loading">
+    <input type="hidden" name="period" value="{{ period }}">
+    {% if full %}<input type="hidden" name="full" value="1">{% endif %}
+    <label class="field" style="flex:2 1 200px"><span>{{ _("vd.search_mp") }}</span>
+        <input type="search" name="search" value="{{ q.get('search', '') }}" placeholder="{{ _('vd.search_mp_placeholder') }}"></label>
+    <label class="field" style="flex:1 1 160px"><span>{{ _("vd.club") }}</span>
+        <select name="party"><option value="">{{ _("loyalty.all_clubs") }}</option>
+            {% for c in clubs %}<option value="{{ c }}" {% if q.get('party') == c %}selected{% endif %}>{{ c|club_name }}</option>{% endfor %}</select></label>
+    <label class="field" style="flex:1 1 170px"><span>{{ _("loyalty.sort") }}</span>
+        <select name="sort">
+            {% for v, k in [("rate", "loyalty.sort_rate"), ("rate_asc", "loyalty.sort_rate_asc"), ("name", "loyalty.sort_name"), ("club", "loyalty.sort_club")] %}
+            <option value="{{ v }}" {% if q.get('sort', 'rate') == v %}selected{% endif %}>{{ _(k) }}</option>{% endfor %}
+        </select></label>
+    {% if full %}
+    <label class="field" style="flex:0 1 110px"><span>{{ _("loyalty.per_page") }}</span>
+        <select name="per_page">{% for n in (50, 100, 0) %}<option value="{{ n }}" {% if q.get('per_page', '50') == n|string %}selected{% endif %}>{{ n if n else _("loyalty.per_page_all") }}</option>{% endfor %}</select></label>
+    {% endif %}
+    <button class="btn" type="submit">{{ _("vl.show") }}</button>
+</form>

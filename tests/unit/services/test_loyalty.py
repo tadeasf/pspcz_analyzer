@@ -1,6 +1,6 @@
 """Tests for loyalty (rebellion rate) computation."""
 
-from pspcz_analyzer.services.loyalty_service import compute_loyalty
+from pspcz_analyzer.services.loyalty_service import compute_loyalty, filter_sort_page
 from tests.fixtures.sample_data import make_period_data
 
 
@@ -101,3 +101,30 @@ class TestComputeLoyalty:
         result = compute_loyalty(data, top=50)
         pcts = [r["rebellion_pct"] for r in result]
         assert pcts == sorted(pcts, reverse=True)
+
+
+def test_filter_sort_page() -> None:
+    """Search, club filter, sorting and paging for the loyalty list (#115)."""
+    rows = [
+        {"jmeno": "Jan", "prijmeni": "Černý", "party": "ODS", "rebellion_pct": 1.0},
+        {"jmeno": "Eva", "prijmeni": "Adámková", "party": "ANO", "rebellion_pct": 3.0},
+        {"jmeno": "Petr", "prijmeni": "Bílý", "party": "ODS", "rebellion_pct": 2.0},
+    ]
+    assert [r["prijmeni"] for r in filter_sort_page(rows, "", "", "rate", 1, 10)["rows"]] == [
+        "Adámková",
+        "Bílý",
+        "Černý",
+    ]
+    assert [r["prijmeni"] for r in filter_sort_page(rows, "", "", "name", 1, 10)["rows"]] == [
+        "Adámková",
+        "Bílý",
+        "Černý",
+    ]
+    assert [
+        r["prijmeni"] for r in filter_sort_page(rows, "", "ODS", "rate_asc", 1, 10)["rows"]
+    ] == ["Černý", "Bílý"]
+    assert [r["prijmeni"] for r in filter_sort_page(rows, "cerny", "", "rate", 1, 10)["rows"]] == [
+        "Černý"
+    ]
+    page2 = filter_sort_page(rows, "", "", "rate", 2, 2)
+    assert (page2["first"], page2["last"], page2["total"], page2["total_pages"]) == (3, 3, 3, 2)

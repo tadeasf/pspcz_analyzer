@@ -36,6 +36,12 @@ def _ctx(request: Request, period: int, **kwargs) -> dict:
     }
 
 
+def _period_clubs(request: Request, period: int) -> list[str]:
+    """Clubs of the period's MPs (latest club), largest first."""
+    parties = request.app.state.data.get_period(period).mp_info.get_column("party").drop_nulls()
+    return parties.value_counts(sort=True).get_column("party").to_list()
+
+
 def _safe_referer(referer: str | None) -> str:
     """Extract path from referer, rejecting external URLs."""
     if not referer:
@@ -96,11 +102,28 @@ async def index(request: Request, period: int = DEFAULT_PERIOD):
 
 @router.get("/loyalty")
 @limiter.limit("60/minute")
-async def loyalty_page(request: Request, period: int = DEFAULT_PERIOD):
+async def loyalty_page(request: Request, period: int = DEFAULT_PERIOD, tab: str = ""):
     validate_period(period)
+    clubs = _period_clubs(request, period)
     return templates.TemplateResponse(
         "loyalty.html",
-        _ctx(request, period, active_page="loyalty"),
+        _ctx(
+            request,
+            period,
+            active_page="loyalty",
+            tab="podobnost" if tab == "podobnost" else "rebelie",
+            clubs=clubs,
+        ),
+    )
+
+
+@router.get("/loyalty/all")
+@limiter.limit("60/minute")
+async def loyalty_all_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    return templates.TemplateResponse(
+        "loyalty_all.html",
+        _ctx(request, period, active_page="loyalty", clubs=_period_clubs(request, period)),
     )
 
 
@@ -133,12 +156,10 @@ async def report_page(request: Request, period: int = DEFAULT_PERIOD):
 
 @router.get("/similarity")
 @limiter.limit("60/minute")
-async def similarity_page(request: Request, period: int = DEFAULT_PERIOD):
+async def similarity_page(request: Request, period: int = DEFAULT_PERIOD) -> Response:
+    """Old URL: similarity is now a tab of the loyalty page (#105, #116)."""
     validate_period(period)
-    return templates.TemplateResponse(
-        "similarity.html",
-        _ctx(request, period, active_page="similarity"),
-    )
+    return RedirectResponse(f"/loyalty?period={period}&tab=podobnost", status_code=301)
 
 
 @router.get("/votes")

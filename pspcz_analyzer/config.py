@@ -55,6 +55,22 @@ PERIOD_LABELS: dict[int, str] = {
 # Minimum votes two MPs both took part in before a pair is ranked by agreement (#104)
 SIMILARITY_MIN_SHARED_VOTES = int(os.environ.get("SIMILARITY_MIN_SHARED_VOTES", "100"))
 
+# Minimum counted votes for an MP to appear in the 'highest rebellion rate' chart (#115)
+LOYALTY_CHART_MIN_VOTES = 100
+
+# Club colours for the similarity map and attendance chart only (#107); others grey
+CLUB_COLORS: dict[str, str] = {
+    "ANO": "#1E6FD9",
+    "ODS": "#0B2A6B",
+    "MS": "#7FC8EE",
+    "STAN": "#E5007D",
+    "Piráti": "#111111",
+    "KDU-ČSL": "#F2C200",
+    "TOP09": "#6B2C91",
+    "SPD": "#8E1B1B",
+}
+CLUB_COLOR_OTHER = "#8A94A3"
+
 # Club abbreviation (normalised, see mp_builder) -> display name (#107)
 CLUB_DISPLAY_NAMES: dict[str, str] = {
     "TOP09": "TOP 09",

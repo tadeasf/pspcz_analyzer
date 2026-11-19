@@ -5,7 +5,7 @@ from collections.abc import Callable
 import numpy as np
 import polars as pl
 
-from pspcz_analyzer.config import SIMILARITY_MIN_SHARED_VOTES
+from pspcz_analyzer.config import CLUB_COLOR_OTHER, CLUB_COLORS, SIMILARITY_MIN_SHARED_VOTES
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.affiliation import GOVERNMENT, OPPOSITION, classify_party
@@ -192,3 +192,48 @@ def compute_cross_party_similarity(data: PeriodData, top: int = 20) -> dict[str,
     s_go, b_go = _agreement_counts(gov, opp)
     gov_opp = _pairs(s_go + s_go.T, b_go + b_go.T, names, parties, lambda i, j: True, top)
     return {"cross_party": cross, "gov_opp": gov_opp}
+
+
+_MAP_W, _MAP_H, _MAP_PAD = 640.0, 400.0, 14.0
+
+
+def similarity_map(data: PeriodData) -> dict:
+    """PCA map points scaled to an SVG viewBox, coloured by club, plus a legend (#116).
+
+    Args:
+        data: Period data.
+
+    Returns:
+        {"points": [{name, party, cx, cy, color}], "legend": [{party, color, side}],
+        "width", "height"}.
+    """
+    coords = compute_pca_coords(data)
+    if not coords:
+        return {"points": [], "legend": [], "width": _MAP_W, "height": _MAP_H}
+    xs = [c["x"] for c in coords]
+    ys = [c["y"] for c in coords]
+    span_x = (max(xs) - min(xs)) or 1.0
+    span_y = (max(ys) - min(ys)) or 1.0
+    points = [
+        {
+            "name": c["mp_name"],
+            "party": c["party"],
+            "cx": round(_MAP_PAD + (c["x"] - min(xs)) / span_x * (_MAP_W - 2 * _MAP_PAD), 1),
+            "cy": round(_MAP_PAD + (c["y"] - min(ys)) / span_y * (_MAP_H - 2 * _MAP_PAD), 1),
+            "color": CLUB_COLORS.get(c["party"], CLUB_COLOR_OTHER),
+        }
+        for c in coords
+    ]
+    counts: dict[str, int] = {}
+    for c in coords:
+        counts[c["party"]] = counts.get(c["party"], 0) + 1
+    legend = [
+        {
+            "party": party,
+            "color": CLUB_COLORS.get(party, CLUB_COLOR_OTHER),
+            "side": classify_party(party, data.coalition_parties),
+            "count": n,
+        }
+        for party, n in sorted(counts.items(), key=lambda kv: -kv[1])
+    ]
+    return {"points": points, "legend": legend, "width": _MAP_W, "height": _MAP_H}

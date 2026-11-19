@@ -1,15 +1,35 @@
+{% if map.points %}
+<figure style="margin:0">
+    <svg viewBox="0 0 {{ map.width }} {{ map.height }}" role="img" aria-label="{{ _('sim.map_aria') }}" style="width:100%;height:auto;background:#FAFBFD;border:1px solid #D0DCE8;border-radius:4px">
+        {% for p in map.points %}<circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="5" fill="{{ p.color }}" fill-opacity=".85" stroke="{{ '#8A6D00' if p.party == 'KDU-ČSL' else '#fff' }}" stroke-width="1"><title>{{ p.name }} ({{ p.party|club_name }})</title></circle>{% endfor %}
+    </svg>
+    <figcaption class="legend" style="margin-top:8px">
+        {% for side in ("government", "opposition", "unknown") %}{% set items = map.legend|selectattr("side", "equalto", side)|list %}{% if items %}
+        <span><b>{{ _("sim.side_" ~ side) }}:</b></span>{% for l in items %}<span><i style="background:{{ l.color }}{% if l.party == 'KDU-ČSL' %};outline:1px solid #8A6D00{% endif %}"></i>{{ l.party|club_name }} ({{ l.count }})</span>{% endfor %}
+        {% endif %}{% endfor %}
+    </figcaption>
+    <p class="lbl">{{ _("sim.map_note") }}</p>
+</figure>
+{% endif %}
+
+{% macro pair_rows(rows, offset=0) %}
+{% for row in rows %}
+<tr><td>{{ loop.index + offset }}</td><td>{{ row.mp1_name }}</td><td>{{ row.mp1_party|club_name }}</td><td>{{ row.mp2_name }}</td><td>{{ row.mp2_party|club_name }}</td>
+    <td><b>{{ (row.agreement * 100)|pct }}</b></td><td class="lbl">{{ _("sim.same_of").format(same=row.same|num, shared=row.shared|num) }}</td></tr>
+{% endfor %}
+{% endmacro %}
 {% macro pair_table(rows, title, empty_text) %}
 <h2 class="h2s">{{ title }}</h2>
 {% if rows %}
 <div style="overflow-x:auto"><table class="t">
-    <thead><tr><th>{{ _("th.rank") }}</th><th>{{ _("th.mp1") }}</th><th>{{ _("th.party") }}</th><th>{{ _("th.mp2") }}</th><th>{{ _("th.party") }}</th><th>{{ _("sim.agreement") }}</th></tr></thead>
-    <tbody>
-    {% for row in rows %}
-    <tr><td>{{ loop.index }}</td><td>{{ row.mp1_name }}</td><td>{{ row.mp1_party|club_name }}</td><td>{{ row.mp2_name }}</td><td>{{ row.mp2_party|club_name }}</td>
-        <td><b>{{ (row.agreement * 100)|pct }}</b> <span class="lbl">{{ _("sim.same_of").format(same=row.same|num, shared=row.shared|num) }}</span></td></tr>
-    {% endfor %}
-    </tbody>
+    <thead><tr><th>#</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("sim.agreement") }}</th><th>{{ _("sim.voted_same") }}</th></tr></thead>
+    <tbody>{{ pair_rows(rows[:5]) }}</tbody>
 </table></div>
+{% if rows|length > 5 %}
+<details><summary style="cursor:pointer">{{ _("sim.show_all").format(n=rows|length) }}</summary>
+    <div style="overflow-x:auto"><table class="t"><tbody>{{ pair_rows(rows[5:], 5) }}</tbody></table></div>
+</details>
+{% endif %}
 {% else %}
 <p>{{ empty_text }}</p>
 {% endif %}
