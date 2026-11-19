@@ -5,7 +5,7 @@
 .lang-switch a.on { background: #1A4677; color: #fff; font-weight: 700; }
 .s-foot a { text-decoration: none; }
 .s-foot a:hover { text-decoration: underline; }
-.footer-version { font-size: 12px; color: #6b7684; }
+.footer-version { font-size: 12px; color: #5a6573; }
 .phead-h { font-family: Georgia, "Times New Roman", serif; color: #1A4677; font-size: 30px; line-height: 1.2; margin: 0; border: 0; padding: 0; }
 .phead-p { color: #3a4552; margin: 0; }
 @media (max-width: 760px) { .phead-h { font-size: 24px; } }
@@ -19,3 +19,4 @@
 .ld-timeline li .lbl { display: inline-block; min-width: 86px; }
 @media (max-width: 760px) { .ld-grid { grid-template-columns: minmax(0, 1fr) !important; } }
 .card-ic h2 { border: 0; padding: 0; color: #1A4677; font-family: Georgia, "Times New Roman", serif; }
+.aiw a,.crumb a,main p a{text-decoration:underline}

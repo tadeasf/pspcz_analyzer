@@ -19,7 +19,7 @@
 {% macro sort_th(label, key) -%}
 <th><a href="#" hx-get="/api/loyalty?{{ qs }}&sort={{ key }}" hx-target="#results" style="color:inherit">{{ label }}{% if sort == key or (key == 'rate' and sort == 'rate') %} ▼{% else %} ↕{% endif %}</a></th>
 {%- endmacro %}
-<div style="overflow-x:auto"><table class="t">
+<div style="overflow-x:auto" tabindex="0"><table class="t">
     <thead><tr>{{ sort_th(_("th.mp"), "name") }}{{ sort_th(_("vd.club"), "club") }}<th>{{ _("loyalty.col_diff") }}</th><th>{{ _("loyalty.col_counted") }}</th>{{ sort_th(_("loyalty.col_rate"), "rate") }}<th>{{ _("loyalty.col_topbod") }}</th></tr></thead>
     <tbody>
     {% for r in rows %}

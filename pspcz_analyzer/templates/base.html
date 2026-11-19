@@ -50,7 +50,7 @@
         {% endfor %}
     </div></nav>
 
-    <div class="aiw"><div class="in">{{ _("ai.notice_before") }}<a href="/nahlasit-chybu?period={{ period }}">{{ _("ai.notice_link") }}</a>{{ _("ai.notice_after") }}</div></div>
+    <aside class="aiw" aria-label="AI"><div class="in">{{ _("ai.notice_before") }}<a href="/nahlasit-chybu?period={{ period }}">{{ _("ai.notice_link") }}</a>{{ _("ai.notice_after") }}</div></aside>
 
     <main id="main-content"><div class="s-body">
         {% block content %}{% endblock %}

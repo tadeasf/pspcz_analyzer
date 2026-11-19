@@ -34,7 +34,7 @@
 
 {% else %}
 {% if not rows %}<p>{{ _("no_data") }}</p>{% else %}
-<div style="overflow-x:auto"><table class="t">
+<div style="overflow-x:auto" tabindex="0"><table class="t">
     <thead><tr><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("att.logged_in") }}</th><th>{{ _("att.mandate_votes") }}</th><th>{{ _("att.rate") }}</th><th>{{ _("vd.excused") }}</th><th>{{ _("att.mandate") }}</th></tr></thead>
     <tbody>
     {% for r in rows %}

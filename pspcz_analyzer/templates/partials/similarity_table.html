@@ -21,13 +21,13 @@
 {% macro pair_table(rows, title, empty_text) %}
 <h2 class="h2s">{{ title }}</h2>
 {% if rows %}
-<div style="overflow-x:auto"><table class="t">
+<div style="overflow-x:auto" tabindex="0"><table class="t">
     <thead><tr><th>#</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("sim.agreement") }}</th><th>{{ _("sim.voted_same") }}</th></tr></thead>
     <tbody>{{ pair_rows(rows[:5]) }}</tbody>
 </table></div>
 {% if rows|length > 5 %}
 <details><summary style="cursor:pointer">{{ _("sim.show_all").format(n=rows|length) }}</summary>
-    <div style="overflow-x:auto"><table class="t"><tbody>{{ pair_rows(rows[5:], 5) }}</tbody></table></div>
+    <div style="overflow-x:auto" tabindex="0"><table class="t"><tbody>{{ pair_rows(rows[5:], 5) }}</tbody></table></div>
 </details>
 {% endif %}
 {% else %}

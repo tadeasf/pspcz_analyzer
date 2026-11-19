@@ -283,7 +283,7 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
   - Feedback is tied to `vote_id` today (`routes/feedback.py:77`, `services/feedback_service.py:20`); make it generic.
   - Detecting a failed PDF iframe load is unreliable, so always show fallback links (the server already checks `_tisk_pdf_exists`).
   - [#99] also notes an intermittent "Failed to load PDF document" on tisky 231 and 246 (cause unknown).
-- [ ] **[#120] Mobile and accessibility** (P2, M). CSS plus keyboard/ARIA. axe needs a browser test dependency.
+- [x] **[#120] Mobile and accessibility** (P2, M). CSS plus keyboard/ARIA. Checked 2026-11-19 at 390 px on 10 pages (home, laws, law detail, votes, vote detail, amendments, loyalty, attendance, similarity, guide): no horizontal page scroll, axe-core 4.10 reports no serious/critical violations (3 moderate heading-order left). Fixed: footer contrast, underlined links in text, law link moved out of `<summary>`, scrollable tables focusable (`tabindex=0`), AI notice is an `<aside>`. axe runs from a scratch Node script, not a project dependency.
 - [x] **English version**: AI-translate the new Czech texts into `i18n/translations.py` (decided).
 
 ---
