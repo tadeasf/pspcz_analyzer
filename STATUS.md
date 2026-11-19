@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#113] Votes list grouped by agenda item with the needed-votes meter, void votes hatched; [#114] vote detail per the mockup (result, quorum bar, club table, MPs by club with search). Question and kind stay "zatím neznáme" until #102 (LLM). | `07975a1`, `dfe576d` | Screenshot of vote 88876 matches psp.cz club counts; 613 tests |
 | 2026-11-19 | Excuses refresh daily: the daily refresh re-parses `omluvy` with the current-period zip (it holds all periods), and the frontend watcher reloads the period when it changes | `880f1d4` | Unit test for the watcher |
 | 2026-11-19 | [#101] Club at the vote date (per-vote `party` from membership dates, only this period's clubs, function rows dropped); hand-kept government table with sources (period 9: Babiš until 16. 12. 2021, Fiala five-party until 30. 9. 2024, then without Piráti); gov/opposition labels use the government on the vote date | `41e93a8` | Vote 88876 matches psp.cz: ANO 80 (69 no, 1 not logged in, 10 excused). David Pražák (left ANO 1. 11. 2026) is counted in ANO for October votes. |
 | 2026-11-19 | [#105] Site frame from the mockup (header, menu, AI notice, footer with real dates); [#107] section headers with icons; [#118] guide page (Czech text from the mockup); [#119] generic 'Nahlásit chybu' form | `915d06f` | Screenshots at 1280 px and 390 px, no horizontal scroll; 604 tests |
