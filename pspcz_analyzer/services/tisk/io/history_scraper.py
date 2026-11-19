@@ -7,6 +7,7 @@ work, senate, president, publication.
 The page uses div.section elements with headings ("Předkladatel", "Poslanecká
 sněmovna", "Senát", etc.) and inside, ul.document-log with li.document-log-item
 items. Each item has span.mark (PS, O, 1, V, 2, G, 3, S, P, VL) and <p> content.
+Stage parsing and status derivation live in history_stages.
 """
 
 import json
@@ -16,62 +17,17 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from loguru import logger
 
 from pspcz_analyzer.config import PSP_HISTORIE_URL_TEMPLATE
-
-# Mark text -> (stage_type, label).
-# Marks come from the psp.cz history page's document-log items. NOTE: "VL" is
-# the Vláda (government opinion) mark — NOT Sbírka zákonů. Publication in the
-# collection of laws uses the "Sb" mark under the "Sbírka zákonů" section.
-_MARK_MAP: dict[str, tuple[str, str]] = {
-    "PS": ("ps", "Poslanecká sněmovna"),
-    "O": ("organizacni", "Organizační výbor"),
-    "1": ("1_cteni", "1. čtení"),
-    "V": ("vybor", "Výbor"),
-    "2": ("2_cteni", "2. čtení"),
-    "G": ("garant", "Garanční výbor"),
-    "3": ("3_cteni", "3. čtení"),
-    "S": ("senat", "Senát"),
-    "P": ("prezident", "Prezident"),
-    "VL": ("vlada", "Vláda"),
-    "Sb": ("sbirka", "Sbírka zákonů"),
-}
-
-# Regexes for extracting structured data from text
-_DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
-_SESSION_RE = re.compile(r"(\d+)\.\s*sch[ůu]zi")
-_VOTE_RE = re.compile(r"hlasov[áa]n[ií]\s*[čc]\.\s*(\d+)")
-_LAW_NUMBER_RE = re.compile(r"(?:pod\s+)?[čc][ií]slem\s+(\d+/\d+\s*Sb\.)")
-_LAW_NUMBER_ALT_RE = re.compile(r"(\d+/\d+\s*Sb\.)")
-
-_OUTCOME_PATTERNS = [
-    ("schválen", "schválen"),
-    ("zamítnut", "zamítnut"),
-    ("přikázán", "přikázán výborům"),
-    ("doporučuje schválit", "doporučuje schválit"),
-    ("nedoporučuje", "nedoporučuje schválit"),
-    ("podepsal", "podepsal"),
-    ("vrátil", "vrátil"),
-    ("přerušuje", "přerušeno"),
-    ("stažen", "stažen"),
-    ("vzat zpět", "vzat zpět"),
-    ("vyhlášen", "vyhlášen"),
-]
-
-
-@dataclass
-class TiskHistoryStage:
-    """A single stage in the legislative process for a tisk."""
-
-    stage_type: str
-    label: str
-    date: str | None = None
-    session_number: int | None = None
-    vote_number: int | None = None
-    outcome: str | None = None
-    details: str = ""
+from pspcz_analyzer.services.tisk.io.history_stages import (
+    TiskHistoryStage,
+    _determine_status,
+    _extract_first_date,
+    _law_number_from_stages,
+    _parse_stages,
+)
 
 
 @dataclass
@@ -90,117 +46,6 @@ class TiskHistory:
     law_changes: list[dict] = field(default_factory=list)
     amendment_tisk_ct1: int | None = None
     amendment_tisk_idd: int | None = None
-
-
-def _extract_first_date(text: str) -> str | None:
-    """Extract the first date from text in Czech format."""
-    m = _DATE_RE.search(text)
-    if m:
-        return f"{m.group(1)}. {m.group(2)}. {m.group(3)}"
-    return None
-
-
-def _extract_outcome(text: str) -> str | None:
-    """Match known outcome patterns in text."""
-    lower = text.lower()
-    for pattern, label in _OUTCOME_PATTERNS:
-        if pattern in lower:
-            return label
-    return None
-
-
-def _build_stage(mark_text: str, content_text: str) -> TiskHistoryStage | None:
-    """Build a TiskHistoryStage from a mark label and content text."""
-    mapping = _MARK_MAP.get(mark_text)
-    if mapping is None:
-        return None
-
-    stage_type, label = mapping
-    date = _extract_first_date(content_text)
-    session_m = _SESSION_RE.search(content_text)
-    vote_m = _VOTE_RE.search(content_text)
-    outcome = _extract_outcome(content_text)
-
-    return TiskHistoryStage(
-        stage_type=stage_type,
-        label=label,
-        date=date,
-        session_number=int(session_m.group(1)) if session_m else None,
-        vote_number=int(vote_m.group(1)) if vote_m else None,
-        outcome=outcome,
-        details=content_text.strip()[:500],
-    )
-
-
-def _parse_document_log_items(items: list[Tag]) -> list[TiskHistoryStage]:
-    """Parse document-log-item elements into legislative stages."""
-    stages: list[TiskHistoryStage] = []
-    for item in items:
-        try:
-            mark = item.find("span", class_="mark")
-            if not mark:
-                continue
-            mark_text = mark.get_text(strip=True)
-
-            # Get content from <p> tag, or from sub-list for V/G stages
-            p = item.find("p")
-            if p:
-                text = p.get_text(" ", strip=True)
-            else:
-                # V and G stages may have nested <ul> instead of <p>
-                text = item.get_text(" ", strip=True)
-
-            stage = _build_stage(mark_text, text)
-            if stage:
-                stages.append(stage)
-        except Exception:
-            logger.opt(exception=True).debug(
-                "Failed to parse document-log-item",
-            )
-    return stages
-
-
-def _parse_simple_section(content_div: Tag) -> TiskHistoryStage | None:
-    """Try to parse a section without document-log items (e.g. simple content)."""
-    mark = content_div.find("span", class_="mark")
-    if not mark:
-        return None
-    mark_text = mark.get_text(strip=True)
-    text = content_div.get_text(" ", strip=True)
-    try:
-        return _build_stage(mark_text, text)
-    except Exception:
-        logger.opt(exception=True).debug("Failed to parse history stage: {!r}", mark_text)
-        return None
-
-
-def _parse_stages(soup: BeautifulSoup) -> list[TiskHistoryStage]:
-    """Extract legislative stages from the page.
-
-    The page structure is:
-      div.section > [h2/h3/strong heading] + div.section-content >
-        ul.document-log > li.document-log-item >
-          span.mark (PS/O/1/V/2/G/3/S/P/VL) + <p> content
-
-    Some sections (Předkladatel, Prezident, Sbírka) may have simple content
-    without document-log items.
-    """
-    stages: list[TiskHistoryStage] = []
-
-    for section in soup.find_all("div", class_="section"):
-        content_div = section.find("div", class_="section-content")
-        if not content_div:
-            continue
-
-        items = content_div.find_all("li", class_="document-log-item")
-        if items:
-            stages.extend(_parse_document_log_items(items))
-        else:
-            stage = _parse_simple_section(content_div)
-            if stage:
-                stages.append(stage)
-
-    return stages
 
 
 def _extract_submitter(soup: BeautifulSoup) -> tuple[str, str | None]:
@@ -240,59 +85,6 @@ def _extract_government_opinion(soup: BeautifulSoup) -> str | None:
         return "nesouhlas"
     if "neutrální" in text:
         return "neutrální"
-    return None
-
-
-def _determine_status(stages: list[TiskHistoryStage]) -> str:
-    """Determine the current overall status from the parsed legislative stages.
-
-    Only the structured stages (the document-log items) are inspected — never the
-    full page text, which contains boilerplate like "ke stažení" (download) and a
-    reference to zákon 106/1999 Sb. that would otherwise yield false positives.
-    """
-    if any(s.stage_type == "sbirka" for s in stages):
-        return "vyhlášeno"
-
-    # Walk the legislative log newest-first; the latest decisive outcome wins.
-    for stage in reversed(stages):
-        outcome = (stage.outcome or "").lower()
-        if not outcome:
-            continue
-        if "zamítnut" in outcome:
-            return "zamítnuto"
-        if "stažen" in outcome or "vzat zpět" in outcome:
-            return "staženo"
-        if "schválen" in outcome:
-            if stage.stage_type == "prezident":
-                return "podepsáno"
-            if stage.stage_type == "3_cteni":
-                return "schváleno sněmovnou"
-
-    return "projednáváno"
-
-
-def _extract_law_number(text: str) -> str | None:
-    """Extract a law number (e.g. '246/2022 Sb.') from a text fragment."""
-    m = _LAW_NUMBER_RE.search(text)
-    if m:
-        return m.group(1)
-    m = _LAW_NUMBER_ALT_RE.search(text)
-    if m:
-        return m.group(1)
-    return None
-
-
-def _law_number_from_stages(stages: list[TiskHistoryStage]) -> str | None:
-    """Extract the published law number from the Sbírka zákonů stage only.
-
-    Reading from the whole page would pick up the boilerplate "106/1999 Sb."
-    (the Freedom of Information Act referenced in every page footer).
-    """
-    for stage in stages:
-        if stage.stage_type == "sbirka":
-            number = _extract_law_number(stage.details or "")
-            if number:
-                return number
     return None
 
 
@@ -357,6 +149,40 @@ def _resolve_amendment_tisk_idd(
     return None
 
 
+def parse_tisk_history(html: str, period: int, ct: int) -> TiskHistory:
+    """Parse a fetched history page into a TiskHistory (no network access).
+
+    Args:
+        html: Decoded HTML of historie.sqw for the tisk.
+        period: Electoral period number.
+        ct: Tisk number.
+
+    Returns:
+        TiskHistory with stages, status and law number. amendment_tisk_idd is
+        left unresolved (None).
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    full_text = soup.get_text(" ", strip=True)
+
+    stages = _parse_stages(soup)
+    submitter, submitter_date = _extract_submitter(soup)
+    amendment_ct1, amendment_idd = _extract_amendment_tisk_reference(full_text)
+
+    return TiskHistory(
+        ct=ct,
+        period=period,
+        submitter=submitter,
+        submitter_date=submitter_date,
+        government_opinion=_extract_government_opinion(soup),
+        stages=stages,
+        current_status=_determine_status(stages),
+        law_number=_law_number_from_stages(stages),
+        scraped_at=datetime.now(UTC).isoformat(),
+        amendment_tisk_ct1=amendment_ct1,
+        amendment_tisk_idd=amendment_idd,
+    )
+
+
 def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
     """Scrape the legislative history page for a tisk.
 
@@ -377,33 +203,14 @@ def scrape_tisk_history(period: int, ct: int) -> TiskHistory | None:
         )
         return None
 
-    soup = BeautifulSoup(resp.text, "html.parser")
-    full_text = soup.get_text(" ", strip=True)
+    history = parse_tisk_history(resp.text, period, ct)
 
-    stages = _parse_stages(soup)
-    submitter, submitter_date = _extract_submitter(soup)
-    gov_opinion = _extract_government_opinion(soup)
-    law_number = _law_number_from_stages(stages)
-    status = _determine_status(stages)
-
-    # Extract amendment sub-tisk reference (e.g. "tisk 410/4")
-    amendment_ct1, amendment_idd = _extract_amendment_tisk_reference(full_text)
-    if amendment_ct1 is not None and amendment_idd is None:
-        amendment_idd = _resolve_amendment_tisk_idd(period, ct, amendment_ct1)
-
-    return TiskHistory(
-        ct=ct,
-        period=period,
-        submitter=submitter,
-        submitter_date=submitter_date,
-        government_opinion=gov_opinion,
-        stages=stages,
-        current_status=status,
-        law_number=law_number,
-        scraped_at=datetime.now(UTC).isoformat(),
-        amendment_tisk_ct1=amendment_ct1,
-        amendment_tisk_idd=amendment_idd,
-    )
+    # Resolve the amendment sub-tisk PDF idd (network) for "tisk 410/4" references
+    if history.amendment_tisk_ct1 is not None and history.amendment_tisk_idd is None:
+        history.amendment_tisk_idd = _resolve_amendment_tisk_idd(
+            period, ct, history.amendment_tisk_ct1
+        )
+    return history
 
 
 def history_to_dict(h: TiskHistory) -> dict:

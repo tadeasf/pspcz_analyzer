@@ -6,7 +6,7 @@ content (the bug that marked every current-period bill as staženo/vyhlášeno).
 
 from bs4 import BeautifulSoup
 
-from pspcz_analyzer.services.tisk.io.history_scraper import (
+from pspcz_analyzer.services.tisk.io.history_stages import (
     TiskHistoryStage,
     _determine_status,
     _law_number_from_stages,
@@ -47,10 +47,13 @@ class TestDetermineStatus:
 
 
 class TestLawNumberFromStages:
-    def test_reads_from_sbirka_stage_only(self):
+    def test_reads_from_publication_stage_only(self):
         stages = [
             _stage("ps", details="ke stažení 106/1999 Sb."),  # boilerplate-like, ignored
-            _stage("sbirka", details="vyhlášen pod číslem 246/2022 Sb."),
+            _stage(
+                "vyhlaseni",
+                details="Zákon vyhlášen 1. 2. 2022 ve Sbírce zákonů pod číslem 246/2022 Sb.",
+            ),
         ]
         assert _law_number_from_stages(stages) == "246/2022 Sb."
 
