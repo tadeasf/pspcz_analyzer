@@ -292,6 +292,7 @@ class DataService(DataReader):
             f"hl_hlasovani_{period}",
             f"hl_poslanec_{period}",
             f"void_votes_{period}",
+            f"omluvy_{period}",  # psp.cz back-fills excuses; the daily refresh picks them up
         ):
             invalidate_parquet(table, self.cache_dir)
 

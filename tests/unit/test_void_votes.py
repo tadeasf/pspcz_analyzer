@@ -25,3 +25,10 @@ def test_missing_file_gives_empty_frame(tmp_path: Path) -> None:
 
     assert void.height == 0
     assert void.schema["id_hlasovani"] == pl.Int64
+
+
+def test_watcher_reloads_period_when_excuses_change(tmp_path) -> None:
+    """A new omluvy_{period}.parquet (daily refresh) reloads that period in the frontend."""
+    reader = DataReader(cache_dir=tmp_path)
+    reader._periods[10] = object()  # type: ignore[assignment]
+    assert reader._identify_changed_periods({"omluvy_10.parquet"}) == [10]

@@ -581,7 +581,7 @@ class DataReader:
         periods: set[int] = set()
         for fname in changed_files:
             # Period-specific files: hl_hlasovani_10.parquet, hl_poslanec_9.parquet, etc.
-            for prefix in ("hl_hlasovani_", "hl_poslanec_", "void_votes_"):
+            for prefix in ("hl_hlasovani_", "hl_poslanec_", "void_votes_", "omluvy_"):
                 if fname.startswith(prefix):
                     try:
                         p = int(fname.removeprefix(prefix).removesuffix(".parquet"))
