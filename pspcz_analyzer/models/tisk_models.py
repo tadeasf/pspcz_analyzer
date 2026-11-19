@@ -85,6 +85,8 @@ class PeriodData:
     coalition_parties: frozenset[str] = field(default_factory=frozenset)
     # Hand-kept government spans with dates (coalition_table); empty = use coalition_parties
     coalition_spans: tuple[CoalitionSpan, ...] = ()
+    # What each vote was about, from steno (#102): id_hlasovani -> record (services/vote_steno)
+    vote_steno: dict[int, dict] = field(default_factory=dict)
     # Reverse index: id_hlasovani -> (schuze, bod, letter, is_final_vote)
     _amendment_vote_index: dict[int, tuple[int, int, str, bool]] = field(
         default_factory=dict, repr=False

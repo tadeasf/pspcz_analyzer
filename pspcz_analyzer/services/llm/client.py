@@ -14,8 +14,8 @@ from pspcz_analyzer.config import (
     LLM_EMPTY_RETRIES,
     LLM_ENABLE_THINKING,
     LLM_HEALTH_TIMEOUT,
-    LLM_MAX_OUTPUT_TOKENS,
     LLM_MAX_COMPARISON_CHARS,
+    LLM_MAX_OUTPUT_TOKENS,
     LLM_TIMEOUT,
 )
 from pspcz_analyzer.services.llm.helpers import (

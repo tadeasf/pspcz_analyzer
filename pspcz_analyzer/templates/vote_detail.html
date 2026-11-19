@@ -17,7 +17,7 @@
 <div style="display:flex;flex-direction:column;gap:10px;max-width:820px">
     <div>
         {% set al = info.amendment_link %}
-        <span class="chip c-st">{% if al and al.is_final_vote %}{{ _("amendments.vote_about_final") }}{% elif al and al.letter %}{{ _("amendments.vote_about_amendment").format(letter=al.letter) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
+        <span class="chip c-st">{% if al and al.is_final_vote %}{{ _("amendments.vote_about_final") }}{% elif al and al.letter %}{{ _("amendments.vote_about_amendment").format(letter=al.letter) }}{% elif info.kind %}{{ _("vl.kind_" ~ info.kind) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
         {% if info.tisk_ct %}<a href="/laws/{{ info.tisk_ct }}?period={{ period }}">{{ info.tisk_nazev or info.nazev_dlouhy }} ({{ _("vd.tisk_n").format(ct=info.tisk_ct) }})</a>{% endif %}
     </div>
     <h1 class="phead-h">{{ info.nazev_dlouhy or _("vd.number_n").format(n=info.cislo) }}</h1>
@@ -28,8 +28,17 @@
         <span class="chip" style="background:{{ '#1f6b2a' if passed else '#B35C00' }};color:#fff;font-size:14px;padding:4px 10px">{{ _("vd.passed") if passed else _("vd.failed") }}</span>
     </div>
     {% endif %}
+    {% set st = info.steno %}
+    {% if st and st.question %}
+    <section class="box" style="background:#F1F6FC">
+        <p style="font-size:18px;margin:0 0 6px"><b>{{ st.question }}</b></p>
+        <p style="margin:0;color:#3a4552">{{ _("vd.from_steno") }}: „{{ st.quote }}“ <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a></p>
+        <div class="ai"><b>{{ _("vd.ai_question") }}</b><span>{{ _("vd.ai_question_note") }}</span></div>
+    </section>
+    {% else %}
     <p style="color:#3a4552">{{ _("vd.subject_unknown") }}
-        <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }}</a>.</p>
+        <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }}</a>{% if st and st.url %}, <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a>{% endif %}.</p>
+    {% endif %}
     {% if info.amendment_link %}
     <p><a href="/amendments/{{ info.amendment_link.schuze }}/{{ info.amendment_link.bod }}?period={{ period }}">{{ _("amendments.view_amendment_detail") }}</a></p>
     {% endif %}

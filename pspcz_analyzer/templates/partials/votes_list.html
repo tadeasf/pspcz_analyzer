@@ -25,8 +25,8 @@
     <div class="vrow"{% if r.kind == "final" %} style="background:#F5F8FC"{% endif %}>
         <span class="lbl">{{ r.cas }}</span>
         <span>
-            <span class="chip {{ 'c-st' if r.kind == 'final' else 'c-proc' }}">{% if r.kind == "final" %}{{ _("vl.kind_final") }}{% elif r.kind == "amendment" %}{{ _("vl.kind_amendment") }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
-            <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{% if r.kind == "final" %}<b>{{ _("vl.q_final") }}</b>{% else %}{{ _("vl.q_unknown").format(n=r.cislo) }}{% endif %}</a>
+            <span class="chip {{ 'c-st' if r.kind == 'final' else 'c-proc' }}">{% if r.kind %}{{ _("vl.kind_" ~ r.kind) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
+            <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{% if r.steno and r.steno.question %}{{ r.steno.question }}{% elif r.kind == "final" %}<b>{{ _("vl.q_final") }}</b>{% else %}{{ _("vl.q_unknown").format(n=r.cislo) }}{% endif %}</a>
         </span>
         <div>
             {% if r.prihlaseno %}

@@ -55,6 +55,7 @@ STAGE_LABELS: dict[str, str] = {
     PipelineStage.CLASSIFY: "Classifying & summarizing",
     PipelineStage.CONSOLIDATE_TOPICS: "Consolidating topics",
     PipelineStage.BRIEFS: "Writing AI briefs",
+    PipelineStage.VOTE_STENO: "Vote questions from steno",
     PipelineStage.SCRAPE_LAW_CHANGES: "Scraping law changes",
     PipelineStage.DOWNLOAD_VERSIONS: "Downloading versions",
     PipelineStage.ANALYZE_DIFFS: "Analyzing diffs",

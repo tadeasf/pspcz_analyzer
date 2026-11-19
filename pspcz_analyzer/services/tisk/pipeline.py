@@ -41,6 +41,7 @@ from pspcz_analyzer.services.tisk.version_service import (
     analyze_version_diffs_sync,
     download_subtisk_versions_sync,
 )
+from pspcz_analyzer.services.vote_steno import generate_vote_steno_sync
 
 
 class TiskPipelineService:
@@ -501,6 +502,15 @@ class TiskPipelineService:
                     self._set_stage(period, PipelineStage.BRIEFS)
                     await asyncio.to_thread(
                         generate_briefs_sync,
+                        period,
+                        self.cache_dir,
+                        progress_callback=_classify_cb,
+                        cancel_check=cancel_check,
+                    )
+                    self._check_period_cancelled(period)
+                    self._set_stage(period, PipelineStage.VOTE_STENO)
+                    await asyncio.to_thread(
+                        generate_vote_steno_sync,
                         period,
                         self.cache_dir,
                         progress_callback=_classify_cb,

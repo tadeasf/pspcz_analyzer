@@ -38,6 +38,8 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `OLLAMA_MODEL` — model name for Ollama (default: `qwen3:8b`)
 - `LLM_STRUCTURED_OUTPUT` — JSON schema structured output for all providers (`0` or `1`, default: `1`; backward-compat: reads `OLLAMA_STRUCTURED_OUTPUT` as fallback)
 - `LLM_EMPTY_RETRIES` — extra attempts when free-text LLM path returns empty/unparseable results (default: `2`, `0` = no retries)
+- `LLM_ENABLE_THINKING` - Qwen3 thinking switch sent as `chat_template_kwargs` on the OpenAI-compatible path: `0` off, `1` on, unset = not sent (default: unset; set `0` for `qwen3_8_flash`, whose thinking runs away on tisk prompts)
+- `LLM_MAX_OUTPUT_TOKENS` - reply token cap sent with every OpenAI-compatible request (default: `8192`; without it the hlidacstatu proxy reserves 131072 reply tokens and halves the usable 262k context)
 - `OPENAI_BASE_URL` — OpenAI-compatible API endpoint (default: `https://api.openai.com/v1`)
 - `OPENAI_API_KEY` — API key for OpenAI-compatible backend (default: empty)
 - `OPENAI_MODEL` — model name for OpenAI-compatible backend (default: `gpt-4o-mini`)
@@ -141,6 +143,14 @@ Background pipeline for third-reading amendment voting analysis. Runs as asyncio
 ### Pipeline Cancellation (`services/cancellation.py`)
 
 Shared cooperative cancellation for both pipeline services. Pipeline bodies run in worker threads (`asyncio.to_thread`), where `asyncio.Task.cancel()` cannot interrupt them — so each running period owns a `CancellationFlag` that `cancel_period()`/`cancel_all()` flip instantly; pipeline stages call `check()` at every stage boundary and loop top, exiting promptly with `PipelineCancelled` (caught by the service → `CANCELLED` status). Both services also expose `async wait_stopped(timeout)` to drain tasks after `cancel_all()` (hard-cancelling whatever is still running after the timeout); used by the admin stop endpoint, daily refresh, and backend lifespan shutdown.
+
+### AI brief per bill (`services/tisk/brief.py`, #109/#97)
+
+Pipeline stage `BRIEFS` (after topic consolidation) writes `tisky_meta/{period}/briefs/{ct}.json` for bills (`id_druh` 1-3): plain title, one/two-sentence summary, who it concerns, amounts, proposed start date, cs + en, with model, date and source text hash. `brief_issues`/`text_issues` flag non-Latin script, English in Czech fields and numbers missing from the source; flagged output is retried, then stored with `status: warning` and shown with a warning. Regenerated when `BRIEF_VERSION` or the text changes. The laws list/detail/homepage/search use the brief; the old critical `summary` is no longer shown. Amendment letter summaries use the same check (`AmendmentVote.summary_warning`).
+
+### Vote questions from steno (`services/vote_steno.py`, #102)
+
+Pipeline stage `VOTE_STENO` crawls every sitting's steno sub-pages (whole numeric range between the first and last page linked from the day pages; index/day pages of sittings from the last 21 days are re-fetched). Each vote anchor `<a href="/sqw/hlasy.sqw?G=<id>" id="hN">` closes a window of lead-in text; rules give the kind, the LLM writes the question + a verbatim quote, kept only when the quote is in the steno and `text_issues` passes (else `status: unknown`). Output `vote_steno/{period}/{schuze}.json`, loaded into `PeriodData.vote_steno`.
 
 ### Law Service (`services/law_service.py`)
 

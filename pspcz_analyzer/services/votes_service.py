@@ -155,11 +155,26 @@ def _enrich_vote_rows(rows: list[dict], data: PeriodData, lang: str = "cs") -> N
 
 
 def _vote_kind(data: PeriodData, vote_id: int) -> str | None:
-    """'final' / 'amendment' when amendment data identifies the vote, else None (#102)."""
+    """Kind from amendment data ('final' / 'amendment'), else from the steno rules (#102)."""
     ctx = data.get_amendment_for_vote(vote_id)
-    if ctx is None:
+    if ctx is not None and (ctx[3] or ctx[2]):
+        return "final" if ctx[3] else "amendment"
+    kind = data.vote_steno.get(vote_id, {}).get("kind")
+    return None if kind in (None, "other") else kind
+
+
+def _vote_question(data: PeriodData, vote_id: int, lang: str) -> dict | None:
+    """Question, quote and steno link of a vote when the steno check passed (#102)."""
+    rec = data.vote_steno.get(vote_id)
+    if not rec:
         return None
-    return "final" if ctx[3] else ("amendment" if ctx[2] else None)
+    q = rec.get("question_en") if lang == "en" else None
+    return {
+        "question": q or rec.get("question", ""),
+        "quote": rec.get("quote", ""),
+        "url": rec.get("url", ""),
+        "status": rec.get("status", "unknown"),
+    }
 
 
 def _filter_kind(votes: pl.DataFrame, data: PeriodData, kind: str) -> pl.DataFrame:
@@ -256,6 +271,7 @@ def list_votes(
     for row in rows:
         row["is_void"] = row["id_hlasovani"] in void_ids
         row["kind"] = _vote_kind(data, row["id_hlasovani"])
+        row["steno"] = _vote_question(data, row["id_hlasovani"], lang)
 
     return {
         "groups": _group_rows(rows),
@@ -363,6 +379,8 @@ def vote_detail(data: PeriodData, vote_id: int, lang: str = "cs") -> dict | None
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)
     mp_detail = mp_rows.join(data.mp_info.drop("party"), on="id_poslanec", how="left")
 
+    info["kind"] = _vote_kind(data, vote_id)
+    info["steno"] = _vote_question(data, vote_id, lang)
     return {
         "info": info,
         "party_breakdown": _build_party_breakdown(mp_detail),

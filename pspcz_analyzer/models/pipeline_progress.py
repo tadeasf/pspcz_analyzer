@@ -31,6 +31,7 @@ class PipelineStage(StrEnum):
     CLASSIFY = "classify_and_summarize"
     CONSOLIDATE_TOPICS = "consolidate_topics"
     BRIEFS = "briefs"
+    VOTE_STENO = "vote_steno"
     SCRAPE_LAW_CHANGES = "scrape_law_changes"
     DOWNLOAD_VERSIONS = "download_versions"
     ANALYZE_DIFFS = "analyze_diffs"
