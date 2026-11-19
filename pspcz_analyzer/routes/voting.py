@@ -103,18 +103,25 @@ async def votes_api(
     search: str = Query(default="", max_length=200),
     outcome: str = Query(default="", max_length=20),
     topic: str = Query(default="", max_length=200),
+    kind: str = Query(default="", max_length=20),
     page: int = Query(default=1, ge=1, le=1000),
 ):
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
     lang = getattr(request.state, "lang", "cs")
-    key = f"votes:{period}:{search}:{outcome}:{topic}:{page}:{lang}"
+    key = f"votes:{period}:{search}:{outcome}:{topic}:{kind}:{page}:{lang}"
     result = await run_with_timeout(
         lambda: analysis_cache.get_or_compute(
             key,
             lambda: list_votes(
-                pd, search=search, page=page, outcome_filter=outcome, topic_filter=topic, lang=lang
+                pd,
+                search=search,
+                page=page,
+                outcome_filter=outcome,
+                topic_filter=topic,
+                lang=lang,
+                kind_filter=kind,
             ),
         ),
         timeout=15.0,
@@ -128,6 +135,7 @@ async def votes_api(
             "search": search,
             "outcome": outcome,
             "topic": topic,
+            "kind": kind,
             "lang": lang,
             **result,
         },

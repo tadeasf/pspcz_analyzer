@@ -148,35 +148,87 @@ def _enrich_vote_rows(rows: list[dict], data: PeriodData, lang: str = "cs") -> N
             r["tisk_topics"] = []
 
 
+def _vote_kind(data: PeriodData, vote_id: int) -> str | None:
+    """'final' / 'amendment' when amendment data identifies the vote, else None (#102)."""
+    ctx = data.get_amendment_for_vote(vote_id)
+    if ctx is None:
+        return None
+    return "final" if ctx[3] else ("amendment" if ctx[2] else None)
+
+
+def _filter_kind(votes: pl.DataFrame, data: PeriodData, kind: str) -> pl.DataFrame:
+    """Keep votes of a known kind; unknown kinds cannot be filtered yet."""
+    if kind not in ("final", "amendment"):
+        return votes
+    ids = [v for v in votes.get_column("id_hlasovani").to_list() if _vote_kind(data, v) == kind]
+    return votes.filter(pl.col("id_hlasovani").is_in(ids))
+
+
+def _group_rows(rows: list[dict]) -> list[dict]:
+    """Group consecutive rows (newest first) by sitting, agenda item and day."""
+    groups: list[dict] = []
+    for row in rows:
+        key = (row["schuze"], row["bod"], row["datum"])
+        if not groups or groups[-1]["key"] != key:
+            groups.append(
+                {
+                    "key": key,
+                    "schuze": row["schuze"],
+                    "bod": row["bod"],
+                    "datum": row["datum"],
+                    "rows": [],
+                }
+            )
+        groups[-1]["rows"].append(row)
+    for g in groups:
+        first = g["rows"][0]
+        g["title"] = first.get("tisk_nazev") or first["nazev_dlouhy"] or first["nazev_kratky"]
+        g["tisk_ct"] = first.get("tisk_ct")
+        g["all_void"] = all(r["is_void"] for r in g["rows"])
+    return groups
+
+
 def list_votes(
     data: PeriodData,
     search: str = "",
     page: int = 1,
-    per_page: int = 30,
+    per_page: int = 12,
     outcome_filter: str = "",
     topic_filter: str = "",
     lang: str = "cs",
+    kind_filter: str = "",
 ) -> dict:
-    """List votes with optional text search, topic filter, and pagination.
+    """List votes grouped by agenda item, with filters and pagination by group (#113).
+
+    Void votes stay in the list (marked ``is_void``) so readers see them.
 
     Args:
+        data: Period data.
+        search: Free-text search over the agenda item names.
+        page: 1-based page of groups.
+        per_page: Groups per page.
+        outcome_filter: "A" (passed) or "R" (rejected), empty for all.
+        topic_filter: Topic label of the linked tisk, empty for all.
         lang: Language code for topic labels ('cs' or 'en').
+        kind_filter: "final" or "amendment" (kinds known from amendment data).
 
-    Returns dict with keys: rows, total, page, per_page, total_pages.
+    Returns:
+        Dict with groups, rows (flat rows of the page), total (votes),
+        total_groups, page, per_page, total_pages.
     """
-    void_ids = data.void_votes.get_column("id_hlasovani")
-    votes = data.votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
+    votes = _apply_vote_filters(data.votes, data, search, outcome_filter, topic_filter)
+    votes = _filter_kind(votes, data, kind_filter).sort("id_hlasovani", descending=True)
+    keys = votes.select("schuze", "bod", "datum").unique(maintain_order=True)
 
-    votes = _apply_vote_filters(votes, data, search, outcome_filter, topic_filter)
-
-    total = votes.height
-    total_pages = max(1, (total + per_page - 1) // per_page)
+    total_groups = keys.height
+    total_pages = max(1, (total_groups + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
+    page_keys = keys.slice((page - 1) * per_page, per_page)
+    page_rows = votes.join(
+        page_keys, on=["schuze", "bod", "datum"], how="semi", maintain_order="left"
+    )
 
-    votes = votes.sort("id_hlasovani", descending=True)
-    offset = (page - 1) * per_page
-    page_rows = votes.slice(offset, per_page)
-
+    void_ids = set(data.void_votes.get_column("id_hlasovani").to_list())
     rows = page_rows.select(
         "id_hlasovani",
         "datum",
@@ -192,13 +244,18 @@ def list_votes(
         "zdrzel",
         "nehlasoval",
         "prihlaseno",
+        "kvorum",
     ).to_dicts()
-
     _enrich_vote_rows(rows, data, lang)
+    for row in rows:
+        row["is_void"] = row["id_hlasovani"] in void_ids
+        row["kind"] = _vote_kind(data, row["id_hlasovani"])
 
     return {
+        "groups": _group_rows(rows),
         "rows": rows,
-        "total": total,
+        "total": votes.height,
+        "total_groups": total_groups,
         "page": page,
         "per_page": per_page,
         "total_pages": total_pages,

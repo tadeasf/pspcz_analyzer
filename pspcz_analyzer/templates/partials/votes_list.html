@@ -1,73 +1,52 @@
-{% if not rows %}
+{% if not groups %}
 <p>{{ _("votes.no_data") }}</p>
 {% else %}
-<p><strong>{{ _("votes_found").format(total=total, page=page, total_pages=total_pages) }}</strong></p>
-
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("th.date") }}</th>
-                <th>{{ _("th.description") }}</th>
-                <th>{{ _("th.result") }}</th>
-                <th>{{ _("th.for") }}</th>
-                <th>{{ _("th.against") }}</th>
-                <th>{{ _("th.abstained") }}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                <td><small>{{ row.datum }}<br>{{ row.cas }}</small></td>
-                <td>
-                    {% if row.nazev_kratky %}
-                    {{ row.nazev_kratky }}
-                    {% elif row.nazev_dlouhy %}
-                    {{ row.nazev_dlouhy[:120] }}{% if row.nazev_dlouhy|length > 120 %}...{% endif %}
-                    {% else %}
-                    <em>{{ _("session_vote").format(session=row.schuze, number=row.cislo) }}</em>
-                    {% endif %}
-                    {% if row.tisk_url %}
-                    <br><small><a href="{{ row.tisk_url }}" target="_blank">{{ _("th.tisk") }} {{ row.tisk_ct }}</a></small>
-                    {% endif %}
-                    {% if row.tisk_topics %}
-                    <br>{% for t in row.tisk_topics %}<span class="topic-badge">{{ t }}</span>{% endfor %}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if row.vysledek == "A" %}
-                    <span class="result-passed">{{ row.outcome_label }}</span>
-                    {% elif row.vysledek == "R" %}
-                    <span class="result-rejected">{{ row.outcome_label }}</span>
-                    {% else %}
-                    {{ row.outcome_label }}
-                    {% endif %}
-                </td>
-                <td>{{ row.pro }}</td>
-                <td>{{ row.proti }}</td>
-                <td>{{ row.zdrzel }}</td>
-                <td>
-                    <a href="/votes/{{ row.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
-                    <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ row.id_hlasovani }}" target="_blank" class="btn-small" style="font-size: 0.8rem;">psp.cz</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+{% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&outcome=" ~ (outcome|urlencode) ~ "&topic=" ~ (topic|urlencode) ~ "&kind=" ~ (kind|urlencode) %}
+<p class="lbl">{{ _("vl.found").format(total=total, groups=total_groups) }}</p>
+{% for g in groups %}
+<details class="vg{% if g.all_void %} zm{% endif %}" {% if loop.index <= 4 %}open{% endif %}>
+    <summary class="vg-h">
+        <span class="lbl">{{ g.datum }} · {{ _("vd.session_n").format(n=g.schuze) }} · {{ _("vl.n_votes").format(n=g.rows|length) }}</span>
+        <span style="font:700 18px Georgia,serif;color:#1A4677">
+            {% if g.tisk_ct %}<a href="/laws/{{ g.tisk_ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ g.title }}</a>
+            <span style="font:400 14px Arial,sans-serif;color:#5a6573">{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}</span>
+            {% else %}{{ g.title or _("vl.no_item") }}{% endif %}
+        </span>
+    </summary>
+    {% for r in g.rows %}
+    {% if r.is_void %}
+    <div class="vrow zm">
+        <span class="lbl">{{ r.cas }}</span>
+        <span><span class="chip c-proc">{{ _("vd.void_label") }}</span> <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{{ _("vd.void_text") }}</a></span>
+        <span></span><span></span>
+    </div>
+    {% else %}
+    {% set passed = r.vysledek == "A" %}
+    <div class="vrow"{% if r.kind == "final" %} style="background:#F5F8FC"{% endif %}>
+        <span class="lbl">{{ r.cas }}</span>
+        <span>
+            <span class="chip {{ 'c-st' if r.kind == 'final' else 'c-proc' }}">{% if r.kind == "final" %}{{ _("vl.kind_final") }}{% elif r.kind == "amendment" %}{{ _("vl.kind_amendment") }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
+            <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{% if r.kind == "final" %}<b>{{ _("vl.q_final") }}</b>{% else %}{{ _("vl.q_unknown").format(n=r.cislo) }}{% endif %}</a>
+        </span>
+        <div>
+            {% if r.prihlaseno %}
+            <div class="meter" role="img" aria-label="{{ _('vl.meter_aria').format(pro=r.pro, kvorum=r.kvorum, prihlaseno=r.prihlaseno) }}"><span class="f" style="width:{{ '%.1f'|format(r.pro * 100 / r.prihlaseno) }}%"></span><span class="t" style="left:{{ '%.1f'|format([r.kvorum * 100 / r.prihlaseno, 100]|min) }}%"></span></div>
+            {% endif %}
+            <span class="lbl">{{ _("vl.meter_text").format(pro=r.pro, kvorum=r.kvorum) }}</span>
+        </div>
+        <span class="chip {{ 'c-ok' if passed else 'c-no' }}" style="justify-self:end">{{ _("vd.passed") if passed else _("vd.failed") }}</span>
+    </div>
+    {% endif %}
+    {% endfor %}
+</details>
+{% endfor %}
+<p class="lbl">{{ _("vl.meter_note") }}</p>
 
 {% if total_pages > 1 %}
 <nav class="pagination" aria-label="{{ _('pagination.label') }}">
-    {% if page > 1 %}
-    <button hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page - 1 }}"
-            hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</button>
-    {% endif %}
+    {% if page > 1 %}<button hx-get="/api/votes?{{ qs }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</button>{% endif %}
     <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
-    {% if page < total_pages %}
-    <button hx-get="/api/votes?period={{ period }}&search={{ search }}&outcome={{ outcome }}&topic={{ topic }}&page={{ page + 1 }}"
-            hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</button>
-    {% endif %}
+    {% if page < total_pages %}<button hx-get="/api/votes?{{ qs }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</button>{% endif %}
 </nav>
 {% endif %}
 {% endif %}

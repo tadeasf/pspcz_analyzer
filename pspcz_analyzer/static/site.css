@@ -9,3 +9,7 @@
 .phead-h { font-family: Georgia, "Times New Roman", serif; color: #1A4677; font-size: 30px; line-height: 1.2; margin: 0; border: 0; padding: 0; }
 .phead-p { color: #3a4552; margin: 0; }
 @media (max-width: 760px) { .phead-h { font-size: 24px; } }
+/* style.css colours every submit button; mockup buttons win */
+.site button.btn, .site button.btn:hover { background: #1A4677; border: 0; color: #fff; }
+.vg > summary, .club > summary { cursor: pointer; list-style: none; }
+.vg > summary::-webkit-details-marker, .club > summary::-webkit-details-marker { display: none; }
