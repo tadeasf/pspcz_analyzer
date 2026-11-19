@@ -5,7 +5,7 @@
 {% macro law_row(r, text) %}
 <div class="lrow">
     <span class="lbl">{{ r.last_step.date|cz_date(short=True) if r.last_step else "" }}</span>
-    <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a><br>{{ text }}</span>
+    <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ text }}</span>
     {% if r.status_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(r.status|status_category, 'c-wait') }}">{{ _(r.status_key) }}</span>{% endif %}
 </div>
 {% endmacro %}
@@ -69,7 +69,7 @@
     {% for r in blocks.newest %}
     <div class="lrow">
         <span class="lbl">{{ r.submitted|cz_date(short=True) if r.submitted else "" }}</span>
-        <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a><br>{{ r.summary or _("lw.no_summary") }}</span>
+        <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ r.summary or _("lw.no_summary") }}</span>
         <span class="chip c-st">{{ _("lw.submitter_" ~ r.kind) if r.kind else _("lw.kind_unknown") }}</span>
     </div>
     {% else %}<p>{{ _("no_data") }}</p>{% endfor %}

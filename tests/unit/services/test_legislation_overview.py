@@ -76,3 +76,9 @@ class TestHomepageBlocks:
             id_tisk=1, ct=999, nazev="Zpráva", period=10, id_druh=5
         )
         assert 999 not in [r["ct"] for r in homepage_blocks(data)["newest"]]
+
+    def test_same_title_bills_are_marked_dup(self):
+        data = _make_data()
+        data.tisk_lookup[(78, 2)].nazev = "Zákon 200"
+        rows = {r["ct"]: r["dup"] for r in homepage_blocks(data)["newest"]}
+        assert rows == {400: False, 300: True, 200: True}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import date, timedelta
 
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
@@ -127,6 +128,10 @@ def homepage_blocks(data: PeriodData, lang: str = "cs") -> dict:
         "newest": [...3]}.
     """
     rows = [_row(t, lang) for t in _bills(data)]
+    # A bill and its accompanying "souvisejici" bill can get the same plain title
+    names = Counter(r["nazev"] for r in rows)
+    for r in rows:
+        r["dup"] = names[r["nazev"]] > 1
     in_chamber = _by_last_step([r for r in rows if r["phase"] == "chamber"])
     passed = _by_last_step([r for r in rows if r["phase"] in ("president", "valid")])
     newest = sorted(rows, key=lambda r: r["ct"], reverse=True)
