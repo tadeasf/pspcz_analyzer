@@ -124,7 +124,7 @@ def list_amendment_bills(
     offset = (page - 1) * per_page
     page_bills = bills[offset : offset + per_page]
 
-    rows = [_bill_summary(b, data.coalition_parties) for b in page_bills]
+    rows = [_bill_summary(b, data.coalition_for_bill(b)) for b in page_bills]
 
     return {
         "rows": rows,
@@ -203,8 +203,14 @@ def amendment_detail(
     if bill is None:
         return None
 
-    amendments = [_amendment_to_dict(a, data.coalition_parties) for a in bill.amendments]
-    final = _amendment_to_dict(bill.final_vote, data.coalition_parties) if bill.final_vote else None
+    amendments = [
+        _amendment_to_dict(a, data.coalition_for_vote(a.id_hlasovani)) for a in bill.amendments
+    ]
+    final = (
+        _amendment_to_dict(bill.final_vote, data.coalition_for_vote(bill.final_vote.id_hlasovani))
+        if bill.final_vote
+        else None
+    )
 
     # Build vote_number → result lookup for revote context
     vote_result_map = _build_vote_result_map(bill)
@@ -258,7 +264,7 @@ def amendment_detail(
         "grouped_amendments": grouped,
         "final_vote": final,
         "amendment_count": bill.amendment_count,
-        "driver": _bill_driver(bill, data.coalition_parties),
+        "driver": _bill_driver(bill, data.coalition_for_bill(bill)),
         "parse_confidence": bill.parse_confidence,
         "parse_warnings": bill.parse_warnings,
     }
@@ -284,7 +290,7 @@ def amendment_mp_votes(
         return None
 
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == id_hlasovani)
-    mp_detail = mp_rows.join(data.mp_info, on="id_poslanec", how="left")
+    mp_detail = mp_rows.join(data.mp_info.drop("party"), on="id_poslanec", how="left")
 
     # Build party breakdown
     party_breakdown: list[dict] = []

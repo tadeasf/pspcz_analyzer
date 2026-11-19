@@ -298,7 +298,7 @@ def vote_detail(data: PeriodData, vote_id: int, lang: str = "cs") -> dict | None
 
     # Individual MP votes for this vote
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)
-    mp_detail = mp_rows.join(data.mp_info, on="id_poslanec", how="left")
+    mp_detail = mp_rows.join(data.mp_info.drop("party"), on="id_poslanec", how="left")
 
     return {
         "info": info,

@@ -40,15 +40,9 @@ def _confidence_vote_candidates(votes: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def _club_yes_fractions(
-    vote_id: int,
-    mp_votes: pl.DataFrame,
-    mp_info: pl.DataFrame,
-) -> pl.DataFrame:
+def _club_yes_fractions(vote_id: int, mp_votes: pl.DataFrame) -> pl.DataFrame:
     """Per-club (party, seats n, yes count, yes_frac) for a single vote."""
-    joined = mp_votes.filter(pl.col("id_hlasovani") == vote_id).join(
-        mp_info.select(["id_poslanec", "party"]), on="id_poslanec", how="left"
-    )
+    joined = mp_votes.filter(pl.col("id_hlasovani") == vote_id)
     return (
         joined.filter(pl.col("party").is_not_null())
         .group_by("party")
@@ -105,14 +99,13 @@ def _coalition_from_split(split: pl.DataFrame) -> frozenset[str]:
 def detect_coalition_parties(
     votes: pl.DataFrame,
     mp_votes: pl.DataFrame,
-    mp_info: pl.DataFrame,
 ) -> frozenset[str]:
     """Detect the governing coalition's clubs from the confidence vote.
 
     Args:
         votes: Vote records (needs `id_hlasovani`, `vysledek`, a name column, `datum`).
-        mp_votes: Per-MP vote results (`id_hlasovani`, `id_poslanec`, `vysledek`).
-        mp_info: MP info with `id_poslanec` and normalized `party`.
+        mp_votes: Per-MP vote results (`id_hlasovani`, `id_poslanec`, `vysledek`,
+            `party` = club at the vote date).
 
     Returns:
         Frozenset of government-coalition club abbreviations, or an empty
@@ -127,7 +120,7 @@ def detect_coalition_parties(
     candidates = candidates.sort("id_hlasovani", descending=True)
 
     for vote_id in candidates.get_column("id_hlasovani").to_list():
-        split = _club_yes_fractions(vote_id, mp_votes, mp_info)
+        split = _club_yes_fractions(vote_id, mp_votes)
         coalition = _coalition_from_split(split)
         if coalition:
             logger.info(

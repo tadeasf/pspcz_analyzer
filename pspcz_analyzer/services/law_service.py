@@ -120,7 +120,7 @@ def _build_law_row(
             if bill.final_vote:
                 final_result = bill.final_vote.result
             amendment_link = {"schuze": schuze, "bod": bod}
-            driver = _bill_driver(bill, data.coalition_parties)
+            driver = _bill_driver(bill, data.coalition_for_bill(bill))
             break
 
     # Summary — truncated for list view
@@ -313,7 +313,7 @@ def law_detail(
                     "bod": bod,
                     "amendment_count": bill.amendment_count,
                     "final_result": final_result,
-                    "driver": _bill_driver(bill, data.coalition_parties),
+                    "driver": _bill_driver(bill, data.coalition_for_bill(bill)),
                 }
             )
 

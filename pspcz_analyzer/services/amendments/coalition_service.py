@@ -42,12 +42,8 @@ def _compute_party_agreement_on_amendments(
     # Only active votes (YES or NO)
     active = mp_votes.filter(pl.col("vysledek").is_in({VoteResult.YES, VoteResult.NO}))
 
-    # Join with MP info for party
-    active = active.join(
-        data.mp_info.select("id_poslanec", "party"),
-        on="id_poslanec",
-        how="inner",
-    )
+    # Keep MPs known for the period; party is the club at the vote date
+    active = active.join(data.mp_info.select("id_poslanec"), on="id_poslanec", how="inner")
 
     # Compute party majority direction per vote
     party_majority = party_majority_direction(active, direction_alias="direction")
@@ -108,7 +104,7 @@ def _find_amendment_rebels(
     # Only active votes
     active = all_mp_votes.filter(pl.col("vysledek").is_in({VoteResult.YES, VoteResult.NO}))
     active = active.join(
-        data.mp_info.select("id_poslanec", "party", "jmeno", "prijmeni"),
+        data.mp_info.select("id_poslanec", "jmeno", "prijmeni"),
         on="id_poslanec",
         how="inner",
     )
@@ -216,11 +212,7 @@ def _compute_party_cohesion(
     all_mp_votes = data.mp_votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
 
     active = all_mp_votes.filter(pl.col("vysledek").is_in({VoteResult.YES, VoteResult.NO}))
-    active = active.join(
-        data.mp_info.select("id_poslanec", "party"),
-        on="id_poslanec",
-        how="inner",
-    )
+    active = active.join(data.mp_info.select("id_poslanec"), on="id_poslanec", how="inner")
 
     # Party majority direction
     party_maj = (

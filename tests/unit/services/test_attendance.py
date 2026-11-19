@@ -19,7 +19,9 @@ def _with_fully_excused_mp() -> PeriodData:
         },
         schema={"id_poslanec": pl.Int64, "id_hlasovani": pl.Int64, "vysledek": pl.Utf8},
     )
-    data.mp_votes = pl.concat([data.mp_votes, excused_rows])
+    data.mp_votes = pl.concat(
+        [data.mp_votes, excused_rows.with_columns(pl.lit("TOP09").alias("party"))]
+    )
     extra_info = pl.DataFrame(
         {
             "id_poslanec": [99],

@@ -51,7 +51,7 @@ def _amendment_info_for_ct(data: PeriodData, ct: int) -> dict:
                 "final_result": bill.final_vote.result if bill.final_vote else "",
                 "has_amendments": True,
                 "amendment_link": {"schuze": schuze, "bod": bod},
-                "driver": amendment_driver(parties, data.coalition_parties),
+                "driver": amendment_driver(parties, data.coalition_for_bill(bill)),
             }
     return {
         "amendment_count": 0,

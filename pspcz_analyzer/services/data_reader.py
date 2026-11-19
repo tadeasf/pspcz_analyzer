@@ -54,7 +54,8 @@ from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.amendments.cache_manager import load_amendments
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.coalition_detector import detect_coalition_parties
-from pspcz_analyzer.services.mp_builder import build_mp_info
+from pspcz_analyzer.services.coalition_table import coalition_spans
+from pspcz_analyzer.services.mp_builder import add_vote_parties, build_mp_info
 from pspcz_analyzer.services.tisk import (
     TiskCacheManager,
     TiskTextService,
@@ -419,6 +420,9 @@ class DataReader:
         mp_info = build_mp_info(
             period, shared.mps, shared.persons, shared.organs, shared.memberships
         )
+        mp_votes = add_vote_parties(
+            period, mp_votes, votes, mp_info, shared.organs, shared.memberships
+        )
 
         # Pre-load topic cache for tisk lookup builder
         self._cache_mgr.load_topic_cache(period)
@@ -439,7 +443,11 @@ class DataReader:
         amendment_data = load_amendments(self.cache_dir, period) if AMENDMENTS_ENABLED else {}
 
         # Auto-detect the governing coalition from the confidence vote
-        coalition_parties = detect_coalition_parties(votes, mp_votes, mp_info)
+        # Hand-kept table first (#101); the confidence vote is the fallback
+        spans = coalition_spans(period)
+        coalition_parties = (
+            spans[-1].parties if spans else detect_coalition_parties(votes, mp_votes)
+        )
 
         pd = PeriodData(
             period=period,
@@ -450,6 +458,7 @@ class DataReader:
             tisk_lookup=tisk_lookup,
             amendment_data=amendment_data,
             coalition_parties=coalition_parties,
+            coalition_spans=spans,
         )
         pd.build_amendment_vote_index()
         self._periods[period] = pd

@@ -27,9 +27,9 @@ def compute_loyalty(
     active_results = {VoteResult.YES, VoteResult.NO}
     active_votes = mp_votes.filter(pl.col("vysledek").is_in(active_results))
 
-    # Map id_poslanec -> id_osoba via mp_info
+    # Map id_poslanec -> id_osoba via mp_info; party is the club at the vote date
     active_votes = active_votes.join(
-        data.mp_info.select("id_poslanec", "id_osoba", "party"),
+        data.mp_info.select("id_poslanec", "id_osoba"),
         on="id_poslanec",
         how="inner",
     )
