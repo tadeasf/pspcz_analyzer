@@ -122,7 +122,7 @@ All of these need a **full re-scrape of history JSON** after [#87]. It is cheap:
 
 ### 1C. Amendments (labels and counts)
 
-- [ ] **[#93] Amendment counts are bod occurrences, not amendments** (P1, M, after #85). Correct.
+- [x] **[#93] Amendment counts are bod occurrences, not amendments** (P1, M, after #85). Correct.
   - Root cause is deeper: `_identify_third_reading_bods` (`identifier.py:102-148`) makes any (schuze, bod) with more than one vote a candidate if the tisk ever had a 3rd reading.
   - `amendment_count` is `len(amendments)` (`amendment_models.py:103-105`) and includes amendments without a result, so a "not determined" bucket is needed for accepted + rejected + other = count.
   - Fix: group by `ct` in `law_service._build_law_row` / `law_detail` and `amendment_service.list_amendment_bills`, show the sum in `law_detail.html:14`, rename `amendments.bills_found`, and tighten candidate selection.
@@ -191,7 +191,7 @@ Order from [#99]: #100 → #101 → #102 → #103 → #104.
     6. Measure on a random sample of about 100 votes and publish the result.
   - Expected accuracy (estimates): anchoring about 95 %, kind about 85-90 %, free-text question about 70-80 % (bills and amendments almost always right, procedural votes mostly).
   - Risk: more network load and pipeline time from fetching steno for every sitting.
-- [ ] **[#103] Who submitted each amendment letter (opposition/government/cross/committee); submitted vs adopted** (P1, M, after #101 and #93). Correct (`amendment_service.py:49-52`; the model has no committee field).
+- [x] **[#103] Who submitted each amendment letter (opposition/government/cross/committee); submitted vs adopted** (P1, M, after #101 and #93). Correct (`amendment_service.py:49-52`; the model has no committee field).
   - Grouped votes, withdrawals, re-votes and technical fixes are already flagged (`amendment_models.py:47-52`).
   - Committee detection relies on parsing PDF headers.
 - [x] **[#104] Similarity: real agreement instead of cosine; gov × opposition pairs** (P1, S + S). Correct: only A=+1 and B=-1, everything else 0, `fill_null(0)` (`similarity_service.py:21-35`), and no minimum overlap (`:75-108`). The methodology text in `translations.py:228` is misleading.
@@ -253,7 +253,7 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
   - "Decisive vote on top" needs the vote kind from #102.
   - The Senate print number and e-Sbírka links are new extraction (URL scheme not checked).
   - Amendment links go to the consolidated document (decided). "Sledovat" is the RSS feed (pending).
-- [ ] **[#112] Amendments: section landing page and per-law detail** (P1, L).
+- [x] **[#112] Amendments: section landing page and per-law detail** (P1, L).
   - Grouping, filters and name search are mostly template work (`submitter_names` exists).
   - The per-amendment link goes to the consolidated document (decided).
   - The "Zatím se nehlasovalo" filter needs the unvoted-amendments pipeline (2X).
