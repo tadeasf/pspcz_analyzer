@@ -1,38 +1,59 @@
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("th.rank") }}</th>
-                <th>{{ _("th.mp") }}</th>
-                <th>{{ _("th.party") }}</th>
-                <th>{{ _("th.active") }}</th>
-                <th>{{ _("th.yes") }}</th>
-                <th>{{ _("th.no") }}</th>
-                <th>{{ _("th.abstained") }}</th>
-                <th>{{ _("th.absent") }}</th>
-                <th>{{ _("th.excused") }}</th>
-                <th>{{ _("th.attendance_pct") }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ row.jmeno }} {{ row.prijmeni }}</td>
-                <td>{{ row.party or "?" }}</td>
-                <td><strong>{{ row.active|num }}</strong></td>
-                <td class="vote-yes">{{ row.yes_votes|num }}</td>
-                <td class="vote-no">{{ row.no_votes|num }}</td>
-                <td class="vote-abstained">{{ row.abstained|num }}</td>
-                <td>{{ row.absent|num }}</td>
-                <td>{{ row.excused|num }}</td>
-                {# Fully-excused MPs have no defined attendance rate (null) #}
-                <td>{% if row.attendance_pct is not none %}{{ row.attendance_pct|pct }}{% else %}{{ _("unknown_yet") }}{% endif %}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% set qs = "period=" ~ period ~ "&sort=" ~ sort ~ "&party=" ~ (party|urlencode) ~ "&search=" ~ (search|urlencode) ~ "&per_page=" ~ per_page ~ "&view=" ~ view %}
+{% if view == "chart" %}
+{# 1. attendance by club: one dot per MP, line = club median #}
+{% set W, LW, RH = 640, 120, 30 %}
+{% set amin = strips.axis_min %}
+{% set H = strips.clubs|length * RH + 30 %}
+<h2 class="h2s">{{ _("att.chart_clubs") }}</h2>
+<svg viewBox="0 0 {{ W }} {{ H }}" role="img" aria-label="{{ _('att.chart_clubs') }}" style="width:100%;height:auto">
+    {% for t in range(amin, 101, 10) %}{% set x = LW + (t - amin) / (100 - amin) * (W - LW - 10) %}
+    <line x1="{{ x }}" x2="{{ x }}" y1="0" y2="{{ H - 20 }}" stroke="#E3EAF2"/><text x="{{ x }}" y="{{ H - 6 }}" font-size="10" text-anchor="middle" fill="#5a6573">{{ t }} %</text>{% endfor %}
+    {% for c in strips.clubs %}{% set y = loop.index0 * RH + 15 %}
+    <text x="0" y="{{ y + 4 }}" font-size="12" fill="#1d232b">{{ c.party|club_name }}</text>
+    {% set color = club_colors.get(c.party, club_color_other) %}
+    {% for pnt in c.points %}{% set x = LW + (pnt.pct - amin) / (100 - amin) * (W - LW - 10) %}
+    <circle cx="{{ '%.1f'|format(x) }}" cy="{{ y }}" r="4.5" fill="{{ color }}" fill-opacity=".75" stroke="{{ '#8A6D00' if c.party == 'KDU-ČSL' else '#fff' }}"><title>{{ pnt.name }}: {{ pnt.pct|pct }}</title></circle>{% endfor %}
+    {% set mx = LW + (c.median - amin) / (100 - amin) * (W - LW - 10) %}
+    <line x1="{{ '%.1f'|format(mx) }}" x2="{{ '%.1f'|format(mx) }}" y1="{{ y - 11 }}" y2="{{ y + 11 }}" stroke="#1d232b" stroke-width="2"><title>{{ _("att.median") }} {{ c.median|pct }}</title></line>
+    {% endfor %}
+</svg>
+<p class="lbl">{{ _("att.chart_clubs_note") }}{% if amin %} {{ _("att.axis_from").format(n=amin) }}{% endif %}</p>
+
+{# 2. what the absence consists of #}
+<h2 class="h2s">{{ _("att.chart_parts") }}</h2>
+{% for r in lowest %}{% set tot = r.mandate_votes or 1 %}
+<div class="hb">
+    <span class="hb-n">{{ r.jmeno }} {{ r.prijmeni }} <span class="lbl">({{ r.party|club_name }})</span></span>
+    <span class="hb-t" style="display:flex;overflow:hidden">
+        <span style="width:{{ '%.1f'|format(r.active * 100 / tot) }}%;background:#1A4677"></span><span style="width:{{ '%.1f'|format(r.excused * 100 / tot) }}%;background:#fff;box-shadow:inset 0 0 0 1px #AEBBCB"></span><span style="width:{{ '%.1f'|format(r.absent * 100 / tot) }}%;background:#AEBBCB"></span>
+    </span>
+    <span><b>{{ r.attendance_pct|pct }}</b></span>
 </div>
-{% if not rows %}
-<p>{{ _("no_data") }}</p>
+{% endfor %}
+<div class="legend"><span><i style="background:#1A4677"></i>{{ _("att.logged_in") }}</span><span><i style="background:#fff;outline:1px solid #AEBBCB"></i>{{ _("vd.excused") }}</span><span><i style="background:#AEBBCB"></i>{{ _("att.absent_unexcused") }}</span></div>
+
+{% else %}
+{% if not rows %}<p>{{ _("no_data") }}</p>{% else %}
+<div style="overflow-x:auto"><table class="t">
+    <thead><tr><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("att.logged_in") }}</th><th>{{ _("att.mandate_votes") }}</th><th>{{ _("att.rate") }}</th><th>{{ _("vd.excused") }}</th><th>{{ _("att.mandate") }}</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr {% if r.small_sample %}style="color:#8A94A3"{% endif %}>
+        <td>{{ r.jmeno }} {{ r.prijmeni }}{% if r.small_sample %} <span class="chip">{{ _("att.small_sample") }}</span>{% endif %}</td>
+        <td>{{ r.party|club_name }}</td>
+        <td>{{ r.active|num }}</td>
+        <td>{{ r.mandate_votes|num }}</td>
+        <td style="min-width:150px">{% if r.attendance_pct is not none %}<span class="meter" style="display:inline-block;width:70px;vertical-align:middle"><span class="f" style="width:{{ '%.1f'|format(r.attendance_pct) }}%"></span></span> {{ r.attendance_pct|pct }}{% else %}{{ _("unknown_yet") }}{% endif %}</td>
+        <td>{{ r.excused|num }}</td>
+        <td>{% if r.from_start and r.to_end %}{{ _("att.whole_term") }}{% elif r.from_start %}{{ _("att.until").format(d=r.mandate_to|cz_date) }}{% elif r.to_end %}{{ _("att.since").format(d=r.mandate_from|cz_date) }}{% else %}{{ r.mandate_from|cz_date }} - {{ r.mandate_to|cz_date }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+<p class="lbl">{{ _("loyalty.shown").format(first=first, last=last, total=total) }} {{ _("att.small_note").format(n=min_votes) }}</p>
+<nav class="pagination" style="display:flex;gap:12px">
+    {% if page > 1 %}<button hx-get="/api/attendance?{{ qs }}&page={{ page - 1 }}" hx-target="#results">&larr; {{ _("pagination.previous") }}</button>{% endif %}
+    {% if page < total_pages %}<button hx-get="/api/attendance?{{ qs }}&page={{ page + 1 }}" hx-target="#results">{{ _("pagination.next") }} &rarr;</button>{% endif %}
+</nav>
+{% endif %}
 {% endif %}

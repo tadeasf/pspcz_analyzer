@@ -55,6 +55,9 @@ PERIOD_LABELS: dict[int, str] = {
 # Minimum votes two MPs both took part in before a pair is ranked by agreement (#104)
 SIMILARITY_MIN_SHARED_VOTES = int(os.environ.get("SIMILARITY_MIN_SHARED_VOTES", "100"))
 
+# MPs with fewer votes in their mandate are not ranked by attendance (#117)
+ATTENDANCE_MIN_VOTES = 50
+
 # Minimum counted votes for an MP to appear in the 'highest rebellion rate' chart (#115)
 LOYALTY_CHART_MIN_VOTES = 100
 

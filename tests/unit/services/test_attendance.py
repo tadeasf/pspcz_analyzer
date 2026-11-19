@@ -50,16 +50,16 @@ class TestComputeAttendance:
         assert all(isinstance(r, dict) for r in result)
 
     def test_attendance_pct_formula(self):
-        """Verify: attendance = active / (total - excused) * 100.
+        """Verify: attendance = logged in / votes in the mandate * 100.
 
         MP 5 (Marie Nová): 1 YES + 1 ABSTAINED + 1 DID_NOT_VOTE (F, logged in) = 3 active,
-        1 ABSENT, 1 EXCUSED; total=5, attendance = 3 / (5-1) * 100 = 75%
+        1 ABSENT, 1 EXCUSED; all 5 votes of the mandate count: 3 / 5 * 100 = 60% (#117)
         """
         data = make_period_data()
         result = compute_attendance(data, top=50)
         marie = [r for r in result if r["prijmeni"] == "Nová"]
         assert len(marie) == 1
-        assert marie[0]["attendance_pct"] == 75.0
+        assert marie[0]["attendance_pct"] == 60.0
         assert marie[0]["active"] == 3
         assert marie[0]["excused"] == 1
 
@@ -82,30 +82,24 @@ class TestComputeAttendance:
         result = compute_attendance(data, top=2)
         assert len(result) <= 2
 
-    def test_fully_excused_mp_has_null_rate(self):
-        """All-excused MPs get a null rate, not inf (audit fix B6).
-
-        Regression: active / (total - excused) = 0/0 = inf used to rank a
-        permanently-excused MP as having the BEST attendance.
-        """
+    def test_fully_excused_mp_has_zero_rate(self):
+        """Excused votes stay in the denominator and are shown separately (#117)."""
         data = _with_fully_excused_mp()
         result = compute_attendance(data, top=50, sort="worst")
         excused = [r for r in result if r["prijmeni"] == "Omluvený"]
-        assert len(excused) == 1
-        assert excused[0]["attendance_pct"] is None
+        assert excused[0]["attendance_pct"] == 0.0
         assert excused[0]["excused"] == 5
 
-    def test_fully_excused_mp_sorts_last_worst(self):
-        """nulls_last: an undefined rate never tops the 'worst attendance' list."""
+    def test_small_sample_is_flagged_and_sorted_last(self, monkeypatch):
+        """MPs under ATTENDANCE_MIN_VOTES are not ranked (#117)."""
+        monkeypatch.setattr("pspcz_analyzer.services.attendance_service.ATTENDANCE_MIN_VOTES", 5)
         data = _with_fully_excused_mp()
+        data.mp_votes = data.mp_votes.filter(
+            ~((pl.col("id_poslanec") == 99) & (pl.col("id_hlasovani") > 2))
+        )
         result = compute_attendance(data, top=50, sort="worst")
         assert result[-1]["prijmeni"] == "Omluvený"
-
-    def test_fully_excused_mp_sorts_last_best(self):
-        """nulls_last: an undefined rate never tops the 'best attendance' list."""
-        data = _with_fully_excused_mp()
-        result = compute_attendance(data, top=50, sort="best")
-        assert result[-1]["prijmeni"] == "Omluvený"
+        assert result[-1]["small_sample"] is True
 
     def test_expected_fields(self):
         """Each result should have the expected keys."""

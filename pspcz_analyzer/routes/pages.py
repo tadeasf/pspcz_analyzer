@@ -133,7 +133,7 @@ async def attendance_page(request: Request, period: int = DEFAULT_PERIOD):
     validate_period(period)
     return templates.TemplateResponse(
         "attendance.html",
-        _ctx(request, period, active_page="attendance"),
+        _ctx(request, period, active_page="attendance", clubs=_period_clubs(request, period)),
     )
 
 

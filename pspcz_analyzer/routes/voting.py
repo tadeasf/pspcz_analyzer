@@ -6,12 +6,16 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, LOYALTY_CHART_MIN_VOTES
+from pspcz_analyzer.config import ATTENDANCE_MIN_VOTES, DEFAULT_PERIOD, LOYALTY_CHART_MIN_VOTES
 from pspcz_analyzer.middleware import run_with_timeout
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.utils import validate_period, with_push_url
 from pspcz_analyzer.services.analysis_cache import analysis_cache
-from pspcz_analyzer.services.attendance_service import compute_attendance
+from pspcz_analyzer.services.attendance_service import (
+    attendance_view,
+    club_strips,
+    compute_attendance,
+)
 from pspcz_analyzer.services.loyalty_service import compute_loyalty, filter_sort_page
 from pspcz_analyzer.services.similarity_service import (
     compute_cross_party_similarity,
@@ -80,25 +84,44 @@ async def loyalty_api(
 async def attendance_api(
     request: Request,
     period: int = DEFAULT_PERIOD,
-    top: int = Query(default=30, ge=1, le=200),
     sort: str = Query(default="worst", max_length=20),
-    party: str = Query(default="", max_length=200),
+    party: str = Query(default="", max_length=50),
+    search: str = Query(default="", max_length=100),
+    per_page: int = Query(default=30, ge=0, le=500),
+    page: int = Query(default=1, ge=1, le=100),
+    view: str = Query(default="table", max_length=10),
 ):
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
-    key = f"attendance:{period}:{top}:{sort}:{party}"
+    key = f"attendance:{period}:{sort}:{party}"
     rows = await run_with_timeout(
         lambda: analysis_cache.get_or_compute(
-            key, lambda: compute_attendance(pd, top=top, sort=sort, party_filter=party or None)
+            key, lambda: compute_attendance(pd, top=None, sort=sort, party_filter=party or None)
         ),
         timeout=15.0,
         label="attendance analysis",
     )
-    return templates.TemplateResponse(
-        "partials/attendance_table.html",
-        {"request": request, "rows": rows, "lang": getattr(request.state, "lang", "cs")},
-    )
+    ctx: dict = {
+        "request": request,
+        "period": period,
+        "sort": sort,
+        "party": party,
+        "search": search,
+        "per_page": per_page,
+        "view": view,
+        "min_votes": ATTENDANCE_MIN_VOTES,
+        "lang": getattr(request.state, "lang", "cs"),
+        **attendance_view(rows, search, page, per_page),
+    }
+    if view == "chart":
+        ctx["strips"] = club_strips(rows)
+        ctx["lowest"] = sorted(
+            (r for r in rows if not r["small_sample"] and r["attendance_pct"] is not None),
+            key=lambda r: r["attendance_pct"],
+        )[:12]
+    response = templates.TemplateResponse("partials/attendance_table.html", ctx)
+    return with_push_url(response, request, "/attendance")
 
 
 @router.get("/similarity", response_class=HTMLResponse)
