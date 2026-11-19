@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#106] (part) Czech number, percent and date filters and the agreed terms (Prošlo/Neprošlo, Pro/Proti, Nepřihlášen, Nepřijat, Shrnutí AI). Left: glossary tooltips from one source (with #118), "Spolehlivost parseru" texts move to the admin with #100/#112, status labels with the history-parser branch | `a385912` | Filter unit tests; 630 tests |
 | 2026-11-19 | [#104] Similarity pairs show real agreement (% and "stejně v X z Y", min. 100 shared votes) and a government × opposition table (sides on the vote date) | `3012847` | Unit test 100 of 100 = 100 %; periods 9 and 10 compute in ~1 s |
 | 2026-11-19 | [#94] Amendment driver label reads "Pozměňovací návrhy podali: poslanci opozice" with a note on what is classified and as of which date | `2f53015` | 628 tests |
 | 2026-11-19 | [#96] Search and filters in the URL for laws, votes and amendments; links can be shared and Back restores the previous list | `b1859be` | Browser: search on /votes changes the URL, Back returns to the full list; 3 API tests |
