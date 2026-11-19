@@ -89,7 +89,7 @@ def _to_date(value: object) -> date | None:
     """Parse a date from a date/datetime, "dd.mm.yyyy" or ISO "yyyy-mm-dd" string."""
     if isinstance(value, date):
         return value
-    text = str(value or "").strip()[:10]
+    text = "".join(str(value or "").split())[:10]  # "18. 11. 2026" -> "18.11.2026"
     for fmt in ("%d.%m.%Y", "%Y-%m-%d"):
         try:
             return datetime.strptime(text, fmt).date()

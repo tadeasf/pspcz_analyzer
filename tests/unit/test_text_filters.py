@@ -21,6 +21,7 @@ def test_czech_formats() -> None:
     assert format_date_cz("23.09.2026") == "23. 9. 2026"
     assert format_date_cz(date(2026, 9, 23), short=True) == "23. 9."
     assert format_date_cz("2026-09-23 00") == "23. 9. 2026"
+    assert format_date_cz("18. 11. 2026", short=True) == "18. 11."
 
 
 def test_english_formats() -> None:
