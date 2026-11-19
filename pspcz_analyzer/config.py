@@ -52,6 +52,9 @@ PERIOD_LABELS: dict[int, str] = {
     1: "1993–1996",
 }
 
+# Minimum votes two MPs both took part in before a pair is ranked by agreement (#104)
+SIMILARITY_MIN_SHARED_VOTES = int(os.environ.get("SIMILARITY_MIN_SHARED_VOTES", "100"))
+
 # Club abbreviation (normalised, see mp_builder) -> display name (#107)
 CLUB_DISPLAY_NAMES: dict[str, str] = {
     "TOP09": "TOP 09",

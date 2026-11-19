@@ -1,27 +1,19 @@
-<table>
-    <thead>
-        <tr>
-            <th>{{ _("th.rank") }}</th>
-            <th>{{ _("th.mp1") }}</th>
-            <th>{{ _("th.party") }}</th>
-            <th>{{ _("th.mp2") }}</th>
-            <th>{{ _("th.party") }}</th>
-            <th>{{ _("th.similarity") }}</th>
-        </tr>
-    </thead>
+{% macro pair_table(rows, title, empty_text) %}
+<h2 class="h2s">{{ title }}</h2>
+{% if rows %}
+<div style="overflow-x:auto"><table class="t">
+    <thead><tr><th>{{ _("th.rank") }}</th><th>{{ _("th.mp1") }}</th><th>{{ _("th.party") }}</th><th>{{ _("th.mp2") }}</th><th>{{ _("th.party") }}</th><th>{{ _("sim.agreement") }}</th></tr></thead>
     <tbody>
-        {% for row in rows %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ row.mp1_name }}</td>
-            <td>{{ row.mp1_party }}</td>
-            <td>{{ row.mp2_name }}</td>
-            <td>{{ row.mp2_party }}</td>
-            <td>{{ "%.1f"|format(row.similarity * 100) }}%</td>
-        </tr>
-        {% endfor %}
+    {% for row in rows %}
+    <tr><td>{{ loop.index }}</td><td>{{ row.mp1_name }}</td><td>{{ row.mp1_party|club_name }}</td><td>{{ row.mp2_name }}</td><td>{{ row.mp2_party|club_name }}</td>
+        <td><b>{{ "%.1f"|format(row.agreement * 100) }} %</b> <span class="lbl">{{ _("sim.same_of").format(same=row.same, shared=row.shared) }}</span></td></tr>
+    {% endfor %}
     </tbody>
-</table>
-{% if not rows %}
-<p>{{ _("no_data") }}</p>
+</table></div>
+{% else %}
+<p>{{ empty_text }}</p>
 {% endif %}
+{% endmacro %}
+{{ pair_table(tables.cross_party, _("sim.cross_title"), _("no_data")) }}
+{{ pair_table(tables.gov_opp, _("sim.govopp_title"), _("sim.govopp_unknown")) }}
+<p class="lbl">{{ _("sim.note") }}</p>

@@ -4,6 +4,12 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "cs": {
         # ── Base / Header / Nav ──────────────────────────────────────────
         "site.title": "Zákony pod lupou",
+        "sim.note": "Shoda = počet hlasování, kde oba hlasovali stejně, děleno počtem hlasování, kterých se oba účastnili (pro, proti, zdržel se / nehlasoval). Nepřihlášení a omluvení se nepočítají. Dvojice musí mít aspoň 100 společných hlasování. U dvojic vláda × opozice počítáme jen hlasování, kdy byl jeden klub ve vládě a druhý v opozici.",
+        "sim.govopp_unknown": "Pro toto období neznáme složení vlády, dvojice vláda × opozice proto neuvádíme.",
+        "sim.govopp_title": "Nejvíce se shodující dvojice vládní × opoziční poslanec",
+        "sim.cross_title": "Nejvíce se shodující dvojice z různých klubů",
+        "sim.same_of": "stejně v {same} z {shared}",
+        "sim.agreement": "Shoda",
         "driver.note": "Klasifikujeme autory podaných pozměňovacích návrhů podle toho, zda jejich klub byl v den hlasování ve vládě. Předkladatele zákona uvádíme zvlášť podle historie tisku.",
         "vl.meter_note": "Svislá čárka v pruhu ukazuje, kolik hlasů bylo k přijetí potřeba. Obvykle je to nadpoloviční většina přítomných poslanců. Pro některá rozhodnutí platí jiná většina, uvádíme ji podle záznamu psp.cz.",
         "vl.meter_aria": "Pro {pro}, potřeba {kvorum} z {prihlaseno} přihlášených",
@@ -481,6 +487,12 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
         # ── Base / Header / Nav ──────────────────────────────────────────
         "site.title": "Zákony pod lupou",
+        "sim.note": "Agreement = votes where both voted the same way, divided by votes both took part in (yes, no, abstained / did not vote). Not logged in and excused do not count. A pair needs at least 100 shared votes. For government × opposition pairs we count only votes where one club was in government and the other in opposition.",
+        "sim.govopp_unknown": "The government for this term is unknown, so government × opposition pairs are not shown.",
+        "sim.govopp_title": "Most agreeing pairs: government × opposition MP",
+        "sim.cross_title": "Most agreeing pairs from different clubs",
+        "sim.same_of": "same in {same} of {shared}",
+        "sim.agreement": "Agreement",
         "driver.note": "We classify the authors of the filed amendments by whether their club was in government on the day of the vote. The bill's sponsor is shown separately, from the bill history.",
         "vl.meter_note": "The vertical mark in the bar shows how many votes were needed to pass. Usually it is a majority of the MPs present. Some decisions need a different majority; we show it as recorded by psp.cz.",
         "vl.meter_aria": "Yes {pro}, needed {kvorum} of {prihlaseno} logged in",
