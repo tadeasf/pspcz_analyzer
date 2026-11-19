@@ -26,7 +26,7 @@ def test_set_and_load_roundtrip(tmp_path) -> None:
 
 
 def test_vote_question_replaces_or_creates_record() -> None:
-    steno = {1: {"question": "", "status": "unknown", "quote": "", "url": "u"}}
+    steno: dict[int, dict] = {1: {"question": "", "status": "unknown", "quote": "", "url": "u"}}
     ov = _ov(vote_question={"1": {"question": "A?", "by": "a", "at": "t"}, "2": {"question": "B?"}})
     apply_vote_questions(steno, ov)
     assert steno[1]["question"] == "A?" and steno[1]["status"] == "ok" and steno[1]["url"] == "u"
