@@ -8,6 +8,7 @@
     <p>{{ detail.tisk_nazev }}</p>
     {% if detail.driver and detail.driver != "unknown" %}
     <p class="driver-line">{{ _("driver.label") }}: {{ driver_badge(detail.driver) }}</p>
+    <p class="lbl">{{ _("driver.note") }}</p>
     {% endif %}
 </div>
 

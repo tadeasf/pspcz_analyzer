@@ -4,6 +4,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "cs": {
         # ── Base / Header / Nav ──────────────────────────────────────────
         "site.title": "Zákony pod lupou",
+        "driver.note": "Klasifikujeme autory podaných pozměňovacích návrhů podle toho, zda jejich klub byl v den hlasování ve vládě. Předkladatele zákona uvádíme zvlášť podle historie tisku.",
         "vl.meter_note": "Svislá čárka v pruhu ukazuje, kolik hlasů bylo k přijetí potřeba. Obvykle je to nadpoloviční většina přítomných poslanců. Pro některá rozhodnutí platí jiná většina, uvádíme ji podle záznamu psp.cz.",
         "vl.meter_aria": "Pro {pro}, potřeba {kvorum} z {prihlaseno} přihlášených",
         "vl.meter_text": "pro {pro} · potřeba {kvorum}",
@@ -163,10 +164,10 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "index.overview.view_law": "Detail zákona",
         "index.overview.view_amendments": "{count} pozm. návrhů",
         "index.overview.no_amendments": "Bez pozměňovacích návrhů",
-        "driver.label": "Předkladatel",
-        "driver.government": "Vládní",
-        "driver.opposition": "Opoziční",
-        "driver.mixed": "Napříč spektrem",
+        "driver.label": "Pozměňovací návrhy podali",
+        "driver.government": "poslanci vládních klubů",
+        "driver.opposition": "poslanci opozice",
+        "driver.mixed": "poslanci vlády i opozice",
         # ── Amendments ─────────────────────────────────────────────────
         "amendments.title": "Pozměňovací návrhy",
         "amendments.subtitle": "Změny, které poslanci a výbory navrhují k projednávaným zákonům. Kdo je podal, co mění a jestli prošly.",
@@ -480,6 +481,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
         # ── Base / Header / Nav ──────────────────────────────────────────
         "site.title": "Zákony pod lupou",
+        "driver.note": "We classify the authors of the filed amendments by whether their club was in government on the day of the vote. The bill's sponsor is shown separately, from the bill history.",
         "vl.meter_note": "The vertical mark in the bar shows how many votes were needed to pass. Usually it is a majority of the MPs present. Some decisions need a different majority; we show it as recorded by psp.cz.",
         "vl.meter_aria": "Yes {pro}, needed {kvorum} of {prihlaseno} logged in",
         "vl.meter_text": "yes {pro} · needed {kvorum}",
@@ -639,10 +641,10 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "index.overview.view_law": "Bill detail",
         "index.overview.view_amendments": "{count} amendments",
         "index.overview.no_amendments": "No amendments",
-        "driver.label": "Proposed by",
-        "driver.government": "Government",
-        "driver.opposition": "Opposition",
-        "driver.mixed": "Cross-party",
+        "driver.label": "Amendments filed by",
+        "driver.government": "government-club MPs",
+        "driver.opposition": "opposition MPs",
+        "driver.mixed": "government and opposition MPs",
         # ── Amendments ─────────────────────────────────────────────────
         "amendments.title": "Amendments",
         "amendments.subtitle": "Changes that MPs and committees propose to bills under debate. Who filed them, what they change and whether they passed.",
