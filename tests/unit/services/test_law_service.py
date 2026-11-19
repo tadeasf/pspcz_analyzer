@@ -317,16 +317,15 @@ class TestLawDetail:
         data = _make_data_with_laws()
         result = law_detail(data, ct=200, cache_dir=_NO_CACHE_DIR)
         assert result is not None
-        assert result["has_amendments"] is True
-        assert len(result["amendment_entries"]) == 1
-        assert result["amendment_entries"][0]["schuze"] == 78
+        assert result["amendments"] is not None
+        assert result["amendments"]["schuze"] == 78
+        assert result["amendments"]["tally"]["total"] >= 1
 
     def test_no_amendments_for_bill(self):
         data = _make_data_with_laws()
         result = law_detail(data, ct=300, cache_dir=_NO_CACHE_DIR)
         assert result is not None
-        assert result["has_amendments"] is False
-        assert len(result["amendment_entries"]) == 0
+        assert result["amendments"] is None
 
     def test_contains_topics(self):
         data = _make_data_with_laws()

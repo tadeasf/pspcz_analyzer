@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import driver_badge %}
+{% from "partials/amendment_card.html" import side_table %}
 {% block title %}{{ detail.nazev }} · {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
@@ -75,13 +75,11 @@
         {% else %}<p>{{ _("ld.no_votes") }}</p>{% endif %}
     </section>
 
-    {% if detail.has_amendments %}
+    {% if detail.amendments %}
     <section>
         <h2 class="h2s">{{ _("ld.amendments") }}</h2>
-        {% for entry in detail.amendment_entries %}
-        <p>{{ _("lw.amendments_n").format(n=entry.amendment_count) }} {% if entry.driver != "unknown" %}· {{ _("driver.label") }}: {{ driver_badge(entry.driver) }}{% endif %}
-            · <a href="/amendments/{{ entry.schuze }}/{{ entry.bod }}?period={{ period }}">{{ _("ld.all_amendments") }}</a></p>
-        {% endfor %}
+        {{ side_table(detail.amendments.tally) }}
+        <p class="lbl"><a href="/amendments/{{ detail.amendments.schuze }}/{{ detail.amendments.bod }}?period={{ period }}">{{ _("ld.all_amendments") }}</a></p>
     </section>
     {% endif %}
 

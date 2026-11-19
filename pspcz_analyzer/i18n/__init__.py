@@ -116,6 +116,27 @@ def format_date_cz(value: object, short: bool = False) -> str:
     return d.strftime("%b %-d") if short else d.strftime("%b %-d, %Y")
 
 
+def format_count(n: int, base: str) -> str:
+    """Number with the noun in the right plural form, e.g. "3 pozměňovací návrhy".
+
+    Args:
+        n: The count.
+        base: Translation key prefix; keys base_one, base_few and base_many
+            hold "{n} ..." templates (Czech 1 / 2-4 / other).
+
+    Returns:
+        The formatted phrase.
+    """
+    match n:
+        case 1:
+            form = "_one"
+        case 2 | 3 | 4:
+            form = "_few"
+        case _:
+            form = "_many"
+    return gettext(base + form).format(n=format_number(n))
+
+
 def setup_jinja2_i18n(env: Environment) -> None:
     """Install gettext callables and locale-aware filters on a Jinja2 environment."""
     env.add_extension("jinja2.ext.i18n")
@@ -124,3 +145,4 @@ def setup_jinja2_i18n(env: Environment) -> None:
     env.filters["num"] = format_number  # type: ignore[attr-defined]
     env.filters["pct"] = format_percent  # type: ignore[attr-defined]
     env.filters["cz_date"] = format_date_cz  # type: ignore[attr-defined]
+    env.filters["count"] = format_count  # type: ignore[attr-defined]

@@ -6,6 +6,7 @@ from pspcz_analyzer.config import TISKY_PDF_DIR
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
+from pspcz_analyzer.services.amendment_listing import law_tally
 from pspcz_analyzer.services.law_filters import (
     TABS,
     decisive_vote,
@@ -143,12 +144,15 @@ def _build_law_row(
     driver = "unknown"
     for (schuze, bod), bill in data.amendment_data.items():
         if bill.ct == tisk.ct:
-            amendment_count = bill.amendment_count
             if bill.final_vote:
                 final_result = bill.final_vote.result
             amendment_link = {"schuze": schuze, "bod": bod}
             driver = _bill_driver(bill, data.coalition_for_bill(bill))
             break
+    amendments = law_tally(data, tisk.ct)
+    if amendments is not None:
+        amendment_count = amendments["tally"]["total"]
+        amendment_link = {"schuze": amendments["schuze"], "bod": amendments["bod"]}
 
     # Summary — truncated for list view
     summary = tisk.summary_en if (lang == "en" and tisk.summary_en) else tisk.summary
@@ -329,21 +333,6 @@ def law_detail(
     # Legislative history stages
     history = tisk.history
 
-    # Find all amendment data entries for this ct
-    amendment_entries: list[dict] = []
-    for (schuze, bod), bill in data.amendment_data.items():
-        if bill.ct == ct:
-            final_result = bill.final_vote.result if bill.final_vote else ""
-            amendment_entries.append(
-                {
-                    "schuze": schuze,
-                    "bod": bod,
-                    "amendment_count": bill.amendment_count,
-                    "final_result": final_result,
-                    "driver": _bill_driver(bill, data.coalition_for_bill(bill)),
-                }
-            )
-
     # Find related votes
     related_votes = find_votes_for_ct(data, ct)
 
@@ -361,8 +350,7 @@ def law_detail(
         "history": history,
         "has_pdf": _tisk_pdf_exists(cache_dir, tisk.period, ct),
         "pdf_url": f"/api/tisk-pdf/{tisk.period}/{ct}",
-        "amendment_entries": amendment_entries,
-        "has_amendments": len(amendment_entries) > 0,
+        "amendments": law_tally(data, ct),
         "related_votes": related_votes,
         "decisive_vote": decisive_vote(history, related_votes),
         "nazev_cely": tisk.nazev_cely,

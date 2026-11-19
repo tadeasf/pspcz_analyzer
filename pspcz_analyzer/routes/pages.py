@@ -11,10 +11,11 @@ from starlette.responses import Response
 from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
 from pspcz_analyzer.i18n import gettext as _t
+from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.context import excuses_as_of
 from pspcz_analyzer.routes.utils import validate_period
-from pspcz_analyzer.services.amendment_service import amendment_detail
+from pspcz_analyzer.services.amendment_listing import law_amendments
 from pspcz_analyzer.services.law_service import get_all_status_labels
 from pspcz_analyzer.services.law_service import law_detail as get_law_detail
 from pspcz_analyzer.services.legislation_overview import homepage_blocks
@@ -237,13 +238,19 @@ async def law_detail_page(request: Request, ct: int, period: int = DEFAULT_PERIO
     )
 
 
+def _clubs(pd: PeriodData) -> list[str]:
+    """Club names of the period's MPs, for the amendments club filter."""
+    return sorted({p for p in pd.mp_info.get_column("party").to_list() if p})
+
+
 @router.get("/amendments")
 @limiter.limit("60/minute")
 async def amendments_page(request: Request, period: int = DEFAULT_PERIOD):
     validate_period(period)
+    pd = request.app.state.data.get_period(period)
     return templates.TemplateResponse(
         "amendments.html",
-        _ctx(request, period, active_page="amendments"),
+        _ctx(request, period, active_page="amendments", clubs=_clubs(pd)),
     )
 
 
@@ -256,11 +263,17 @@ async def amendment_detail_page(
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
     lang = getattr(request.state, "lang", "cs")
-    detail = amendment_detail(pd, schuze, bod, lang)
+    detail = law_amendments(pd, schuze, bod, lang)
     if detail is None:
         return templates.TemplateResponse(
             "amendments.html",
-            _ctx(request, period, active_page="amendments"),
+            _ctx(
+                request,
+                period,
+                active_page="amendments",
+                clubs=_clubs(pd),
+                error=_t("pn.not_found"),
+            ),
         )
     return templates.TemplateResponse(
         "amendment_detail.html",

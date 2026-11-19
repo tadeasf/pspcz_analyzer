@@ -1,205 +1,24 @@
 {% extends "base.html" %}
-{% from "macros.html" import driver_badge %}
-{% block title %}{{ _("amendments.detail_title").format(ct=detail.ct) }} · {{ _("site.short_title") }}{% endblock %}
+{% from "partials/amendment_card.html" import letter_card, side_table %}
+{% block title %}{{ _("pn.detail_title").format(t=detail.title) }} · {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("amendments.detail_title").format(ct=detail.ct) }}</h1>
-    <p>{{ detail.tisk_nazev }}</p>
-    {% if detail.driver and detail.driver != "unknown" %}
-    <p class="driver-line">{{ _("driver.label") }}: {{ driver_badge(detail.driver) }}</p>
-    <p class="lbl">{{ _("driver.note") }}</p>
-    {% endif %}
+<div class="crumb"><a href="/amendments?period={{ period }}">{{ _("amendments.title") }}</a> › {{ _("lw.in_period").format(p=period) }} › {{ detail.title }}</div>
+<div style="display:flex;flex-direction:column;gap:6px;max-width:760px">
+    <h1 style="font-size:28px">{{ _("pn.detail_title").format(t=detail.title) }}</h1>
+    <p style="color:#3a4552">{{ _("pn.detail_perex") }}</p>
+    <p class="lbl">{% if detail.date %}{{ _("pn.third_reading").format(d=detail.date|cz_date) }} · {% endif %}<a href="/laws/{{ detail.ct }}?period={{ period }}">{{ _("vd.tisk_n").format(ct=detail.ct) }}</a>{% if detail.final_result in ("accepted", "rejected") %} · {{ _("pn.law_passed" if detail.final_result == "accepted" else "pn.law_failed")|safe }}{% endif %}</p>
 </div>
 
-<article>
-    <div class="stat-grid">
-        <article class="stat-card stat-card-blue">
-            <h3>{{ detail.amendment_count }}</h3>
-            <p>{{ _("amendments.amendments_for") }}</p>
-        </article>
-        <article class="stat-card {% if detail.final_vote and detail.final_vote.result == 'accepted' %}stat-card-green{% else %}stat-card-red{% endif %}">
-            <h3>{% if detail.final_vote %}{{ _("amendments.result." + detail.final_vote.result) }}{% else %}—{% endif %}</h3>
-            <p>{{ _("amendments.final_vote") }}</p>
-        </article>
-        <article class="stat-card stat-card-gray">
-            <h3>{{ "{:.0f}%".format(detail.parse_confidence * 100) }}</h3>
-            <p>{{ _("amendments.confidence") }}</p>
-        </article>
-    </div>
+{{ side_table(detail.tally) }}
 
-    {% if detail.steno_url %}
-    <p>
-        <a href="{{ detail.steno_url }}" target="_blank" class="btn-outline btn-small">{{ _("amendments.view_steno") }} &nearr;</a>
-        {% if detail.tisk_url %}
-        <a href="{{ detail.tisk_url }}" target="_blank" class="btn-explore btn-small">{{ _("detail.document").format(ct=detail.ct, name=detail.tisk_nazev) }} &nearr;</a>
-        {% endif %}
-        {% if detail.amendment_pdf_url %}
-        <a href="{{ detail.amendment_pdf_url }}" target="_blank" class="btn-outline btn-small">{{ _("amendments.view_pdf") }} &nearr;</a>
-        {% endif %}
-        <a href="/laws/{{ detail.ct }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_law_detail") }}</a>
-    </p>
-    {% endif %}
+{% for x in detail.letters %}
+{{ letter_card(x, period, stances=true) }}
+{% endfor %}
 
-    {% if detail.parse_warnings %}
-    <details>
-        <summary>{{ detail.parse_warnings | length }} parser warnings</summary>
-        <ul>
-            {% for w in detail.parse_warnings %}
-            <li>{{ w }}</li>
-            {% endfor %}
-        </ul>
-    </details>
-    {% endif %}
-</article>
-
-{% if detail.bill_summary %}
-<div class="info-box">
-    <div class="info-box-header">
-        {{ _("amendments.ai_amendments_overview") }}
-        <small>{{ _("amendments.ai_amendments_overview_note") }}</small>
-    </div>
-    {{ detail.bill_summary | markdown }}
-</div>
+{% if detail.unassigned or detail.unlinked %}
+<div class="empty" style="font-size:14px"><b>{{ _("pn.incomplete") }}</b><span>{% if detail.unassigned %}{{ _("pn.incomplete_votes").format(n=detail.unassigned) }}{% endif %}
+    {% if detail.unlinked %}{{ _("pn.incomplete_letters").format(n=detail.unlinked) }}{% endif %}
+    {% if detail.steno_url %}<a href="{{ detail.steno_url }}" target="_blank" rel="noopener">{{ _("pn.steno") }}</a> · {% endif %}<a href="/jak-se-v-tom-vyznat">{{ _("pn.how_we_match") }}</a></span></div>
 {% endif %}
-
-<h2>{{ _("amendments.amendments_for") }}</h2>
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("amendments.letter") }}</th>
-                <th>{{ _("amendments.submitter") }}</th>
-                <th>{{ _("th.result") }}</th>
-                <th>{{ _("amendments.stance.committee") }}</th>
-                <th>{{ _("amendments.stance.proposer") }}</th>
-                <th>{{ _("th.links") }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for a in detail.grouped_amendments %}
-            {# ── Primary amendment row ── #}
-            <tr>
-                <td>
-                    <strong>{{ a.letter }}</strong>
-                    {% if a.is_leg_tech %}<small class="badge-info">§95</small>{% endif %}
-                    {% if a.grouped_with %}<br><small>{{ _("amendments.grouped_with") }}: {{ a.grouped_with | join(", ") }}</small>{% endif %}
-                </td>
-                <td>
-                    {% if a.pdf_submitter_names %}
-                    {{ a.pdf_submitter_names | join(", ") }}
-                    {% elif a.submitter_names %}
-                    {{ a.submitter_names | join(", ") }}
-                    {% endif %}
-                    {% if a.submitter_parties %}
-                    <br><small class="badge-info">{{ a.submitter_parties | join(", ") }}</small>
-                    {{ driver_badge(a.driver, tooltip=a.submitter_names|join(", ")) }}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if a.is_withdrawn %}
-                    <span class="vote-passive">{{ _("amendments.result.withdrawn") }}</span>
-                    {% elif a.result == "accepted" %}
-                    <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
-                    {% elif a.result == "rejected" %}
-                    <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
-                    {% else %}
-                    <span class="vote-passive">{{ _("amendments.result.unknown") }}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if a.committee_stance %}
-                    {{ _("amendments.stance." + a.committee_stance) }}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if a.proposer_stance %}
-                    {{ _("amendments.stance." + a.proposer_stance) }}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if a.id_hlasovani %}
-                    <a href="/votes/{{ a.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_vote") }}</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% if a.amendment_summary %}
-            <tr class="amendment-summary-row">
-                <td colspan="6">
-                    <details>
-                        <summary><small>{{ _("amendments.ai_single_amendment") }}</small></summary>
-                        <div class="info-box-compact">
-                            {{ a.amendment_summary }}
-                        </div>
-                    </details>
-                </td>
-            </tr>
-            {% endif %}
-            {# ── Revote sub-rows (indented, no repeated summary) ── #}
-            {% for rv in a.revotes %}
-            <tr class="revote-row" style="background: var(--pico-card-background-color, #f8f8f8);">
-                <td style="padding-left: 2rem;">
-                    <small class="badge-warn">{{ _("amendments.revote") }}</small>
-                    {{ rv.letter }}
-                </td>
-                <td></td>
-                <td>
-                    {% if rv.result == "accepted" %}
-                    <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
-                    {% elif rv.result == "rejected" %}
-                    <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
-                    {% else %}
-                    <span class="vote-passive">{{ _("amendments.result.unknown") }}</span>
-                    {% endif %}
-                    {% if rv.original_result %}
-                    <br><small>{{ _("amendments.revote_context").format(original_result=_("amendments.result." + rv.original_result)) }}</small>
-                    {% endif %}
-                </td>
-                <td></td>
-                <td></td>
-                <td>
-                    {% if rv.id_hlasovani %}
-                    <a href="/votes/{{ rv.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_vote") }}</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{% if detail.final_vote %}
-<h2>{{ _("amendments.final_vote") }}</h2>
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("th.result") }}</th>
-                <th>{{ _("th.links") }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    {% if detail.final_vote.result == "accepted" %}
-                    <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
-                    {% elif detail.final_vote.result == "rejected" %}
-                    <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
-                    {% else %}
-                    <span class="vote-passive">{{ _("amendments.result.unknown") }}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if detail.final_vote.id_hlasovani %}
-                    <a href="/votes/{{ detail.final_vote.id_hlasovani }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_vote") }}</a>
-                    {% endif %}
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-{% endif %}
-
-<p><a href="/amendments?period={{ period }}">&larr; {{ _("amendments.back_to_list") }}</a></p>
 {% endblock %}

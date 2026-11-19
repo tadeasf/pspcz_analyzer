@@ -1,68 +1,43 @@
-{% from "macros.html" import driver_badge %}
-{% if not rows %}
-<p>{{ _("amendments.no_data") }}</p>
+{% from "partials/amendment_card.html" import letter_card, side_line %}
+{% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&side=" ~ side ~ "&club=" ~ (club|urlencode) ~ "&fate=" ~ fate ~ "&view=" ~ view ~ "&sort=" ~ sort %}
+{% if not law_count %}
+<div class="empty"><b>{{ _("pn.no_data") }}</b></div>
 {% else %}
-<p>{{ _("amendments.bills_found").format(total=total) }}</p>
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("th.description") }}</th>
-                <th title="{{ _('driver.note') }}">{{ _("driver.label") }}</th>
-                <th>{{ _("amendments.amendments_for") }}</th>
-                <th>{{ _("amendments.result.accepted") }}</th>
-                <th>{{ _("amendments.result.rejected") }}</th>
-                <th>{{ _("amendments.final_vote") }}</th>
-                <th>{{ _("amendments.confidence") }}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                <td>
-                    <strong>{{ _("th.tisk") }} {{ row.ct }}</strong><br>
-                    <small>{{ row.tisk_nazev[:80] }}{% if row.tisk_nazev|length > 80 %}...{% endif %}</small>
-                    {% if row.unlinked_amendment_count %}
-                    <br><small class="unlinked-note">{{ _("amendments.unlinked_note").format(count=row.unlinked_amendment_count) }}</small>
-                    {% endif %}
-                </td>
-                <td>{{ driver_badge(row.driver) }}</td>
-                <td>{{ row.amendment_count }}</td>
-                <td class="vote-yes">{{ row.accepted }}</td>
-                <td class="vote-no">{{ row.rejected }}</td>
-                <td>
-                    {% if row.final_result == "accepted" %}
-                    <span class="vote-yes">{{ _("amendments.result.accepted") }}</span>
-                    {% elif row.final_result == "rejected" %}
-                    <span class="vote-no">{{ _("amendments.result.rejected") }}</span>
-                    {% else %}
-                    —
-                    {% endif %}
-                </td>
-                <td class="confidence-cell" title="{{ _('amendments.confidence_help') }}">{{ "{:.0f}%".format(row.parse_confidence * 100) }}</td>
-                <td>
-                    <a href="/amendments/{{ row.schuze }}/{{ row.bod }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="box" style="display:flex;flex-direction:column;gap:6px;font-size:14px">
+    <span><b>{{ _("pn.in_period").format(p=period) }}</b> {{ period_tally.total|count("pn.n") }} {{ _("pn.to_law_one") if law_count == 1 else _("pn.to_laws").format(n=law_count|num) }}</span>
+    <span>{% for s in ("opposition", "government", "mixed", "committee") %}{% if not loop.first %} · {% endif %}{{ _("pn.from_" ~ s) }} <b>{{ period_tally.by_side[s].submitted|num }}</b>, {{ _("pn.accepted_n") }} <b>{{ period_tally.by_side[s].accepted|num }}</b>{% endfor %}</span>
 </div>
 
-{% if total_pages > 1 %}
-<nav class="pagination" aria-label="{{ _('pagination.label') }}">
-    {% if page > 1 %}
-    <button hx-get="/api/amendments?period={{ period }}&search={{ search|urlencode }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
-        {{ _("pagination.previous") }}
-    </button>
-    {% endif %}
-    <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
-    {% if page < total_pages %}
-    <button hx-get="/api/amendments?period={{ period }}&search={{ search|urlencode }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">
-        {{ _("pagination.next") }}
-    </button>
-    {% endif %}
+{% if not rows %}
+<div class="empty"><b>{{ _("pn.none") }}</b></div>
+{% elif view == "letters" %}
+{% for x in rows %}
+<p class="lbl" style="margin:12px 0 4px">{{ _("vd.tisk_n").format(ct=x.ct) }} · <a href="/amendments/{{ x.law.schuze }}/{{ x.law.bod }}?period={{ period }}">{{ x.law.title }}</a></p>
+{{ letter_card(x, period) }}
+{% endfor %}
+{% else %}
+{% for g in rows %}
+<div class="vg">
+    <div class="vg-h"><span class="lbl">{% if g.date %}{{ _("pn.third_reading").format(d=g.date|cz_date) }} · {% endif %}{{ _("vd.tisk_n").format(ct=g.ct) }}</span>
+        <h4 style="font-size:20px"><a href="/amendments/{{ g.schuze }}/{{ g.bod }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ g.title }}</a></h4>
+        <p style="font-size:14px">{{ side_line(g.tally) }}{% if g.final_result in ("accepted", "rejected") %} · {{ _("pn.law_passed" if g.final_result == "accepted" else "pn.law_failed")|safe }}{% endif %}</p>
+        {% if g.unassigned %}<p class="lbl">{{ _("pn.incomplete_votes").format(n=g.unassigned) }}</p>{% endif %}</div>
+    <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+        {% for x in g.shown[:preview] %}{{ letter_card(x, period) }}{% endfor %}
+        {% if g.shown|length > preview %}<span class="lbl">{{ _("pn.more_n").format(n=g.shown|length - preview) }}</span>{% endif %}
+        <a href="/amendments/{{ g.schuze }}/{{ g.bod }}?period={{ period }}" style="font-size:14px;font-weight:700">{{ _("pn.all_for_law") }}</a>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if rows %}
+<nav class="pager" aria-label="{{ _('pagination.label') }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+    <span class="lbl">{{ _("pn.shown_letters" if view == "letters" else "pn.shown_laws").format(first=(page - 1) * per_page + 1, last=[page * per_page, total]|min, total=total) }}</span>
+    <span style="display:flex;gap:10px">
+    {% if page > 1 %}<button hx-get="/api/amendments?{{ qs }}&page={{ page - 1 }}" hx-target="#results">&lsaquo; {{ _("pagination.previous") }}</button>{% endif %}
+    {% if page < total_pages %}<button hx-get="/api/amendments?{{ qs }}&page={{ page + 1 }}" hx-target="#results">{{ _("pagination.next") }} &rsaquo;</button>{% endif %}
+    </span>
 </nav>
 {% endif %}
 {% endif %}
