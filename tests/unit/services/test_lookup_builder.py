@@ -32,6 +32,7 @@ _TISKY = pl.DataFrame(
         "id_tisk": [1, 2, 3, 4, 5],
         "ct": [11, 22, 33, 44, 55],
         "nazev_tisku": ["approved", "proposed", "proposed-only", "real", "interpellation"],
+        "id_druh": [1, 2, 2, 5, 6],
     }
 )
 
@@ -49,3 +50,10 @@ def test_lookup_uses_only_approved_agenda() -> None:
 
 def test_proposed_rows_never_overwrite_regardless_of_order() -> None:
     assert _build(_BODS.reverse()) == {(10, 17): 11, (10, 137): 44}
+
+
+def test_lookup_carries_document_type() -> None:
+    text = MagicMock()
+    text.has_text.return_value = False
+    lookup = build_tisk_lookup_via_schuze(10, _SESSIONS, _BODS, _TISKY, text, {}, {})
+    assert {key: info.id_druh for key, info in lookup.items()} == {(10, 17): 1, (10, 137): 5}

@@ -149,6 +149,7 @@ def _build_law_row(
     return {
         "ct": tisk.ct,
         "nazev": tisk.nazev,
+        "id_druh": tisk.id_druh,
         "topics": topics,
         "submitter": submitter,
         "status": status,

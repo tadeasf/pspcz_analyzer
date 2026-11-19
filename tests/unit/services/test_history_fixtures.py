@@ -228,3 +228,42 @@ class TestGovernmentOpinion:
     def test_government_bill_has_no_opinion_82(self):
         # 82 is a government bill; "souhlas" elsewhere on the page is unrelated
         assert _parse(10, 82).government_opinion is None
+
+
+# Document type names from druh_tisku.unl
+_DRUH_NAMES = {
+    "Vládní návrh zákona",
+    "Návrh zákona",
+    "Státní rozpočet",
+    "Mezinárodní smlouva",
+    "Zpráva a jiné",
+    "Písemná interpelace",
+}
+
+
+class TestSubmitter:
+    """#98: the submitter is never a document type."""
+
+    def test_budget_submitted_by_government_324(self):
+        # "Návrh zákona o státním rozpočtu vládou předložen 30. 9. 2026."
+        h = _parse(10, 324)
+        assert (h.submitter, h.submitter_date) == ("Vláda", "30. 9. 2026")
+
+    def test_treaty_has_no_submitter_314(self):
+        # "Mezinárodní smlouva předložena sněmovně dne 23. 9. 2026."
+        h = _parse(10, 314)
+        assert (h.submitter, h.submitter_date) == ("", "23. 9. 2026")
+
+    def test_report_without_submitter_section_142(self):
+        # No Předkladatel section; the Senate hand-over must not become "Senát PS"
+        assert _parse(10, 142).submitter == ""
+
+    def test_named_submitters(self):
+        assert _parse(10, 82).submitter == "Vláda"
+        assert _parse(10, 85).submitter == "Ing. Aleš Juchelka"
+        assert _parse(10, 201).submitter.startswith("Skupina poslanců")
+
+    def test_no_submitter_is_a_document_type(self):
+        for f in _FIXTURES.glob("*.html"):
+            period, ct = f.stem[1:].split("_t")
+            assert _parse(int(period), int(ct)).submitter not in _DRUH_NAMES, f.name

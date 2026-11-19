@@ -54,31 +54,51 @@ class TiskHistory:
     parser_version: int = HISTORY_PARSER_VERSION
 
 
+# Subjects of the Předkladatel sentence that name the document, not its submitter
+# ("Mezinárodní smlouva předložena sněmovně ...").
+_DOCUMENT_TYPE_SUBJECTS = ("Mezinárodní smlouva", "Návrh", "Zpráva", "Informace")
+_SUBMITTER_RE = re.compile(r"(.*?)\s*\bpředlož", re.IGNORECASE | re.DOTALL)
+
+
+def _submitter_from_text(text: str) -> str:
+    """Take the submitter from "<subject> předložil(a) ..." text.
+
+    Args:
+        text: Text of the Předkladatel section.
+
+    Returns:
+        The submitter; "Vláda" for "... vládou předložen"; "" when the subject is
+        a document type or there is no "předlož..." sentence.
+    """
+    m = _SUBMITTER_RE.match(text)
+    if not m:
+        return ""
+    subject = m.group(1).strip()
+    if subject.lower().endswith("vládou"):
+        return "Vláda"
+    if subject.startswith(_DOCUMENT_TYPE_SUBJECTS):
+        return ""
+    return subject
+
+
 def _extract_submitter(soup: BeautifulSoup) -> tuple[str, str | None]:
-    """Extract who submitted the tisk and when."""
-    # Look specifically in the Předkladatel section
+    """Extract who submitted the tisk and when, from the Předkladatel section.
+
+    Args:
+        soup: Parsed history page.
+
+    Returns:
+        (submitter, date). ("", None) when the page has no Předkladatel section
+        (reports, interpellations); the rest of the page is never searched, as
+        it yields fragments like "Senát PS" from "PS předložil Senátu".
+    """
     for section in soup.find_all("div", class_="section"):
         heading = section.find(["h2", "h3", "h4", "strong", "b"])
         if heading and "Předkladatel" in heading.get_text():
             content = section.find("div", class_="section-content")
             if content:
                 text = content.get_text(" ", strip=True)
-                date = _extract_first_date(text)
-                # Extract submitter name — typically "Vláda" or a person name
-                submitter = (
-                    text.split("předlož")[0].strip() if "předlož" in text.lower() else text[:80]
-                )
-                return submitter, date
-
-    # Fallback: search full text
-    text = soup.get_text(" ", strip=True)
-    predlozil_re = re.compile(
-        r"([\w\s]+?)\s+předlož\w+\s+.*?(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})",
-        re.IGNORECASE,
-    )
-    m = predlozil_re.search(text)
-    if m:
-        return m.group(1).strip(), _extract_first_date(m.group(2))
+                return _submitter_from_text(text), _extract_first_date(text)
     return "", None
 
 
