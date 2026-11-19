@@ -70,3 +70,30 @@ class TestParseAmendmentPdfMultiSubmitter:
         amendments = parse_amendment_pdf(text)
         assert len(amendments) == 1
         assert amendments[0].submitter_names == ["Jan Novák"]
+
+
+def test_committee_letter_is_parsed_in_document_order() -> None:
+    """Committee letters (tisk 246/2 layout) are letters too (#103)."""
+    text = (
+        "A. \nPozměňovací návrhy obsažené v usnesení garančního hospodářského výboru č. 98 \n"
+        "1. V čl. I se slova „1 den“ nahrazují slovy „24 hodin“.\n"
+        "B. \nPoslanec Jan Papajanovský \nB1. SD 1731 \n1. V názvu zákona ...\n"
+        "C. \nPozměňovací návrhy obsažené v usnesení garančního výboru pro veřejnou správu \n"
+        "1. Text.\n"
+    )
+    result = parse_amendment_pdf(text)
+    assert [(a.letter, a.submitter_names) for a in result] == [
+        ("A", ["Hospodářský výbor"]),
+        ("B", ["Jan Papajanovský"]),
+        ("C", ["Výbor pro veřejnou správu"]),
+    ]
+    assert "24 hodin" in result[0].raw_text
+
+
+def test_notes_after_the_name_are_dropped() -> None:
+    assert _parse_submitter_names("Jiří Pospíšil – SD 1273 – PN k usnesení ÚPV") == [
+        "Jiří Pospíšil"
+    ]
+    assert _parse_submitter_names("Kateřina Stojanová (přihlašuje se k PN") == [
+        "Kateřina Stojanová"
+    ]

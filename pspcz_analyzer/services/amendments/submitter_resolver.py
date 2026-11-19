@@ -38,8 +38,13 @@ def _match_name_to_mp(
 
     for row in mp_rows:
         prijmeni = row.get("prijmeni", "")
-        norm_prijmeni = normalize_czech(prijmeni)
-        ratio = difflib.SequenceMatcher(None, norm_name, norm_prijmeni).ratio()
+        full = normalize_czech(f"{row.get('jmeno', '')} {prijmeni}")
+        # Steno has inflected surnames ("Bartošem"), the PDF full names ("Petr
+        # Bendl", which scores only 0.67 against the bare surname).
+        ratio = max(
+            difflib.SequenceMatcher(None, norm_name, normalize_czech(prijmeni)).ratio(),
+            difflib.SequenceMatcher(None, norm_name, full).ratio(),
+        )
         if ratio >= _EXACT_MATCH_RATIO:
             return (row["id_poslanec"], row.get("party", ""))
         if ratio > best_ratio:
@@ -57,9 +62,9 @@ def resolve_submitter_ids(
 ) -> None:
     """Resolve submitter names to MP IDs and party affiliations.
 
-    Prefers pdf_submitter_names (nominative case, high-confidence match)
-    over steno submitter_names (inflected, requires fuzzy matching).
-    Resolves ALL names from both sources, not just the first match.
+    Uses pdf_submitter_names (nominative case, high-confidence match) when
+    present, otherwise the steno submitter_names (inflected, fuzzy matched).
+    Resolves all names of the chosen source, not just the first match.
 
     Mutates AmendmentVote objects in-place, populating submitter_ids
     and submitter_parties fields.
@@ -77,11 +82,13 @@ def resolve_submitter_ids(
             all_amends.append(bill.final_vote)
 
         for amend in all_amends:
-            # Collect all candidate names: prefer PDF (nominative) then steno (inflected)
-            candidate_names = list(amend.pdf_submitter_names) + [
-                n for n in amend.submitter_names if n not in amend.pdf_submitter_names
-            ]
+            # PDF names (nominative, from the consolidated document) are
+            # authoritative; inflected steno names only when the PDF has none,
+            # since fuzzy-matching both gave one submitter two clubs ("napříč").
+            candidate_names = list(amend.pdf_submitter_names or amend.submitter_names)
             for name in candidate_names:
+                if "výbor" in name.lower():  # committee letter, not an MP
+                    continue
                 result = _match_name_to_mp(name, mp_rows)
                 if result is not None:
                     mp_id, party = result

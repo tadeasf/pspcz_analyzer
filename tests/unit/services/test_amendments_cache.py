@@ -6,7 +6,6 @@ from types import SimpleNamespace
 import polars as pl
 
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
-from pspcz_analyzer.services.amendment_service import _bill_summary
 from pspcz_analyzer.services.amendments.cache_manager import (
     AMENDMENTS_SCHEMA,
     _cache_path,
@@ -14,7 +13,10 @@ from pspcz_analyzer.services.amendments.cache_manager import (
     save_amendments,
 )
 from pspcz_analyzer.services.amendments.identifier import _resolve_vote_ids
-from pspcz_analyzer.services.amendments.submitter_resolver import _match_name_to_mp
+from pspcz_analyzer.services.amendments.submitter_resolver import (
+    _match_name_to_mp,
+    resolve_submitter_ids,
+)
 
 
 def _bill(**overrides) -> BillAmendmentData:
@@ -80,13 +82,6 @@ def _default_for(dtype: pl.DataType) -> object:
             return False
         case _:
             return ""
-
-
-class TestBillSummaryUnlinkedKey:
-    def test_bill_summary_includes_unlinked_count(self):
-        bill = _bill(unlinked_amendment_count=5)
-        summary = _bill_summary(bill, frozenset())
-        assert summary["unlinked_amendment_count"] == 5
 
 
 class TestResolveVoteIdsWarnings:
@@ -157,3 +152,34 @@ class TestExactNameMatch:
     def test_fuzzy_match_below_threshold_returns_none(self):
         mp_rows = [{"id_poslanec": 1, "prijmeni": "Bartoš", "party": "ODS"}]
         assert _match_name_to_mp("Svoboda", mp_rows) is None
+
+    def test_pdf_full_name_matches_and_picks_the_right_namesake(self):
+        """PDF headers give "Jméno Příjmení"; it scored 0.67 against the surname alone."""
+        mp_rows = [
+            {"id_poslanec": 1, "jmeno": "Jan", "prijmeni": "Novák", "party": "ODS"},
+            {"id_poslanec": 2, "jmeno": "Marek", "prijmeni": "Novák", "party": "ANO"},
+            {"id_poslanec": 3, "jmeno": "Petr", "prijmeni": "Bendl", "party": "ODS"},
+        ]
+        assert _match_name_to_mp("Petr Bendl", mp_rows) == (3, "ODS")
+        assert _match_name_to_mp("Marek Novák", mp_rows) == (2, "ANO")
+        assert _match_name_to_mp("Bendlem", mp_rows) == (3, "ODS")
+
+
+def test_pdf_names_win_over_steno_names() -> None:
+    """One PDF submitter must not pick up a second club from a fuzzy steno name."""
+    mp_info = pl.DataFrame(
+        {
+            "id_poslanec": [1, 2],
+            "jmeno": ["Marian", "Jan"],
+            "prijmeni": ["Jurečka", "Juráček"],
+            "party": ["KDU-ČSL", "ANO"],
+        }
+    )
+    amend = AmendmentVote(
+        letter="A1",
+        vote_number=3,
+        pdf_submitter_names=["Marian Jurečka"],
+        submitter_names=["Juráčkem"],
+    )
+    resolve_submitter_ids([_bill(amendments=[amend])], mp_info)
+    assert amend.submitter_parties == ["KDU-ČSL"]

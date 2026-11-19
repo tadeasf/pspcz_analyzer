@@ -41,6 +41,23 @@ _LETTER_HEADER_ALT_RE = re.compile(
 )
 
 
+# Committee letter: "A. Pozměňovací návrhy obsažené v usnesení garančního
+# hospodářského výboru č. 98" (also "Komplexní (a další) pozměňovací návrh(y)");
+# the committee name may wrap onto the next line.
+_COMMITTEE_HEADER_RE = re.compile(
+    r"^([A-Z])\.?\s+((?:Komplexní\s+(?:a\s+další\s+)?)?[Pp]ozměňovací\s+návrh\w*"
+    r"\s+obsažen\w*\s+v\s+usnesení\s+[^\n]*(?:\n[^\n]*)?)",
+    re.MULTILINE,
+)
+
+# Committee name inside that header, in the genitive: "hospodářského výboru",
+# "výboru pro veřejnou správu" ("garančního" is a role, not part of the name).
+_COMMITTEE_NAME_RE = re.compile(
+    r"(?:(?<!\S)(?!garančního)(\S+(?:ého|ího))\s+)?výboru(\s+pro\s+.+?)?(?=\s+č\.|\s+ze\s|\s*\(|\s*$)",
+    re.MULTILINE,
+)
+
+
 @dataclass
 class PdfSubAmendment:
     """A single sub-amendment within a letter (e.g. A.1, A.2).
@@ -90,6 +107,9 @@ def _clean_single_name(name: str) -> str:
     Returns:
         Cleaned name string.
     """
+    # Drop trailing notes: "Jiří Pospíšil – SD 1273 – PN k usnesení ÚPV",
+    # "Kateřina Stojanová (přihlašuje se k PN ..." (hyphenated names have no spaces).
+    name = re.split(r"\s+[–-]\s+|\s*\(", name)[0]
     name = name.strip().rstrip(",.:;")
     # Remove academic titles
     name = re.sub(
@@ -159,11 +179,55 @@ def _parse_sub_amendments(
     return subs
 
 
+def _committee_name(header: str) -> str:
+    """Committee name in the nominative from a committee letter header.
+
+    Args:
+        header: Header text after the letter, e.g. "Pozměňovací návrhy obsažené
+            v usnesení garančního hospodářského výboru č. 98".
+
+    Returns:
+        E.g. "Hospodářský výbor" or "Výbor pro veřejnou správu"; "Výbor" when
+        the name cannot be read.
+    """
+    m = _COMMITTEE_NAME_RE.search(header)
+    if m is None:
+        return "Výbor"
+    adjective = m.group(1) or ""
+    if adjective.endswith("ého"):
+        adjective = adjective[:-3] + "ý"
+    elif adjective.endswith("ího"):
+        adjective = adjective[:-3] + "í"
+    rest = " ".join((m.group(2) or "").split())
+    name = " ".join(p for p in (adjective, "výbor", rest) if p)
+    return name[0].upper() + name[1:]
+
+
+def _letter_headers(text: str) -> list[tuple[int, int, str, list[str], str]]:
+    """All letter headers (MP and committee) in document order.
+
+    Args:
+        text: Full PDF text.
+
+    Returns:
+        (start, end, letter, submitter names, title) per header.
+    """
+    headers = [
+        (m.start(), m.end(), m.group(1), _parse_submitter_names(m.group(3)), m.group(2))
+        for m in _LETTER_HEADER_RE.finditer(text)
+    ]
+    headers += [
+        (m.start(), m.end(), m.group(1), [_committee_name(m.group(2))], "Výbor")
+        for m in _COMMITTEE_HEADER_RE.finditer(text)
+    ]
+    return sorted(headers)
+
+
 def parse_amendment_pdf(text: str) -> list[PdfAmendment]:
     """Parse extracted amendment PDF text into structured amendments.
 
-    Splits by top-level letter headers (A., B., C., ...) and extracts
-    submitter names and sub-amendment text for each.
+    Splits by top-level letter headers (A., B., C., ...) of MPs and committees
+    and extracts submitter names and sub-amendment text for each.
 
     Args:
         text: Raw text extracted from the amendment PDF.
@@ -175,41 +239,30 @@ def parse_amendment_pdf(text: str) -> list[PdfAmendment]:
     if not text or not text.strip():
         return []
 
-    # Find all letter header matches
-    matches = list(_LETTER_HEADER_RE.finditer(text))
+    headers = _letter_headers(text)
 
     # Fallback to alternative format without title prefix
-    if not matches:
+    if not headers:
         matches = list(_LETTER_HEADER_ALT_RE.finditer(text))
         if matches:
             return _parse_with_alt_headers(text, matches)
-
-    if not matches:
         logger.debug("No amendment letter headers found in PDF text ({} chars)", len(text))
         return []
 
     amendments: list[PdfAmendment] = []
 
-    for i, m in enumerate(matches):
-        letter = m.group(1)
-        title = m.group(2)
-        raw_name = m.group(3)
-        names = _parse_submitter_names(raw_name)
-
+    for i, (start, end, letter, names, title) in enumerate(headers):
         # Section runs from end of header line to start of next header (or end)
-        section_start = m.end()
-        section_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-        section_text = text[section_start:section_end]
-        raw_text = text[m.start() : section_end].strip()
-
-        sub_amendments = _parse_sub_amendments(letter, section_text)
+        section_end = headers[i + 1][0] if i + 1 < len(headers) else len(text)
+        section_text = text[end:section_end]
+        raw_text = text[start:section_end].strip()
 
         amendments.append(
             PdfAmendment(
                 letter=letter,
                 submitter_names=names,
                 submitter_titles=[title],
-                sub_amendments=sub_amendments,
+                sub_amendments=_parse_sub_amendments(letter, section_text),
                 raw_text=raw_text,
             )
         )
