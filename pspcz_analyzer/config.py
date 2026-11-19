@@ -52,6 +52,12 @@ PERIOD_LABELS: dict[int, str] = {
     1: "1993–1996",
 }
 
+# Club abbreviation (normalised, see mp_builder) -> display name (#107)
+CLUB_DISPLAY_NAMES: dict[str, str] = {
+    "TOP09": "TOP 09",
+    "MS": "Motoristé sobě",
+}
+
 # Electoral period -> organ ID in psp.cz database
 # (id_obdobi in poslanec table uses organ IDs, not period numbers)
 PERIOD_ORGAN_IDS: dict[int, int] = {

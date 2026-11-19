@@ -1,13 +1,20 @@
 """Jinja2 context processors shared by frontend templates."""
 
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 
 import polars as pl
 from fastapi import Request
 from loguru import logger
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, TISKY_HISTORIE_DIR, TISKY_META_DIR
+from pspcz_analyzer.config import (
+    CLUB_DISPLAY_NAMES,
+    DEFAULT_PERIOD,
+    PARQUET_DIR,
+    TISKY_HISTORIE_DIR,
+    TISKY_META_DIR,
+)
 from pspcz_analyzer.i18n import get_locale
 
 
@@ -21,6 +28,32 @@ def format_date(d: date) -> str:
         Locale-specific date string.
     """
     return d.strftime("%-d. %-m. %Y" if get_locale() == "cs" else "%b %-d, %Y")
+
+
+def club_name(party: str | None) -> str:
+    """Jinja filter: display name of a club abbreviation.
+
+    Args:
+        party: Normalised club abbreviation, or None.
+
+    Returns:
+        Display name ("?" when unknown).
+    """
+    return CLUB_DISPLAY_NAMES.get(party, party) if party else "?"
+
+
+def excuses_as_of(cache_dir: Path, period: int) -> str | None:
+    """Date the period's excuse data was last parsed (psp.cz back-fills excuses).
+
+    Args:
+        cache_dir: Data cache root.
+        period: Electoral period number.
+
+    Returns:
+        Formatted date, or None when no excuse data is cached.
+    """
+    f = cache_dir / PARQUET_DIR / f"omluvy_{period}.parquet"
+    return format_date(datetime.fromtimestamp(f.stat().st_mtime)) if f.is_file() else None
 
 
 def _last_vote_date(svc: Any, period: int) -> str | None:

@@ -54,3 +54,14 @@ class TestSiteFrame:
         )
         assert resp.status_code == 200
         assert 'name="page" value="/laws/246?period=10"' in resp.text
+
+
+class TestVoteDetailRedesign:
+    """Vote detail per the mockup (#114)."""
+
+    def test_vote_detail_sections(self, client, mock_period_data):
+        vote_id = mock_period_data.votes.get_column("id_hlasovani")[0]
+        html = client.get(f"/votes/{vote_id}?period=1").text
+        assert "Jak hlasovaly poslanecké kluby" in html
+        assert "Jak hlasovali jednotliví poslanci" in html
+        assert "zatím neznáme" in html

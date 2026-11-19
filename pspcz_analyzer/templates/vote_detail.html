@@ -1,235 +1,118 @@
 {% extends "base.html" %}
 {% block title %}{{ _("detail.vote_id").format(id=detail.info.id_hlasovani) }} · {{ _("site.short_title") }}{% endblock %}
-
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("detail.vote_id").format(id=detail.info.id_hlasovani) }}</h1>
-    <p>{{ detail.info.datum }} {{ detail.info.cas }} — {{ _("detail.session_vote").format(session=detail.info.schuze, number=detail.info.cislo) }}</p>
+{% set info = detail.info %}
+{% set rows = detail.party_breakdown|sort(attribute="total", reverse=true) %}
+{% set n_total = rows|sum(attribute="total") %}
+{% set n_yes = rows|sum(attribute="yes") %}
+{% set n_no = rows|sum(attribute="no") %}
+{% set n_abst = rows|sum(attribute="abstained") %}
+{% set n_absent = rows|sum(attribute="absent") %}
+{% set n_exc = rows|sum(attribute="excused") %}
+{% set passed = info.vysledek == "A" %}
+{% set icons = {"YES": ("✓", "i-a", "vd.yes"), "NO": ("✕", "i-n", "vd.no"), "ABSTAINED": ("–", "i-z", "vd.abstained_short"), "Absent": ("∅", "i-0", "vd.absent"), "Excused": ("O", "i-m", "vd.excused")} %}
+
+<div class="crumb"><a href="/votes?period={{ period }}">{{ _("nav.votes") }}</a> › {{ _("vd.session_n").format(n=info.schuze) }} › {{ _("vd.number_n").format(n=info.cislo) }} · {{ info.datum }}, {{ info.cas }}</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;max-width:820px">
+    <div>
+        {% set al = info.amendment_link %}
+        <span class="chip c-st">{% if al and al.is_final_vote %}{{ _("amendments.vote_about_final") }}{% elif al and al.letter %}{{ _("amendments.vote_about_amendment").format(letter=al.letter) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
+        {% if info.tisk_ct %}<a href="/laws/{{ info.tisk_ct }}?period={{ period }}">{{ info.tisk_nazev or info.nazev_dlouhy }} ({{ _("vd.tisk_n").format(ct=info.tisk_ct) }})</a>{% endif %}
+    </div>
+    <h1 class="phead-h">{{ info.nazev_dlouhy or _("vd.number_n").format(n=info.cislo) }}</h1>
+    {% if info.is_void %}
+    <div class="zm" style="padding:12px 14px;border-radius:3px"><span class="chip">{{ _("vd.void_label") }}</span> {{ _("vd.void_text") }}</div>
+    {% else %}
+    <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:{{ '#E7F3E8' if passed else '#FFF1DF' }};padding:12px 14px;border-radius:3px">
+        <span class="chip" style="background:{{ '#1f6b2a' if passed else '#B35C00' }};color:#fff;font-size:14px;padding:4px 10px">{{ _("vd.passed") if passed else _("vd.failed") }}</span>
+    </div>
+    {% endif %}
+    <p style="color:#3a4552">{{ _("vd.subject_unknown") }}
+        <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }}</a>.</p>
+    {% if info.amendment_link %}
+    <p><a href="/amendments/{{ info.amendment_link.schuze }}/{{ info.amendment_link.bod }}?period={{ period }}">{{ _("amendments.view_amendment_detail") }}</a></p>
+    {% endif %}
 </div>
 
-<article>
-    <header>
-        <strong>{{ detail.info.outcome_label }}</strong>
-        {% if detail.info.is_void %}<p><strong>{{ _("detail.void_notice") }}</strong></p>{% endif %}
-    </header>
-    {% if detail.info.nazev_dlouhy %}
-    <p>{{ detail.info.nazev_dlouhy }}</p>
-    {% endif %}
-    {% if detail.info.nazev_kratky and detail.info.nazev_kratky != detail.info.nazev_dlouhy %}
-    <p><small>{{ detail.info.nazev_kratky }}</small></p>
-    {% endif %}
-
-    {% if detail.info.amendment_link %}
-    <p>
-        {% if detail.info.amendment_link.is_final_vote %}
-        <span class="badge-info">{{ _("amendments.vote_about_final") }}</span>
-        {% elif detail.info.amendment_link.letter %}
-        <span class="badge-info">{{ _("amendments.vote_about_amendment").format(letter=detail.info.amendment_link.letter) }}</span>
-        {% endif %}
-        <a href="/amendments/{{ detail.info.amendment_link.schuze }}/{{ detail.info.amendment_link.bod }}?period={{ period }}" class="btn-outline btn-small">{{ _("amendments.view_amendment_detail") }}</a>
-    </p>
-    {% endif %}
-
-    {% if detail.info.tisk_topics %}
-    <p>
-        <strong>{{ _("detail.topics") }}</strong>
-        {% for t in detail.info.tisk_topics %}
-        <span class="topic-badge">{{ t }}</span>
-        {% endfor %}
-    </p>
-    {% endif %}
-
-    {% set show_summary = detail.info.tisk_summary_en if (lang == "en" and detail.info.tisk_summary_en) else detail.info.tisk_summary %}
-    {% if show_summary %}
-    <div class="info-box">
-        <div class="info-box-header">
-            {% if detail.info.amendment_link %}
-                {{ _("detail.ai_amendment_vote_summary") }}
-                <small>{{ _("detail.ai_amendment_vote_note") }}</small>
-            {% else %}
-                {{ _("detail.ai_bill_summary") }}
-                <small>{{ _("detail.ai_bill_summary_note") }}</small>
-            {% endif %}
+<div style="display:flex;flex-direction:column;gap:10px">
+    <h2 class="h2s">{{ _("vd.why_passed") if passed else _("vd.why_failed") }}</h2>
+    <p>{{ _("vd.quorum_text").format(kvorum=info.kvorum, prihlaseno=info.prihlaseno, pro=info.pro)|safe }}</p>
+    {% if n_total %}
+    <div style="position:relative;padding-top:18px">
+        <div class="bar5" role="img" aria-label="{{ _('vd.bar_aria').format(total=n_total, yes=n_yes, no=n_no, abst=n_abst, absent=n_absent, exc=n_exc, kvorum=info.kvorum) }}">
+            <span class="p" style="width:{{ "%.1f"|format(n_yes * 100 / n_total) }}%">{% if n_yes > 15 %}{{ _("vd.yes_n").format(n=n_yes) }}{% endif %}</span><span class="x" style="width:{{ "%.1f"|format(n_no * 100 / n_total) }}%">{% if n_no > 15 %}{{ _("vd.no_n").format(n=n_no) }}{% endif %}</span><span class="z" style="width:{{ "%.1f"|format(n_abst * 100 / n_total) }}%"></span><span class="o" style="width:{{ "%.1f"|format(n_absent * 100 / n_total) }}%;background:#AEBBCB"></span><span class="o" style="width:{{ "%.1f"|format(n_exc * 100 / n_total) }}%">{% if n_exc > 15 %}{{ n_exc }}{% endif %}</span>
         </div>
-        {{ show_summary | markdown }}
-    </div>
-    {% endif %}
-
-    {% if feedback_enabled %}
-    <details style="margin: 0.75rem 0;">
-        <summary>{{ _("feedback.button") }}</summary>
-        {% include "partials/feedback_form.html" %}
-    </details>
-    {% endif %}
-
-    {% if detail.info.tisk_current_stage %}
-    <p>
-        <strong>{{ _("detail.this_vote") }}</strong>
-        <span class="stage-badge">{{ detail.info.tisk_current_stage.label }}</span>
-        {% if detail.info.tisk_current_stage.outcome %}
-        <small class="vote-passive"> — {{ detail.info.tisk_current_stage.outcome }}</small>
-        {% endif %}
-    </p>
-    {% endif %}
-
-    {% if detail.info.tisk_history and detail.info.tisk_history.stages %}
-    <div class="legis-box">
-        <div class="legis-box-header">
-            {{ _("detail.legislative_process") }}
-            {% if detail.info.tisk_submitter %}
-            <small>{{ _("detail.submitted_by") }} {{ detail.info.tisk_submitter }}</small>
-            {% endif %}
-            {% if detail.info.tisk_current_status %}
-            <span class="status-badge">{{ detail.info.tisk_current_status }}</span>
-            {% endif %}
-            {% if detail.info.tisk_law_number %}
-            <small class="law-number">{{ detail.info.tisk_law_number }}</small>
-            {% endif %}
-        </div>
-        <div class="legislative-timeline">
-            {% for stage in detail.info.tisk_history.stages %}
-            <div class="timeline-stage {% if detail.info.tisk_current_stage and stage.stage_type == detail.info.tisk_current_stage.stage_type and stage.vote_number == detail.info.tisk_current_stage.vote_number and stage.date == detail.info.tisk_current_stage.date %}timeline-stage-active{% endif %}">
-                <div class="timeline-dot"></div>
-                <span class="timeline-label">{{ stage.label }}</span>
-                {% if stage.date %}
-                <span class="timeline-date">{{ stage.date }}</span>
-                {% endif %}
-                {% if stage.outcome %}
-                <div class="timeline-outcome {% set cat = stage.outcome|status_category %}{% if cat == 'pass' %}timeline-approved{% elif cat == 'fail' %}timeline-rejected{% endif %}">
-                    {{ stage.outcome }}
-                    {% if stage.vote_number %}
-                    <small>({{ _("timeline.vote_number").format(number=stage.vote_number) }})</small>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% if detail.info.tisk_url %}
-        <p style="margin: 0.5rem 0 0; font-size: 0.85rem;">
-            <a href="{{ detail.info.tisk_url }}" target="_blank">{{ _("detail.full_history") }} &nearr;</a>
-        </p>
+        {% if info.kvorum %}
+        <div style="position:absolute;left:{{ "%.1f"|format(info.kvorum * 100 / n_total) }}%;top:0;bottom:-4px;border-left:2px solid #1d232b"></div>
+        <div style="position:absolute;left:{{ "%.1f"|format(info.kvorum * 100 / n_total) }}%;top:0;transform:translateX(5px);font:700 11px Arial,sans-serif">{{ _("vd.needed_n").format(n=info.kvorum) }}</div>
         {% endif %}
     </div>
+    <div class="legend"><span><i class="p"></i>{{ _("vd.yes_n").format(n=n_yes) }}</span><span><i class="x"></i>{{ _("vd.no_n").format(n=n_no) }}</span><span><i class="z"></i>{{ _("vd.abst_n").format(n=n_abst) }}</span><span><i style="background:#AEBBCB"></i>{{ _("vd.absent_n").format(n=n_absent) }}</span><span><i class="o"></i>{{ _("vd.excused_n").format(n=n_exc) }}</span></div>
+    <p class="lbl">{{ _("vd.excuses_note") }}{% if excuses_as_of %} {{ _("vd.as_of").format(date=excuses_as_of) }}{% endif %}</p>
     {% endif %}
+</div>
 
-    <p>
-        <a href="https://www.psp.cz/sqw/hlasy.sqw?G={{ detail.info.id_hlasovani }}" target="_blank" class="btn-outline btn-small">{{ _("detail.view_on_psp") }} &nearr;</a>
-        {% if detail.info.tisk_url %}
-        <a href="{{ detail.info.tisk_url }}" target="_blank" class="btn-explore btn-small">{{ _("detail.document").format(ct=detail.info.tisk_ct, name=detail.info.tisk_nazev) }} &nearr;</a>
-        {% endif %}
-    </p>
-
-    {% if detail.info.tisk_ct %}
-    <details id="tisk-details">
-        <summary>{{ _("detail.view_tisk") }}</summary>
-        <div id="tisk-text-content"
-             hx-get="/api/tisk-text?period={{ period }}&ct={{ detail.info.tisk_ct }}"
-             hx-trigger="intersect once"
-             hx-indicator="#tisk-loading">
-            <span id="tisk-loading" class="htmx-indicator" aria-busy="true">{{ _("detail.loading_tisk") }}</span>
-        </div>
-    </details>
-
-    <div id="tisk-evolution-content"
-         hx-get="/api/tisk-evolution?period={{ period }}&ct={{ detail.info.tisk_ct }}"
-         hx-trigger="intersect once"
-         hx-indicator="#evolution-loading">
-        <span id="evolution-loading" class="htmx-indicator" aria-busy="true">{{ _("detail.loading_evolution") }}</span>
-    </div>
-    {% endif %}
-
-    <div class="stat-grid">
-        <article class="stat-card stat-card-green">
-            <h3>{{ detail.info.pro }}</h3>
-            <p>{{ _("detail.for") }}</p>
-        </article>
-        <article class="stat-card stat-card-red">
-            <h3>{{ detail.info.proti }}</h3>
-            <p>{{ _("detail.against") }}</p>
-        </article>
-        <article class="stat-card stat-card-orange">
-            <h3>{{ detail.info.zdrzel }}</h3>
-            <p>{{ _("detail.abstained") }}</p>
-        </article>
-        <article class="stat-card stat-card-gray">
-            <h3>{{ detail.info.nehlasoval }}</h3>
-            <p>{{ _("detail.did_not_vote") }}</p>
-        </article>
-    </div>
-</article>
-
-<h2>{{ _("detail.party_breakdown") }}</h2>
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("th.party") }}</th>
-                <th>{{ _("th.yes") }}</th>
-                <th>{{ _("th.no") }}</th>
-                <th>{{ _("th.abstained") }}</th>
-                <th>{{ _("th.absent") }}</th>
-                <th>{{ _("th.excused") }}</th>
-                <th>{{ _("th.total") }}</th>
-            </tr>
-        </thead>
+<div style="display:flex;flex-direction:column;gap:10px">
+    <h2 class="h2s">{{ _("vd.clubs_title") }}</h2>
+    <div style="overflow-x:auto"><table class="t">
+        <thead><tr><th>{{ _("vd.club") }}</th><th>{{ _("vd.yes") }}</th><th>{{ _("vd.no") }}</th><th>{{ _("vd.abst_pl") }}</th><th>{{ _("vd.absent_pl") }}</th><th>{{ _("vd.excused_pl") }}</th><th>{{ _("vd.total") }}</th></tr></thead>
         <tbody>
-            {% for row in detail.party_breakdown %}
-            <tr>
-                <td><strong>{{ row.party or "?" }}</strong></td>
-                <td class="vote-yes">{{ row.yes }}</td>
-                <td class="vote-no">{{ row.no }}</td>
-                <td class="vote-abstained">{{ row.abstained }}</td>
-                <td>{{ row.absent }}</td>
-                <td>{{ row.excused }}</td>
-                <td>{{ row.total }}</td>
-            </tr>
-            {% endfor %}
+        {% for r in rows %}
+        {% set top = [r.yes, r.no, r.abstained]|max %}
+        <tr><td>{{ r.party|club_name }}</td>
+            <td>{% if r.yes == top and top %}<b>{{ r.yes }}</b>{% else %}{{ r.yes }}{% endif %}</td>
+            <td>{% if r.no == top and top and r.yes != top %}<b>{{ r.no }}</b>{% else %}{{ r.no }}{% endif %}</td>
+            <td>{{ r.abstained }}</td><td>{{ r.absent }}</td><td>{{ r.excused }}</td><td>{{ r.total }}</td></tr>
+        {% endfor %}
+        <tr class="sum"><td>{{ _("vd.total") }}</td><td>{{ n_yes }}</td><td>{{ n_no }}</td><td>{{ n_abst }}</td><td>{{ n_absent }}</td><td>{{ n_exc }}</td><td>{{ n_total }}</td></tr>
         </tbody>
-    </table>
+    </table></div>
+    <p class="lbl">{{ _("vd.clubs_note") }}</p>
 </div>
 
-<h2>{{ _("detail.individual_mps") }}</h2>
-
-<details>
-    <summary>{{ _("detail.show_all_votes").format(count=detail.mp_votes | length) }}</summary>
-    <div class="overflow-auto">
-        <table>
-            <thead>
-                <tr>
-                    <th>{{ _("th.rank") }}</th>
-                    <th>{{ _("th.mp") }}</th>
-                    <th>{{ _("th.party") }}</th>
-                    <th>{{ _("th.vote") }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for mp in detail.mp_votes %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ mp.jmeno }} {{ mp.prijmeni }}</td>
-                    <td>{{ mp.party or "?" }}</td>
-                    <td>
-                        {% if mp.vote_label == "YES" %}
-                        <span class="vote-yes">{{ _("vote.yes") }}</span>
-                        {% elif mp.vote_label == "NO" %}
-                        <span class="vote-no">{{ _("vote.no") }}</span>
-                        {% elif mp.vote_label == "ABSTAINED" %}
-                        <span class="vote-abstained">{{ _("vote.abstained") }}</span>
-                        {% elif mp.vote_label == "Absent" %}
-                        <span class="vote-passive">{{ _("vote.absent") }}</span>
-                        {% elif mp.vote_label == "Excused" %}
-                        <span class="vote-passive">{{ _("vote.excused") }}</span>
-                        {% else %}
-                        <span class="vote-passive">{{ _("vote.passive") }}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div style="display:flex;flex-direction:column;gap:10px" id="mp-votes">
+    <h2 class="h2s">{{ _("vd.mps_title") }}</h2>
+    <div class="filters" style="background:transparent;padding:0">
+        <label class="field" style="flex:2 1 220px"><span>{{ _("vd.search_mp") }}</span><input id="mp-search" type="search" placeholder="{{ _('vd.search_mp_placeholder') }}"></label>
+        <label class="field" style="flex:1 1 160px"><span>{{ _("vd.vote_filter") }}</span>
+            <select id="mp-filter"><option value="">{{ _("vd.all_votes") }}</option>{% for key, (sym, cls, label) in icons.items() %}<option value="{{ key }}">{{ _(label) }}</option>{% endfor %}</select></label>
     </div>
-</details>
+    <div class="legend">{% for key, (sym, cls, label) in icons.items() %}<span><span aria-hidden="true" class="ic {{ cls }}">{{ sym }}</span> {{ _(label) }}</span>{% endfor %}</div>
+    {% for r in rows %}
+    <details class="club" {% if loop.index > 3 %}{% else %}open{% endif %}>
+        <summary class="club-h"><b>{{ r.party|club_name }}</b> <span class="lbl">({{ r.total }})</span>
+            <span class="club-c">{% for key, field in [("YES", "yes"), ("NO", "no"), ("ABSTAINED", "abstained"), ("Absent", "absent"), ("Excused", "excused")] if r[field] %}{% if not loop.first %} · {% endif %}<span aria-hidden="true" class="ic {{ icons[key][1] }}">{{ icons[key][0] }}</span>{{ _(icons[key][2]) }} <b>{{ r[field] }}</b>{% endfor %}</span></summary>
+        <div class="mpg">
+            {% for mp in detail.mp_votes if mp.party == r.party %}
+            {% set ic = icons.get(mp.vote_label, ("?", "i-0", "vd.other")) %}
+            <span class="mp" data-name="{{ (mp.jmeno ~ ' ' ~ mp.prijmeni)|lower }}" data-vote="{{ mp.vote_label }}"><span class="ic {{ ic[1] }}" role="img" aria-label="{{ _(ic[2]) }}">{{ ic[0] }}</span>{{ mp.jmeno }} {{ mp.prijmeni }}</span>
+            {% endfor %}
+        </div>
+    </details>
+    {% endfor %}
+</div>
 
-<p><a href="/votes?period={{ period }}">&larr; {{ _("detail.back_to_votes") }}</a></p>
+<div style="display:flex;flex-wrap:wrap;gap:8px 24px;font-size:14px;border-top:1px solid #D0DCE8;padding-top:14px">
+    <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record_full") }}</a>
+    <a href="#" id="copy-link">{{ _("vd.copy_link") }}</a>
+    <a href="/nahlasit-chybu?period={{ period }}">{{ _("footer.report") }}</a>
+</div>
+
+<script>
+(function () {
+    var q = document.getElementById('mp-search'), f = document.getElementById('mp-filter');
+    function apply() {
+        var term = q.value.trim().toLowerCase(), vote = f.value;
+        document.querySelectorAll('#mp-votes .mp').forEach(function (el) {
+            el.hidden = (term && el.dataset.name.indexOf(term) < 0) || (vote && el.dataset.vote !== vote);
+        });
+        if (term || vote) { document.querySelectorAll('#mp-votes details').forEach(function (d) { d.open = true; }); }
+    }
+    q.addEventListener('input', apply); f.addEventListener('change', apply);
+    document.getElementById('copy-link').addEventListener('click', function (e) {
+        e.preventDefault(); navigator.clipboard.writeText(location.href);
+    });
+})();
+</script>
 {% endblock %}

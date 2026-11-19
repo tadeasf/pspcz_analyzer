@@ -8,10 +8,11 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.responses import Response
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, GITHUB_FEEDBACK_ENABLED
+from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
 from pspcz_analyzer.i18n import gettext as _t
 from pspcz_analyzer.rate_limit import limiter
+from pspcz_analyzer.routes.context import excuses_as_of
 from pspcz_analyzer.routes.utils import validate_period
 from pspcz_analyzer.services.amendment_service import amendment_detail
 from pspcz_analyzer.services.law_service import get_all_status_labels
@@ -173,7 +174,7 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
             period,
             detail=detail,
             active_page="votes",
-            feedback_enabled=GITHUB_FEEDBACK_ENABLED,
+            excuses_as_of=excuses_as_of(data_svc.cache_dir, period),
         ),
     )
 
