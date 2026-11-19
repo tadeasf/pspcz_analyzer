@@ -131,7 +131,9 @@ TISKY_HISTORIE_DIR = "tisky_historie"
 # not change again, so the daily refresh skips re-scraping it. Any other status
 # (e.g. "projednáváno", "schváleno sněmovnou", "podepsáno") is still "active":
 # it can advance another legislative step, so refresh re-scrapes it.
-TERMINAL_TISK_STATUSES: frozenset[str] = frozenset({"vyhlášeno", "zamítnuto", "staženo"})
+TERMINAL_TISK_STATUSES: frozenset[str] = frozenset(
+    {"vyhlášeno", "zamítnuto", "nepřijato", "vzato zpět"}
+)
 
 # Legislative evolution: law changes, related bills, sub-tisk versions
 PSP_LAW_CHANGES_URL_TEMPLATE = "https://www.psp.cz/sqw/historie.sqw?o={period}&t={ct}&snzp=1"

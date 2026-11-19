@@ -15,6 +15,7 @@ from pspcz_analyzer.config import (
     TISKY_META_DIR,
 )
 from pspcz_analyzer.services.tisk.io import (
+    HISTORY_PARSER_VERSION,
     TiskHistory,
     load_history_json,
     load_law_changes_json,
@@ -45,7 +46,9 @@ def scrape_histories_sync(
         progress_callback: Optional (done, total) progress hook.
         force_active: When True, re-scrape any cached bill whose status is not
             terminal (see TERMINAL_TISK_STATUSES) so daily refresh picks up
-            legislative step changes. Terminal bills are still served from cache.
+            legislative step changes. Terminal bills are still served from cache,
+            unless they were parsed by an older parser (HISTORY_PARSER_VERSION),
+            which are always re-scraped.
 
     Returns:
         {ct: TiskHistory} dict.
@@ -66,8 +69,11 @@ def scrape_histories_sync(
         if json_path.exists():
             h = load_history_json(json_path)
             if h:
-                # Refresh active (non-terminal) bills so status changes show up
-                needs_refresh = force_active and h.current_status not in TERMINAL_TISK_STATUSES
+                # Refresh active (non-terminal) bills so status changes show up,
+                # and every bill parsed by an older parser, terminal or not
+                needs_refresh = h.parser_version < HISTORY_PARSER_VERSION or (
+                    force_active and h.current_status not in TERMINAL_TISK_STATUSES
+                )
                 # One-time migration: history predates amendment sub-tisk scraping
                 needs_migration = h.amendment_tisk_ct1 is None and bool(h.stages)
                 if needs_refresh or needs_migration:

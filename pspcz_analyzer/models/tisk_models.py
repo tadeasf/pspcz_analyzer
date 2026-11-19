@@ -25,6 +25,9 @@ class TiskInfo:
         ct: Tisk number (cislo tisku).
         nazev: Title of the tisk.
         period: Electoral period number.
+        id_druh: Document type from tisky.unl (druh_tisku.unl: 1 = Vládní návrh
+            zákona, 2 = Návrh zákona, 3 = Státní rozpočet, 4 = Mezinárodní
+            smlouva, 5 = Zpráva a jiné, 6 = Písemná interpelace); None if unknown.
         topics: LLM-classified topic labels (1-3 Czech labels).
         topics_en: LLM-classified topic labels (1-3 English labels).
         has_text: Whether extracted full text is available.
@@ -38,6 +41,7 @@ class TiskInfo:
     ct: int  # tisk number
     nazev: str
     period: int
+    id_druh: int | None = None
     topics: list[str] = field(default_factory=list)
     topics_en: list[str] = field(default_factory=list)
     has_text: bool = False

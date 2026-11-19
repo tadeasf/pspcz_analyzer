@@ -4,6 +4,12 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#98] `id_druh` carried into `TiskInfo` and law rows; submitter only from the Předkladatel section ("... vládou předložen" = Vláda, document type = empty, no whole-page fallback). Laws list filter/UI not changed | `ef56d0d` | Snapshot tests: 324 = Vláda, 314 and 142 empty, no fixture submitter is a druh name; lookup test for `id_druh` |
+| 2026-11-19 | [#86] `parser_version` in history JSON (missing = 0); histories below `HISTORY_PARSER_VERSION` (1) are re-scraped even when terminal. Needs one pipeline run to replace the cache | `cd49500` | Unit test: an unversioned terminal history is re-scraped; snapshots 231 and 201 give "projednáváno" and no law number |
+| 2026-11-19 | [#90] Status from the last decisive stage: v Senátu, schváleno/vráceno/zamítnuto Senátem, u prezidenta, vráceno prezidentem, podepsáno, odesláno k vyhlášení, vyhlášeno, zamítnuto, nepřijato, vzato zpět; terminal = vyhlášeno, zamítnuto, nepřijato, vzato zpět; government opinion from the Vláda section only; cs/en status keys | `511fa2b` | Snapshots: 167 status ladder, 85 nepřijato (24. 3. 2026, vote 46), 67/179 Sněmovna overrides Senate, 57 returned by Senate, 65 vzato zpět, 82 no opinion. "u prezidenta", veto and 1st-reading rejection only on synthetic pages |
+| 2026-11-19 | [#89] Stage date is the date of the sentence stating the outcome (or the nearest earlier dated sentence) | `39253c2` | Snapshot 82: signature 16. 7. 2026 (delivery 13. 7. stays in the text); 67: Sněmovna vote 9. 9. 2026 |
+| 2026-11-19 | [#88] "vyhlášeno" only from the "Zákon vyhlášen ... pod číslem" sentence; a Sbírka entry alone = "odesláno k vyhlášení"; whole-word outcomes | `2579ec6` | Snapshot 246 (sent 9. 11. 2026, not published): odesláno k vyhlášení, no number; 67 now published 215/2026 Sb. |
+| 2026-11-19 | [#87] Stages typed by (section, mark); publication stage and law number from `p.status`; parsing split from fetching (`parse_tisk_history`), 13 psp.cz snapshots in `tests/fixtures/history/` | `b2766d1` | Snapshots: 246 Senate steps 29. 9./30. 9./14. 10. are Senate stages; 82 no "Vláda", 129/2026 Sb.; 167 91/2026 Sb. |
 | 2026-11-19 | [#117] Attendance per the mockup: new definition (logged in / all votes in the mandate, excused shown separately), mandate column, small-sample flag under 50 votes, table and two SVG charts. Links from each number to its vote list are not done yet | `e39ea3e` | Screenshot of the chart view, period 10; 630 tests |
 | 2026-11-19 | [#115] (Ne)loajalita per the mockup (explanation, chart, sortable list, /loyalty/all); [#116] similarity as a tab with an SVG map in club colours and top-5 pair tables; `/similarity` redirects; [#107] club colours in config. "Jen o celých zákonech" toggle waits for #102 | `862dcd1` | Screenshots of both tabs, period 10; 631 tests |
 | 2026-11-19 | [#106] (part) Czech number, percent and date filters and the agreed terms (Prošlo/Neprošlo, Pro/Proti, Nepřihlášen, Nepřijat, Shrnutí AI). Left: glossary tooltips from one source (with #118), "Spolehlivost parseru" texts move to the admin with #100/#112, status labels with the history-parser branch | `a385912` | Filter unit tests; 630 tests |
@@ -27,6 +33,8 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 - Redesign: only the frame is done. Page contents (laws list, detail pages, homepage, charts) still use the old layout until #108-#117.
 - Guide page is Czech only (English shows a note); the "O datech" sub-pages it lists are not written yet.
 - #107 leftovers: alternating backgrounds and illustration come with the homepage (#108); club and vote colours come with the charts (#116, #117).
+- `/similarity` still has its own page (highlighted as loyalty in the menu); it becomes a loyalty tab with #115/#116.
+- Stages still hold one outcome per entry ([#89] S fix): the president's delivery and signature are one stage dated by the signature, not two events.
 - Locally no tisk histories are scraped yet, so the footer says "zatím nenačteno" and the laws list has no statuses.
 - Per-MP pages (attendance, similarity) show the MP's latest club in the period; per-vote tables use the club on the vote date.
 - The "77501 by club" acceptance item of [#101] cannot come from open data (the vote is missing there).
@@ -35,6 +43,12 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 [#84]: https://github.com/tadeasf/pspcz_analyzer/issues/84
 [#85]: https://github.com/tadeasf/pspcz_analyzer/issues/85
+[#86]: https://github.com/tadeasf/pspcz_analyzer/issues/86
+[#87]: https://github.com/tadeasf/pspcz_analyzer/issues/87
+[#88]: https://github.com/tadeasf/pspcz_analyzer/issues/88
+[#89]: https://github.com/tadeasf/pspcz_analyzer/issues/89
+[#90]: https://github.com/tadeasf/pspcz_analyzer/issues/90
+[#98]: https://github.com/tadeasf/pspcz_analyzer/issues/98
 [#91]: https://github.com/tadeasf/pspcz_analyzer/issues/91
 [#92]: https://github.com/tadeasf/pspcz_analyzer/issues/92
 [#101]: https://github.com/tadeasf/pspcz_analyzer/issues/101

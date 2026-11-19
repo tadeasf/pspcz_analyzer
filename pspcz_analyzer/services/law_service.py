@@ -9,6 +9,25 @@ from pspcz_analyzer.services.affiliation import amendment_driver
 from pspcz_analyzer.services.labels import vote_outcome_label
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
+# Bill status (as stored, Czech) -> translation key. Templates render
+# _(status_key); an unknown status has no key and shows the raw value.
+STATUS_KEYS: dict[str, str] = {
+    "projednáváno": "laws.status.in_progress",
+    "schváleno sněmovnou": "laws.status.passed_chamber",
+    "v Senátu": "laws.status.in_senate",
+    "schváleno Senátem": "laws.status.passed_senate",
+    "vráceno Senátem": "laws.status.returned_by_senate",
+    "zamítnuto Senátem": "laws.status.rejected_by_senate",
+    "u prezidenta": "laws.status.with_president",
+    "vráceno prezidentem": "laws.status.returned_by_president",
+    "podepsáno": "laws.status.signed",
+    "odesláno k vyhlášení": "laws.status.sent_for_publication",
+    "vyhlášeno": "laws.status.published",
+    "zamítnuto": "laws.status.rejected",
+    "nepřijato": "laws.status.not_passed",
+    "vzato zpět": "laws.status.withdrawn",
+}
+
 
 def _tisk_pdf_exists(cache_dir: Path, period: int, ct: int) -> bool:
     """Check whether a cached bill PDF exists for this tisk.
@@ -130,9 +149,11 @@ def _build_law_row(
     return {
         "ct": tisk.ct,
         "nazev": tisk.nazev,
+        "id_druh": tisk.id_druh,
         "topics": topics,
         "submitter": submitter,
         "status": status,
+        "status_key": STATUS_KEYS.get(status, ""),
         "law_number": law_number,
         "url": tisk.url,
         "summary_truncated": summary_truncated,
@@ -335,6 +356,7 @@ def law_detail(
         "topics": topics,
         "summary": summary,
         "status": status,
+        "status_key": STATUS_KEYS.get(status, ""),
         "submitter": submitter,
         "law_number": law_number,
         "history": history,
