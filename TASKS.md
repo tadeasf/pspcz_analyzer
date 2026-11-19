@@ -145,7 +145,7 @@ All of these need a **full re-scrape of history JSON** after [#87]. It is cheap:
 
 ### 1E. AI summaries
 
-- [ ] **[#97] Corrupted AI summaries** (P1, M; provenance and citations are L). **Cause found**: the model writes it.
+- [x] **[#97] Corrupted AI summaries** (P1, M; provenance and citations are L). **Cause found**: the model writes it.
   - All 57 period-10 summaries are `llm:gpt-oss-120b`. ct 21 has "shodu ke **стр**ážitelných regulacím" and ct 34 has "politic**ского** fungování". The source texts contain no Cyrillic, so this is token-level language drift, not encoding.
   - `summarize` (`services/llm/client.py:505`) uses JSON-schema constrained decoding, sets no temperature, and does no output validation.
   - Fix:
@@ -173,7 +173,7 @@ Order from [#99]: #100 → #101 → #102 → #103 → #104.
   - Membership dates `od_o`/`do_o` exist. The club at the date of each vote in every service is L, because `mp_info.party` is one value per MP.
   - The Fiala government is organ 1628, type 5 (17.12.2021-15.12.2025). Ministers who are not MPs have no club.
   - **Extra bug**: `cl_funkce` is never filtered; 112 function rows with an `id_of` matching a club organ id join by mistake.
-- [ ] **[#102] What each vote was about, from steno** (P1, L). Correct: steno is used only for 3rd readings (`identifier.py:102-136`), and `_VOTE_NUMBER_RE` (`steno_parser.py:86`) misses "hlasování 278" and "(Číslo 273".
+- [x] **[#102] What each vote was about, from steno** (P1, L). Correct: steno is used only for 3rd readings (`identifier.py:102-136`), and `_VOTE_NUMBER_RE` (`steno_parser.py:86`) misses "hlasování 278" and "(Číslo 273".
   - Key finding (verified on psp.cz): the vote page `hlasy.sqw?g=<id>` links to the exact steno page and anchor, e.g. `.../stenprot/031schuz/s031088.htm#h10` for vote 10 of sitting 31.
     - The link's period path is broken (`1993ps`); the real page is under `/eknih/2025ps/`.
     - Alternatively, crawl all steno pages of a sitting and collect the `hN` anchors (N = vote number within the sitting). That takes fewer requests.
@@ -200,8 +200,8 @@ Order from [#99]: #100 → #101 → #102 → #103 → #104.
 
 ## Phase 2X: shared infrastructure (not a single issue)
 
-- [ ] **Steno crawler for all sittings** (feeds [#102] and [#108]). Extend `services/amendments/steno_scraper.py` beyond 3rd readings: all pages per sitting, cached, incremental in the daily refresh, with negative-cache rules already in place (`STENO_NEGATIVE_CACHE_TTL`).
-- [ ] **Speech counts per agenda item** ([#108] "Teď se o tom mluví").
+- [x] **Steno crawler for all sittings** (feeds [#102] and [#108]). Extend `services/amendments/steno_scraper.py` beyond 3rd readings: all pages per sitting, cached, incremental in the daily refresh, with negative-cache rules already in place (`STENO_NEGATIVE_CACHE_TTL`).
+- [x] **Speech counts per agenda item** ([#108] "Teď se o tom mluví").
   - From the same pages: speaker turns per bod, excluding the chair's procedural lines.
   - Caveats: steno publication lag (the last few days of the 14-day window will be missing; actual lag not yet checked) and merged debates (sloučená rozprava) that span several items.
 - [ ] **Admin extensions** ([#100], [#108], [#109]).
@@ -235,7 +235,7 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
   - Blocks 1, 2 and 4-6 use existing data (`legislation_overview.py`, `bod_schuze`).
   - "Teď se o tom mluví" uses speech counts (2X), with an admin override for the pick.
   - Depends on #85, #87-#90, #95, #102 and #109.
-- [ ] **[#109] Short AI summary and descriptive title per tisk** (P1, L).
+- [x] **[#109] Short AI summary and descriptive title per tisk** (P1, L).
   - New LLM pass. The current prompt asks for critical analysis and risks (`services/llm/prompts.py:50-58`), which breaks the "descriptive only" rule.
   - New fields: title, one-sentence summary, who/how much/from when, source version. `TiskInfo` has only `summary`/`summary_en` (`models/tisk_models.py:43`).
   - Cheap check that the numbers appear in the tisk text. Review status and manual edits that survive reruns live in the admin (2X).
@@ -279,12 +279,12 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
 ### 3C. Content, states, mobile
 
 - [x] **[#118] "Jak se v tom vyznat" guide replaces the docs link** (P1, M). Static page from `jak-se-v-tom-vyznat.md` (in the [#121] zip). The "O datech" pages must be written from the code.
-- [ ] **[#119] Empty and error states, "Nahlásit chybu" form** (P2, S).
+- [x] **[#119] Empty and error states, "Nahlásit chybu" form** (P2, S).
   - Feedback is tied to `vote_id` today (`routes/feedback.py:77`, `services/feedback_service.py:20`); make it generic.
   - Detecting a failed PDF iframe load is unreliable, so always show fallback links (the server already checks `_tisk_pdf_exists`).
   - [#99] also notes an intermittent "Failed to load PDF document" on tisky 231 and 246 (cause unknown).
 - [ ] **[#120] Mobile and accessibility** (P2, M). CSS plus keyboard/ARIA. axe needs a browser test dependency.
-- [ ] **English version**: AI-translate the new Czech texts into `i18n/translations.py` (decided).
+- [x] **English version**: AI-translate the new Czech texts into `i18n/translations.py` (decided).
 
 ---
 

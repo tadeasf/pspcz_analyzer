@@ -27,6 +27,9 @@ Plan and per-issue notes: [TASKS.md](TASKS.md). What is done: [STATUS.md](STATUS
 | Site name / domain | "Zákony pod lupou" is a working title. The team decides. | open (not mine) |
 | Admin users | The admin is single-user (`ADMIN_USERNAME`) and loopback-only by default (`ADMIN_ALLOWED_IPS=127.0.0.1,::1`). If anyone besides me edits, it needs more accounts and external access (VPN or an IP whitelist). | open, ask when it comes up |
 | Work order | 1) site frame from the mockup (#105-#107), 2) #101 club by vote date + regular excuse refresh, 3) remaining non-LLM data fixes, alternating with redesign pages. LLM work (#97, #109, #102 question text) waits until the LLM is back (Sun 2026-11-22). | decided 2026-11-19 |
+| LLM model and settings | `qwen3_8_flash` (262k context) with thinking off (`LLM_ENABLE_THINKING=0`) and a reply cap (`LLM_MAX_OUTPUT_TOKENS=8192`); full tisk text (`TISK_SHORTENER=0`), briefs keep head + tail above 480k chars. | decided 2026-11-19 (by me) |
+| AI brief scope ([#109]) | Bills with `id_druh` 1-3 (incl. the state budget), from the original text ct/0 only, so the source line reads "z původního návrhu". The number check compares digit groups, so decimals ("2,1 bilionu") are only checked per part. Human review status and edits wait for the admin corrections (2X). | decided 2026-11-19 (by me) |
+| Vote kind chip ([#102]) | Shown from the rules even when the question is unknown; it can be off for resolutions (e.g. committee set-up labelled procedural). The question is the reliable part. | decided 2026-11-19 (by me) |
 | Branch and deploy | All work goes to `feat/zakony-pod-lupou`, committed per issue. Tuned locally; Martin deploys when it is ready. No checks against snemovna.hlidacstatu.cz. | decided 2026-11-19 |
 | Serena | Removed from the repo, not used. | decided 2026-11-19 |
 
