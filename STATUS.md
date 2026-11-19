@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#95] Search by tisk number ("246", "tisk 246", "ST 246"), without diacritics, tolerant to word forms; tisky full-title column fixed in the schema (searching it comes after the history-parser branch adds it to TiskInfo) | `2fc7978` | Real data: "televizi" finds 231 and 201, "ST 246" finds 11 votes of tisk 246 |
 | 2026-11-19 | [#113] Votes list grouped by agenda item with the needed-votes meter, void votes hatched; [#114] vote detail per the mockup (result, quorum bar, club table, MPs by club with search). Question and kind stay "zatím neznáme" until #102 (LLM). | `07975a1`, `dfe576d` | Screenshot of vote 88876 matches psp.cz club counts; 613 tests |
 | 2026-11-19 | Excuses refresh daily: the daily refresh re-parses `omluvy` with the current-period zip (it holds all periods), and the frontend watcher reloads the period when it changes | `880f1d4` | Unit test for the watcher |
 | 2026-11-19 | [#101] Club at the vote date (per-vote `party` from membership dates, only this period's clubs, function rows dropped); hand-kept government table with sources (period 9: Babiš until 16. 12. 2021, Fiala five-party until 30. 9. 2024, then without Piráti); gov/opposition labels use the government on the vote date | `41e93a8` | Vote 88876 matches psp.cz: ANO 80 (69 no, 1 not logged in, 10 excused). David Pražák (left ANO 1. 11. 2026) is counted in ANO for October votes. |
