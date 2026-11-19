@@ -1,8 +1,8 @@
-"""Tests for the homepage legislation overview (recent activity + active laws)."""
+"""Tests for the homepage legislation blocks (#108)."""
 
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
-from pspcz_analyzer.services.legislation_overview import active_laws, recent_activity
+from pspcz_analyzer.services.legislation_overview import homepage_blocks
 from pspcz_analyzer.services.tisk.io.history_scraper import TiskHistory, TiskHistoryStage
 from tests.fixtures.sample_data import (
     make_mp_info,
@@ -22,6 +22,7 @@ def _make_tisk(ct: int, status: str, latest_date: str | None) -> TiskInfo:
         ct=ct,
         nazev=f"Zákon {ct}",
         period=10,
+        id_druh=1,
         topics=["Ekonomika"],
         history=history,
     )
@@ -55,38 +56,23 @@ def _make_data() -> PeriodData:
     )
 
 
-class TestRecentActivity:
-    def test_orders_by_latest_date_desc(self):
-        rows = recent_activity(_make_data())
-        # ct=300 (20.11) before ct=200 (5.11); ct=400 has no date so excluded
-        assert [r["ct"] for r in rows] == [300, 200]
+class TestHomepageBlocks:
+    def test_in_progress_only_chamber_bills_by_last_step(self):
+        blocks = homepage_blocks(_make_data())
+        assert [r["ct"] for r in blocks["in_progress"]] == [300, 400]
+        assert blocks["in_progress_total"] == 2
 
-    def test_attaches_driver_and_amendment_link(self):
-        rows = recent_activity(_make_data())
-        ct300 = next(r for r in rows if r["ct"] == 300)
-        assert ct300["has_amendments"] is True
-        assert ct300["driver"] == "government"
-        assert ct300["amendment_link"] == {"schuze": 78, "bod": 2}
+    def test_recently_passed_contains_published_law(self):
+        blocks = homepage_blocks(_make_data())
+        assert [r["ct"] for r in blocks["recently_passed"]] == [200]
+        assert blocks["recently_passed"][0]["status_key"] == "laws.status.published"
 
-    def test_bill_without_amendments(self):
-        rows = recent_activity(_make_data())
-        ct200 = next(r for r in rows if r["ct"] == 200)
-        assert ct200["has_amendments"] is False
-        assert ct200["driver"] == "unknown"
+    def test_newest_by_tisk_number(self):
+        assert [r["ct"] for r in homepage_blocks(_make_data())["newest"]] == [400, 300, 200]
 
-    def test_limit_respected(self):
-        rows = recent_activity(_make_data(), limit=1)
-        assert len(rows) == 1
-        assert rows[0]["ct"] == 300
-
-
-class TestActiveLaws:
-    def test_excludes_terminal_bills(self):
-        rows = active_laws(_make_data())
-        cts = {r["ct"] for r in rows}
-        # 200 is "vyhlášeno" (terminal) → excluded; 300 + 400 active
-        assert cts == {300, 400}
-
-    def test_active_with_date_first(self):
-        rows = active_laws(_make_data())
-        assert rows[0]["ct"] == 300  # dated active bill ranks above undated
+    def test_non_bills_are_excluded(self):
+        data = _make_data()
+        data.tisk_lookup[(80, 1)] = TiskInfo(
+            id_tisk=1, ct=999, nazev="Zpráva", period=10, id_druh=5
+        )
+        assert 999 not in [r["ct"] for r in homepage_blocks(data)["newest"]]

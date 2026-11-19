@@ -18,3 +18,4 @@
 .ld-timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid #3C71AC; display: flex; flex-direction: column; gap: 6px; }
 .ld-timeline li .lbl { display: inline-block; min-width: 86px; }
 @media (max-width: 760px) { .ld-grid { grid-template-columns: minmax(0, 1fr) !important; } }
+.card-ic h2 { border: 0; padding: 0; color: #1A4677; font-family: Georgia, "Times New Roman", serif; }

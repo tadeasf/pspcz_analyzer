@@ -17,7 +17,7 @@ from pspcz_analyzer.routes.utils import validate_period
 from pspcz_analyzer.services.amendment_service import amendment_detail
 from pspcz_analyzer.services.law_service import get_all_status_labels
 from pspcz_analyzer.services.law_service import law_detail as get_law_detail
-from pspcz_analyzer.services.legislation_overview import active_laws, recent_activity
+from pspcz_analyzer.services.legislation_overview import homepage_blocks
 from pspcz_analyzer.services.votes_service import vote_detail
 
 router = APIRouter(tags=["Pages"])
@@ -92,10 +92,8 @@ async def index(request: Request, period: int = DEFAULT_PERIOD):
         _ctx(
             request,
             period,
-            stats=pd.stats,
             active_page="index",
-            recent_activity=recent_activity(pd, lang),
-            active_laws=active_laws(pd, lang),
+            blocks=homepage_blocks(pd, lang),
         ),
     )
 
