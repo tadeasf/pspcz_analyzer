@@ -51,7 +51,9 @@ def _votes() -> pl.DataFrame:
             "nehlasoval": [1, 0],
             "prihlaseno": [2, 1],
         },
-        schema_overrides=dict.fromkeys(("pro", "proti", "zdrzel", "nehlasoval", "prihlaseno"), pl.Int32),
+        schema_overrides=dict.fromkeys(
+            ("pro", "proti", "zdrzel", "nehlasoval", "prihlaseno"), pl.Int32
+        ),
     )
 
 

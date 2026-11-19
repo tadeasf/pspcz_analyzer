@@ -26,9 +26,10 @@ def mock_period_data():
 
 
 @pytest.fixture()
-def mock_data_service(mock_period_data):
+def mock_data_service(mock_period_data, tmp_path):
     """A DataService-like mock that returns our synthetic data."""
     svc = MagicMock(spec=DataService)
+    svc.cache_dir = tmp_path
     svc.available_periods = [1]
     svc.loaded_periods = {1}
     svc.get_period.return_value = mock_period_data

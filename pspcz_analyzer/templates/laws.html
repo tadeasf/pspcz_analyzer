@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ _("laws.title") }} — {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ _("laws.title") }} · {{ _("site.short_title") }}{% endblock %}
 
+{% from "macros.html" import page_head %}
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("laws.title") }}</h1>
-    <p>{{ _("laws.subtitle") }}</p>
-</div>
+{{ page_head("document", _("laws.title"), _("laws.subtitle")) }}
 
 <form hx-get="/api/laws" hx-target="#results" hx-indicator="#loading" hx-push-url="false">
     <input type="hidden" name="period" value="{{ period }}">

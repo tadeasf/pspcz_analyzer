@@ -113,6 +113,23 @@ async def attendance_page(request: Request, period: int = DEFAULT_PERIOD):
     )
 
 
+@router.get("/jak-se-v-tom-vyznat")
+@limiter.limit("60/minute")
+async def guide_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    return templates.TemplateResponse("guide.html", _ctx(request, period, active_page="guide"))
+
+
+@router.get("/nahlasit-chybu")
+@limiter.limit("60/minute")
+async def report_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    source_page = _safe_referer(request.headers.get("referer"))
+    return templates.TemplateResponse(
+        "report.html", _ctx(request, period, active_page="report", source_page=source_page)
+    )
+
+
 @router.get("/similarity")
 @limiter.limit("60/minute")
 async def similarity_page(request: Request, period: int = DEFAULT_PERIOD):

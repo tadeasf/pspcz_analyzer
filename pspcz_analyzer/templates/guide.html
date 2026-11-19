@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "macros.html" import page_head %}
+{% block title %}{{ _("nav.guide") }} · {{ _("site.short_title") }}{% endblock %}
+{% block content %}
+{{ page_head("book", _("nav.guide"), _("guide.perex")) }}
+{% if lang != "cs" %}<p class="info-box">{{ _("guide.czech_only") }}</p>{% endif %}
+{% include "partials/guide_cs.html" %}
+{% endblock %}

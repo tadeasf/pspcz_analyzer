@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ _("nav.votes") }} — {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ _("nav.votes") }} · {{ _("site.short_title") }}{% endblock %}
 
+{% from "macros.html" import page_head %}
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("votes.title") }}</h1>
-    <p>{{ _("votes.subtitle") }}</p>
-</div>
+{{ page_head("ballot", _("votes.title"), _("votes.subtitle")) }}
 
 <details class="methodology">
     <summary>{{ _("votes.methodology_title") }}</summary>

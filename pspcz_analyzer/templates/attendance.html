@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ _("nav.attendance") }} — {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ _("nav.attendance") }} · {{ _("site.short_title") }}{% endblock %}
 
+{% from "macros.html" import page_head %}
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("attendance.title") }}</h1>
-    <p>{{ _("attendance.subtitle") }}</p>
-</div>
+{{ page_head("calendar", _("attendance.title"), _("attendance.subtitle")) }}
 
 <details class="methodology">
     <summary>{{ _("attendance.methodology_title") }}</summary>

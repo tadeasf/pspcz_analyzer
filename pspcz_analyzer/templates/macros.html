@@ -16,3 +16,27 @@
 {% macro status_badge(status) %}
 <span class="status-pill status-pill-{{ status|status_category }}">{{ status }}</span>
 {% endmacro %}
+
+{# Line icons from the redesign mockup (docs/ux-rework/zakony-pod-lupou.html), 24x24, currentColor. #}
+{% set _ICONS = {
+    "document": '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 15.5h5M10 9h2"/>',
+    "pencil": '<path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',
+    "ballot": '<path d="M4 13h16v7H4z"/><path d="M8 13V4h8v9"/><path d="M10 8.5l1.5 1.5 3-3"/>',
+    "people": '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c2.9.2 5 2.4 5 5.8"/>',
+    "calendar": '<path d="M4 6h16v14H4z"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M9 15l2 2 4-4"/>',
+    "book": '<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5v13"/>',
+} %}
+
+{% macro icon(name, cls="ico") -%}
+<svg class="{{ cls }}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{{ _ICONS[name]|safe }}</svg>
+{%- endmacro %}
+
+{% macro page_head(icon_name, title, perex="") %}
+<div class="phead">
+    <span class="pbadge">{{ icon(icon_name) }}</span>
+    <div class="phead-t">
+        <h1 class="phead-h">{{ title }}</h1>
+        {% if perex %}<p class="phead-p">{{ perex }}</p>{% endif %}
+    </div>
+</div>
+{% endmacro %}

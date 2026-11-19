@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ _("nav.similarity") }} — {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ _("nav.similarity") }} · {{ _("site.short_title") }}{% endblock %}
 
+{% from "macros.html" import page_head %}
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("similarity.title") }}</h1>
-    <p>{{ _("similarity.subtitle") }}</p>
-</div>
+{{ page_head("people", _("similarity.title"), _("similarity.subtitle")) }}
 
 <details class="methodology">
     <summary>{{ _("similarity.methodology_title") }}</summary>

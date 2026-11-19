@@ -20,8 +20,9 @@ _REQUEST_TIMEOUT = 15.0
 def _build_issue_body(body: str, vote_id: int, period: int, page_url: str, lang: str) -> str:
     """Assemble the issue body with vote metadata header and user text."""
     escaped_body = html_mod.escape(body)
+    vote_line = f"**Vote ID:** {vote_id}\n" if vote_id else ""
     return (
-        f"**Vote ID:** {vote_id}\n"
+        f"{vote_line}"
         f"**Period:** {period}\n"
         f"**Page URL:** {page_url}\n"
         f"**Language:** {lang}\n\n"
@@ -61,7 +62,7 @@ class GitHubFeedbackClient:
             logger.warning("GitHub feedback not configured, skipping issue creation")
             return None
 
-        issue_title = f"[Feedback] Vote #{vote_id}: {title}"
+        issue_title = f"[Feedback] Vote #{vote_id}: {title}" if vote_id else f"[Feedback] {title}"
         issue_body = _build_issue_body(body, vote_id, period, page_url, lang)
 
         url = f"{_GITHUB_API_BASE}/repos/{self.repo}/issues"

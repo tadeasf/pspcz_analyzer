@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from pspcz_analyzer.rate_limit import limiter
+from pspcz_analyzer.services.feedback_service import _build_issue_body
 
 _CSRF_HEADERS = {"origin": "http://testserver"}
 
@@ -97,3 +98,35 @@ class TestFeedbackEndpoint:
         )
         assert resp.status_code == 200
         assert "github.com" not in resp.text
+
+
+class TestGenericFeedback:
+    """The report page (#119) sends feedback without a vote id."""
+
+    @patch("pspcz_analyzer.routes.feedback.GITHUB_FEEDBACK_ENABLED", True)
+    @patch("pspcz_analyzer.routes.feedback.GitHubFeedbackClient")
+    def test_report_without_vote_uses_page_field(self, mock_client_cls, client):
+        mock_instance = MagicMock()
+        mock_instance.create_issue.return_value = {
+            "number": 2,
+            "html_url": "https://github.com/t/issues/2",
+        }
+        mock_client_cls.return_value = mock_instance
+        resp = client.post(
+            "/api/feedback",
+            data={
+                "period": "10",
+                "page": "/laws/246?period=10",
+                "title": "Spatny stav",
+                "body": "Tisk 246 ma spatny stav.",
+            },
+            headers=_CSRF_HEADERS,
+        )
+        assert resp.status_code == 200
+        args = mock_instance.create_issue.call_args.args
+        assert args[2] == 0 and args[4] == "/laws/246?period=10"
+
+
+def test_issue_title_without_vote():
+    assert "Vote ID" not in _build_issue_body("text", 0, 10, "/x", "cs")
+    assert "**Vote ID:** 5" in _build_issue_body("text", 5, 10, "/x", "cs")
