@@ -7,12 +7,14 @@ import markdown as _md
 import markupsafe
 import nh3
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from loguru import logger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from pspcz_analyzer.config import (
     CLUB_COLOR_OTHER,
@@ -80,6 +82,26 @@ app = FastAPI(
 # Security: rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+
+async def _not_found_handler(request: Request, exc: StarletteHTTPException) -> Response:
+    """HTML 404 page for page URLs; API and other errors keep the default JSON."""
+    path = request.url.path
+    if exc.status_code != 404 or path.startswith(("/api/", "/static/", "/charts/")):
+        return await http_exception_handler(request, exc)
+    return pages_templates.TemplateResponse(
+        "not_found.html",
+        {
+            "request": request,
+            "period": DEFAULT_PERIOD,
+            "periods": request.app.state.data.available_periods,
+            "lang": getattr(request.state, "lang", "cs"),
+        },
+        status_code=404,
+    )
+
+
+app.add_exception_handler(StarletteHTTPException, _not_found_handler)  # type: ignore[arg-type]
 
 # Security: response headers
 app.add_middleware(SecurityHeadersMiddleware)

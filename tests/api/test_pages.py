@@ -64,7 +64,19 @@ class TestVoteDetailRedesign:
         html = client.get(f"/votes/{vote_id}?period=1").text
         assert "Jak hlasovaly poslanecké kluby" in html
         assert "Jak hlasovali jednotliví poslanci" in html
-        assert "zatím neznáme" in html
+        assert "otázku doplníme" in html  # no steno record yet
+
+    def test_unknown_vote_and_law_are_404(self, client):
+        assert client.get("/votes/999999999?period=1").status_code == 404
+        resp = client.get("/laws/999999?period=1")
+        assert resp.status_code == 404
+        assert "999999" in resp.text
+
+    def test_unknown_page_is_html_404(self, client):
+        resp = client.get("/neexistuje")
+        assert resp.status_code == 404
+        assert "Stránku jsme nenašli" in resp.text
+        assert client.get("/api/neexistuje").headers["content-type"].startswith("application/json")
 
 
 class TestUrlState:

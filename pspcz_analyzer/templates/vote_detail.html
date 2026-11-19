@@ -35,9 +35,11 @@
         <p style="margin:0;color:#3a4552">{{ _("vd.from_steno") }}: „{{ st.quote }}“ <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a></p>
         <div class="ai"><b>{{ _("vd.ai_question") }}</b><span>{{ _("vd.ai_question_note") }}</span></div>
     </section>
+    {% elif st %}
+    <p style="color:#3a4552">{{ _("vd.subject_unsure") }} <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_part") }} ↗</a> · <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }} ↗</a></p>
     {% else %}
     <p style="color:#3a4552">{{ _("vd.subject_unknown") }}
-        <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }}</a>{% if st and st.url %}, <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a>{% endif %}.</p>
+        <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }}</a>.</p>
     {% endif %}
     {% if info.amendment_link %}
     <p><a href="/amendments/{{ info.amendment_link.schuze }}/{{ info.amendment_link.bod }}?period={{ period }}">{{ _("amendments.view_amendment_detail") }}</a></p>

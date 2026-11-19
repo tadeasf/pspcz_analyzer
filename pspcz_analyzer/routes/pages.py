@@ -184,8 +184,9 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
     detail = vote_detail(pd, vote_id, lang)
     if detail is None:
         return templates.TemplateResponse(
-            "votes.html",
-            _ctx(request, period, active_page="votes", error=_t("vote.not_found")),
+            "not_found.html",
+            _ctx(request, period, active_page="votes", message=_t("vote.not_found")),
+            status_code=404,
         )
     return templates.TemplateResponse(
         "vote_detail.html",
@@ -229,8 +230,9 @@ async def law_detail_page(request: Request, ct: int, period: int = DEFAULT_PERIO
     detail = get_law_detail(pd, ct, data_svc.cache_dir, lang)
     if detail is None:
         return templates.TemplateResponse(
-            "laws.html",
-            _ctx(request, period, active_page="laws"),
+            "not_found.html",
+            _ctx(request, period, active_page="laws", message=_t("law.not_found").format(ct=ct)),
+            status_code=404,
         )
     return templates.TemplateResponse(
         "law_detail.html",
@@ -274,6 +276,7 @@ async def amendment_detail_page(
                 clubs=_clubs(pd),
                 error=_t("pn.not_found"),
             ),
+            status_code=404,
         )
     return templates.TemplateResponse(
         "amendment_detail.html",
