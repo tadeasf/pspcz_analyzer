@@ -219,3 +219,42 @@ def test_config_endpoint_masks_secrets(client, session_cookie, mock_data_service
     payload = response.json()
     assert payload["openai_api_key"] == "***"
     assert secret not in response.text
+
+
+class TestCorrections:
+    """Admin corrections page writes the overrides file (TASKS 2X)."""
+
+    def test_save_and_delete_vote_question(self, client, session_cookie, tmp_path):
+        form = {"period": "1", "kind": "vote_question", "key": "2", "question": "  O čem? "}
+        r = client.post(
+            "/admin/api/corrections",
+            data=form,
+            cookies=session_cookie,
+            headers=ORIGIN,
+            follow_redirects=False,
+        )
+        assert r.status_code == 303 and "msg=" in r.headers["location"]
+        saved = json.loads((tmp_path / "overrides" / "1.json").read_text())
+        assert saved["vote_question"]["2"]["question"] == "O čem?"
+        assert saved["vote_question"]["2"]["by"] == "admin"
+
+        form = {"period": "1", "kind": "vote_question", "key": "2", "action": "delete"}
+        client.post("/admin/api/corrections", data=form, cookies=session_cookie, headers=ORIGIN)
+        saved = json.loads((tmp_path / "overrides" / "1.json").read_text())
+        assert saved["vote_question"] == {}
+
+    def test_unknown_vote_is_rejected(self, client, session_cookie, tmp_path):
+        form = {"period": "1", "kind": "vote_question", "key": "999", "question": "x"}
+        r = client.post(
+            "/admin/api/corrections",
+            data=form,
+            cookies=session_cookie,
+            headers=ORIGIN,
+            follow_redirects=False,
+        )
+        assert "error=" in r.headers["location"]
+        assert not (tmp_path / "overrides" / "1.json").exists()
+
+    def test_page_renders(self, client, session_cookie):
+        r = client.get("/admin/corrections?period=1", cookies=session_cookie)
+        assert r.status_code == 200 and "Vote question" in r.text

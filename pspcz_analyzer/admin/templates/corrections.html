@@ -1,0 +1,92 @@
+{% extends "admin_base.html" %}
+{% block title %}Corrections{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Corrections, period {{ period }}</h1>
+    <p>Manual fixes on top of the pipeline output. Pipelines never overwrite them; the public site shows them on its next request.</p>
+    <form method="get"><select name="period" onchange="this.form.submit()">{% for p in available_periods %}<option value="{{ p }}" {% if p == period %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></form>
+</div>
+{% if msg %}<div class="card mb-2"><div class="card-body" role="status">{{ msg }}</div></div>{% endif %}
+{% if error %}<div class="card mb-2"><div class="card-body" role="alert" style="color:#A33"><b>Not saved:</b> {{ error }}</div></div>{% endif %}
+
+{% macro delete_btn(kind, key) %}
+<form method="post" action="/admin/api/corrections" style="display:inline">
+    <input type="hidden" name="period" value="{{ period }}"><input type="hidden" name="kind" value="{{ kind }}">
+    <input type="hidden" name="key" value="{{ key }}"><input type="hidden" name="action" value="delete">
+    <button class="btn btn-secondary" type="submit">Remove</button>
+</form>
+{% endmacro %}
+
+<div class="card mb-2">
+    <div class="card-header">Current corrections</div>
+    <div class="card-body">
+        <table>
+            <thead><tr><th>Kind</th><th>Key</th><th>Value</th><th>By / when</th><th></th></tr></thead>
+            <tbody>
+            {% for kind, recs in ov.items() %}{% for key, r in recs.items() %}
+            <tr>
+                <td>{{ kind }}</td><td>{{ key }}</td>
+                <td style="font-size:0.85rem">{% for f, v in r.items() if f not in ("by", "at") %}<b>{{ f }}</b>: {{ v }}<br>{% endfor %}</td>
+                <td>{{ r.by }}<br>{{ r.at }}</td>
+                <td>{{ delete_btn(kind, key) }}</td>
+            </tr>
+            {% endfor %}{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">Vote question</div>
+    <div class="card-body">
+        <form method="post" action="/admin/api/corrections">
+            <input type="hidden" name="period" value="{{ period }}"><input type="hidden" name="kind" value="vote_question">
+            <div class="form-group"><label for="vq-key">Vote id (id_hlasovani, from /votes/&lt;id&gt;)</label><input id="vq-key" name="key" required inputmode="numeric"></div>
+            <div class="form-group"><label for="vq-q">Question (Czech)</label><input id="vq-q" name="question" required maxlength="500" style="width:100%"></div>
+            <div class="form-group"><label for="vq-en">Question (English, optional)</label><input id="vq-en" name="question_en" maxlength="500" style="width:100%"></div>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">AI brief of a bill</div>
+    <div class="card-body">
+        <form method="post" action="/admin/api/corrections">
+            <input type="hidden" name="period" value="{{ period }}"><input type="hidden" name="kind" value="brief">
+            <div class="form-group"><label for="br-key">Tisk number</label><input id="br-key" name="key" required inputmode="numeric"></div>
+            <div class="form-group"><label for="br-review">Review</label>
+                <select id="br-review" name="review"><option value="ok">Checked, correct</option><option value="hidden">Wrong, hide it</option><option value="edited">Replace with my text</option></select></div>
+            <div class="form-group"><label for="br-nazev">Plain title (only for "replace")</label><input id="br-nazev" name="nazev" maxlength="500" style="width:100%"></div>
+            <div class="form-group"><label for="br-shrnuti">Summary (only for "replace"; English then shows this Czech text)</label><textarea id="br-shrnuti" name="shrnuti" rows="4" maxlength="3000" style="width:100%"></textarea></div>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">Amendment letter summary</div>
+    <div class="card-body">
+        <form method="post" action="/admin/api/corrections">
+            <input type="hidden" name="period" value="{{ period }}"><input type="hidden" name="kind" value="amendment_summary">
+            <div class="form-group"><label for="am-ct">Tisk number</label><input id="am-ct" name="ct" required inputmode="numeric"></div>
+            <div class="form-group"><label for="am-letter">Letter (e.g. A, B2)</label><input id="am-letter" name="letter" required maxlength="6"></div>
+            <div class="form-group"><label for="am-s">Summary (Czech)</label><textarea id="am-s" name="summary" rows="3" required maxlength="3000" style="width:100%"></textarea></div>
+            <div class="form-group"><label for="am-en">Summary (English, optional)</label><textarea id="am-en" name="summary_en" rows="3" maxlength="3000" style="width:100%"></textarea></div>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">Homepage: "Teď se o tom mluví"</div>
+    <div class="card-body">
+        <form method="post" action="/admin/api/corrections">
+            <input type="hidden" name="period" value="{{ period }}"><input type="hidden" name="kind" value="homepage_pick">
+            <div class="form-group"><label for="hp-ct">Tisk number to show instead of the most debated bill</label><input id="hp-ct" name="ct" required inputmode="numeric"></div>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

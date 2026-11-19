@@ -15,6 +15,7 @@ from pspcz_analyzer.config import (
     PERIOD_LABELS,
     PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
+    TISKY_META_DIR,
 )
 from pspcz_analyzer.data.cache import get_or_parse
 from pspcz_analyzer.data.downloader import (
@@ -56,14 +57,21 @@ from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.coalition_detector import detect_coalition_parties
 from pspcz_analyzer.services.coalition_table import coalition_spans
 from pspcz_analyzer.services.mp_builder import add_vote_parties, build_mp_info
+from pspcz_analyzer.services.overrides import (
+    apply_amendment_summaries,
+    apply_briefs,
+    apply_vote_questions,
+    load_overrides,
+    overrides_path,
+)
 from pspcz_analyzer.services.tisk import (
     TiskCacheManager,
     TiskTextService,
     build_tisk_lookup,
 )
-from pspcz_analyzer.services.tisk.brief import load_briefs
+from pspcz_analyzer.services.tisk.brief import BRIEFS_DIR, load_briefs
 from pspcz_analyzer.services.vote_codes import check_vote_totals, normalize_vote_codes
-from pspcz_analyzer.services.vote_steno import load_speeches, load_vote_steno
+from pspcz_analyzer.services.vote_steno import VOTE_STENO_DIR, load_speeches, load_vote_steno
 
 _WATCH_INTERVAL_S = 30
 _SCHUZE_STAV_UNAPPROVED = 2  # psp.cz: agenda not approved, session closed
@@ -136,6 +144,8 @@ class DataReader:
         self._last_mtimes: dict[str, float] = {}
         self._last_amendment_mtimes: dict[int, float] = {}
         self._watcher_task: asyncio.Task | None = None
+        # mtimes of the JSON outputs per period, to clear analysis_cache on change
+        self._json_stamps: dict[int, tuple[float, ...]] = {}
 
     @property
     def available_periods(self) -> list[dict]:
@@ -179,6 +189,11 @@ class DataReader:
         brief_map = load_briefs(self.cache_dir, period)
         pd.vote_steno = load_vote_steno(self.cache_dir, period)
         pd.speeches = load_speeches(self.cache_dir, period)
+        pd.overrides = load_overrides(self.cache_dir, period)
+        apply_briefs(brief_map, pd.overrides)
+        apply_vote_questions(pd.vote_steno, pd.overrides)
+        apply_amendment_summaries(pd.amendment_data, pd.overrides)
+        self._invalidate_on_json_change(period)
         for tisk in pd.tisk_lookup.values():
             tisk.topics = topic_map.get(tisk.ct, [])
             tisk.summary = summary_map.get(tisk.ct, "")
@@ -194,6 +209,22 @@ class DataReader:
                 v["llm_diff_summary"] = diffs_map.get(diff_key, "")
                 v["llm_diff_summary_en"] = diffs_en_map.get(diff_key, "")
             tisk.sub_versions = versions
+
+    def _invalidate_on_json_change(self, period: int) -> None:
+        """Drop cached list pages when briefs, vote questions or corrections change.
+
+        These JSON outputs are re-read on every request, but the laws/amendments
+        lists are memoised in analysis_cache, which only parquet changes cleared.
+        """
+        paths = (
+            overrides_path(self.cache_dir, period),
+            self.cache_dir / TISKY_META_DIR / str(period) / BRIEFS_DIR,
+            self.cache_dir / VOTE_STENO_DIR / str(period),
+        )
+        stamp = tuple(p.stat().st_mtime if p.exists() else 0.0 for p in paths)
+        if self._json_stamps.get(period, stamp) != stamp:
+            analysis_cache.invalidate()
+        self._json_stamps[period] = stamp
 
     def initialize(self, period: int = DEFAULT_PERIOD) -> None:
         """Pre-load shared data and the default period."""

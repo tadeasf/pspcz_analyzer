@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.law_filters import last_step, phase_of, submitter_kind, tab_of
 from pspcz_analyzer.services.law_service import STATUS_KEYS
+from pspcz_analyzer.services.overrides import homepage_pick
 from pspcz_analyzer.services.tisk.brief import brief_view
 
 
@@ -100,7 +101,8 @@ def talked_about(data: PeriodData, lang: str, days: int = 14) -> dict | None:
         days: Window length counted back from today.
 
     Returns:
-        Homepage row plus ``speeches``, or None when no bill was debated.
+        Homepage row plus ``speeches``, or None when no bill was debated. A bill
+        the admin picked (services/overrides) wins over the speech count.
     """
     since = (date.today() - timedelta(days=days)).isoformat()
     per_ct: dict[int, int] = {}
@@ -110,10 +112,13 @@ def talked_about(data: PeriodData, lang: str, days: int = 14) -> dict | None:
             n = sum(v for d, v in by_day.items() if d >= since)
             per_ct[tisk.ct] = per_ct.get(tisk.ct, 0) + n
     ct, n = max(per_ct.items(), key=lambda kv: kv[1], default=(0, 0))
+    pick = homepage_pick(data.overrides) if data.overrides else None
+    if pick:
+        ct, n = pick, per_ct.get(pick, 0)
     tisk = next((t for t in _bills(data) if t.ct == ct), None)
-    if not tisk or not n:
+    if not tisk or not (n or pick):
         return None
-    return {**_row(tisk, lang), "speeches": n, "steps": phase_steps(tisk)}
+    return {**_row(tisk, lang), "speeches": n, "steps": phase_steps(tisk), "picked": bool(pick)}
 
 
 def homepage_blocks(data: PeriodData, lang: str = "cs") -> dict:

@@ -32,7 +32,7 @@
             {% if b.od_kdy %}<dt>{{ _("ld.from_when") }}</dt><dd>{{ _("ld.proposed") }} {{ b.od_kdy }}</dd>{% endif %}
         </dl>
         <div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("ld.ai_source").format(ct=detail.ct) }}{% if detail.history and detail.history.submitter_date %} ({{ detail.history.submitter_date|cz_date }}){% endif %}
-            · {% if b.status == "ok" %}{{ _("ai.check_ok") }}{% else %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}
+            · {% if b.edited %}{{ _("ai.reviewed") }}{% elif b.status == "ok" %}{{ _("ai.check_ok") }}{% else %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}
             {% if detail.amendments and detail.amendments.tally.accepted %} {{ _("ld.amended_note") }}{% endif %}</span></div>
         {% else %}<p>{{ _("lw.no_summary") }}</p>{% endif %}
     </section>

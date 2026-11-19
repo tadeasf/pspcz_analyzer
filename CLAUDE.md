@@ -92,6 +92,14 @@ Both are initialized at startup via FastAPI lifespan, stored on `app.state.data`
 - **Per-period data** (`PeriodData` dataclass) — voting records, MP votes, void votes, MP info, tisk (print) lookups
 - Periods are loaded on demand; `config.py` maps period numbers to years, organ IDs, and labels
 
+### Admin corrections (`admin/corrections.py`, `services/overrides.py`)
+
+`/admin/corrections` edits `overrides/{period}.json` in the cache dir (`{kind: {key: {...fields, by, at}}}`; kinds `vote_question`, `brief` (review `ok`/`hidden`/`edited`), `amendment_summary` (`"ct:LETTER"`), `homepage_pick`). `DataReader._refresh_tisk_data` applies it on every `get_period` on top of the briefs / vote steno / amendment data and clears `analysis_cache` when the overrides file or the briefs / vote-steno folders change. Pipelines never write this file, so corrections survive reruns. Edited texts are labelled "zkontroloval člověk".
+
+### Unvoted amendments (`services/amendments/pending.py`, #112)
+
+Bills with a consolidated amendment document (history "zpracovány jako tisk N/X") but no 3rd reading get a `BillAmendmentData` keyed `(PENDING_SCHUZE=0, ct)` (`is_pending`), letters from the PDF, fate `pending` ("Zatím se nehlasovalo"). The parse stage rebuilds the whole list, so the entry disappears once the bill is voted.
+
 ### Admin Dashboard (`admin/`)
 
 Password-protected admin interface (bcrypt auth + session cookies):

@@ -204,11 +204,11 @@ Order from [#99]: #100 → #101 → #102 → #103 → #104.
 - [x] **Speech counts per agenda item** ([#108] "Teď se o tom mluví").
   - From the same pages: speaker turns per bod, excluding the chair's procedural lines.
   - Caveats: steno publication lag (the last few days of the 14-day window will be missing; actual lag not yet checked) and merged debates (sloučená rozprava) that span several items.
-- [ ] **Admin extensions** ([#100], [#108], [#109]).
+- [x] **Admin extensions** ([#100], [#108], [#109]). Done 2026-11-20: `/admin/corrections` (vote question, AI brief ok/hide/replace, amendment letter summary, homepage pick) writes `overrides/{period}.json` with who/when (`services/overrides.py`); readers apply it on every request, pipelines never touch it. Not done: corrections of other amendment fields (fate, submitters).
   - Corrections (vote question, amendment fields, uncertain data), homepage pick, AI summary review status and edited text.
   - The backend writes an overrides file into the cache dir with who/when for each change. The frontend reads it through the existing file watcher. Pipelines merge overrides and never overwrite them.
   - See the "Admin users" decision about accounts and access.
-- [ ] **Unvoted amendments** ([#112] filter "Zatím se nehlasovalo"). Today the amendment pipeline starts from 3rd-reading votes, so bills between the 2nd and 3rd reading are missing. Parse the consolidated amendment document as soon as it appears (we already download sub-tisk versions).
+- [x] **Unvoted amendments** ([#112] filter "Zatím se nehlasovalo"). Done 2026-11-20 (`services/amendments/pending.py`): bills with the consolidated document and no 3rd reading get entry `(0, ct)`, fate `pending`; period 10: 10 bills, 66 letters. Today the amendment pipeline starts from 3rd-reading votes, so bills between the 2nd and 3rd reading are missing. Parse the consolidated amendment document as soon as it appears (we already download sub-tisk versions).
 - [ ] **RSS/Atom feed per tisk** ([#111] "Sledovat tento návrh"). Pending confirmation.
 - [x] **Version in footer** (part of [#84]).
 

@@ -282,7 +282,8 @@ def brief_view(brief: dict | None, lang: str) -> dict | None:
         lang: UI language; English falls back to Czech when missing.
 
     Returns:
-        Dict with the FIELDS plus ``status`` and ``generated_at``, or None.
+        Dict with the FIELDS plus ``status``, ``generated_at`` and ``edited``
+        (admin review, see services/overrides), or None.
     """
     if not brief:
         return None
@@ -293,4 +294,5 @@ def brief_view(brief: dict | None, lang: str) -> dict | None:
         **{f: fields.get(f, "") for f in FIELDS},
         "status": brief.get("status", "warning"),
         "generated_at": brief.get("generated_at", ""),
+        "edited": brief.get("edited"),
     }

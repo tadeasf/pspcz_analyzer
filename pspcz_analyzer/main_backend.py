@@ -9,6 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.responses import RedirectResponse
 
 from pspcz_analyzer.admin.auth import AdminAuthMiddleware
+from pspcz_analyzer.admin.corrections import router as corrections_router
 from pspcz_analyzer.admin.log_stream import log_broadcaster
 from pspcz_analyzer.admin.pipeline_history import PipelineHistory
 from pspcz_analyzer.admin.routes import router as admin_router
@@ -82,6 +83,7 @@ app.add_middleware(AdminAuthMiddleware)
 
 # Mount admin routes
 app.include_router(admin_router)
+app.include_router(corrections_router)
 
 
 @app.get("/")

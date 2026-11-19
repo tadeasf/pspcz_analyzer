@@ -32,8 +32,9 @@
     {% if st and st.question %}
     <section class="box" style="background:#F1F6FC">
         <p style="font-size:18px;margin:0 0 6px"><b>{{ st.question }}</b></p>
-        <p style="margin:0;color:#3a4552">{{ _("vd.from_steno") }}: „{{ st.quote }}“ <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a></p>
-        <div class="ai"><b>{{ _("vd.ai_question") }}</b><span>{{ _("vd.ai_question_note") }}</span></div>
+        {% if st.quote %}<p style="margin:0;color:#3a4552">{{ _("vd.from_steno") }}: „{{ st.quote }}“ <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a></p>{% endif %}
+        {% if st.edited %}<div class="ai"><b>{{ _("vd.edited_question") }}</b></div>
+        {% else %}<div class="ai"><b>{{ _("vd.ai_question") }}</b><span>{{ _("vd.ai_question_note") }}</span></div>{% endif %}
     </section>
     {% elif st %}
     <p style="color:#3a4552">{{ _("vd.subject_unsure") }} <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_part") }} ↗</a> · <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }} ↗</a></p>

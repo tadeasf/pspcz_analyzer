@@ -323,6 +323,11 @@
                 </a>
             </li>
             <li>
+                <a href="/admin/corrections" {% if '/corrections' in request.url.path %}class="active"{% endif %}>
+                    <span class="nav-icon">&#9998;</span> Corrections
+                </a>
+            </li>
+            <li>
                 <a href="/admin/config" {% if '/config' in request.url.path %}class="active"{% endif %}>
                     <span class="nav-icon">&#9881;</span> Configuration
                 </a>

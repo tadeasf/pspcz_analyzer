@@ -82,3 +82,10 @@ class TestHomepageBlocks:
         data.tisk_lookup[(78, 2)].nazev = "Zákon 200"
         rows = {r["ct"]: r["dup"] for r in homepage_blocks(data)["newest"]}
         assert rows == {400: False, 300: True, 200: True}
+
+
+def test_admin_pick_wins_over_speech_count():
+    data = _make_data()
+    data.overrides = {"homepage_pick": {"talked_about": {"ct": 400}}}
+    row = homepage_blocks(data)["talked_about"]
+    assert row["ct"] == 400 and row["picked"] and row["speeches"] == 0

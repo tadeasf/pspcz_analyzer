@@ -174,6 +174,7 @@ def _vote_question(data: PeriodData, vote_id: int, lang: str) -> dict | None:
         "quote": rec.get("quote", ""),
         "url": rec.get("url", ""),
         "status": rec.get("status", "unknown"),
+        "edited": rec.get("edited"),
     }
 
 

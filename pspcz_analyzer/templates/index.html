@@ -46,7 +46,7 @@
         <h3 style="font-size:22px;margin:0"><a href="/laws/{{ t.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ t.nazev }}</a></h3>
         {% if t.summary %}<p style="margin:0">{{ t.summary }}</p>{% endif %}
         <ol class="phase">{% for s in t.steps %}<li class="{{ s.state }}"><b>{{ _(s.key) }}</b>{% if s.date %}<br>{{ s.date|cz_date(short=True) }}{% elif s.state == "now" %}<br>{{ _("ph.now") }}{% endif %}</li>{% endfor %}</ol>
-        <p class="lbl" style="margin:0">{{ _("home.talked_why").format(n=t.speeches) }}</p>
+        <p class="lbl" style="margin:0">{{ _("home.talked_picked") if t.picked else _("home.talked_why").format(n=t.speeches) }}</p>
     </div>
 </div>
 {% endif %}
