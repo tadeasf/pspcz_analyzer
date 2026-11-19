@@ -19,6 +19,8 @@ Timeline promised to the team: roughly 1-2 months of weekend work, pushed contin
 
 ---
 
+Done items are ticked here; details, commits and remaining gaps per item are in [STATUS.md](STATUS.md).
+
 ## Decisions
 
 Moved to [DECISIONS.md](DECISIONS.md). Progress is in [STATUS.md](STATUS.md).
@@ -125,19 +127,19 @@ All of these need a **full re-scrape of history JSON** after [#87]. It is cheap:
   - `amendment_count` is `len(amendments)` (`amendment_models.py:103-105`) and includes amendments without a result, so a "not determined" bucket is needed for accepted + rejected + other = count.
   - Fix: group by `ct` in `law_service._build_law_row` / `law_detail` and `amendment_service.list_amendment_bills`, show the sum in `law_detail.html:14`, rename `amendments.bills_found`, and tighten candidate selection.
   - Definition pending (see Decisions: count letters).
-- [ ] **[#94] "Předkladatel: Opoziční" on a government bill** (P1, S). Correct (`law_service.py:28-31`, `amendment_service.py:49-52`, `translations.py:82`, `amendments_list.html:11`).
+- [x] **[#94] "Předkladatel: Opoziční" on a government bill** (P1, S). Correct (`law_service.py:28-31`, `amendment_service.py:49-52`, `translations.py:82`, `amendments_list.html:11`).
   - It is a label fix: relabel to something like "Pozměňovací návrhy podali". The bill's real submitter comes from history (#98).
   - `driver` uses only `submitter_parties`, so committee amendments probably land as "unknown" (not verified).
 
 ### 1D. Search and URLs
 
-- [ ] **[#95] Search: tisk number, no diacritics, inflected forms** (P1, S-M). Mostly correct, but it misses a **schema bug**: tisky column 15 is named `id_stav` and typed Int32 in `models/schemas.py`, but it holds the full official title. `data/parser.py:58` casts with `strict=False`, so the title silently becomes null.
+- [x] **[#95] Search: tisk number, no diacritics, inflected forms** (P1, S-M). Mostly correct, but it misses a **schema bug**: tisky column 15 is named `id_stav` and typed Int32 in `models/schemas.py`, but it holds the full official title. `data/parser.py:58` casts with `strict=False`, so the title silently becomes null.
   - Fix:
     - Rename the column, drop the cast, and search it.
     - A numeric, "tisk N" or "ST N" query matches `t.ct`, and the votes search matches `ct` through `tisk_lookup`.
     - Inflection: prefix match per token on top of `normalize_czech` (cut tokens to max(4, len-2)). It covers poplatky/poplatcích, televize/televizi and česká/české.
   - Full Czech morphology (MorphoDiTa) is not worth it: CC BY-NC-SA models and a heavy dependency.
-- [ ] **[#96] Search/filters not in the URL** (P2, S). Correct (`laws.html:10`, `votes.html:19`, `amendments.html:19`, pagination partials).
+- [x] **[#96] Search/filters not in the URL** (P2, S). Correct (`laws.html:10`, `votes.html:19`, `amendments.html:19`, pagination partials).
   - Fix: API routes return an `HX-Push-Url` header pointing at `/laws?...`. Page routes accept status/topic/outcome/page and pass them into the initial `hx-get`; today only `laws_page` takes `search` (`pages.py:166`). Back sends `HX-History-Restore-Request`.
   - Also fix: the pagination partials put `search={{ search }}` into the URL without `urlencode`.
 
@@ -163,7 +165,7 @@ Order from [#99]: #100 → #101 → #102 → #103 → #104.
     - Add source + status (certain/uncertain/undetermined) per `AmendmentVote`.
     - Manual corrections via the admin (see 2X) keyed by (period, schuze, bod, letter), merged by the pipelines but never overwritten.
     - Move the parser score and warnings to the admin.
-- [ ] **[#101] Club and government/opposition by date of vote; period 9 has none** (P1, S + L). The reporter's cause for period 9 is **wrong**.
+- [x] **[#101] Club and government/opposition by date of vote; period 9 has none** (P1, S + L). The reporter's cause for period 9 is **wrong**.
   - Confidence vote 77501 is **not in psp.cz open data** (checked in the live `hl-2021ps.zip`). The only period-9 matches are 77497 (173:0) and 77500 (186:0), both near-unanimous, so the guard rejects them (`coalition_detector.py:82`) and the result is "unknown" (`:140`).
   - **Decided fix**: a hand-kept coalition table (period, club, from, to, source), with the confidence vote as a fallback. It also covers the Pirates leaving (exact date still to be checked).
   - The acceptance criterion "77501 by club on the web" cannot come from open data. Options: manual seed, scraping `hlasy.sqw`, or reporting the gap to psp.cz.
@@ -192,7 +194,7 @@ Order from [#99]: #100 → #101 → #102 → #103 → #104.
 - [ ] **[#103] Who submitted each amendment letter (opposition/government/cross/committee); submitted vs adopted** (P1, M, after #101 and #93). Correct (`amendment_service.py:49-52`; the model has no committee field).
   - Grouped votes, withdrawals, re-votes and technical fixes are already flagged (`amendment_models.py:47-52`).
   - Committee detection relies on parsing PDF headers.
-- [ ] **[#104] Similarity: real agreement instead of cosine; gov × opposition pairs** (P1, S + S). Correct: only A=+1 and B=-1, everything else 0, `fill_null(0)` (`similarity_service.py:21-35`), and no minimum overlap (`:75-108`). The methodology text in `translations.py:228` is misleading.
+- [x] **[#104] Similarity: real agreement instead of cosine; gov × opposition pairs** (P1, S + S). Correct: only A=+1 and B=-1, everything else 0, `fill_null(0)` (`similarity_service.py:21-35`), and no minimum overlap (`:75-108`). The methodology text in `translations.py:228` is misleading.
   - Fix: agreement = sum over codes c of M_c·M_cᵀ divided by P·Pᵀ (P = MP took part). Minimum shared votes goes in config; show "X z Y".
   - What counts as "voted" depends on [#91]. Gov × opposition needs [#101].
 
@@ -225,11 +227,11 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
 
 ### 3A. Site frame (checkpoint 1)
 
-- [ ] **[#105] Header, menu, footer, AI notice** (P1, S). Template + i18n. `/similarity` redirects to the loyalty tab. Footer dates come from the max vote `datum` and the history cache file mtime.
-- [ ] **[#106] Text rules: numbers, dates, states, terms** (P1, M). Only a `thousands` filter exists (`i18n/__init__.py:57`), and templates hard-code `"{:,}"` (e.g. `partials/attendance_table.html:24-28`).
+- [x] **[#105] Header, menu, footer, AI notice** (P1, S). Template + i18n. `/similarity` redirects to the loyalty tab. Footer dates come from the max vote `datum` and the history cache file mtime.
+- [x] **[#106] Text rules: numbers, dates, states, terms** (P1, M). Only a `thousands` filter exists (`i18n/__init__.py:57`), and templates hard-code `"{:,}"` (e.g. `partials/attendance_table.html:24-28`).
   - Needs Czech number, percent and date filters plus one glossary source, which also feeds the [#118] tooltips.
-- [ ] **[#107] Icons, illustrations, alternating backgrounds, club colours** (P2, S). CSS plus inline SVG from the mockup. Club colours go in config, per period.
-- [ ] **[#108] Homepage** (P1, L).
+- [x] **[#107] Icons, illustrations, alternating backgrounds, club colours** (P2, S). CSS plus inline SVG from the mockup. Club colours go in config, per period.
+- [x] **[#108] Homepage** (P1, L).
   - Blocks 1, 2 and 4-6 use existing data (`legislation_overview.py`, `bod_schuze`).
   - "Teď se o tom mluví" uses speech counts (2X), with an admin override for the pick.
   - Depends on #85, #87-#90, #95, #102 and #109.
@@ -241,11 +243,11 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
 
 ### 3B. Section pages (checkpoint 2 after #110, #111, #113, #114)
 
-- [ ] **[#110] Laws: tabs by tisk type, cards, sorting, pagination** (P1, M).
+- [x] **[#110] Laws: tabs by tisk type, cards, sorting, pagination** (P1, M).
   - `id_druh` is in the schema (`models/schemas.py:211`), but `druh_tisku.unl` is not loaded.
   - Treaties and reports show the last history step as text (proposed). Interpellations come later.
   - Depends on #109, #87-#90, #95, #96, #98 and #103.
-- [ ] **[#111] Law detail** (P1, L).
+- [x] **[#111] Law detail** (P1, L).
   - The restructure itself is M.
   - Senate/President timeline needs the fixed parser. Deadlines (15 days for the President, 30 for the Senate) are cheap to compute.
   - "Decisive vote on top" needs the vote kind from #102.
@@ -256,27 +258,27 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
   - The per-amendment link goes to the consolidated document (decided).
   - The "Zatím se nehlasovalo" filter needs the unvoted-amendments pipeline (2X).
   - Depends on #93, #94, #100, #102 and #103.
-- [ ] **[#113] Votes: list grouped by agenda item, with the question and votes needed** (P1, M).
+- [x] **[#113] Votes: list grouped by agenda item, with the question and votes needed** (P1, M).
   - Grouping by (schuze, bod) is trivial.
   - `kvorum` is already loaded (`models/schemas.py:31`) but unused, so the quorum bar is cheap.
   - The question and kind stay "zatím neznáme" until #102.
-- [ ] **[#114] Vote detail: question, result, why it passed, clubs, MPs by club** (P1, M).
+- [x] **[#114] Vote detail: question, result, why it passed, clubs, MPs by club** (P1, M).
   - The club table and MP grid exist (`services/votes_service.py:266-295`).
   - The question, "Co znamenal hlas" and the steno link come from #102.
   - Challenged/repeated votes: the `hl-2021ps.zip` has `hl2021x.unl` and `hl2021v.unl`, which are not identified yet. Check the psp.cz docs; one may be zpochybnění.
   - Depends on #91, #92, #100, #101 and #102.
-- [ ] **[#115] Party (dis)loyalty: explanation, rebellion chart, full MP list** (P2, M).
+- [x] **[#115] Party (dis)loyalty: explanation, rebellion chart, full MP list** (P2, M).
   - Rebel vote rows and `active_votes` are already computed (`services/loyalty_service.py:58-90`), so "X z Y" and the drill-down are cheap.
   - "Nejčastěji u bodu" is one group_by. Add a `/loyalty/all` page and a CSS bar chart instead of the PNG.
   - The "Jen o celých zákonech" toggle needs #102.
-- [ ] **[#116] Similarity: club-coloured map, top 5 pairs, gov × opposition pairs** (P2, M).
+- [x] **[#116] Similarity: club-coloured map, top 5 pairs, gov × opposition pairs** (P2, M).
   - `compute_pca_coords` already returns name/party/x/y (`similarity_service.py:47-70`). Render a server-side SVG map with hover titles and links; the "map technology" question in #121 is answered by the mockup itself.
   - Pair tables need #104 and #101.
-- [ ] **[#117] Attendance: definition, table, chart view** (P2, M). Table plus two server-side SVG charts. The 50-vote threshold and mandate start (from memberships) are cheap. Depends on #91 and #92.
+- [x] **[#117] Attendance: definition, table, chart view** (P2, M). Table plus two server-side SVG charts. The 50-vote threshold and mandate start (from memberships) are cheap. Depends on #91 and #92.
 
 ### 3C. Content, states, mobile
 
-- [ ] **[#118] "Jak se v tom vyznat" guide replaces the docs link** (P1, M). Static page from `jak-se-v-tom-vyznat.md` (in the [#121] zip). The "O datech" pages must be written from the code.
+- [x] **[#118] "Jak se v tom vyznat" guide replaces the docs link** (P1, M). Static page from `jak-se-v-tom-vyznat.md` (in the [#121] zip). The "O datech" pages must be written from the code.
 - [ ] **[#119] Empty and error states, "Nahlásit chybu" form** (P2, S).
   - Feedback is tied to `vote_id` today (`routes/feedback.py:77`, `services/feedback_service.py:20`); make it generic.
   - Detecting a failed PDF iframe load is unreliable, so always show fallback links (the server already checks `_tisk_pdf_exists`).
