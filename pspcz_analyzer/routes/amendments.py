@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.rate_limit import limiter
-from pspcz_analyzer.routes.utils import validate_period
+from pspcz_analyzer.routes.utils import validate_period, with_push_url
 from pspcz_analyzer.services.amendment_service import list_amendment_bills
 from pspcz_analyzer.services.amendments.coalition_service import compute_amendment_coalitions
 from pspcz_analyzer.services.analysis_cache import analysis_cache
@@ -34,7 +34,7 @@ async def amendments_api(
         key,
         lambda: list_amendment_bills(pd, search=search, page=page),
     )
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "partials/amendments_list.html",
         {
             "request": request,
@@ -44,6 +44,7 @@ async def amendments_api(
             **result,
         },
     )
+    return with_push_url(response, request, "/amendments")
 
 
 @router.get("/amendment-coalitions", response_class=HTMLResponse)

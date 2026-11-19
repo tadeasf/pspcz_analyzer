@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.rate_limit import limiter
-from pspcz_analyzer.routes.utils import validate_period
+from pspcz_analyzer.routes.utils import validate_period, with_push_url
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.law_service import list_laws
 
@@ -43,7 +43,7 @@ async def laws_api(
             lang=lang,
         ),
     )
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "partials/laws_list.html",
         {
             "request": request,
@@ -55,3 +55,4 @@ async def laws_api(
             **result,
         },
     )
+    return with_push_url(response, request, "/laws")

@@ -10,14 +10,14 @@
     <div class="form-row">
         <label>
             {{ _("form.search_laws") }}
-            <input type="search" name="search" placeholder="{{ _('form.search_laws_placeholder') }}" aria-label="{{ _('form.search_laws_placeholder') }}" value="{{ initial_search|default('') }}">
+            <input type="search" name="search" placeholder="{{ _('form.search_laws_placeholder') }}" aria-label="{{ _('form.search_laws_placeholder') }}" value="{{ request.query_params.get('search', '') }}">
         </label>
         <label>
             {{ _("laws.status_filter") }}
             <select name="status">
                 <option value="">{{ _("laws.status.all") }}</option>
                 {% for s in statuses %}
-                <option value="{{ s }}">{{ s }}</option>
+                <option value="{{ s }}" {% if request.query_params.get('status') == s %}selected{% endif %}>{{ s }}</option>
                 {% endfor %}
             </select>
         </label>
@@ -26,7 +26,7 @@
             <select name="topic">
                 <option value="">{{ _("form.all_topics") }}</option>
                 {% for t in topics %}
-                <option value="{{ t }}">{{ t }}</option>
+                <option value="{{ t }}" {% if request.query_params.get('topic') == t %}selected{% endif %}>{{ t }}</option>
                 {% endfor %}
             </select>
         </label>
@@ -39,7 +39,7 @@
 
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
-<div id="results" hx-get="/api/laws?period={{ period }}{% if initial_search %}&search={{ initial_search|urlencode }}{% endif %}" hx-trigger="load" hx-indicator="#loading">
+<div id="results" hx-get="/api/laws?{{ request.url.query or ('period=' ~ period) }}" hx-trigger="load" hx-indicator="#loading">
     <div class="skeleton">{% for _ in range(8) %}
     <div class="skeleton-pulse skeleton-table-row"></div>
     {% endfor %}</div>

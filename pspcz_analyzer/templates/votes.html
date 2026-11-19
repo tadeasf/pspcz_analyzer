@@ -8,25 +8,25 @@
 <form class="filters" hx-get="/api/votes" hx-target="#results" hx-indicator="#loading" hx-push-url="false">
     <input type="hidden" name="period" value="{{ period }}">
     <label class="field" style="flex:2 1 220px"><span>{{ _("vl.search") }}</span>
-        <input type="search" name="search" placeholder="{{ _('vl.search_placeholder') }}" value=""></label>
+        <input type="search" name="search" placeholder="{{ _('vl.search_placeholder') }}" value="{{ request.query_params.get('search', '') }}"></label>
     <label class="field" style="flex:1 1 200px"><span>{{ _("vl.kind") }}</span>
         <select name="kind">
             <option value="">{{ _("vl.kind_all") }}</option>
-            <option value="final">{{ _("vl.kind_final") }}</option>
-            <option value="amendment">{{ _("vl.kind_amendment") }}</option>
+            <option value="final" {% if request.query_params.get('kind') == 'final' %}selected{% endif %}>{{ _("vl.kind_final") }}</option>
+            <option value="amendment" {% if request.query_params.get('kind') == 'amendment' %}selected{% endif %}>{{ _("vl.kind_amendment") }}</option>
         </select></label>
     <label class="field" style="flex:1 1 130px"><span>{{ _("vl.outcome") }}</span>
         <select name="outcome">
             <option value="">{{ _("vl.outcome_all") }}</option>
-            <option value="A">{{ _("vd.passed") }}</option>
-            <option value="R">{{ _("vd.failed") }}</option>
+            <option value="A" {% if request.query_params.get('outcome') == 'A' %}selected{% endif %}>{{ _("vd.passed") }}</option>
+            <option value="R" {% if request.query_params.get('outcome') == 'R' %}selected{% endif %}>{{ _("vd.failed") }}</option>
         </select></label>
     <button class="btn" type="submit">{{ _("vl.show") }}</button>
 </form>
 
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
-<div id="results" hx-get="/api/votes?period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+<div id="results" hx-get="/api/votes?{{ request.url.query or ('period=' ~ period) }}" hx-trigger="load" hx-indicator="#loading">
     <div class="skeleton">{% for _ in range(8) %}
     <div class="skeleton-pulse skeleton-table-row"></div>
     {% endfor %}</div>

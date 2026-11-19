@@ -65,3 +65,27 @@ class TestVoteDetailRedesign:
         assert "Jak hlasovaly poslanecké kluby" in html
         assert "Jak hlasovali jednotliví poslanci" in html
         assert "zatím neznáme" in html
+
+
+class TestUrlState:
+    """Search and filters live in the URL (#96)."""
+
+    def test_list_request_pushes_page_url(self, client):
+        resp = client.get(
+            "/api/votes?period=1&search=dalnice&outcome=",
+            headers={"HX-Request": "true", "HX-Current-URL": "http://testserver/votes?period=1"},
+        )
+        assert resp.headers["HX-Push-Url"] == "/votes?period=1&search=dalnice"
+
+    def test_no_push_when_url_unchanged(self, client):
+        resp = client.get(
+            "/api/votes?period=1",
+            headers={"HX-Request": "true", "HX-Current-URL": "http://testserver/votes?period=1"},
+        )
+        assert "HX-Push-Url" not in resp.headers
+
+    def test_page_prefills_from_url(self, client):
+        html = client.get("/votes?period=1&search=dalnice&kind=final").text
+        assert 'value="dalnice"' in html
+        assert 'value="final" selected' in html
+        assert 'hx-get="/api/votes?period=1&amp;search=dalnice&amp;kind=final"' in html

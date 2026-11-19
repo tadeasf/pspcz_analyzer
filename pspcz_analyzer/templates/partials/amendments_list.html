@@ -53,13 +53,13 @@
 {% if total_pages > 1 %}
 <nav class="pagination" aria-label="{{ _('pagination.label') }}">
     {% if page > 1 %}
-    <button hx-get="/api/amendments?period={{ period }}&search={{ search }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
+    <button hx-get="/api/amendments?period={{ period }}&search={{ search|urlencode }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
         {{ _("pagination.previous") }}
     </button>
     {% endif %}
     <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
     {% if page < total_pages %}
-    <button hx-get="/api/amendments?period={{ period }}&search={{ search }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">
+    <button hx-get="/api/amendments?period={{ period }}&search={{ search|urlencode }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">
         {{ _("pagination.next") }}
     </button>
     {% endif %}
