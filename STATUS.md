@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#104] Similarity pairs show real agreement (% and "stejně v X z Y", min. 100 shared votes) and a government × opposition table (sides on the vote date) | `3012847` | Unit test 100 of 100 = 100 %; periods 9 and 10 compute in ~1 s |
 | 2026-11-19 | [#94] Amendment driver label reads "Pozměňovací návrhy podali: poslanci opozice" with a note on what is classified and as of which date | `2f53015` | 628 tests |
 | 2026-11-19 | [#96] Search and filters in the URL for laws, votes and amendments; links can be shared and Back restores the previous list | `b1859be` | Browser: search on /votes changes the URL, Back returns to the full list; 3 API tests |
 | 2026-11-19 | [#95] Search by tisk number ("246", "tisk 246", "ST 246"), without diacritics, tolerant to word forms; tisky full-title column fixed in the schema (searching it comes after the history-parser branch adds it to TiskInfo) | `2fc7978` | Real data: "televizi" finds 231 and 201, "ST 246" finds 11 votes of tisk 246 |
@@ -19,6 +20,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 ## Known gaps
 
+- Period 9 government × opposition pairs are led by ANO × SPD pairs from Oct-Dec 2021, when ANO alone was the government. Correct by definition; may need a minimum per side later.
 - Redesign: only the frame is done. Page contents (laws list, detail pages, homepage, charts) still use the old layout until #108-#117.
 - Guide page is Czech only (English shows a note); the "O datech" sub-pages it lists are not written yet.
 - #107 leftovers: alternating backgrounds and illustration come with the homepage (#108); club and vote colours come with the charts (#116, #117).
