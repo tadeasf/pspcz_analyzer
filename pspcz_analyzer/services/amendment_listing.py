@@ -194,7 +194,7 @@ def list_amendments(
         search: Tisk number, law title words or submitter name.
         side: Submitter side filter (opposition/government/mixed/committee).
         club: Club filter (a submitter's club).
-        fate: Fate filter (accepted/rejected/not_voted/withdrawn/unknown).
+        fate: Fate filter (one of amendment_letters.FATES).
         view: "laws" (grouped) or "letters" (one card per letter).
         sort: One of SORTS.
         page: Page number (1-based).

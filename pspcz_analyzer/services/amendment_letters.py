@@ -12,9 +12,8 @@ from pspcz_analyzer.services.affiliation import amendment_driver
 
 COMMITTEE = "committee"
 SIDES = ("opposition", "government", "mixed", COMMITTEE, "unknown")
-# shortcut: no "pending" (not voted yet) fate until bills before the 3rd reading
-# are parsed (TASKS 2X "Unvoted amendments"); every bill here had its 3rd reading.
-FATES = ("accepted", "rejected", "not_voted", "withdrawn", "unknown")
+# "pending" = the bill's 3rd reading has not been voted yet (BillAmendmentData.is_pending)
+FATES = ("accepted", "rejected", "not_voted", "withdrawn", "pending", "unknown")
 
 
 def _is_committee(amend: AmendmentVote) -> bool:
@@ -23,7 +22,7 @@ def _is_committee(amend: AmendmentVote) -> bool:
     return any("výbor" in n.lower() for n in names)
 
 
-def _fate(amend: AmendmentVote, bill_voted: bool, all_assigned: bool) -> str:
+def _fate(amend: AmendmentVote, bill_voted: bool, all_assigned: bool, pending: bool = False) -> str:
     """Fate of one amendment entry.
 
     Args:
@@ -31,12 +30,15 @@ def _fate(amend: AmendmentVote, bill_voted: bool, all_assigned: bool) -> str:
         bill_voted: True when the final vote of the 3rd reading was found.
         all_assigned: True when every 3rd-reading vote is tied to a letter, so
             a letter without a vote really was not voted on.
+        pending: True when the bill's 3rd reading has not been voted yet.
 
     Returns:
         One of FATES.
     """
     if amend.is_withdrawn:
         return "withdrawn"
+    if pending:
+        return "pending"
     if not amend.vote_number:
         return "not_voted" if bill_voted and all_assigned else "unknown"
     match amend.result:
@@ -93,7 +95,7 @@ def bill_letters(bill: BillAmendmentData, coalition: frozenset[str]) -> list[dic
             letters[key] = {
                 "letter": key,
                 "amend": amend,
-                "fate": _fate(amend, bill_voted, all_assigned),
+                "fate": _fate(amend, bill_voted, all_assigned, bill.is_pending),
                 "side": _side(amend, coalition),
                 "voted_with": [k for k in keys if k != key],
             }

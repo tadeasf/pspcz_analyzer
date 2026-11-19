@@ -21,7 +21,7 @@
                 {% for c in clubs %}<option value="{{ c }}" {% if q.get('club') == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
         <label class="field" style="flex:1 1 150px"><span>{{ _("pn.fate") }}</span>
             <select name="fate"><option value="">{{ _("pn.fate_all") }}</option>
-                {% for v in ("accepted", "rejected", "not_voted", "withdrawn", "unknown") %}<option value="{{ v }}" {% if q.get('fate') == v %}selected{% endif %}>{{ _("pn.fate_" ~ v) }}</option>{% endfor %}</select></label>
+                {% for v in ("pending", "accepted", "rejected", "not_voted", "withdrawn", "unknown") %}<option value="{{ v }}" {% if q.get('fate') == v %}selected{% endif %}>{{ _("pn.fate_" ~ v) }}</option>{% endfor %}</select></label>
         <button class="btn" type="submit">{{ _("vl.show") }}</button>
     </div>
     <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;font-size:14px;margin-top:8px">

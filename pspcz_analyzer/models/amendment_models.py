@@ -58,14 +58,19 @@ class AmendmentVote:
     pdf_letter_raw_text: str = ""
 
 
+# Sitting number of bills whose amendments are not voted yet; their key is (0, ct)
+PENDING_SCHUZE = 0
+
+
 @dataclass
 class BillAmendmentData:
     """All amendment data for a single bill (tisk) in one session agenda item.
 
     Attributes:
         period: Electoral period number.
-        schuze: Session number.
-        bod: Agenda item number.
+        schuze: Session number; PENDING_SCHUZE (0) for a bill whose amendment
+            document is out but whose 3rd reading has not been voted yet.
+        bod: Agenda item number; the tisk number for a pending bill.
         ct: Tisk number (cislo tisku).
         tisk_nazev: Title of the tisk.
         steno_url: URL of the stenographic record page.
@@ -99,6 +104,11 @@ class BillAmendmentData:
     amendment_tisk_idd: int | None = None
     amendment_pdf_text: str = ""
     unlinked_amendment_count: int = 0
+
+    @property
+    def is_pending(self) -> bool:
+        """True for a bill before its 3rd-reading vote (key ``(0, ct)``)."""
+        return self.schuze == PENDING_SCHUZE
 
     @property
     def amendment_count(self) -> int:

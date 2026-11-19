@@ -25,7 +25,9 @@ async def amendments_api(
     search: str = Query(default="", max_length=200),
     side: str = Query(default="", pattern="^(|opposition|government|mixed|committee)$"),
     club: str = Query(default="", max_length=40),
-    fate: str = Query(default="", pattern="^(|accepted|rejected|not_voted|withdrawn|unknown)$"),
+    fate: str = Query(
+        default="", pattern="^(|accepted|rejected|not_voted|withdrawn|pending|unknown)$"
+    ),
     view: str = Query(default="laws", pattern="^(laws|letters)$"),
     sort: str = Query(default="newest", pattern="^(newest|most|oldest)$"),
     page: int = Query(default=1, ge=1, le=1000),

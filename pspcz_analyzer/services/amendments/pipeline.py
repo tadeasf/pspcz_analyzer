@@ -33,6 +33,7 @@ from pspcz_analyzer.services.amendments.merger import (
     _merge_pdf_and_steno,
     _pdf_download_and_parse,
 )
+from pspcz_analyzer.services.amendments.pending import build_pending_bills, pending_cts
 from pspcz_analyzer.services.amendments.progress import (
     AmendmentProgress,
     AmendmentStage,
@@ -193,10 +194,11 @@ def _run_parse_stages(
     progress.stage = AmendmentStage.IDENTIFY
     logger.info("[amendment pipeline] Identifying third-reading candidates...")
     candidates = _identify_third_reading_bods(period_data)
-    progress.bills_found = len(candidates)
+    pending = pending_cts(period_data, {ct for _, _, ct, _ in candidates})
+    progress.bills_found = len(candidates) + len(pending)
     progress.total_items = len(candidates)
 
-    if not candidates:
+    if not candidates and not pending:
         logger.info(
             "[amendment pipeline] No third-reading amendment bills found for period {}",
             period,
@@ -211,7 +213,7 @@ def _run_parse_stages(
     )
 
     # Build temporary bills to group by CT for PDF download
-    ct_set = {ct for _, _, ct, _ in candidates}
+    ct_set = {ct for _, _, ct, _ in candidates} | set(pending)
     temp_bills_for_pdf = [BillAmendmentData(period=period, schuze=0, bod=0, ct=ct) for ct in ct_set]
     pdf_data, ct_to_pdf_text = _pdf_download_and_parse(
         temp_bills_for_pdf, period, cache_dir, period_data, cancel_check
@@ -356,6 +358,8 @@ def _run_parse_stages(
         linked_votes,
         total_after_merge,
     )
+
+    bills += build_pending_bills(period, pending, pdf_data, period_data)
 
     # Stage 6: Resolve submitter names to MP IDs
     progress.stage = AmendmentStage.RESOLVE_SUBMITTERS
