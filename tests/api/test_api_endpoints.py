@@ -13,6 +13,7 @@ class TestHealthEndpoint:
         data = resp.json()
         assert data["status"] == "ok"
         assert "periods_loaded" in data
+        assert data["version"]
 
 
 class TestHTMXPartials:

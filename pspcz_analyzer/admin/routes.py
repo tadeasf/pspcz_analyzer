@@ -18,7 +18,12 @@ from pspcz_analyzer.admin.auth import (
 )
 from pspcz_analyzer.admin.log_stream import log_broadcaster
 from pspcz_analyzer.admin.pipeline_history import PipelineHistory
-from pspcz_analyzer.config import ADMIN_COOKIE_SECURE, ADMIN_USERNAME, DEFAULT_CACHE_DIR
+from pspcz_analyzer.config import (
+    ADMIN_COOKIE_SECURE,
+    ADMIN_USERNAME,
+    DEFAULT_CACHE_DIR,
+    GIT_SHA,
+)
 from pspcz_analyzer.models.pipeline_progress import (
     AmendmentMode,
     PeriodStatus,
@@ -574,6 +579,7 @@ async def admin_health(request: Request) -> dict:
     svc = request.app.state.data
     return {
         "status": "ok",
+        "version": GIT_SHA,
         "periods_loaded": svc.loaded_periods,
         "pipeline_running": pipeline_lock.is_locked,
     }

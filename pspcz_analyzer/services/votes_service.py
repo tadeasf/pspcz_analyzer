@@ -212,6 +212,7 @@ def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData, lang: str = "cs")
         pl.col("nazev_kratky").fill_null(""),
     ).to_dicts()[0]
     info["outcome_label"] = _outcome_label(info.get("vysledek", ""))
+    info["is_void"] = info["id_hlasovani"] in data.void_votes.get_column("id_hlasovani")
 
     # Look up linked parliamentary print (tisk)
     schuze = info.get("schuze")

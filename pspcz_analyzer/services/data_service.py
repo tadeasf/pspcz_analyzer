@@ -275,6 +275,7 @@ class DataService(DataReader):
             "organy",
             "zarazeni",
             "schuze",
+            "schuze_stav",
             "bod_schuze",
             "tisky",
         ):
@@ -290,7 +291,7 @@ class DataService(DataReader):
         for table in (
             f"hl_hlasovani_{period}",
             f"hl_poslanec_{period}",
-            f"zmatecne_{period}",
+            f"void_votes_{period}",
         ):
             invalidate_parquet(table, self.cache_dir)
 

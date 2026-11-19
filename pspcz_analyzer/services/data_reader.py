@@ -38,6 +38,8 @@ from pspcz_analyzer.models.schemas import (
     POSLANEC_DTYPES,
     SCHUZE_COLUMNS,
     SCHUZE_DTYPES,
+    SCHUZE_STAV_COLUMNS,
+    SCHUZE_STAV_DTYPES,
     TISKY_COLUMNS,
     TISKY_DTYPES,
     ZARAZENI_COLUMNS,
@@ -57,6 +59,7 @@ from pspcz_analyzer.services.tisk import (
 )
 
 _WATCH_INTERVAL_S = 30
+_SCHUZE_STAV_UNAPPROVED = 2  # psp.cz: agenda not approved, session closed
 
 
 @dataclass(frozen=True)
@@ -256,6 +259,7 @@ class DataReader:
             ),
             self.cache_dir,
         )
+        self._schuze = self._drop_unapproved_sessions(self._schuze, schuze_dir)
 
         self._bod_schuze = get_or_parse(
             "bod_schuze",
@@ -285,6 +289,43 @@ class DataReader:
             self._bod_schuze.height,
             self._tisky.height,
         )
+
+    def _drop_unapproved_sessions(self, schuze: pl.DataFrame, schuze_dir: Path) -> pl.DataFrame:
+        """Drop sessions whose agenda was never approved (schuze_stav.stav == 2).
+
+        Their "approved" agenda rows are a copy of the proposal and the only
+        votes are about the agenda itself, so linking them to a tisk is wrong.
+        """
+        stav = get_or_parse(
+            "schuze_stav",
+            schuze_dir,
+            lambda: parse_unl(
+                self._find_file(schuze_dir, "schuze_stav.unl"),
+                SCHUZE_STAV_COLUMNS,
+                SCHUZE_STAV_DTYPES,
+            ),
+            self.cache_dir,
+        )
+        unapproved = stav.filter(pl.col("stav") == _SCHUZE_STAV_UNAPPROVED)
+        return schuze.join(unapproved.select("id_schuze"), on="id_schuze", how="anti")
+
+    def _load_void_votes(self, period: int, voting_dir: Path, votes: pl.DataFrame) -> pl.DataFrame:
+        """Load this period's void votes from the all-periods zmatecne.unl.
+
+        hl{year}z.unl is a different table (or absent), so it is not used.
+        """
+        try:
+            zmatecne_file = self._find_file(voting_dir, "zmatecne.unl")
+        except FileNotFoundError:
+            logger.error("zmatecne.unl missing for period {}: void votes NOT filtered", period)
+            return pl.DataFrame({"id_hlasovani": pl.Series([], dtype=pl.Int64)})
+        all_void = get_or_parse(
+            f"void_votes_{period}",  # not "zmatecne_": old parquets hold the wrong table
+            voting_dir,
+            lambda: parse_unl(zmatecne_file, ZMATECNE_COLUMNS, ZMATECNE_DTYPES),
+            self.cache_dir,
+        )
+        return all_void.join(votes.select("id_hlasovani"), on="id_hlasovani", how="semi")
 
     def _ensure_shared_loaded(self) -> SharedTables:
         """Assert that shared tables have been loaded and return them.
@@ -346,17 +387,7 @@ class DataReader:
             self.cache_dir,
         )
 
-        try:
-            zmatecne_file = self._find_file(voting_dir, f"hl{year}z.unl")
-            void_votes = get_or_parse(
-                f"zmatecne_{period}",
-                voting_dir,
-                lambda: parse_unl(zmatecne_file, ZMATECNE_COLUMNS, ZMATECNE_DTYPES),
-                self.cache_dir,
-            )
-        except FileNotFoundError:
-            logger.info("No void votes file for period {}", period)
-            void_votes = pl.DataFrame({"id_hlasovani": pl.Series([], dtype=pl.Int64)})
+        void_votes = self._load_void_votes(period, voting_dir, votes)
 
         shared = self._ensure_shared_loaded()
 
@@ -540,7 +571,7 @@ class DataReader:
         periods: set[int] = set()
         for fname in changed_files:
             # Period-specific files: hl_hlasovani_10.parquet, hl_poslanec_9.parquet, etc.
-            for prefix in ("hl_hlasovani_", "hl_poslanec_", "zmatecne_"):
+            for prefix in ("hl_hlasovani_", "hl_poslanec_", "void_votes_"):
                 if fname.startswith(prefix):
                     try:
                         p = int(fname.removeprefix(prefix).removesuffix(".parquet"))

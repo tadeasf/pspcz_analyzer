@@ -6,7 +6,7 @@ import time
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from pspcz_analyzer.config import LLM_PROVIDER
+from pspcz_analyzer.config import GIT_SHA, LLM_PROVIDER
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.llm import create_llm_client
 
@@ -18,7 +18,11 @@ router = APIRouter(tags=["Health"])
 async def health(request: Request):
     """Health check endpoint."""
     data_svc = request.app.state.data
-    return {"status": "ok", "periods_loaded": list(data_svc.loaded_periods)}
+    return {
+        "status": "ok",
+        "version": GIT_SHA,
+        "periods_loaded": list(data_svc.loaded_periods),
+    }
 
 
 # ── LLM diagnostic constants ─────────────────────────────────────────────

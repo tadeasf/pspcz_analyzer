@@ -23,6 +23,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "votes.no_data": "Nebyla nalezena žádná hlasování.",
         "amendments.unlinked_note": "U tohoto tisku bylo nalezeno {count} pozměňovacích návrhů, ale nebyly spojeny s žádným zaznamenaným hlasováním.",
         "footer.updated": "Data aktualizována: {time}",
+        "footer.version": "Verze: {sha}",
         "nav.skip": "Přeskočit na obsah",
         "nav.main_aria": "Hlavní navigace",
         "pagination.label": "Stránkování",
@@ -250,6 +251,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn.search": "Hledat",
         # ── Vote detail ──────────────────────────────────────────────────
         "detail.vote_id": "Hlasování #{id}",
+        "detail.void_notice": "Hlasování bylo prohlášeno za zmatečné. Do statistik se nepočítá.",
         "detail.session_vote": "Schůze {session}, Hlasování {number}",
         "detail.topics": "Témata:",
         "detail.ai_summary": "AI Shrnutí",
@@ -414,6 +416,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "votes.no_data": "No votes found.",
         "amendments.unlinked_note": "{count} amendment(s) detected for this bill, but none could be linked to a recorded vote.",
         "footer.updated": "Data updated: {time}",
+        "footer.version": "Version: {sha}",
         "nav.skip": "Skip to content",
         "nav.main_aria": "Main navigation",
         "pagination.label": "Pagination",
@@ -641,6 +644,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn.search": "Search",
         # ── Vote detail ──────────────────────────────────────────────────
         "detail.vote_id": "Vote #{id}",
+        "detail.void_notice": "This vote was declared void. It is not counted in the statistics.",
         "detail.session_vote": "Session {session}, Vote {number}",
         "detail.topics": "Topics:",
         "detail.ai_summary": "AI Summary",

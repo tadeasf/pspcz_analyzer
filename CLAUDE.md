@@ -31,6 +31,7 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `PSPCZ_DEV` — `1` for hot reload, `0` for production (default: `1`; exposed as `config.DEV`)
 - `PSPCZ_CACHE_HOST_DIR` — Docker only: host directory bind-mounted to `/data/cache` (default: `./cache-data`; set an absolute path to put the cache on another disk)
 - `PORT` — server port (default: `8000`)
+- `GIT_SHA` — commit the Docker image was built from (build arg, `GIT_SHA=$(git rev-parse HEAD) docker compose up -d --build`); shown as `version` in both health endpoints and in the footer (default: `unknown`)
 - `LLM_PROVIDER` — LLM backend: `ollama` (default) or `openai`
 - `OLLAMA_BASE_URL` — Ollama API endpoint (default: `http://localhost:11434`)
 - `OLLAMA_API_KEY` — Bearer token for remote HTTPS Ollama (default: empty)

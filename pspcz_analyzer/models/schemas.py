@@ -146,7 +146,7 @@ ZARAZENI_DTYPES: PolarsSchemaDict = {
     "id_of": pl.Int32,
 }
 
-# ---- Void votes (zmatecne.unl from hl-XXXXps.zip) ----
+# ---- Void votes (zmatecne.unl, same all-periods table in every hl-XXXXps.zip) ----
 
 ZMATECNE_COLUMNS: list[str] = [
     "id_hlasovani",
@@ -172,6 +172,22 @@ SCHUZE_DTYPES: PolarsSchemaDict = {
     "id_schuze": pl.Int64,
     "id_org": pl.Int32,
     "schuze": pl.Int32,
+}
+
+# ---- Session states (schuze_stav.unl from schuze.zip) ----
+
+SCHUZE_STAV_COLUMNS: list[str] = [
+    "id_schuze",
+    "stav",  # 1 = OK, 2 = agenda not approved and the session was closed
+    "typ",
+    "text_dt",
+    "text_st",
+    "tm_line",
+]
+
+SCHUZE_STAV_DTYPES: PolarsSchemaDict = {
+    "id_schuze": pl.Int64,
+    "stav": pl.Int32,
 }
 
 # ---- Agenda items (bod_schuze.unl from schuze.zip) ----

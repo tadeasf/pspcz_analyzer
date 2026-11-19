@@ -1,6 +1,9 @@
 services:
   frontend:
-    build: .
+    build:
+      context: .
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     command: ["python", "-m", "pspcz_analyzer.main_frontend"]
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
@@ -23,7 +26,10 @@ services:
       start_period: 300s # cold cache: lifespan downloads psp.cz data first
 
   backend:
-    build: .
+    build:
+      context: .
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     command: ["python", "-m", "pspcz_analyzer.main_backend"]
     # Loopback-only by default: the admin panel is not meant to be public.
     # Behind a reverse proxy or for LAN access, set ADMIN_BIND_ADDR (e.g. 0.0.0.0)

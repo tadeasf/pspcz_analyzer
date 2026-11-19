@@ -14,7 +14,7 @@ from loguru import logger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, DEV, PORT
+from pspcz_analyzer.config import DEFAULT_PERIOD, DEV, GIT_SHA, PORT
 from pspcz_analyzer.i18n import setup_jinja2_i18n
 from pspcz_analyzer.i18n.middleware import LocaleMiddleware
 from pspcz_analyzer.logging_config import setup_logging
@@ -117,6 +117,7 @@ for t in (
 ):
     t.env.filters["markdown"] = _md_filter
     t.env.filters["status_category"] = status_category
+    t.env.globals["git_sha"] = GIT_SHA
     t.context_processors.append(data_freshness_processor)
     setup_jinja2_i18n(t.env)
 

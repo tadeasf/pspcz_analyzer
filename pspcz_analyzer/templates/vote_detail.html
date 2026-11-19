@@ -10,6 +10,7 @@
 <article>
     <header>
         <strong>{{ detail.info.outcome_label }}</strong>
+        {% if detail.info.is_void %}<p><strong>{{ _("detail.void_notice") }}</strong></p>{% endif %}
     </header>
     {% if detail.info.nazev_dlouhy %}
     <p>{{ detail.info.nazev_dlouhy }}</p>

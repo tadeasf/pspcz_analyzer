@@ -75,7 +75,13 @@ def build_tisk_lookup_via_schuze(
     summary_en_cache: dict[int, dict[int, str]] | None = None,
     topic_en_cache: dict[int, dict[int, list[str]]] | None = None,
 ) -> dict[tuple[int, int], TiskInfo]:
-    """Build lookup using the schuze -> bod_schuze -> tisky chain."""
+    """Build lookup using the schuze -> bod_schuze -> tisky chain.
+
+    Only the approved agenda (``pozvanka`` null) is used: vote ``bod`` numbers
+    refer to it, and the proposed agenda (``pozvanka`` 1) numbers items
+    differently. An approved item without a tisk stays unlinked.
+    """
+    sessions = sessions.filter(pl.col("pozvanka").is_null())
     session_map = dict(
         zip(
             sessions.get_column("id_schuze").to_list(),
@@ -87,6 +93,7 @@ def build_tisk_lookup_via_schuze(
 
     bods = bod_schuze.filter(
         pl.col("id_schuze").is_in(session_ids)
+        & pl.col("pozvanka").is_null()
         & pl.col("id_tisk").is_not_null()
         & (pl.col("id_tisk") != 0)
     )
