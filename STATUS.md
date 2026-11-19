@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#120] Phone and accessibility: no horizontal page scroll at 390 px; axe fixes (footer contrast, underlined text links, law link out of `<summary>`, focusable table scrollers, AI notice `<aside>`) | `928dce9` | axe-core 4.10 on 10 pages at 390 px: 0 serious/critical (3 moderate heading-order); screenshots; 688 tests |
 | 2026-11-19 | [#119] Unknown law/vote = 404 with "nenacházíme", HTML 404 page for unknown URLs (API keeps JSON); vote detail tells apart "stenozáznam zatím nevyšel" and "nepodařilo se spolehlivě určit, nehádáme" (mockup text) | `6834699` | Live: /laws/99999 and /neco return 404 pages; 3 API tests |
 | 2026-11-19 | English guide page (machine translation of the verified Czech text) | `2799832` | /jak-se-v-tom-vyznat in both languages |
 | 2026-11-19 | [#100] (rest) Admin "Data quality" page: parser score, warnings, unknown fates, unassigned votes, amendment summaries missing or flagged per bill; flagged AI briefs; vote steno coverage | `f8646f8` | Template rendered on real period-10 data (31 bills); admin login not exercised |
