@@ -1,0 +1,50 @@
+{% extends "admin_base.html" %}
+{% block title %}Data quality{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Data quality, period {{ period }}</h1>
+    <p>Parser scores and automatic AI checks. These are not shown on the public site.</p>
+    <form method="get"><select name="period" onchange="this.form.submit()">{% for p in available_periods %}<option value="{{ p }}" {% if p == period %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></form>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">AI briefs</div><div class="stat-value">{{ r.briefs_total }}</div><div class="stat-sub">{{ r.briefs_flagged|length }} flagged by the check</div></div>
+    <div class="stat-card"><div class="stat-label">Votes with steno record</div><div class="stat-value">{{ r.votes_steno }}</div><div class="stat-sub">of {{ r.votes_total }}; {{ r.votes_question }} with a checked question</div></div>
+    <div class="stat-card"><div class="stat-label">Bills with amendments</div><div class="stat-value">{{ r.bills|length }}</div><div class="stat-sub">lowest parser score first</div></div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">Amendment parsing</div>
+    <div class="card-body">
+        <table>
+            <thead><tr><th>Tisk</th><th>Sitting / item</th><th>Score</th><th>Letters</th><th>Unknown fate</th><th>Unassigned votes</th><th>Unlinked in PDF</th><th>No summary</th><th>Summary warning</th><th>Warnings</th></tr></thead>
+            <tbody>
+            {% for b in r.bills %}
+            <tr>
+                <td>{{ b.ct }} {{ b.nazev[:60] }}</td>
+                <td>{{ b.schuze }}/{{ b.bod }}</td>
+                <td>{{ "%.2f"|format(b.confidence) }}</td>
+                <td>{{ b.letters }}</td><td>{{ b.unknown_fate }}</td><td>{{ b.unassigned_votes }}</td><td>{{ b.unlinked }}</td>
+                <td>{{ b.no_summary }}</td><td>{{ b.summary_warning }}</td>
+                <td style="font-size:0.8rem">{{ b.warnings|join("; ") }}</td>
+            </tr>
+            {% else %}<tr><td colspan="10">No amendment data.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">AI briefs flagged by the automatic check</div>
+    <div class="card-body">
+        <table>
+            <thead><tr><th>Tisk</th><th>Issues</th></tr></thead>
+            <tbody>
+            {% for b in r.briefs_flagged %}<tr><td>{{ b.ct }} {{ b.nazev }}</td><td>{{ b.issues|join(", ") }}</td></tr>
+            {% else %}<tr><td colspan="2">None.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

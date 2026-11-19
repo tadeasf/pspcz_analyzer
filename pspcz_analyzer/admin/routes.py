@@ -18,10 +18,12 @@ from pspcz_analyzer.admin.auth import (
 )
 from pspcz_analyzer.admin.log_stream import log_broadcaster
 from pspcz_analyzer.admin.pipeline_history import PipelineHistory
+from pspcz_analyzer.admin.quality import quality_report
 from pspcz_analyzer.config import (
     ADMIN_COOKIE_SECURE,
     ADMIN_USERNAME,
     DEFAULT_CACHE_DIR,
+    DEFAULT_PERIOD,
     GIT_SHA,
 )
 from pspcz_analyzer.models.pipeline_progress import (
@@ -493,6 +495,25 @@ async def pipeline_logs_sse() -> StreamingResponse:
 
 
 # ── Config editor ────────────────────────────────────────────────
+
+
+@router.get("/quality", response_class=HTMLResponse)
+async def quality_page(request: Request, period: int = DEFAULT_PERIOD) -> HTMLResponse:
+    """Data quality report: parser scores and AI check results (#100, #97)."""
+    svc = request.app.state.data
+    if period not in svc.available_periods:
+        period = DEFAULT_PERIOD
+    report = await asyncio.to_thread(lambda: quality_report(svc.get_period(period)))
+    return templates.TemplateResponse(
+        "quality.html",
+        {
+            "request": request,
+            "admin_user": get_session_username(request),
+            "available_periods": svc.available_periods,
+            "period": period,
+            "r": report,
+        },
+    )
 
 
 @router.get("/config", response_class=HTMLResponse)
