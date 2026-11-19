@@ -4,6 +4,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
+| 2026-11-19 | [#115] (Ne)loajalita per the mockup (explanation, chart, sortable list, /loyalty/all); [#116] similarity as a tab with an SVG map in club colours and top-5 pair tables; `/similarity` redirects; [#107] club colours in config. "Jen o celých zákonech" toggle waits for #102 | `862dcd1` | Screenshots of both tabs, period 10; 631 tests |
 | 2026-11-19 | [#106] (part) Czech number, percent and date filters and the agreed terms (Prošlo/Neprošlo, Pro/Proti, Nepřihlášen, Nepřijat, Shrnutí AI). Left: glossary tooltips from one source (with #118), "Spolehlivost parseru" texts move to the admin with #100/#112, status labels with the history-parser branch | `a385912` | Filter unit tests; 630 tests |
 | 2026-11-19 | [#104] Similarity pairs show real agreement (% and "stejně v X z Y", min. 100 shared votes) and a government × opposition table (sides on the vote date) | `3012847` | Unit test 100 of 100 = 100 %; periods 9 and 10 compute in ~1 s |
 | 2026-11-19 | [#94] Amendment driver label reads "Pozměňovací návrhy podali: poslanci opozice" with a note on what is classified and as of which date | `2f53015` | 628 tests |
@@ -25,7 +26,6 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 - Redesign: only the frame is done. Page contents (laws list, detail pages, homepage, charts) still use the old layout until #108-#117.
 - Guide page is Czech only (English shows a note); the "O datech" sub-pages it lists are not written yet.
 - #107 leftovers: alternating backgrounds and illustration come with the homepage (#108); club and vote colours come with the charts (#116, #117).
-- `/similarity` still has its own page (highlighted as loyalty in the menu); it becomes a loyalty tab with #115/#116.
 - Locally no tisk histories are scraped yet, so the footer says "zatím nenačteno" and the laws list has no statuses.
 - Per-MP pages (attendance, similarity) show the MP's latest club in the period; per-vote tables use the club on the vote date.
 - The "77501 by club" acceptance item of [#101] cannot come from open data (the vote is missing there).
