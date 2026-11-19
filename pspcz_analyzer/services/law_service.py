@@ -7,6 +7,7 @@ from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
 from pspcz_analyzer.services.labels import vote_outcome_label
+from pspcz_analyzer.services.law_filters import TABS, last_step, phase_of, submitter_kind, tab_of
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 # Bill status (as stored, Czech) -> translation key. Templates render
@@ -154,6 +155,9 @@ def _build_law_row(
         "submitter": submitter,
         "status": status,
         "status_key": STATUS_KEYS.get(status, ""),
+        "tab": tab_of(tisk),
+        "submitter_kind": submitter_kind(tisk),
+        "last_step": last_step(tisk),
         "law_number": law_number,
         "url": tisk.url,
         "summary_truncated": summary_truncated,
@@ -192,6 +196,10 @@ def list_laws(
     page: int = 1,
     per_page: int = 20,
     lang: str = "cs",
+    tab: str = "",
+    phase: str = "",
+    submitter: str = "",
+    sort: str = "moved",
 ) -> dict:
     """List bills with optional search, status, and topic filters, paginated.
 
@@ -203,9 +211,13 @@ def list_laws(
         page: Page number (1-based).
         per_page: Results per page.
         lang: Language code for topics/summaries.
+        tab: Document-type tab (law_filters.TABS), empty = all types.
+        phase: "Kde návrh je" (law_filters.PHASES), empty = all.
+        submitter: law_filters.SUBMITTER_KINDS, empty = anyone.
+        sort: "moved" (latest move), "newest" or "oldest" tisk number.
 
     Returns:
-        Dict with keys: rows, total, page, per_page, total_pages.
+        Dict with keys: rows, total, page, per_page, total_pages, tab_counts.
     """
     tisky = _deduplicate_tisky(data)
 
@@ -233,8 +245,25 @@ def list_laws(
             if topic_filter in (t.topics_en if (lang == "en" and t.topics_en) else t.topics)
         ]
 
-    # Sort by ct descending (newest first)
-    tisky.sort(key=lambda t: t.ct, reverse=True)
+    if phase:
+        tisky = [t for t in tisky if phase_of(_tisk_status(t)) == phase]
+    if submitter:
+        tisky = [t for t in tisky if submitter_kind(t) == submitter]
+    tab_counts = dict.fromkeys(TABS, 0)
+    for t in tisky:
+        tab_counts[tab_of(t)] += 1
+    if tab:
+        tisky = [t for t in tisky if tab_of(t) == tab]
+
+    match sort:
+        case "newest":
+            tisky.sort(key=lambda t: t.ct, reverse=True)
+        case "oldest":
+            tisky.sort(key=lambda t: t.ct)
+        case _:
+            tisky.sort(
+                key=lambda t: ((s := last_step(t)) and s["sort"] or (0, 0, 0), t.ct), reverse=True
+            )
 
     total = len(tisky)
     total_pages = max(1, (total + per_page - 1) // per_page)
@@ -251,6 +280,7 @@ def list_laws(
         "page": page,
         "per_page": per_page,
         "total_pages": total_pages,
+        "tab_counts": tab_counts,
     }
 
 

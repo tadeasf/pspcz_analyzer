@@ -25,13 +25,17 @@ async def laws_api(
     status_filter: str = Query(default="", alias="status"),
     topic: str = Query(default="", max_length=200),
     page: int = Query(default=1, ge=1, le=1000),
+    tab: str = Query(default="navrhy", max_length=20),
+    phase: str = Query(default="", max_length=20),
+    submitter: str = Query(default="", max_length=20),
+    sort: str = Query(default="moved", max_length=10),
 ):
     """Return paginated laws list as an HTMX partial."""
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
     lang = getattr(request.state, "lang", "cs")
-    key = f"laws:{period}:{search}:{status_filter}:{topic}:{page}:{lang}"
+    key = f"laws:{period}:{search}:{status_filter}:{topic}:{page}:{lang}:{tab}:{phase}:{submitter}:{sort}"
     result = analysis_cache.get_or_compute(
         key,
         lambda: list_laws(
@@ -41,6 +45,10 @@ async def laws_api(
             topic_filter=topic,
             page=page,
             lang=lang,
+            tab=tab,
+            phase=phase if tab == "navrhy" else "",
+            submitter=submitter if tab == "navrhy" else "",
+            sort=sort,
         ),
     )
     response = templates.TemplateResponse(
@@ -51,6 +59,10 @@ async def laws_api(
             "search": search,
             "status_filter": status_filter,
             "topic": topic,
+            "tab": tab,
+            "phase": phase,
+            "submitter": submitter,
+            "sort": sort,
             "lang": lang,
             **result,
         },
