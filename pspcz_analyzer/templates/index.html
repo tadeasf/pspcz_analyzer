@@ -36,7 +36,20 @@
     {% endfor %}
 </div>
 
-{# "Teď se o tom mluví" (#108 block 3) needs speech counts from steno; hidden until they exist. #}
+{% set t = blocks.talked_about %}
+{% if t %}
+<div class="hsec alt" style="display:flex;flex-direction:column;gap:12px">
+    <h2 class="h2s">{{ icon("clock") }}{{ _("home.talked") }}</h2>
+    <div class="box" style="display:flex;flex-direction:column;gap:10px">
+        <div class="top"><span class="chip c-st">{{ _("lw.kind_" ~ (t.kind or "unknown")) }}</span><span class="lbl">{{ _("vd.tisk_n").format(ct=t.ct) }}</span>
+            {% if t.status_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(t.status|status_category, 'c-wait') }}">{{ _(t.status_key) }}</span>{% endif %}</div>
+        <h3 style="font-size:22px;margin:0"><a href="/laws/{{ t.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ t.nazev }}</a></h3>
+        {% if t.summary %}<p style="margin:0">{{ t.summary }}</p>{% endif %}
+        {% if t.last_step %}<p class="lbl" style="margin:0">{{ t.last_step.date|cz_date(short=True) }} · {{ t.last_step.text }}</p>{% endif %}
+        <p class="lbl" style="margin:0">{{ _("home.talked_why").format(n=t.speeches) }}</p>
+    </div>
+</div>
+{% endif %}
 
 <div class="hsec" style="display:flex;flex-direction:column;gap:2px">
     <h2 class="h2s">{{ icon("clock") }}{{ _("home.in_progress") }}</h2>

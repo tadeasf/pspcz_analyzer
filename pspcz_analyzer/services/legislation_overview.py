@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.law_filters import last_step, phase_of, submitter_kind, tab_of
 from pspcz_analyzer.services.law_service import STATUS_KEYS
@@ -45,6 +47,29 @@ def _by_last_step(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: (r["last_step"] or {}).get("sort", (0, 0, 0)), reverse=True)
 
 
+def talked_about(data: PeriodData, lang: str, days: int = 14) -> dict | None:
+    """Bill with the most speeches in the Chamber over the last ``days`` days (#108).
+
+    Args:
+        data: Period data with speeches and tisk_lookup.
+        lang: Language code for the brief.
+        days: Window length counted back from today.
+
+    Returns:
+        Homepage row plus ``speeches``, or None when no bill was debated.
+    """
+    since = (date.today() - timedelta(days=days)).isoformat()
+    per_ct: dict[int, int] = {}
+    for key, by_day in data.speeches.items():
+        tisk = data.tisk_lookup.get(key)
+        if tisk is not None and tab_of(tisk) == "navrhy":
+            n = sum(v for d, v in by_day.items() if d >= since)
+            per_ct[tisk.ct] = per_ct.get(tisk.ct, 0) + n
+    ct, n = max(per_ct.items(), key=lambda kv: kv[1], default=(0, 0))
+    tisk = next((t for t in _bills(data) if t.ct == ct), None)
+    return {**_row(tisk, lang), "speeches": n} if tisk and n else None
+
+
 def homepage_blocks(data: PeriodData, lang: str = "cs") -> dict:
     """Rows for the homepage legislation blocks.
 
@@ -65,4 +90,5 @@ def homepage_blocks(data: PeriodData, lang: str = "cs") -> dict:
         "in_progress_total": len(in_chamber),
         "recently_passed": passed[:3],
         "newest": newest[:3],
+        "talked_about": talked_about(data, lang),
     }

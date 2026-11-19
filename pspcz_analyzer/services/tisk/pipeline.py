@@ -28,6 +28,9 @@ from pspcz_analyzer.models.pipeline_progress import (
     StageProgress,
     TiskMode,
 )
+
+# module import: vote_steno -> amendments -> tisk -> this module is a cycle when vote_steno loads first
+from pspcz_analyzer.services import vote_steno
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
 from pspcz_analyzer.services.llm import deserialize_topics
 from pspcz_analyzer.services.tisk.brief import generate_briefs_sync
@@ -41,7 +44,6 @@ from pspcz_analyzer.services.tisk.version_service import (
     analyze_version_diffs_sync,
     download_subtisk_versions_sync,
 )
-from pspcz_analyzer.services.vote_steno import generate_vote_steno_sync
 
 
 class TiskPipelineService:
@@ -510,7 +512,7 @@ class TiskPipelineService:
                     self._check_period_cancelled(period)
                     self._set_stage(period, PipelineStage.VOTE_STENO)
                     await asyncio.to_thread(
-                        generate_vote_steno_sync,
+                        vote_steno.generate_vote_steno_sync,
                         period,
                         self.cache_dir,
                         progress_callback=_classify_cb,

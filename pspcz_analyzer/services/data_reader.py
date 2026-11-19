@@ -63,7 +63,7 @@ from pspcz_analyzer.services.tisk import (
 )
 from pspcz_analyzer.services.tisk.brief import load_briefs
 from pspcz_analyzer.services.vote_codes import check_vote_totals, normalize_vote_codes
-from pspcz_analyzer.services.vote_steno import load_vote_steno
+from pspcz_analyzer.services.vote_steno import load_speeches, load_vote_steno
 
 _WATCH_INTERVAL_S = 30
 _SCHUZE_STAV_UNAPPROVED = 2  # psp.cz: agenda not approved, session closed
@@ -178,6 +178,7 @@ class DataReader:
         diffs_map, diffs_en_map = self._cache_mgr.load_version_diffs_cache(period)
         brief_map = load_briefs(self.cache_dir, period)
         pd.vote_steno = load_vote_steno(self.cache_dir, period)
+        pd.speeches = load_speeches(self.cache_dir, period)
         for tisk in pd.tisk_lookup.values():
             tisk.topics = topic_map.get(tisk.ct, [])
             tisk.summary = summary_map.get(tisk.ct, "")
