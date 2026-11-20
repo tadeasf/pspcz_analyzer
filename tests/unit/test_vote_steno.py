@@ -8,6 +8,7 @@ from pspcz_analyzer.services.speeches import speech_counts
 from pspcz_analyzer.services.vote_steno import _ask, _ask_once
 from pspcz_analyzer.services.vote_steno_text import (
     anchor_check,
+    clean_proposer,
     earlier_proposals,
     is_referential,
     link_repeats,
@@ -207,3 +208,10 @@ def test_merged_debate_counts_for_every_item() -> None:
     counts = speech_counts(index, {"31-2.html": DAY})
     assert counts[2] == {"2026-09-23": 3}  # 1 own (q8) + 2 merged (q7)
     assert counts[3] == {"2026-09-23": 2}
+
+
+def test_proposer_first_name_must_stand_by_the_surname() -> None:
+    text = "Pan poslanec Benda navrhuje pevné hlasování. Poslanec Jan Jakob souhlasí."
+    assert clean_proposer("Jan Benda", text) == "Benda"
+    assert clean_proposer("Jan Jakob", text) == "Jan Jakob"
+    assert clean_proposer("Karel Haas", text) == ""

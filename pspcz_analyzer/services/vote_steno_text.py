@@ -332,11 +332,16 @@ def clean_proposer(names: str, context: str) -> str:
     Titles ("pan poslanec") are dropped, and so is a name whose surname is not in the
     text; a first name the model added is dropped on its own.
     """
-    low = context.lower()
+    low = " ".join(context.lower().split())
     kept = []
     for name in re.split(r",| a ", names):
         words = [w for w in name.split() if w[:1].isupper() and len(w) >= 3]
-        words = [w for w in words if w[:-1].lower() in low]
-        if words and name.split() and words[-1] == name.split()[-1]:
-            kept.append(" ".join(words))
+        if not words or not name.split() or words[-1] != name.split()[-1]:
+            continue
+        surname = words[-1]
+        if surname[:-1].lower() not in low:
+            continue
+        # a first name counts only right before the surname ("Marek Benda"), else it is invented
+        full = " ".join(words).lower()
+        kept.append(" ".join(words) if full[:-1] in low else surname)
     return ", ".join(kept)
