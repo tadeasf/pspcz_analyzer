@@ -5970,7 +5970,9 @@ third-read bills are detected (daily refresh).</p>
 <span class="normal"><a href="#__codelineno-0-190">190</a></span>
 <span class="normal"><a href="#__codelineno-0-191">191</a></span>
 <span class="normal"><a href="#__codelineno-0-192">192</a></span>
-<span class="normal"><a href="#__codelineno-0-193">193</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_amendment_pipeline</span><span class="p">(</span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_amendment_pipeline</span><span class="p">(</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="n">mode</span><span class="p">:</span> <span class="n">AmendmentMode</span> <span class="o">=</span> <span class="n">AmendmentMode</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span>
@@ -6019,41 +6021,43 @@ third-read bills are detected (daily refresh).</p>
 <a id="__codelineno-0-156" name="__codelineno-0-156"></a>            <span class="p">)</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157"></a>            <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-158" name="__codelineno-0-158"></a>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_on_progress</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">_bills</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback: reload in-memory amendment data on incremental saves.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a>        <span class="n">period_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a>        <span class="k">if</span> <span class="n">period_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163"></a>            <span class="k">return</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>        <span class="n">period_data</span><span class="o">.</span><span class="n">amendment_data</span> <span class="o">=</span> <span class="n">load_amendments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendments:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendment-coalitions:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_on_complete</span><span class="p">(</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170"></a>        <span class="n">bills</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback: refresh in-memory amendment data after pipeline finishes.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="n">period_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="k">if</span> <span class="n">period_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>            <span class="k">return</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="n">period_data</span><span class="o">.</span><span class="n">amendment_data</span> <span class="o">=</span> <span class="n">load_amendments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendments:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendment-coalitions:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>            <span class="s2">&quot;[amendment pipeline] Updated in-memory amendment data for period </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2"> bills&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>            <span class="n">p</span><span class="p">,</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a>            <span class="nb">len</span><span class="p">(</span><span class="n">period_data</span><span class="o">.</span><span class="n">amendment_data</span><span class="p">),</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="p">)</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">start_period</span><span class="p">(</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="n">period</span><span class="p">,</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="n">pd</span><span class="p">,</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="n">on_complete</span><span class="o">=</span><span class="n">_on_complete</span><span class="p">,</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="n">on_progress</span><span class="o">=</span><span class="n">_on_progress</span><span class="p">,</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="n">refresh_active</span><span class="o">=</span><span class="n">refresh_active</span><span class="p">,</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="p">)</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a>    <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_tisk_data</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>  <span class="c1"># briefs reach the bill summaries even without get_period</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_on_progress</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">_bills</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback: reload in-memory amendment data on incremental saves.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>        <span class="n">period_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>        <span class="k">if</span> <span class="n">period_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>            <span class="k">return</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>        <span class="n">period_data</span><span class="o">.</span><span class="n">amendment_data</span> <span class="o">=</span> <span class="n">load_amendments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendments:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendment-coalitions:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_on_complete</span><span class="p">(</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>        <span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>        <span class="n">bills</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback: refresh in-memory amendment data after pipeline finishes.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>        <span class="n">period_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="k">if</span> <span class="n">period_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>            <span class="k">return</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>        <span class="n">period_data</span><span class="o">.</span><span class="n">amendment_data</span> <span class="o">=</span> <span class="n">load_amendments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendments:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;amendment-coalitions:</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>            <span class="s2">&quot;[amendment pipeline] Updated in-memory amendment data for period </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2"> bills&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>            <span class="n">p</span><span class="p">,</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>            <span class="nb">len</span><span class="p">(</span><span class="n">period_data</span><span class="o">.</span><span class="n">amendment_data</span><span class="p">),</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>        <span class="p">)</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">start_period</span><span class="p">(</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="n">period</span><span class="p">,</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="n">pd</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="n">on_complete</span><span class="o">=</span><span class="n">_on_complete</span><span class="p">,</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="n">on_progress</span><span class="o">=</span><span class="n">_on_progress</span><span class="p">,</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="n">refresh_active</span><span class="o">=</span><span class="n">refresh_active</span><span class="p">,</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="p">)</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="k">return</span> <span class="kc">True</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6079,9 +6083,7 @@ if that period happens to be loaded.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/data_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-195">195</a></span>
-<span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-197">197</a></span>
 <span class="normal"><a href="#__codelineno-0-198">198</a></span>
 <span class="normal"><a href="#__codelineno-0-199">199</a></span>
 <span class="normal"><a href="#__codelineno-0-200">200</a></span>
@@ -6127,55 +6129,57 @@ if that period happens to be loaded.</p>
 <span class="normal"><a href="#__codelineno-0-240">240</a></span>
 <span class="normal"><a href="#__codelineno-0-241">241</a></span>
 <span class="normal"><a href="#__codelineno-0-242">242</a></span>
-<span class="normal"><a href="#__codelineno-0-243">243</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_all_tisk_pipelines</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Kick off sequential background tisk processing for ALL periods (newest first).</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">    Does not require periods to be loaded – uses the shared tisky table</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">    to get ct numbers. When a period completes, updates in-memory data</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="sd">    if that period happens to be loaded.</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tisky</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="k">return</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="n">period_ct</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a>    <span class="k">for</span> <span class="n">period</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">PERIOD_ORGAN_IDS</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="n">organ_id</span> <span class="o">=</span> <span class="n">PERIOD_ORGAN_IDS</span><span class="p">[</span><span class="n">period</span><span class="p">]</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a>        <span class="n">period_tisky</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tisky</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209"></a>            <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_obdobi&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">organ_id</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;ct&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_not_null</span><span class="p">()</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a>        <span class="p">)</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="n">ct_numbers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">period_tisky</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="s2">&quot;ct&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212"></a>        <span class="k">if</span> <span class="n">ct_numbers</span><span class="p">:</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213"></a>            <span class="n">period_ct</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">period</span><span class="p">,</span> <span class="n">ct_numbers</span><span class="p">))</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214"></a>
-<a id="__codelineno-0-215" name="__codelineno-0-215"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">period_ct</span><span class="p">:</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216"></a>        <span class="k">return</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217"></a>
-<a id="__codelineno-0-218" name="__codelineno-0-218"></a>    <span class="k">if</span> <span class="n">AI_PERIODS_LIMIT</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">period_ct</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">AI_PERIODS_LIMIT</span><span class="p">:</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219"></a>        <span class="n">skipped</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">period_ct</span><span class="p">)</span> <span class="o">-</span> <span class="n">AI_PERIODS_LIMIT</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220"></a>        <span class="n">period_ct</span> <span class="o">=</span> <span class="n">period_ct</span><span class="p">[:</span><span class="n">AI_PERIODS_LIMIT</span><span class="p">]</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222"></a>            <span class="s2">&quot;[tisk pipeline] AI limited to </span><span class="si">{}</span><span class="s2"> newest periods (</span><span class="si">{}</span><span class="s2"> skipped)&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223"></a>            <span class="n">AI_PERIODS_LIMIT</span><span class="p">,</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224"></a>            <span class="n">skipped</span><span class="p">,</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225"></a>        <span class="p">)</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_on_complete</span><span class="p">(</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228"></a>        <span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229"></a>        <span class="n">_text_paths</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="n">_topic_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="n">_summary_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="o">*</span><span class="n">_args</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="o">**</span><span class="n">_kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mgr</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236"></a>        <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="p">:</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_load_period</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_tisk_data</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[tisk pipeline] Updated in-memory tisk data for period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240"></a>        <span class="c1"># Start amendment pipeline after tisk completes</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">start_amendment_pipeline</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">start_all_periods</span><span class="p">(</span><span class="n">period_ct</span><span class="p">,</span> <span class="n">on_complete</span><span class="o">=</span><span class="n">_on_complete</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#__codelineno-0-244">244</a></span>
+<span class="normal"><a href="#__codelineno-0-245">245</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="k">def</span><span class="w"> </span><span class="nf">start_all_tisk_pipelines</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Kick off sequential background tisk processing for ALL periods (newest first).</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="sd">    Does not require periods to be loaded – uses the shared tisky table</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">    to get ct numbers. When a period completes, updates in-memory data</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">    if that period happens to be loaded.</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tisky</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>        <span class="k">return</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>    <span class="n">period_ct</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>    <span class="k">for</span> <span class="n">period</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">PERIOD_ORGAN_IDS</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>        <span class="n">organ_id</span> <span class="o">=</span> <span class="n">PERIOD_ORGAN_IDS</span><span class="p">[</span><span class="n">period</span><span class="p">]</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>        <span class="n">period_tisky</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tisky</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>            <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;id_obdobi&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">organ_id</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;ct&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_not_null</span><span class="p">()</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>        <span class="p">)</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>        <span class="n">ct_numbers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">period_tisky</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="s2">&quot;ct&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>        <span class="k">if</span> <span class="n">ct_numbers</span><span class="p">:</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a>            <span class="n">period_ct</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">period</span><span class="p">,</span> <span class="n">ct_numbers</span><span class="p">))</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">period_ct</span><span class="p">:</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a>        <span class="k">return</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a>    <span class="k">if</span> <span class="n">AI_PERIODS_LIMIT</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">period_ct</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">AI_PERIODS_LIMIT</span><span class="p">:</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="n">skipped</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">period_ct</span><span class="p">)</span> <span class="o">-</span> <span class="n">AI_PERIODS_LIMIT</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a>        <span class="n">period_ct</span> <span class="o">=</span> <span class="n">period_ct</span><span class="p">[:</span><span class="n">AI_PERIODS_LIMIT</span><span class="p">]</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a>            <span class="s2">&quot;[tisk pipeline] AI limited to </span><span class="si">{}</span><span class="s2"> newest periods (</span><span class="si">{}</span><span class="s2"> skipped)&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>            <span class="n">AI_PERIODS_LIMIT</span><span class="p">,</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a>            <span class="n">skipped</span><span class="p">,</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a>        <span class="p">)</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_on_complete</span><span class="p">(</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="n">_text_paths</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="n">_topic_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="n">_summary_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a>        <span class="o">*</span><span class="n">_args</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a>        <span class="o">**</span><span class="n">_kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mgr</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="p">:</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_load_period</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_tisk_data</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[tisk pipeline] Updated in-memory tisk data for period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a>        <span class="c1"># Start amendment pipeline after tisk completes</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">start_amendment_pipeline</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244"></a>
+<a id="__codelineno-0-245" name="__codelineno-0-245"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">start_all_periods</span><span class="p">(</span><span class="n">period_ct</span><span class="p">,</span> <span class="n">on_complete</span><span class="o">=</span><span class="n">_on_complete</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6199,21 +6203,21 @@ if that period happens to be loaded.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/data_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-245">245</a></span>
-<span class="normal"><a href="#__codelineno-0-246">246</a></span>
-<span class="normal"><a href="#__codelineno-0-247">247</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-247">247</a></span>
 <span class="normal"><a href="#__codelineno-0-248">248</a></span>
 <span class="normal"><a href="#__codelineno-0-249">249</a></span>
 <span class="normal"><a href="#__codelineno-0-250">250</a></span>
 <span class="normal"><a href="#__codelineno-0-251">251</a></span>
-<span class="normal"><a href="#__codelineno-0-252">252</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-245" name="__codelineno-0-245"></a><span class="k">def</span><span class="w"> </span><span class="nf">cancel_period_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Cancel a single period in both tisk and amendment pipelines.</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248"></a><span class="sd">    Returns a dict with cancellation results for each pipeline.</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250"></a>    <span class="n">tisk_cancelled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">cancel_period</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251"></a>    <span class="n">amend_cancelled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">cancel_period</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;tisk&quot;</span><span class="p">:</span> <span class="n">tisk_cancelled</span><span class="p">,</span> <span class="s2">&quot;amendment&quot;</span><span class="p">:</span> <span class="n">amend_cancelled</span><span class="p">}</span>
+<span class="normal"><a href="#__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#__codelineno-0-254">254</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-247" name="__codelineno-0-247"></a><span class="k">def</span><span class="w"> </span><span class="nf">cancel_period_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Cancel a single period in both tisk and amendment pipelines.</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a><span class="sd">    Returns a dict with cancellation results for each pipeline.</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>    <span class="n">tisk_cancelled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">cancel_period</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>    <span class="n">amend_cancelled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">cancel_period</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;tisk&quot;</span><span class="p">:</span> <span class="n">tisk_cancelled</span><span class="p">,</span> <span class="s2">&quot;amendment&quot;</span><span class="p">:</span> <span class="n">amend_cancelled</span><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6237,17 +6241,17 @@ if that period happens to be loaded.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/data_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-254">254</a></span>
-<span class="normal"><a href="#__codelineno-0-255">255</a></span>
-<span class="normal"><a href="#__codelineno-0-256">256</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-256">256</a></span>
 <span class="normal"><a href="#__codelineno-0-257">257</a></span>
 <span class="normal"><a href="#__codelineno-0-258">258</a></span>
-<span class="normal"><a href="#__codelineno-0-259">259</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-254" name="__codelineno-0-254"></a><span class="k">def</span><span class="w"> </span><span class="nf">remove_pending_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a pending period from the tisk pipeline queue.</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256"></a>
-<a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="sd">    Returns True if the period was pending and is now skipped.</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">remove_pending_period</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-259">259</a></span>
+<span class="normal"><a href="#__codelineno-0-260">260</a></span>
+<span class="normal"><a href="#__codelineno-0-261">261</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-256" name="__codelineno-0-256"></a><span class="k">def</span><span class="w"> </span><span class="nf">remove_pending_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a pending period from the tisk pipeline queue.</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a><span class="sd">    Returns True if the period was pending and is now skipped.</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">remove_pending_period</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6276,9 +6280,7 @@ Safe for concurrent HTTP requests – old data stays valid until swapped.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/data_service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-303">303</a></span>
-<span class="normal"><a href="#__codelineno-0-304">304</a></span>
-<span class="normal"><a href="#__codelineno-0-305">305</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-305">305</a></span>
 <span class="normal"><a href="#__codelineno-0-306">306</a></span>
 <span class="normal"><a href="#__codelineno-0-307">307</a></span>
 <span class="normal"><a href="#__codelineno-0-308">308</a></span>
@@ -6323,54 +6325,56 @@ Safe for concurrent HTTP requests – old data stays valid until swapped.</p>
 <span class="normal"><a href="#__codelineno-0-347">347</a></span>
 <span class="normal"><a href="#__codelineno-0-348">348</a></span>
 <span class="normal"><a href="#__codelineno-0-349">349</a></span>
-<span class="normal"><a href="#__codelineno-0-350">350</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">refresh_all_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Re-download all data from psp.cz and reload in-memory state.</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a><span class="sd">    Pauses the tisk AI pipeline, refreshes data, then restarts the pipeline.</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="sd">    Safe for concurrent HTTP requests – old data stays valid until swapped.</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="o">.</span><span class="n">locked</span><span class="p">():</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Refresh already in progress, skipping&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a>        <span class="k">return</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="p">:</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Starting full data refresh ...&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="c1"># 1. Cancel tisk and amendment pipelines (cooperative), then</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="c1">#    wait for the worker threads to stop at their next checkpoint</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">cancel_all</span><span class="p">()</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">cancel_all</span><span class="p">()</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">wait_stopped</span><span class="p">()</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">wait_stopped</span><span class="p">()</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322"></a>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="c1"># 2. Re-download and reload shared tables</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a>        <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_shared_tables</span><span class="p">)</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Shared tables reloaded&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Failed to reload shared tables&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329"></a>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a>        <span class="c1"># 3. Re-download and reload current period only</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a>        <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_period</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span><span class="p">)</span>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Period </span><span class="si">{}</span><span class="s2"> reloaded&quot;</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span><span class="p">)</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a>                <span class="s2">&quot;[daily-refresh] Failed to reload period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a>            <span class="p">)</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>        <span class="c1"># 4. Invalidate analysis caches</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a>        <span class="k">for</span> <span class="n">period</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="p">:</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mgr</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a>        <span class="c1"># 5. Re-run the tisk + amendment pipelines for the current period in</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a>        <span class="c1">#    refresh mode: brand-new tisky are processed and active (non-terminal)</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a>        <span class="c1">#    bills are re-scraped/re-analyzed so new laws and freshly voted</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a>        <span class="c1">#    amendments are picked up. Terminal bills stay served from cache.</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">start_tisk_pipeline</span><span class="p">(</span><span class="n">DEFAULT_PERIOD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">TiskMode</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span> <span class="n">refresh_active</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Full data refresh complete&quot;</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-350">350</a></span>
+<span class="normal"><a href="#__codelineno-0-351">351</a></span>
+<span class="normal"><a href="#__codelineno-0-352">352</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-305" name="__codelineno-0-305"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">refresh_all_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Re-download all data from psp.cz and reload in-memory state.</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">    Pauses the tisk AI pipeline, refreshes data, then restarts the pipeline.</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">    Safe for concurrent HTTP requests – old data stays valid until swapped.</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="o">.</span><span class="n">locked</span><span class="p">():</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Refresh already in progress, skipping&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a>        <span class="k">return</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_lock</span><span class="p">:</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Starting full data refresh ...&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a>
+<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="c1"># 1. Cancel tisk and amendment pipelines (cooperative), then</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="c1">#    wait for the worker threads to stop at their next checkpoint</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">cancel_all</span><span class="p">()</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">cancel_all</span><span class="p">()</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">tisk_pipeline</span><span class="o">.</span><span class="n">wait_stopped</span><span class="p">()</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">amendment_pipeline</span><span class="o">.</span><span class="n">wait_stopped</span><span class="p">()</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a>
+<a id="__codelineno-0-325" name="__codelineno-0-325"></a>        <span class="c1"># 2. Re-download and reload shared tables</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_shared_tables</span><span class="p">)</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Shared tables reloaded&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Failed to reload shared tables&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="c1"># 3. Re-download and reload current period only</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_reload_period</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span><span class="p">)</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Period </span><span class="si">{}</span><span class="s2"> reloaded&quot;</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span><span class="p">)</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="n">exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>                <span class="s2">&quot;[daily-refresh] Failed to reload period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">DEFAULT_PERIOD</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>            <span class="p">)</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a>        <span class="c1"># 4. Invalidate analysis caches</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a>        <span class="n">analysis_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a>        <span class="k">for</span> <span class="n">period</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periods</span><span class="p">:</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mgr</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a>        <span class="c1"># 5. Re-run the tisk + amendment pipelines for the current period in</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a>        <span class="c1">#    refresh mode: brand-new tisky are processed and active (non-terminal)</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a>        <span class="c1">#    bills are re-scraped/re-analyzed so new laws and freshly voted</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a>        <span class="c1">#    amendments are picked up. Terminal bills stay served from cache.</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">start_tisk_pipeline</span><span class="p">(</span><span class="n">DEFAULT_PERIOD</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">TiskMode</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span> <span class="n">refresh_active</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[daily-refresh] Full data refresh complete&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
