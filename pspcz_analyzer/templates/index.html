@@ -1,140 +1,81 @@
 {% extends "base.html" %}
-{% block title %}{{ _("nav.dashboard") }} — {{ _("site.short_title") }}{% endblock %}
-
-{% from "macros.html" import status_badge %}
-
-{% macro driver_badge(driver) %}
-{% if driver == 'government' %}
-<span class="driver-badge driver-government">{{ _("driver.government") }}</span>
-{% elif driver == 'opposition' %}
-<span class="driver-badge driver-opposition">{{ _("driver.opposition") }}</span>
-{% elif driver == 'mixed' %}
-<span class="driver-badge driver-mixed">{{ _("driver.mixed") }}</span>
-{% endif %}
-{% endmacro %}
-
-{% macro feed_item(row) %}
-<article class="feed-item">
-    <div class="feed-item-main">
-        <div class="feed-item-head">
-            <span class="feed-tisk">{{ _("th.tisk") }} {{ row.ct }}</span>
-            {{ status_badge(row.status) }}
-        </div>
-        <a href="/laws/{{ row.ct }}?period={{ period }}" class="feed-title">{{ row.nazev }}</a>
-        <div class="feed-meta">
-            {% if row.latest_date %}
-            <span class="feed-date">{{ _("index.overview.latest_step") }}: {{ row.latest_date }}</span>
-            {% endif %}
-            {% for t in row.topics %}<a href="/laws?period={{ period }}&topic={{ t | urlencode }}" class="topic-badge topic-badge-link" title="{{ _('laws.filter_by_topic') }}">{{ t }}</a>{% endfor %}
-        </div>
-    </div>
-    <div class="feed-item-side">
-        {% if row.has_amendments %}
-        {{ driver_badge(row.driver) }}
-        <a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}"
-           class="feed-amend-link">{{ _("index.overview.view_amendments").format(count=row.amendment_count) }} &rarr;</a>
-        {% else %}
-        <span class="feed-no-amend">{{ _("index.overview.no_amendments") }}</span>
-        {% endif %}
-        <a href="/laws/{{ row.ct }}?period={{ period }}" class="btn-outline btn-small">{{ _("index.overview.view_law") }}</a>
-    </div>
-</article>
-{% endmacro %}
-
+{% from "macros.html" import ai_label, icon %}
+{% block title %}{{ _("site.short_title") }}{% endblock %}
 {% block content %}
-<section class="hero">
-    <p class="hero-eyebrow">{{ _("index.hero.eyebrow") }}</p>
-    <h1 class="hero-title">{{ _("index.hero.title") }}</h1>
-    <p class="hero-subtitle">{{ _("index.hero.subtitle") }}</p>
-    <form class="hero-search" action="/laws" method="get" role="search">
-        <input type="hidden" name="period" value="{{ period }}">
-        <input type="search" name="search"
-               placeholder="{{ _('index.hero.search_placeholder') }}"
-               aria-label="{{ _('index.hero.search_aria') }}">
-        <button type="submit" class="btn-primary">{{ _("index.hero.search_submit") }}</button>
-    </form>
-    <div class="hero-cta">
-        <a href="/laws?period={{ period }}" class="btn-explore">{{ _("index.hero.cta_laws") }}</a>
-        <a href="/amendments?period={{ period }}" class="btn-outline">{{ _("index.hero.cta_amendments") }}</a>
-    </div>
-</section>
+{% macro law_row(r, text) %}
+<div class="lrow">
+    <span class="lbl">{{ r.last_step.date|cz_date(short=True) if r.last_step else "" }}</span>
+    <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ text }}</span>
+    {% if r.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(r.status|status_category, 'c-wait') }}">{{ _(r.phase_key) }}</span>{% endif %}
+</div>
+{% endmacro %}
 
-<section class="legislation-section">
-    <div class="section-lead">
-        <h2>{{ _("index.recent.title") }}</h2>
-        <p>{{ _("index.recent.subtitle") }}</p>
+<div class="hero">
+    <div class="hero-t">
+        <div class="eyebrow">{{ _("home.eyebrow").format(p=period) }}</div>
+        <h1 class="phead-h" style="font-size:32px">{{ _("home.title") }}</h1>
+        <p style="font-size:17px;color:#3a4552">{{ _("home.perex") }}</p>
+        <form action="/laws" method="get" role="search">
+            <input type="hidden" name="period" value="{{ period }}">
+            <label class="field"><span>{{ _("home.search_label") }}</span>
+                <span style="display:flex;gap:8px"><input type="search" name="search" placeholder="{{ _('home.search_placeholder') }}" style="flex:1;min-width:0">
+                <button class="btn" type="submit">{{ icon("search", "ico ico-btn") }}{{ _("btn.search") }}</button></span></label>
+        </form>
     </div>
-    {% if recent_activity %}
-    <div class="legislation-feed">
-        {% for row in recent_activity %}{{ feed_item(row) }}{% endfor %}
-    </div>
-    {% else %}
-    <p class="feed-empty">{{ _("index.recent.empty") }}</p>
-    {% endif %}
-</section>
+    <div class="hero-i" aria-hidden="true">{% include "partials/hero_illustration.html" %}</div>
+</div>
 
-<section class="legislation-section">
-    <div class="section-lead">
-        <h2>{{ _("index.active.title") }}</h2>
-        <p>{{ _("index.active.subtitle") }}</p>
-    </div>
-    {% if active_laws %}
-    <div class="legislation-feed">
-        {% for row in active_laws %}{{ feed_item(row) }}{% endfor %}
-    </div>
-    {% else %}
-    <p class="feed-empty">{{ _("index.active.empty") }}</p>
-    {% endif %}
-</section>
+<div class="grid2 cards4">
+    {% for href, ic, title, text in [
+        ("/laws", "document", "home.tile_laws", "home.tile_laws_text"),
+        ("/votes", "ballot", "home.tile_votes", "home.tile_votes_text"),
+        ("/amendments", "pencil", "home.tile_amendments", "home.tile_amendments_text"),
+        ("/loyalty", "people", "home.tile_mps", "home.tile_mps_text"),
+    ] %}
+    <a class="boxlink" href="{{ href }}?period={{ period }}"><div class="box card-ic"><span class="ibadge">{{ icon(ic) }}</span><div><h2 style="font-size:18px;margin:0">{{ _(title) }}</h2><p style="font-size:14px;color:#3a4552">{{ _(text) }}</p></div></div></a>
+    {% endfor %}
+</div>
 
-<section class="dataset-section">
-    <h2>{{ _("index.dataset").format(period=stats.period, label=stats.label) }}</h2>
-    <div class="stat-grid">
-        <article class="stat-card stat-card-blue">
-            <h3>{{ stats.total_votes|thousands }}</h3>
-            <p>{{ _("index.total_votes") }}</p>
-        </article>
-        <article class="stat-card stat-card-blue">
-            <h3>{{ stats.total_mps|thousands }}</h3>
-            <p>{{ _("index.mps") }}</p>
-        </article>
-        <article class="stat-card stat-card-blue">
-            <h3>{{ stats.total_mp_records|thousands }}</h3>
-            <p>{{ _("index.individual_records") }}</p>
-        </article>
-        <article class="stat-card stat-card-gray">
-            <h3>{{ stats.void_votes|thousands }}</h3>
-            <p>{{ _("index.void_votes") }}</p>
-        </article>
-    </div>
-    <p class="dataset-range"><strong>{{ _("index.date_range") }}:</strong> {{ stats.date_min }} — {{ stats.date_max }}</p>
-</section>
+{% if blocks.void_votes %}<p class="lbl">{{ _("home.void_note").format(p=period, n=blocks.votes_total|num, v=blocks.void_votes|num) }} <a href="/jak-se-v-tom-vyznat#g8">{{ _("home.void_what") }}</a></p>{% endif %}
 
-<section class="analysis-section">
-    <h2>{{ _("index.analysis.title") }}</h2>
-    <div class="grid">
-        <article>
-            <header>{{ _("index.card.loyalty") }}</header>
-            <p>{{ _("index.card.loyalty_desc") }}</p>
-            <a href="/loyalty?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
-        </article>
-        <article>
-            <header>{{ _("index.card.attendance") }}</header>
-            <p>{{ _("index.card.attendance_desc") }}</p>
-            <a href="/attendance?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
-        </article>
+{% set t = blocks.talked_about %}
+{% if t %}
+<div class="hsec alt" style="display:flex;flex-direction:column;gap:12px">
+    <h2 class="h2s">{{ icon("clock") }}{{ _("home.talked") }}</h2>
+    <div class="box" style="display:flex;flex-direction:column;gap:10px">
+        <div class="top"><span class="chip c-st">{{ _("lw.kind_" ~ (t.kind or "unknown")) }}</span><span class="lbl">{{ _("vd.tisk_n").format(ct=t.ct) }}</span>
+            {% if t.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(t.status|status_category, 'c-wait') }}">{{ _(t.phase_key) }}</span>{% endif %}</div>
+        <h3 style="font-size:22px;margin:0"><a href="/laws/{{ t.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ t.nazev }}</a></h3>
+        {% if t.summary %}<p style="margin:0">{{ t.summary }}</p>{{ ai_label(t.brief, t.ct) }}{% endif %}
+        <ol class="phase">{% for s in t.steps %}<li class="{{ s.state }}"><b>{{ _(s.key) }}</b>{% if s.date %}<br>{{ s.date|cz_date(short=True) }}{% elif s.state == "now" %}<br>{{ _("ph.now") }}{% endif %}</li>{% endfor %}</ol>
+        <p class="lbl" style="margin:0">{{ _("home.talked_picked") if t.picked else _("home.talked_why").format(n=t.speeches) }}</p>
     </div>
-    <div class="grid">
-        <article>
-            <header>{{ _("index.card.similarity") }}</header>
-            <p>{{ _("index.card.similarity_desc") }}</p>
-            <a href="/similarity?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
-        </article>
-        <article>
-            <header>{{ _("index.card.votes") }}</header>
-            <p>{{ _("index.card.votes_desc") }}</p>
-            <a href="/votes?period={{ period }}" class="btn-outline">{{ _("btn.explore") }}</a>
-        </article>
+</div>
+{% endif %}
+
+<div class="hsec" style="display:flex;flex-direction:column;gap:2px">
+    <h2 class="h2s">{{ icon("clock") }}{{ _("home.in_progress") }}</h2>
+    {% if blocks.agenda_sitting %}<p class="lbl" style="padding:4px 0 2px">{{ _("home.in_progress_sub").format(n=blocks.agenda_sitting) }}</p>{% endif %}
+    {% for r in blocks.in_progress %}{{ law_row(r, r.last_step.text if r.last_step else "") }}{% else %}<p>{{ _("home.in_progress_empty") }}</p>{% endfor %}
+    <a href="/laws?period={{ period }}&phase=chamber" style="font-size:14px;font-weight:700;padding-top:8px">{{ _("home.in_progress_all").format(n=blocks.in_progress_total) }} →</a>
+</div>
+
+<div class="hsec alt" style="display:flex;flex-direction:column;gap:2px">
+    <h2 class="h2s">{{ icon("check") }}{{ _("home.passed") }}</h2>
+    <p class="lbl" style="padding:4px 0 2px">{{ _("home.passed_sub") }}</p>
+    {% for r in blocks.recently_passed %}{{ law_row(r, (r.last_step.text if r.last_step else "") ) }}{% else %}<p>{{ _("home.passed_empty") }}</p>{% endfor %}
+    <a href="/laws?period={{ period }}&phase=valid" style="font-size:14px;font-weight:700;padding-top:8px">{{ _("home.passed_all") }} →</a>
+</div>
+
+<div class="hsec" style="display:flex;flex-direction:column;gap:2px">
+    <h2 class="h2s">{{ icon("doc_plus") }}{{ _("home.newest") }}</h2>
+    {% for r in blocks.newest %}
+    <div class="lrow">
+        <span class="lbl">{{ r.submitted|cz_date(short=True) if r.submitted else "" }}</span>
+        <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ r.summary or _("lw.no_summary") }}{% if r.summary %}<br>{{ ai_label(r.brief, r.ct) }}{% endif %}</span>
+        <span class="chip c-st">{{ _("lw.submitter_" ~ r.kind) if r.kind else _("lw.kind_unknown") }}</span>
     </div>
-</section>
+    {% else %}<p>{{ _("home.newest_empty") }}</p>{% endfor %}
+    <a href="/laws?period={{ period }}&sort=newest" style="font-size:14px;font-weight:700;padding-top:8px">{{ _("home.newest_all") }} →</a>
+</div>
 {% endblock %}

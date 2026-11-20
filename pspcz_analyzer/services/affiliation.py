@@ -4,7 +4,7 @@ Maps a club abbreviation (as produced by services/mp_builder.py) to a political
 side given the period's governing coalition, and derives the "driver" of an
 amendment from the set of clubs its submitters belong to. The coalition set is
 auto-detected per period (services/coalition_detector.py) and carried on
-PeriodData.coalition_parties. An empty coalition set means "unknown" — nothing
+PeriodData.coalition_parties. An empty coalition set means "unknown" – nothing
 is classifiable. Used by the web layer to show who is pushing a legislative change.
 """
 

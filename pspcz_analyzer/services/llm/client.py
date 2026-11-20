@@ -1,4 +1,4 @@
-"""LLM client implementation — LLMClient class."""
+"""LLM client implementation – LLMClient class."""
 
 from __future__ import annotations
 
@@ -12,8 +12,10 @@ from loguru import logger
 
 from pspcz_analyzer.config import (
     LLM_EMPTY_RETRIES,
+    LLM_ENABLE_THINKING,
     LLM_HEALTH_TIMEOUT,
     LLM_MAX_COMPARISON_CHARS,
+    LLM_MAX_OUTPUT_TOKENS,
     LLM_TIMEOUT,
 )
 from pspcz_analyzer.services.llm.helpers import (
@@ -93,7 +95,7 @@ class LLMClient:
     """Unified LLM client supporting ollama and openai providers.
 
     Args:
-        provider: ``"ollama"`` or ``"openai"`` — controls which protocol is used.
+        provider: ``"ollama"`` or ``"openai"`` – controls which protocol is used.
         base_url: LLM API base URL.
         model: Model name/identifier.
         timeout: Per-request timeout in seconds.
@@ -326,9 +328,12 @@ class LLMClient:
                 {"role": "user", "content": prompt},
             ],
             "stream": False,
+            "max_tokens": LLM_MAX_OUTPUT_TOKENS,
         }
         if response_format is not None:
             payload["response_format"] = response_format
+        if LLM_ENABLE_THINKING:
+            payload["chat_template_kwargs"] = {"enable_thinking": LLM_ENABLE_THINKING == "1"}
         try:
             resp = httpx.post(
                 f"{self.base_url}/chat/completions",
@@ -398,7 +403,7 @@ class LLMClient:
         schema: dict[str, Any],
     ) -> dict[str, Any] | None:
         """Try schema-constrained JSON generation via response_format."""
-        # vLLM/xgrammar does not support additionalProperties — strip it.
+        # vLLM/xgrammar does not support additionalProperties – strip it.
         # Also drop "strict" which is OpenAI-only and meaningless for vLLM.
         clean_schema = self._strip_additional_properties(schema)
         response_format: dict[str, Any] = {
@@ -734,7 +739,7 @@ class LLMClient:
             RISKS: ...
 
         Returns:
-            (topics, summary_data_dict) — partial success is acceptable.
+            (topics, summary_data_dict) – partial success is acceptable.
         """
         response = self._strip_think(response)
 
@@ -776,7 +781,7 @@ class LLMClient:
         """Classify topics + summarize in a single LLM call (Czech).
 
         Returns:
-            (topics, summary_markdown) — ([], "") on failure.
+            (topics, summary_markdown) – ([], "") on failure.
         """
         truncated = text if _truncated else truncate_legislative_text(text)
         sanitized_title = _sanitize_llm_input(title or "(bez názvu)")
@@ -816,7 +821,7 @@ class LLMClient:
         """Classify topics + summarize in a single LLM call (English).
 
         Returns:
-            (topics, summary_markdown) — ([], "") on failure.
+            (topics, summary_markdown) – ([], "") on failure.
         """
         truncated = text if _truncated else truncate_legislative_text(text)
         sanitized_title = _sanitize_llm_input(title or "(no title)")
@@ -1049,7 +1054,7 @@ class LLMClient:
                 for additional context in prompts.
 
         Returns:
-            (cs_map, en_map) — each mapping amendment letter to summary.
+            (cs_map, en_map) – each mapping amendment letter to summary.
         """
         truncated = truncate_legislative_text(text)
         cs_map = self.summarize_amendments(

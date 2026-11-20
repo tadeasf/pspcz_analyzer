@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import polars as pl
 
 from pspcz_analyzer.config import PERIOD_LABELS, PERIOD_YEARS
+from pspcz_analyzer.services.coalition_table import CoalitionSpan, parties_at
 
 if TYPE_CHECKING:
     from pspcz_analyzer.models.amendment_models import BillAmendmentData
@@ -24,6 +25,9 @@ class TiskInfo:
         ct: Tisk number (cislo tisku).
         nazev: Title of the tisk.
         period: Electoral period number.
+        id_druh: Document type from tisky.unl (druh_tisku.unl: 1 = Vládní návrh
+            zákona, 2 = Návrh zákona, 3 = Státní rozpočet, 4 = Mezinárodní
+            smlouva, 5 = Zpráva a jiné, 6 = Písemná interpelace); None if unknown.
         topics: LLM-classified topic labels (1-3 Czech labels).
         topics_en: LLM-classified topic labels (1-3 English labels).
         has_text: Whether extracted full text is available.
@@ -37,11 +41,15 @@ class TiskInfo:
     ct: int  # tisk number
     nazev: str
     period: int
+    id_druh: int | None = None
+    nazev_cely: str = ""  # full official title (tisky.unl column 15)
+    predkladatel: str = ""  # submitter as tisky.unl names it ("min. financí", #98)
     topics: list[str] = field(default_factory=list)
     topics_en: list[str] = field(default_factory=list)
     has_text: bool = False
     summary: str = ""
     summary_en: str = ""
+    brief: dict | None = None  # AI brief (#109), see services/tisk/brief.py
     history: TiskHistory | None = None
     law_changes: list[dict] = field(default_factory=list)
     sub_versions: list[dict] = field(default_factory=list)
@@ -58,7 +66,8 @@ class PeriodData:
     Attributes:
         period: Electoral period number.
         votes: Polars DataFrame of vote records (hl_hlasovani).
-        mp_votes: Polars DataFrame of per-MP vote results (hl_poslanec).
+        mp_votes: Polars DataFrame of per-MP vote results (hl_poslanec) with
+            ``party`` = the MP's club on the vote date.
         void_votes: Polars DataFrame of void vote IDs (zmatecne).
         mp_info: Polars DataFrame of MP info (name, party, organ).
         tisk_lookup: Mapping of (session, agenda_item) to TiskInfo.
@@ -73,12 +82,62 @@ class PeriodData:
     tisk_lookup: dict[tuple[int, int], TiskInfo] = field(default_factory=dict)
     # Amendment data: (schuze, bod) -> BillAmendmentData
     amendment_data: dict[tuple[int, int], BillAmendmentData] = field(default_factory=dict)
-    # Government-coalition club abbreviations (auto-detected; empty = unknown)
+    # Current government clubs (table or confidence vote; empty = unknown)
     coalition_parties: frozenset[str] = field(default_factory=frozenset)
+    # Hand-kept government spans with dates (coalition_table); empty = use coalition_parties
+    coalition_spans: tuple[CoalitionSpan, ...] = ()
+    # What each vote was about, from steno (#102): id_hlasovani -> record (services/vote_steno)
+    vote_steno: dict[int, dict] = field(default_factory=dict)
+    # Agenda items whose steno-anchored vote count differs from hl_hlasovani (#102)
+    anchor_checks: list[dict[str, int]] = field(default_factory=list)
+    # Speeches per agenda item and day from steno (#108): (schuze, bod) -> {iso date: n}
+    speeches: dict[tuple[int, int], dict[str, int]] = field(default_factory=dict)
+    # Admin corrections (services/overrides): kind -> key -> record
+    overrides: dict[str, dict[str, dict]] = field(default_factory=dict)
     # Reverse index: id_hlasovani -> (schuze, bod, letter, is_final_vote)
     _amendment_vote_index: dict[int, tuple[int, int, str, bool]] = field(
         default_factory=dict, repr=False
     )
+
+    def __post_init__(self) -> None:
+        """Guarantee mp_votes.party; without per-vote clubs, use the current club."""
+        if "party" not in self.mp_votes.columns and "party" in self.mp_info.columns:
+            self.mp_votes = self.mp_votes.join(
+                self.mp_info.select("id_poslanec", "party"),
+                on="id_poslanec",
+                how="left",
+                maintain_order="left",
+            )
+
+    def coalition_for_vote(self, id_hlasovani: int | None) -> frozenset[str]:
+        """Government clubs on the day of a vote (current clubs if the date is unknown).
+
+        Args:
+            id_hlasovani: Vote id, or None.
+
+        Returns:
+            Club names in government; empty set means unknown.
+        """
+        if not self.coalition_spans or id_hlasovani is None:
+            return self.coalition_parties
+        row = self.votes.filter(pl.col("id_hlasovani") == id_hlasovani).select(
+            pl.col("datum").str.to_date("%d.%m.%Y", strict=False)
+        )
+        day = row.item() if row.height else None
+        return parties_at(self.coalition_spans, day) if day else self.coalition_parties
+
+    def coalition_for_bill(self, bill: BillAmendmentData) -> frozenset[str]:
+        """Government clubs on the day of a bill's final vote (or its first amendment vote).
+
+        Args:
+            bill: Amendment data of one bill.
+
+        Returns:
+            Club names in government; empty set means unknown.
+        """
+        vote_ids = [bill.final_vote.id_hlasovani] if bill.final_vote else []
+        vote_ids += [a.id_hlasovani for a in bill.amendments]
+        return self.coalition_for_vote(next((v for v in vote_ids if v is not None), None))
 
     def get_amendments(self, schuze: int, bod: int) -> BillAmendmentData | None:
         """Get amendment data for a vote given its session and agenda item."""

@@ -1,4 +1,4 @@
-"""Admin dashboard routes — pipeline management, config editor, log viewer."""
+"""Admin dashboard routes – pipeline management, config editor, log viewer."""
 
 import asyncio
 import contextlib
@@ -18,7 +18,14 @@ from pspcz_analyzer.admin.auth import (
 )
 from pspcz_analyzer.admin.log_stream import log_broadcaster
 from pspcz_analyzer.admin.pipeline_history import PipelineHistory
-from pspcz_analyzer.config import ADMIN_COOKIE_SECURE, ADMIN_USERNAME, DEFAULT_CACHE_DIR
+from pspcz_analyzer.admin.quality import quality_report
+from pspcz_analyzer.config import (
+    ADMIN_COOKIE_SECURE,
+    ADMIN_USERNAME,
+    DEFAULT_CACHE_DIR,
+    DEFAULT_PERIOD,
+    GIT_SHA,
+)
 from pspcz_analyzer.models.pipeline_progress import (
     AmendmentMode,
     PeriodStatus,
@@ -49,6 +56,8 @@ STAGE_LABELS: dict[str, str] = {
     PipelineStage.DOWNLOAD_PDFS: "Downloading PDFs",
     PipelineStage.CLASSIFY: "Classifying & summarizing",
     PipelineStage.CONSOLIDATE_TOPICS: "Consolidating topics",
+    PipelineStage.BRIEFS: "Writing AI briefs",
+    PipelineStage.VOTE_STENO: "Vote questions from steno",
     PipelineStage.SCRAPE_LAW_CHANGES: "Scraping law changes",
     PipelineStage.DOWNLOAD_VERSIONS: "Downloading versions",
     PipelineStage.ANALYZE_DIFFS: "Analyzing diffs",
@@ -81,7 +90,7 @@ PIPELINE_TYPE_LABELS: dict[str, str] = {
 def _format_eta(seconds: float | None) -> str:
     """Format ETA seconds as human-readable string."""
     if seconds is None:
-        return "—"
+        return "–"
     if seconds <= 0:
         return "< 1s"
     minutes, secs = divmod(int(seconds), 60)
@@ -223,7 +232,7 @@ async def pipelines_page(request: Request) -> HTMLResponse:
 
 @router.get("/partials/pipeline-status", response_class=HTMLResponse)
 async def pipeline_status_partial(request: Request) -> HTMLResponse:
-    """HTML partial for HTMX polling — renders pipeline status + progress bars."""
+    """HTML partial for HTMX polling – renders pipeline status + progress bars."""
     svc = request.app.state.data
     tisk_progress = svc.tisk_pipeline.progress
     amendment_progress = svc.amendment_pipeline.progress
@@ -276,7 +285,7 @@ async def _monitor_pipeline(
     """Background coroutine: await the real pipeline task, then release lock and record history."""
     try:
         await task
-        # For "full" mode, tisk's on_complete chains to amendment — wait for that too
+        # For "full" mode, tisk's on_complete chains to amendment – wait for that too
         if pipeline_type == "full":
             await asyncio.sleep(0.5)
             amendment_task = svc.amendment_pipeline.get_task(period)
@@ -348,7 +357,7 @@ async def start_pipeline(
             case "amendment_summarize":
                 started = svc.start_amendment_pipeline(period, mode=AmendmentMode.SUMMARIZE)
             case "full":
-                # Tisk on_complete callback chains to amendment — don't double-start
+                # Tisk on_complete callback chains to amendment – don't double-start
                 started = svc.start_tisk_pipeline(period, mode=TiskMode.FULL)
             case _:
                 pipeline_lock.release()
@@ -374,7 +383,7 @@ async def start_pipeline(
         history.finish_run(run_data, "error", "Task not found after start")
         return {"status": "error", "message": "Pipeline task not found after start"}
 
-    # Spawn monitor — it holds the lock until the pipeline finishes
+    # Spawn monitor – it holds the lock until the pipeline finishes
     asyncio.create_task(
         _monitor_pipeline(svc, pipeline_type, period, task, run_data, history, label),
         name=f"pipeline-monitor-{pipeline_type}-{period}",
@@ -488,6 +497,25 @@ async def pipeline_logs_sse() -> StreamingResponse:
 # ── Config editor ────────────────────────────────────────────────
 
 
+@router.get("/quality", response_class=HTMLResponse)
+async def quality_page(request: Request, period: int = DEFAULT_PERIOD) -> HTMLResponse:
+    """Data quality report: parser scores and AI check results (#100, #97)."""
+    svc = request.app.state.data
+    if period not in svc.available_periods:
+        period = DEFAULT_PERIOD
+    report = await asyncio.to_thread(lambda: quality_report(svc.get_period(period)))
+    return templates.TemplateResponse(
+        "quality.html",
+        {
+            "request": request,
+            "admin_user": get_session_username(request),
+            "available_periods": svc.available_periods,
+            "period": period,
+            "r": report,
+        },
+    )
+
+
 @router.get("/config", response_class=HTMLResponse)
 async def config_page(request: Request) -> HTMLResponse:
     """Runtime config editor page."""
@@ -574,6 +602,7 @@ async def admin_health(request: Request) -> dict:
     svc = request.app.state.data
     return {
         "status": "ok",
+        "version": GIT_SHA,
         "periods_loaded": svc.loaded_periods,
         "pipeline_running": pipeline_lock.is_locked,
     }

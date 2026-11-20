@@ -75,6 +75,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | `GITHUB_FEEDBACK_LABELS`  | `user-feedback`               | Labels applied to feedback issues                              |
 | `LLM_STRUCTURED_OUTPUT`   | `1`                           | JSON schema structured output (`0` = free-text regex fallback)  |
 | `LLM_EMPTY_RETRIES`       | `2`                           | Extra LLM attempts on empty/unparseable free-text results       |
+| `LLM_CONCURRENCY`         | `4`                           | Parallel LLM requests per pipeline stage                        |
 | `ADMIN_PORT`              | `8001`                        | Port for the admin backend server                               |
 | `ADMIN_USERNAME`          | `admin`                       | Admin dashboard login username                                  |
 | `ADMIN_PASSWORD_HASH`     | _(empty)_                     | bcrypt hash of the admin password                               |

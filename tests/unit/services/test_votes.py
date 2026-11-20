@@ -1,5 +1,7 @@
 """Tests for vote search and detail service."""
 
+import polars as pl
+
 from pspcz_analyzer.services.votes_service import list_votes, vote_detail
 from tests.fixtures.sample_data import make_period_data
 
@@ -92,3 +94,21 @@ class TestVoteDetail:
         data = make_period_data()
         result = vote_detail(data, vote_id=99999)
         assert result is None
+
+
+class TestVoteGroups:
+    """Votes grouped by agenda item, void votes kept and marked (#113)."""
+
+    def test_groups_cover_all_rows(self):
+        data = make_period_data()
+        result = list_votes(data)
+        assert sum(len(g["rows"]) for g in result["groups"]) == len(result["rows"])
+        for g in result["groups"]:
+            assert {(r["schuze"], r["bod"], r["datum"]) for r in g["rows"]} == {g["key"]}
+
+    def test_void_vote_is_listed_and_marked(self):
+        data = make_period_data()
+        vid = data.votes.get_column("id_hlasovani")[0]
+        data.void_votes = pl.DataFrame({"id_hlasovani": [vid]})
+        rows = {r["id_hlasovani"]: r for r in list_votes(data, per_page=100)["rows"]}
+        assert rows[vid]["is_void"] is True

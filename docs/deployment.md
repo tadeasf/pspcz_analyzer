@@ -134,3 +134,19 @@ curl -fsS http://localhost:8001/admin/api/health    # backend (IP-whitelisted)
 
 Both containers use a 300 s healthcheck start period — a cold cache loads
 shared tables and per-period data on first boot, which takes a while.
+
+## Which code version is running
+
+Both containers report the git commit they were built from: `version` in
+`/api/health` (frontend) and `/admin/api/health` (backend), plus the page footer.
+Pass the commit at build time and rebuild **both** services together, otherwise
+the value is `unknown`:
+
+```bash
+git pull
+GIT_SHA=$(git rev-parse HEAD) docker compose up -d --build
+curl -fsS http://localhost:8000/api/health          # "version" must match git rev-parse HEAD
+curl -fsS http://localhost:8001/admin/api/health    # and must be the same here
+```
+
+Images published by the release workflow have the commit baked in.

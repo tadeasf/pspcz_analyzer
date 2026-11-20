@@ -18,6 +18,9 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
+# Commit the image was built from, shown in /health and the footer
+ARG GIT_SHA=unknown
+
 # Copy the virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/pspcz_analyzer /app/pspcz_analyzer
@@ -25,7 +28,8 @@ COPY --from=builder /app/pspcz_analyzer /app/pspcz_analyzer
 # Put venv on PATH
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    PSPCZ_DEV=0
+    PSPCZ_DEV=0 \
+    GIT_SHA=$GIT_SHA
 
 EXPOSE 8000 8001
 

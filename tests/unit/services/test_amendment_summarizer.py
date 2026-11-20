@@ -12,6 +12,7 @@ from pspcz_analyzer.services.amendments.progress import AmendmentProgress
 from pspcz_analyzer.services.amendments.summarizer import (
     _build_amendment_meta,
     _summarize_amendments,
+    _summarize_per_amendment,
 )
 from pspcz_analyzer.services.llm.parsers import (
     _format_amendments_list,
@@ -343,3 +344,52 @@ class TestSummarizeAmendmentsBatching:
         _summarize_amendments(bills, tmp_path, 10, AmendmentProgress())
 
         assert saves == []
+
+
+class TestNoSummaryWithoutOwnText:
+    """#100: a letter without its own text gets no summary, never a guess."""
+
+    class _FakeLLM:
+        def __init__(self) -> None:
+            self.asked: list[str] = []
+
+        def summarize_amendments_bilingual(
+            self, text: str, title: str, amendments: list[dict[str, str]], bill_context: str = ""
+        ) -> tuple[dict[str, str], dict[str, str]]:
+            self.asked = [a["letter"] for a in amendments]
+            # A model that answers for every letter of the document, asked or not
+            return {"A": "Mění § 5.", "B": "Vymyšlené shrnutí."}, {"A": "Amends s. 5.", "B": "x"}
+
+    def test_letter_without_text_is_skipped(self) -> None:
+        bill = BillAmendmentData(
+            period=10,
+            schuze=1,
+            bod=1,
+            ct=231,
+            tisk_nazev="tisk 231",
+            amendments=[
+                AmendmentVote(letter="A", vote_number=1, amendment_text="Změna § 5 odst. 1"),
+                AmendmentVote(letter="B", vote_number=2, amendment_text=""),
+            ],
+        )
+        llm = self._FakeLLM()
+        count = _summarize_per_amendment(llm, bill, 1, 1, pdf_text="Celý dokument A i B.")  # type: ignore[arg-type]
+        a, b = bill.amendments
+        assert llm.asked == ["A"]
+        assert count == 1
+        assert (a.summary, a.summary_en) == ("Mění § 5.", "Amends s. 5.")
+        assert (b.summary, b.summary_en) == ("", "")
+
+    def test_no_llm_call_when_no_letter_has_text(self) -> None:
+        bill = BillAmendmentData(
+            period=10,
+            schuze=1,
+            bod=1,
+            ct=231,
+            tisk_nazev="tisk 231",
+            amendments=[AmendmentVote(letter="B", vote_number=2, amendment_text="")],
+        )
+        llm = self._FakeLLM()
+        assert _summarize_per_amendment(llm, bill, 1, 1, pdf_text="Celý dokument.") == 0  # type: ignore[arg-type]
+        assert llm.asked == []
+        assert bill.amendments[0].summary == ""

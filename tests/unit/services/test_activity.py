@@ -18,7 +18,6 @@ class TestAttendanceVoteBreakdown:
             "yes_votes",
             "no_votes",
             "abstained",
-            "passive",
             "absent",
             "excused",
             "attendance_pct",

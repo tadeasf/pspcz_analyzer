@@ -88,7 +88,7 @@ def process_period_sync(
     for i, ct in enumerate(ct_numbers, 1):
         if cancel_check:
             cancel_check()
-        # Check caches first (fast path — no HTTP needed)
+        # Check caches first (fast path – no HTTP needed)
         pdf_dir = cache_dir / TISKY_PDF_DIR / str(period)
         text_dir = cache_dir / TISKY_TEXT_DIR / str(period)
         pdf_cached = pdf_dir / f"{ct}.pdf"

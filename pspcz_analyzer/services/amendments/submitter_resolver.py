@@ -14,7 +14,7 @@ from pspcz_analyzer.utils.text import normalize_czech
 
 # Minimum similarity ratio for a name match (handles instrumental case)
 _MATCH_THRESHOLD = 0.7
-# Ratio at which a name match is considered exact — short-circuits the scan
+# Ratio at which a name match is considered exact – short-circuits the scan
 # so ties between several MPs (same surname) can't misattribute the match.
 _EXACT_MATCH_RATIO = 0.99
 
@@ -38,8 +38,13 @@ def _match_name_to_mp(
 
     for row in mp_rows:
         prijmeni = row.get("prijmeni", "")
-        norm_prijmeni = normalize_czech(prijmeni)
-        ratio = difflib.SequenceMatcher(None, norm_name, norm_prijmeni).ratio()
+        full = normalize_czech(f"{row.get('jmeno', '')} {prijmeni}")
+        # Steno has inflected surnames ("Bartošem"), the PDF full names ("Petr
+        # Bendl", which scores only 0.67 against the bare surname).
+        ratio = max(
+            difflib.SequenceMatcher(None, norm_name, normalize_czech(prijmeni)).ratio(),
+            difflib.SequenceMatcher(None, norm_name, full).ratio(),
+        )
         if ratio >= _EXACT_MATCH_RATIO:
             return (row["id_poslanec"], row.get("party", ""))
         if ratio > best_ratio:
@@ -51,15 +56,28 @@ def _match_name_to_mp(
     return None
 
 
+def _clubs_at_votes(bills: list[BillAmendmentData], mp_votes: pl.DataFrame | None) -> dict:
+    """``{(id_hlasovani, id_poslanec): club that day}`` for the bills' amendment votes."""
+    if mp_votes is None or "party" not in mp_votes.columns:
+        return {}
+    ids = {a.id_hlasovani for b in bills for a in b.amendments if a.id_hlasovani}
+    rows = mp_votes.filter(pl.col("id_hlasovani").is_in(list(ids)))
+    return {
+        (r["id_hlasovani"], r["id_poslanec"]): r["party"]
+        for r in rows.select("id_hlasovani", "id_poslanec", "party").iter_rows(named=True)
+    }
+
+
 def resolve_submitter_ids(
     bills: list[BillAmendmentData],
     mp_info: pl.DataFrame,
+    mp_votes: pl.DataFrame | None = None,
 ) -> None:
     """Resolve submitter names to MP IDs and party affiliations.
 
-    Prefers pdf_submitter_names (nominative case, high-confidence match)
-    over steno submitter_names (inflected, requires fuzzy matching).
-    Resolves ALL names from both sources, not just the first match.
+    Uses pdf_submitter_names (nominative case, high-confidence match) when
+    present, otherwise the steno submitter_names (inflected, fuzzy matched).
+    Resolves all names of the chosen source, not just the first match.
 
     Mutates AmendmentVote objects in-place, populating submitter_ids
     and submitter_parties fields.
@@ -67,8 +85,13 @@ def resolve_submitter_ids(
     Args:
         bills: List of bill amendment data with parsed submitter_names.
         mp_info: DataFrame with id_poslanec, prijmeni, party columns.
+        mp_votes: Per-vote MP rows with the club on the vote day (``add_vote_parties``);
+            the club is taken on the day of the letter's vote (#101/#103).
     """
     mp_rows = mp_info.to_dicts()
+    # shortcut: the club on the 3rd-reading vote day stands in for the filing day (days
+    # apart); use the filing date if a club switch in between ever matters
+    at_vote = _clubs_at_votes(bills, mp_votes)
     resolved_count = 0
 
     for bill in bills:
@@ -77,14 +100,17 @@ def resolve_submitter_ids(
             all_amends.append(bill.final_vote)
 
         for amend in all_amends:
-            # Collect all candidate names: prefer PDF (nominative) then steno (inflected)
-            candidate_names = list(amend.pdf_submitter_names) + [
-                n for n in amend.submitter_names if n not in amend.pdf_submitter_names
-            ]
+            # PDF names (nominative, from the consolidated document) are
+            # authoritative; inflected steno names only when the PDF has none,
+            # since fuzzy-matching both gave one submitter two clubs ("napříč").
+            candidate_names = list(amend.pdf_submitter_names or amend.submitter_names)
             for name in candidate_names:
+                if "výbor" in name.lower():  # committee letter, not an MP
+                    continue
                 result = _match_name_to_mp(name, mp_rows)
                 if result is not None:
                     mp_id, party = result
+                    party = at_vote.get((amend.id_hlasovani, mp_id)) or party
                     if mp_id not in amend.submitter_ids:  # deduplicate
                         amend.submitter_ids.append(mp_id)
                         amend.submitter_parties.append(party)

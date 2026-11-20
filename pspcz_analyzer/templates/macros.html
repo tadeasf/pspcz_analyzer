@@ -2,7 +2,7 @@
 
 {% macro driver_badge(driver, tooltip="") %}
 {#- Renders nothing for driver == 'unknown' (e.g. periods where the governing
-    coalition cannot be derived) — a neutral gray badge on every row would be
+    coalition cannot be derived) – a neutral gray badge on every row would be
     noise. Pass tooltip= to expose the submitters on hover. -#}
 {%- if driver == 'government' -%}
 <span class="driver-badge driver-government"{% if tooltip %} title="{{ tooltip }}"{% endif %}>{{ _("driver.government") }}</span>
@@ -16,3 +16,57 @@
 {% macro status_badge(status) %}
 <span class="status-pill status-pill-{{ status|status_category }}">{{ status }}</span>
 {% endmacro %}
+
+{# Line icons from the redesign mockup (docs/ux-rework/zakony-pod-lupou.html), 24x24, currentColor. #}
+{% set _ICONS = {
+    "document": '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 15.5h5M10 9h2"/>',
+    "pencil": '<path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',
+    "ballot": '<path d="M4 13h16v7H4z"/><path d="M8 13V4h8v9"/><path d="M10 8.5l1.5 1.5 3-3"/>',
+    "people": '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c2.9.2 5 2.4 5 5.8"/>',
+    "calendar": '<path d="M4 6h16v14H4z"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M9 15l2 2 4-4"/>',
+    "book": '<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5v13"/>',
+    "search": '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+    "megaphone": '<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/>',
+    "clock": '<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/>',
+    "check": '<circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/>',
+    "doc_plus": '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M12.5 11v6M9.5 14h6"/>',
+} %}
+
+{% macro icon(name, cls="ico") -%}
+<svg class="{{ cls }}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{{ _ICONS[name]|safe }}</svg>
+{%- endmacro %}
+
+{% macro page_head(icon_name, title, perex="") %}
+<div class="phead">
+    <span class="pbadge">{{ icon(icon_name) }}</span>
+    <div class="phead-t">
+        <h1 class="phead-h">{{ title }}</h1>
+        {% if perex %}<p class="phead-p">{{ perex }}</p>{% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{# Numbered pager (#110, #112, #113, #115, #117): ‹ Předchozí 1 2 3 … 9 Další ›. url ends right before the page number. #}
+{% macro page_links(url, page, total_pages, target="#results") -%}
+{% if total_pages > 1 %}<span class="pages" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+{% if page > 1 %}<button hx-get="{{ url }}{{ page - 1 }}" hx-target="{{ target }}">&lsaquo; {{ _("pagination.previous") }}</button>{% endif %}
+{% set ns = namespace(gap=false) %}
+{% for p in range(1, total_pages + 1) %}
+{% if p == 1 or p == total_pages or (p - page)|abs <= 2 %}{% set ns.gap = false %}
+{% if p == page %}<span aria-current="page" style="font-weight:700;padding:0 6px">{{ p }}</span>{% else %}<button hx-get="{{ url }}{{ p }}" hx-target="{{ target }}" aria-label="{{ _('pagination.page_n').format(n=p) }}">{{ p }}</button>{% endif %}
+{% elif not ns.gap %}{% set ns.gap = true %}<span aria-hidden="true">…</span>{% endif %}
+{% endfor %}
+{% if page < total_pages %}<button hx-get="{{ url }}{{ page + 1 }}" hx-target="{{ target }}">{{ _("pagination.next") }} &rsaquo;</button>{% endif %}
+</span>{% endif %}
+{%- endmacro %}
+
+{# Term with its glossary explanation (#106): hover shows it, the link opens the guide entry. #}
+{% macro term(slug, label="") -%}
+{%- set t = gloss(slug) -%}
+<a class="term" href="/jak-se-v-tom-vyznat#pojem-{{ slug }}" title="{{ t[1] }}">{{ label or t[0] }}</a>
+{%- endmacro %}
+
+{# "Shrnutí AI · z tisku 246/0 · stav kontroly" next to every shown summary (#109, #97). #}
+{% macro ai_label(brief, ct) -%}
+<span class="ai-l lbl"><b>{{ _("detail.ai_generated") }}</b> · {{ _("lw.ai_from").format(ct=ct ~ "/0") }} · {% if brief and brief.edited %}{{ _("ai.reviewed") }}{% elif brief and brief.status == "ok" %}{{ _("ai.check_ok") }}{% else %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}</span>
+{%- endmacro %}

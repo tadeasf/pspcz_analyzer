@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>{% block title %}Admin{% endblock %} — PSP.cz Analyzer</title>
+    <title>{% block title %}Admin{% endblock %} – PSP.cz Analyzer</title>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/sse.js"></script>
     <style>
@@ -315,6 +315,16 @@
             <li>
                 <a href="/admin/pipelines" {% if '/pipelines' in request.url.path %}class="active"{% endif %}>
                     <span class="nav-icon">&#9654;</span> Pipelines
+                </a>
+            </li>
+            <li>
+                <a href="/admin/quality" {% if '/quality' in request.url.path %}class="active"{% endif %}>
+                    <span class="nav-icon">&#10003;</span> Data quality
+                </a>
+            </li>
+            <li>
+                <a href="/admin/corrections" {% if '/corrections' in request.url.path %}class="active"{% endif %}>
+                    <span class="nav-icon">&#9998;</span> Corrections
                 </a>
             </li>
             <li>

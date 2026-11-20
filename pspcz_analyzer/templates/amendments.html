@@ -1,48 +1,44 @@
 {% extends "base.html" %}
-{% block title %}{{ _("nav.amendments") }} — {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ _("nav.amendments") }} · {{ _("site.short_title") }}{% endblock %}
 
+{% from "macros.html" import page_head %}
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("amendments.title") }}</h1>
-    <p>{{ _("amendments.subtitle") }}</p>
-</div>
+{{ page_head("pencil", _("amendments.title"), _("amendments.subtitle")) }}
+{% if error %}<div class="empty"><b>{{ error }}</b></div>{% endif %}
 
-<details class="methodology">
-    <summary>{{ _("amendments.methodology_title") }}</summary>
-    <article>
-        <p>{{ _("amendments.methodology.intro") }}</p>
-        <p>{{ _("amendments.methodology.parsing") }}</p>
-        <p>{{ _("amendments.methodology.confidence") }}</p>
-    </article>
-</details>
-
-<form hx-get="/api/amendments" hx-target="#results" hx-indicator="#loading" hx-push-url="false">
+{% set q = request.query_params %}
+<form id="pn-form" hx-get="/api/amendments" hx-target="#results" hx-indicator="#loading" hx-trigger="submit, change">
     <input type="hidden" name="period" value="{{ period }}">
-    <div class="form-row">
-        <label>
-            {{ _("form.search_amendments") }}
-            <input type="search" name="search" placeholder="{{ _('form.search_placeholder') }}" aria-label="{{ _('form.search_placeholder') }}" value="">
-        </label>
-        <div class="form-submit">
-            <label>&nbsp;</label>
-            <button type="submit">{{ _("btn.search") }}</button>
-        </div>
+    <input type="hidden" name="view" id="pn-view" value="{{ q.get('view', 'laws') }}">
+    <div class="filters">
+        <label class="field" style="flex:2 1 220px"><span>{{ _("vl.search") }}</span>
+            <input type="search" name="search" value="{{ q.get('search', '') }}" placeholder="{{ _('pn.search_placeholder') }}"></label>
+        <label class="field" style="flex:1 1 170px"><span>{{ _("pn.who") }}</span>
+            <select name="side"><option value="">{{ _("pn.who_all") }}</option>
+                {% for v in ("opposition", "government", "mixed", "committee") %}<option value="{{ v }}" {% if q.get('side') == v %}selected{% endif %}>{{ _("pn.side_" ~ v) }}</option>{% endfor %}</select></label>
+        <label class="field" style="flex:1 1 140px"><span>{{ _("pn.club") }}</span>
+            <select name="club"><option value="">{{ _("pn.club_all") }}</option>
+                {% for c in clubs %}<option value="{{ c }}" {% if q.get('club') == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+        <label class="field" style="flex:1 1 150px"><span>{{ _("pn.fate") }}</span>
+            <select name="fate"><option value="">{{ _("pn.fate_all") }}</option>
+                {% for v in ("pending", "accepted", "rejected", "not_voted", "withdrawn", "unknown") %}<option value="{{ v }}" {% if q.get('fate') == v %}selected{% endif %}>{{ _("pn.fate_" ~ v) }}</option>{% endfor %}</select></label>
+        <button class="btn" type="submit">{{ _("vl.show") }}</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;font-size:14px;margin-top:8px">
+        <span class="seg" role="group">
+            {% for v in ("laws", "letters") %}<button type="button" class="{% if q.get('view', 'laws') == v %}on{% endif %}" aria-pressed="{{ 'true' if q.get('view', 'laws') == v else 'false' }}"
+                onclick="document.getElementById('pn-view').value='{{ v }}';this.parentNode.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b===this);b.setAttribute('aria-pressed',b===this)});htmx.trigger('#pn-form','submit')">{{ _("pn.view_" ~ v) }}</button>{% endfor %}
+        </span>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px"><span>{{ _("lw.sort") }}</span>
+            <select name="sort">{% for v in ("newest", "most", "oldest") %}<option value="{{ v }}" {% if q.get('sort', 'newest') == v %}selected{% endif %}>{{ _("pn.sort_" ~ v) }}</option>{% endfor %}</select></label>
     </div>
 </form>
 
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
-<div id="results" hx-get="/api/amendments?period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+<div id="results" hx-get="/api/amendments?{{ request.url.query or ('period=' ~ period) }}" hx-trigger="load" hx-indicator="#loading">
     <div class="skeleton">{% for _ in range(8) %}
     <div class="skeleton-pulse skeleton-table-row"></div>
-    {% endfor %}</div>
-</div>
-
-<h2>{{ _("coalition.title") }}</h2>
-<div id="coalition-results" hx-get="/api/amendment-coalitions?period={{ period }}" hx-trigger="load" hx-indicator="#coalition-loading">
-    <span id="coalition-loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
-    <div class="skeleton">{% for _ in range(4) %}
-    <div class="skeleton-pulse skeleton-card"></div>
     {% endfor %}</div>
 </div>
 {% endblock %}

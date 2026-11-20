@@ -33,7 +33,7 @@ def _download_file(url: str, dest: Path, force: bool = False) -> Path:
 
     The payload is streamed to a temp file and moved into place atomically,
     then verified as an intact ZIP, so ``dest`` is either a complete archive
-    or absent — never a truncated partial download.
+    or absent – never a truncated partial download.
     """
     if dest.exists() and not force:
         logger.info("Using cached {}", dest.name)
@@ -63,7 +63,7 @@ def _verify_zip(zip_path: Path) -> None:
     try:
         assert_zip_intact(zip_path)
     except zipfile.BadZipFile:
-        logger.error("Downloaded archive {} is corrupt — removing for re-download", zip_path.name)
+        logger.error("Downloaded archive {} is corrupt – removing for re-download", zip_path.name)
         zip_path.unlink(missing_ok=True)
         raise
 

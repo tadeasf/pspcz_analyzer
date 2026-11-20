@@ -34,9 +34,13 @@ AMENDMENTS_SCHEMA = {
     "grouped_with": pl.Utf8,
     "is_final_vote": pl.Boolean,
     "is_leg_tech": pl.Boolean,
+    "is_procedure": pl.Boolean,
+    "is_unvotable": pl.Boolean,
+    "match_source": pl.Utf8,
     "amendment_text": pl.Utf8,
     "summary": pl.Utf8,
     "summary_en": pl.Utf8,
+    "summary_warning": pl.Boolean,
     "pdf_submitter_names": pl.Utf8,
     "submitter_parties": pl.Utf8,
     "bill_summary": pl.Utf8,
@@ -122,9 +126,13 @@ def _placeholder_row(bill: BillAmendmentData) -> dict:
         "grouped_with": "",
         "is_final_vote": False,
         "is_leg_tech": False,
+        "is_procedure": False,
+        "is_unvotable": False,
+        "match_source": "",
         "amendment_text": "",
         "summary": "",
         "summary_en": "",
+        "summary_warning": False,
         "pdf_submitter_names": "",
         "submitter_parties": "",
         "bill_summary": bill.bill_summary,
@@ -182,9 +190,13 @@ def save_amendments(
                     "grouped_with": _serialize_list(amend.grouped_with),
                     "is_final_vote": amend.is_final_vote,
                     "is_leg_tech": amend.is_leg_tech,
+                    "is_procedure": amend.is_procedure,
+                    "is_unvotable": amend.is_unvotable,
+                    "match_source": amend.match_source,
                     "amendment_text": amend.amendment_text,
                     "summary": amend.summary,
                     "summary_en": amend.summary_en,
+                    "summary_warning": amend.summary_warning,
                     "pdf_submitter_names": _serialize_list(amend.pdf_submitter_names),
                     "submitter_parties": _serialize_list(amend.submitter_parties),
                     "bill_summary": bill.bill_summary,
@@ -199,7 +211,7 @@ def save_amendments(
             )
 
         if not all_amendments and bill.unlinked_amendment_count > 0:
-            # Bill has PDF amendments but no recorded votes — keep a
+            # Bill has PDF amendments but no recorded votes – keep a
             # placeholder row so the unlinked count survives the round-trip.
             rows.append(_placeholder_row(bill))
 
@@ -209,7 +221,7 @@ def save_amendments(
 
     df = pl.DataFrame(rows, schema=AMENDMENTS_SCHEMA)
     path = _cache_path(cache_dir, period)
-    # Atomic — the frontend may read this parquet at any moment.
+    # Atomic – the frontend may read this parquet at any moment.
     write_parquet_atomic(df, path)
     logger.info(
         "Saved {} amendment rows for {} bills (period {}) to {}",
@@ -245,9 +257,13 @@ def _row_to_amendment(row: dict) -> AmendmentVote:
         grouped_with=_deserialize_list(row.get("grouped_with", "")),
         is_final_vote=row.get("is_final_vote", False),
         is_leg_tech=row.get("is_leg_tech", False),
+        is_procedure=row.get("is_procedure", False) or False,
+        is_unvotable=row.get("is_unvotable", False) or False,
+        match_source=row.get("match_source") or ("letter" if row.get("vote_number") else ""),
         amendment_text=row.get("amendment_text", ""),
         summary=row.get("summary", ""),
         summary_en=row.get("summary_en", ""),
+        summary_warning=bool(row.get("summary_warning")),
         pdf_submitter_names=_deserialize_list(row.get("pdf_submitter_names", "")),
         submitter_parties=_deserialize_list(row.get("submitter_parties", "")),
     )

@@ -13,7 +13,9 @@ from pspcz_analyzer.config import (
     DEFAULT_CACHE_DIR,
     DEFAULT_PERIOD,
     PERIOD_LABELS,
+    PERIOD_ORGAN_IDS,
     PERIOD_YEARS,
+    TISKY_META_DIR,
 )
 from pspcz_analyzer.data.cache import get_or_parse
 from pspcz_analyzer.data.downloader import (
@@ -30,6 +32,8 @@ from pspcz_analyzer.models.schemas import (
     HL_HLASOVANI_DTYPES,
     HL_POSLANEC_COLUMNS,
     HL_POSLANEC_DTYPES,
+    OMLUVY_COLUMNS,
+    OMLUVY_DTYPES,
     ORGANY_COLUMNS,
     ORGANY_DTYPES,
     OSOBY_COLUMNS,
@@ -38,6 +42,8 @@ from pspcz_analyzer.models.schemas import (
     POSLANEC_DTYPES,
     SCHUZE_COLUMNS,
     SCHUZE_DTYPES,
+    SCHUZE_STAV_COLUMNS,
+    SCHUZE_STAV_DTYPES,
     TISKY_COLUMNS,
     TISKY_DTYPES,
     ZARAZENI_COLUMNS,
@@ -49,14 +55,27 @@ from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.amendments.cache_manager import load_amendments
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.coalition_detector import detect_coalition_parties
-from pspcz_analyzer.services.mp_builder import build_mp_info
+from pspcz_analyzer.services.coalition_table import coalition_spans
+from pspcz_analyzer.services.mp_builder import add_vote_parties, build_mp_info
+from pspcz_analyzer.services.overrides import (
+    apply_amendment_summaries,
+    apply_briefs,
+    apply_vote_questions,
+    load_overrides,
+    overrides_path,
+)
+from pspcz_analyzer.services.speeches import VOTE_STENO_DIR, load_speeches
 from pspcz_analyzer.services.tisk import (
     TiskCacheManager,
     TiskTextService,
     build_tisk_lookup,
 )
+from pspcz_analyzer.services.tisk.brief import BRIEFS_DIR, load_briefs
+from pspcz_analyzer.services.vote_codes import check_vote_totals, normalize_vote_codes
+from pspcz_analyzer.services.vote_steno import load_anchor_checks, load_vote_steno
 
 _WATCH_INTERVAL_S = 30
+_SCHUZE_STAV_UNAPPROVED = 2  # psp.cz: agenda not approved, session closed
 
 
 @dataclass(frozen=True)
@@ -64,7 +83,7 @@ class SharedTables:
     """Shared cross-period tables, narrowed to non-Optional after loading.
 
     ``_ensure_shared_loaded`` returns these so callers hold locally-typed
-    references — pyright does not narrow instance attributes across method
+    references – pyright does not narrow instance attributes across method
     calls, which otherwise forces redundant asserts at every call site.
     """
 
@@ -102,7 +121,7 @@ def _collect_amendment_mtimes(cache_dir: Path) -> dict[int, float]:
 
 
 class DataReader:
-    """Reads cached data (parquet/JSON) — no pipeline orchestration."""
+    """Reads cached data (parquet/JSON) – no pipeline orchestration."""
 
     def __init__(self, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
         self.cache_dir = cache_dir
@@ -126,6 +145,8 @@ class DataReader:
         self._last_mtimes: dict[str, float] = {}
         self._last_amendment_mtimes: dict[int, float] = {}
         self._watcher_task: asyncio.Task | None = None
+        # mtimes of the JSON outputs per period, to clear analysis_cache on change
+        self._json_stamps: dict[int, tuple[float, ...]] = {}
 
     @property
     def available_periods(self) -> list[dict]:
@@ -154,7 +175,7 @@ class DataReader:
     def _refresh_tisk_data(self, period: int) -> None:
         """Update in-memory tisk_lookup from the latest parquet cache.
 
-        Called on every get_period — only re-reads if the parquet mtime changed.
+        Called on every get_period – only re-reads if the parquet mtime changed.
         """
         pd = self._periods.get(period)
         if pd is None:
@@ -166,10 +187,20 @@ class DataReader:
         law_changes_map = self._cache_mgr.load_law_changes_cache(period)
         subtisk_map = self._cache_mgr.load_subtisk_versions_cache(period)
         diffs_map, diffs_en_map = self._cache_mgr.load_version_diffs_cache(period)
+        brief_map = load_briefs(self.cache_dir, period)
+        pd.vote_steno = load_vote_steno(self.cache_dir, period)
+        pd.anchor_checks = load_anchor_checks(self.cache_dir, period)
+        pd.speeches = load_speeches(self.cache_dir, period)
+        pd.overrides = load_overrides(self.cache_dir, period)
+        apply_briefs(brief_map, pd.overrides)
+        apply_vote_questions(pd.vote_steno, pd.overrides)
+        apply_amendment_summaries(pd.amendment_data, pd.overrides)
+        self._invalidate_on_json_change(period)
         for tisk in pd.tisk_lookup.values():
             tisk.topics = topic_map.get(tisk.ct, [])
             tisk.summary = summary_map.get(tisk.ct, "")
             tisk.summary_en = summary_en_map.get(tisk.ct, "")
+            tisk.brief = brief_map.get(tisk.ct)
             tisk.has_text = self.tisk_text.has_text(period, tisk.ct)
             tisk.history = history_map.get(tisk.ct)
             tisk.law_changes = law_changes_map.get(tisk.ct, [])
@@ -180,6 +211,22 @@ class DataReader:
                 v["llm_diff_summary"] = diffs_map.get(diff_key, "")
                 v["llm_diff_summary_en"] = diffs_en_map.get(diff_key, "")
             tisk.sub_versions = versions
+
+    def _invalidate_on_json_change(self, period: int) -> None:
+        """Drop cached list pages when briefs, vote questions or corrections change.
+
+        These JSON outputs are re-read on every request, but the laws/amendments
+        lists are memoised in analysis_cache, which only parquet changes cleared.
+        """
+        paths = (
+            overrides_path(self.cache_dir, period),
+            self.cache_dir / TISKY_META_DIR / str(period) / BRIEFS_DIR,
+            self.cache_dir / VOTE_STENO_DIR / str(period),
+        )
+        stamp = tuple(p.stat().st_mtime if p.exists() else 0.0 for p in paths)
+        if self._json_stamps.get(period, stamp) != stamp:
+            analysis_cache.invalidate()
+        self._json_stamps[period] = stamp
 
     def initialize(self, period: int = DEFAULT_PERIOD) -> None:
         """Pre-load shared data and the default period."""
@@ -256,6 +303,7 @@ class DataReader:
             ),
             self.cache_dir,
         )
+        self._schuze = self._drop_unapproved_sessions(self._schuze, schuze_dir)
 
         self._bod_schuze = get_or_parse(
             "bod_schuze",
@@ -269,7 +317,7 @@ class DataReader:
         )
 
         self._tisky = get_or_parse(
-            "tisky",
+            "tisky_v2",  # v2: column 15 is the full title, no longer cast to int (#95)
             tisky_dir,
             lambda: parse_unl(
                 self._find_file(tisky_dir, "tisky.unl"),
@@ -284,6 +332,62 @@ class DataReader:
             self._schuze.height,
             self._bod_schuze.height,
             self._tisky.height,
+        )
+
+    def _drop_unapproved_sessions(self, schuze: pl.DataFrame, schuze_dir: Path) -> pl.DataFrame:
+        """Drop sessions whose agenda was never approved (schuze_stav.stav == 2).
+
+        Their "approved" agenda rows are a copy of the proposal and the only
+        votes are about the agenda itself, so linking them to a tisk is wrong.
+        """
+        stav = get_or_parse(
+            "schuze_stav",
+            schuze_dir,
+            lambda: parse_unl(
+                self._find_file(schuze_dir, "schuze_stav.unl"),
+                SCHUZE_STAV_COLUMNS,
+                SCHUZE_STAV_DTYPES,
+            ),
+            self.cache_dir,
+        )
+        unapproved = stav.filter(pl.col("stav") == _SCHUZE_STAV_UNAPPROVED)
+        return schuze.join(unapproved.select("id_schuze"), on="id_schuze", how="anti")
+
+    def _load_void_votes(self, period: int, voting_dir: Path, votes: pl.DataFrame) -> pl.DataFrame:
+        """Load this period's void votes from the all-periods zmatecne.unl.
+
+        hl{year}z.unl is a different table (or absent), so it is not used.
+        """
+        try:
+            zmatecne_file = self._find_file(voting_dir, "zmatecne.unl")
+        except FileNotFoundError:
+            logger.error("zmatecne.unl missing for period {}: void votes NOT filtered", period)
+            return pl.DataFrame({"id_hlasovani": pl.Series([], dtype=pl.Int64)})
+        all_void = get_or_parse(
+            f"void_votes_{period}",  # not "zmatecne_": old parquets hold the wrong table
+            voting_dir,
+            lambda: parse_unl(zmatecne_file, ZMATECNE_COLUMNS, ZMATECNE_DTYPES),
+            self.cache_dir,
+        )
+        return all_void.join(votes.select("id_hlasovani"), on="id_hlasovani", how="semi")
+
+    def _load_excuses(self, period: int, voting_dir: Path) -> pl.DataFrame:
+        """Load this period's rows of the all-periods omluvy.unl (empty if missing)."""
+        try:
+            omluvy_file = self._find_file(voting_dir, "omluvy.unl")
+        except FileNotFoundError:
+            logger.error("omluvy.unl missing for period {}: excused MPs shown as absent", period)
+            return pl.DataFrame(
+                schema={"id_poslanec": pl.Int64, "den": pl.String, "od": pl.String, "do": pl.String}
+            )
+        organ_id = PERIOD_ORGAN_IDS[period]
+        return get_or_parse(
+            f"omluvy_{period}",
+            voting_dir,
+            lambda: parse_unl(omluvy_file, OMLUVY_COLUMNS, OMLUVY_DTYPES).filter(
+                pl.col("id_organ") == organ_id
+            ),
+            self.cache_dir,
         )
 
     def _ensure_shared_loaded(self) -> SharedTables:
@@ -346,22 +450,17 @@ class DataReader:
             self.cache_dir,
         )
 
-        try:
-            zmatecne_file = self._find_file(voting_dir, f"hl{year}z.unl")
-            void_votes = get_or_parse(
-                f"zmatecne_{period}",
-                voting_dir,
-                lambda: parse_unl(zmatecne_file, ZMATECNE_COLUMNS, ZMATECNE_DTYPES),
-                self.cache_dir,
-            )
-        except FileNotFoundError:
-            logger.info("No void votes file for period {}", period)
-            void_votes = pl.DataFrame({"id_hlasovani": pl.Series([], dtype=pl.Int64)})
+        void_votes = self._load_void_votes(period, voting_dir, votes)
+        mp_votes = normalize_vote_codes(mp_votes, votes, self._load_excuses(period, voting_dir))
+        check_vote_totals(period, votes, mp_votes)
 
         shared = self._ensure_shared_loaded()
 
         mp_info = build_mp_info(
             period, shared.mps, shared.persons, shared.organs, shared.memberships
+        )
+        mp_votes = add_vote_parties(
+            period, mp_votes, votes, mp_info, shared.organs, shared.memberships
         )
 
         # Pre-load topic cache for tisk lookup builder
@@ -383,7 +482,11 @@ class DataReader:
         amendment_data = load_amendments(self.cache_dir, period) if AMENDMENTS_ENABLED else {}
 
         # Auto-detect the governing coalition from the confidence vote
-        coalition_parties = detect_coalition_parties(votes, mp_votes, mp_info)
+        # Hand-kept table first (#101); the confidence vote is the fallback
+        spans = coalition_spans(period)
+        coalition_parties = (
+            spans[-1].parties if spans else detect_coalition_parties(votes, mp_votes)
+        )
 
         pd = PeriodData(
             period=period,
@@ -394,6 +497,7 @@ class DataReader:
             tisk_lookup=tisk_lookup,
             amendment_data=amendment_data,
             coalition_parties=coalition_parties,
+            coalition_spans=spans,
         )
         pd.build_amendment_vote_index()
         self._periods[period] = pd
@@ -438,36 +542,12 @@ class DataReader:
             self._watcher_task = None
             logger.info("[file-watcher] Stopped")
 
-    def last_updated(self, period: int | None = None) -> float | None:
-        """Return the newest known data mtime (epoch seconds), if any.
-
-        Uses the file watcher's mtime snapshots (30 s tick granularity);
-        falls back to a one-shot filesystem scan if the watcher hasn't
-        populated them yet.
-
-        Args:
-            period: When given, also consider that period's amendment cache.
-
-        Returns:
-            Epoch seconds of the newest known cache file, or None when no
-            cache files exist yet.
-        """
-        mtimes = self._last_mtimes or _collect_parquet_mtimes(self.cache_dir)
-        stamps = list(mtimes.values())
-        if period is not None:
-            amendment_mtimes = self._last_amendment_mtimes or _collect_amendment_mtimes(
-                self.cache_dir
-            )
-            if period in amendment_mtimes:
-                stamps.append(amendment_mtimes[period])
-        return max(stamps) if stamps else None
-
     async def _watch_loop(self) -> None:
         """Poll parquet file mtimes and reload periods with changed data.
 
         The filesystem scan and any period reloads run in worker threads so
         a large reload (re-parsing several periods) never blocks the event
-        loop — HTTP requests keep being served during a refresh.
+        loop – HTTP requests keep being served during a refresh.
         """
         while True:
             await asyncio.sleep(_WATCH_INTERVAL_S)
@@ -540,7 +620,7 @@ class DataReader:
         periods: set[int] = set()
         for fname in changed_files:
             # Period-specific files: hl_hlasovani_10.parquet, hl_poslanec_9.parquet, etc.
-            for prefix in ("hl_hlasovani_", "hl_poslanec_", "zmatecne_"):
+            for prefix in ("hl_hlasovani_", "hl_poslanec_", "void_votes_", "omluvy_"):
                 if fname.startswith(prefix):
                     try:
                         p = int(fname.removeprefix(prefix).removesuffix(".parquet"))
@@ -557,7 +637,7 @@ class DataReader:
                 "zarazeni",
                 "schuze",
                 "bod_schuze",
-                "tisky",
+                "tisky_v2",
             )
             base = fname.removesuffix(".parquet")
             if base in shared_names:

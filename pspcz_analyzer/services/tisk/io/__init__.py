@@ -1,4 +1,4 @@
-"""Tisk I/O subpackage — scraping, downloading, and text extraction for parliamentary prints."""
+"""Tisk I/O subpackage – scraping, downloading, and text extraction for parliamentary prints."""
 
 from pspcz_analyzer.services.tisk.io.downloader import (
     download_period_tisky,
@@ -11,6 +11,7 @@ from pspcz_analyzer.services.tisk.io.extractor import (
     extract_text_from_pdf,
 )
 from pspcz_analyzer.services.tisk.io.history_scraper import (
+    HISTORY_PARSER_VERSION,
     TiskHistory,
     TiskHistoryStage,
     history_from_dict,
@@ -38,6 +39,7 @@ from pspcz_analyzer.services.tisk.io.scraper import (
 )
 
 __all__ = [
+    "HISTORY_PARSER_VERSION",
     "ProposedLawChange",
     "RelatedBill",
     "SubTiskVersion",

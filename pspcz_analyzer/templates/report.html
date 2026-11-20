@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ _("footer.report") }} · {{ _("site.short_title") }}{% endblock %}
+{% block content %}
+<div class="crumb">{{ _("site.title") }} › {{ _("footer.report") }}</div>
+<div id="feedback-area" style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+    <h1 class="phead-h"><span class="pbadge sm"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h11l-2 4 2 4H6"/></svg></span>{{ _("footer.report") }}</h1>
+    <p>{{ _("report.intro") }}</p>
+    <form hx-post="/api/feedback" hx-target="#feedback-area" hx-swap="outerHTML" style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" name="period" value="{{ period }}">
+        <input type="hidden" name="page" value="{{ source_page }}">
+        <label class="field"><span>{{ _("report.title_label") }}</span>
+            <input type="text" name="title" minlength="5" maxlength="200" required placeholder="{{ _('report.title_placeholder') }}"></label>
+        <label class="field"><span>{{ _("report.body_label") }}</span>
+            <textarea name="body" rows="6" minlength="10" maxlength="2000" required style="font:inherit;font-size:14px;padding:8px 10px;border:1px solid #9fb3c8;border-radius:3px"></textarea></label>
+        <div><button class="btn" type="submit">{{ _("report.submit") }}</button></div>
+    </form>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-"""HTMX partial endpoints — laws/bills listing."""
+"""HTMX partial endpoints – laws/bills listing."""
 
 from pathlib import Path
 
@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from pspcz_analyzer.config import DEFAULT_PERIOD
 from pspcz_analyzer.rate_limit import limiter
-from pspcz_analyzer.routes.utils import validate_period
+from pspcz_analyzer.routes.utils import validate_period, with_push_url
 from pspcz_analyzer.services.analysis_cache import analysis_cache
 from pspcz_analyzer.services.law_service import list_laws
 
@@ -25,13 +25,17 @@ async def laws_api(
     status_filter: str = Query(default="", alias="status"),
     topic: str = Query(default="", max_length=200),
     page: int = Query(default=1, ge=1, le=1000),
+    tab: str = Query(default="navrhy", max_length=20),
+    phase: str = Query(default="", max_length=20),
+    submitter: str = Query(default="", max_length=20),
+    sort: str = Query(default="moved", max_length=10),
 ):
     """Return paginated laws list as an HTMX partial."""
     validate_period(period)
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
     lang = getattr(request.state, "lang", "cs")
-    key = f"laws:{period}:{search}:{status_filter}:{topic}:{page}:{lang}"
+    key = f"laws:{period}:{search}:{status_filter}:{topic}:{page}:{lang}:{tab}:{phase}:{submitter}:{sort}"
     result = analysis_cache.get_or_compute(
         key,
         lambda: list_laws(
@@ -41,17 +45,27 @@ async def laws_api(
             topic_filter=topic,
             page=page,
             lang=lang,
+            tab=tab,
+            phase=phase if tab == "navrhy" else "",
+            submitter=submitter if tab == "navrhy" else "",
+            sort=sort,
         ),
     )
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "partials/laws_list.html",
         {
             "request": request,
             "period": period,
+            "periods": request.app.state.data.available_periods,
             "search": search,
             "status_filter": status_filter,
             "topic": topic,
+            "tab": tab,
+            "phase": phase,
+            "submitter": submitter,
+            "sort": sort,
             "lang": lang,
             **result,
         },
     )
+    return with_push_url(response, request, "/laws")

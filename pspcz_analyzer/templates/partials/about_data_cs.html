@@ -1,0 +1,40 @@
+{# "O datech" (#118): how the site gets and computes its data. Kept in sync with the code by hand. #}
+<div class="ld-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px">
+<div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+<section class="gsec" id="zdroje"><h2 class="h2s">Odkud data jsou a jak často se načítají</h2>
+<p>Všechno pochází z veřejných zdrojů Poslanecké sněmovny na psp.cz:</p>
+<ul>
+<li><b>Otevřená data psp.cz</b> (soubory ke stažení): hlasování a hlasy jednotlivých poslanců, zmatečná hlasování, omluvy, poslanci a jejich kluby, schůze a pořady schůzí, sněmovní tisky.</li>
+<li><b>Historie tisků</b> (stránky „Historie tisku“): kroky legislativního procesu, stav návrhu, předkladatel a číslo ve Sbírce zákonů.</li>
+<li><b>Texty tisků</b> (PDF na psp.cz): z nich vznikají shrnutí a z dokumentu s pozměňovacími návrhy písmena návrhů a jejich podavatelé.</li>
+<li><b>Stenozáznamy schůzí</b>: z nich zjišťujeme, o čem se u jednotlivých hlasování hlasovalo, výsledky pozměňovacích návrhů ve 3. čtení a počty projevů k bodům.</li>
+</ul>
+<p>Data se obnovují <b>každý den ve {{ refresh_hour }}:00</b>. Obnova znovu stáhne otevřená data a hlasování aktuálního období a znovu zpracuje nové tisky a všechny návrhy, které ještě nejsou uzavřené (nejsou vyhlášené, zamítnuté ani vzaté zpět). Uzavřené návrhy se už nemění. Stenozáznamy schůzí z posledních 21 dní se načítají znovu, protože psp.cz je doplňuje postupně. Datum posledního hlasování a posledního načtení historií je v patičce každé stránky.</p></section>
+
+<section class="gsec" id="ai"><h2 class="h2s">Jak vznikají AI shrnutí a jak je kontrolujeme</h2>
+<p>Shrnutí návrhu („Co se má změnit“, věcný název, Koho se to týká, Kolik, Od kdy) napíše jazykový model z textu původního návrhu (tisk s lomítkem 0). Model má zakázáno cokoli domýšlet. U každého shrnutí uvádíme zdroj a stav kontroly.</p>
+<p>Každé shrnutí projde automatickou kontrolou. Kontrola hledá písmo jiné než latinku, anglické věty v českém textu a čísla, která v původním textu nejsou. Když kontrola něco najde, model píše znovu. Když chyba zůstane, shrnutí zveřejníme s upozorněním „automatická kontrola našla možnou chybu“. Shrnutí, která zkontroloval člověk, nesou štítek „zkontroloval člověk“. Shrnutí se přegeneruje, když se změní text tisku.</p>
+<p>Shrnutí pozměňovacích návrhů vzniká jen z textu daného písmena. Písmeno bez vlastního textu shrnutí nedostane.</p></section>
+
+<section class="gsec" id="statistiky"><h2 class="h2s">Jak počítáme statistiky</h2>
+<p>Zmatečná hlasování se nikam nezapočítávají.</p>
+<ul>
+<li><b>Účast</b> je podíl hlasování, při kterých byl poslanec přihlášený (pro, proti, zdržel se), ze všech hlasování během jeho mandátu. Omluvy počítáme zvlášť. Poslance s méně než {{ att_min }} hlasováními neřadíme do pořadí.</li>
+<li><b>Míra rebelie</b> je podíl hlasování, ve kterých poslanec hlasoval opačně než většina jeho klubu. Počítají se jen hlasy pro a proti; klub se bere podle příslušnosti v den hlasování.</li>
+<li><b>Shoda dvojice</b> je podíl společných hlasování, ve kterých hlasovali oba stejně (oba pro, oba proti, nebo oba přihlášení bez hlasu pro či proti). Do žebříčků zařazujeme jen dvojice s alespoň {{ sim_min }} společnými hlasováními.</li>
+<li><b>Vládní a opoziční kluby</b> určujeme podle hlasování o důvěře vládě: vládní jsou kluby, jejichž poslanci pro důvěru hlasovali. Když to hlasování jasné výsledky nedává, stranu neurčujeme.</li>
+<li><b>Mapa podobnosti</b> rozmisťuje poslance tak, aby blízko sebe byli ti, kdo hlasují podobně (analýza hlavních komponent).</li>
+</ul>
+<h3 style="font-size:16px">Ručně vedené složení vlády (kde hlasování o důvěře nestačí)</h3>
+<div style="overflow-x:auto" tabindex="0"><table class="t"><thead><tr><th>Období</th><th>Od</th><th>Do</th><th>Vládní kluby</th><th>Zdroj</th></tr></thead><tbody>
+{% for p, spans in coalition_table.items() %}{% for s in spans %}<tr><td>{{ p }}</td><td>{{ s.start|cz_date }}</td><td>{{ s.end|cz_date if s.end else "–" }}</td><td>{{ s.parties|sort|join(", ") }}</td><td class="lbl">{{ s.source|urlize(40, true) }}</td></tr>{% endfor %}{% endfor %}
+</tbody></table></div>
+<p class="lbl">Pozměňovací návrhy přiřazujeme straně podle klubu podavatele v den hlasování ve 3. čtení; předkladatele zákona bereme z historie tisku.</p></section>
+
+<section class="gsec" id="prirazovani"><h2 class="h2s">Jak přiřazujeme hlasování k návrhům</h2>
+<p>Hlasování má v otevřených datech číslo schůze a bodu. Bod hledáme ve <b>schváleném</b> pořadu schůze (ne v navrženém) a z něj bereme sněmovní tisk.</p>
+<p>O čem se hlasovalo, zjišťujeme ze stenozáznamu: každé hlasování je v něm oznámené („Hlasování číslo N, přihlášeno …“) a text před oznámením popisuje, o čem se hlasuje. Jazykový model z toho napíše otázku, co znamenal hlas Pro a kdo návrh podal, a musí doslova ocitovat větu ze stenozáznamu. Když citace ve stenozáznamu není, předmět nepovažujeme za zjištěný a napíšeme „zatím neznáme“. Když jsme předmět našli jen v dřívější části jednání, označíme ho jako nejistý.</p>
+<p>Pozměňovací návrhy ve 3. čtení přiřazujeme podle písmen, která zpravodaj čte před hlasováním, a podle dokumentu s pozměňovacími návrhy. Hlasování o pořadí hlasování (proceduře) mezi pozměňovací návrhy nepočítáme. Když zpravodaj oznámí, že se návrh stal nehlasovatelným, ukážeme „Nehlasovalo se o něm“. Když přiřazení není úplné, stránka zákona to řekne.</p></section>
+</div>
+<aside><nav class="box" style="display:flex;flex-direction:column;gap:4px;font-size:14px"><b>Na této stránce</b><a href="#zdroje">Odkud data jsou</a><a href="#ai">AI shrnutí a kontrola</a><a href="#statistiky">Jak počítáme statistiky</a><a href="#prirazovani">Přiřazování hlasování</a><a href="/jak-se-v-tom-vyznat?period={{ period }}">← Jak se v tom vyznat</a></nav></aside>
+</div>

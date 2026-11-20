@@ -21,9 +21,9 @@
                 <tbody>
                     {% for lc in law_changes %}
                     <tr>
-                        <td>{{ lc.citace or "—" }}</td>
-                        <td>{{ lc.zmena or "—" }}</td>
-                        <td>{{ lc.predpis or "—" }}</td>
+                        <td>{{ lc.citace or "–" }}</td>
+                        <td>{{ lc.zmena or "–" }}</td>
+                        <td>{{ lc.predpis or "–" }}</td>
                         <td>
                             {% if lc.idsb %}
                             <button class="btn-outline btn-small"
@@ -36,7 +36,7 @@
                             <span id="rb-loading-{{ lc.idsb }}" class="htmx-indicator" aria-busy="true" style="font-size: 0.8rem;">{{ _("loading") }}</span>
                             <div id="related-bills-{{ lc.idsb }}"></div>
                             {% else %}
-                            —
+                            –
                             {% endif %}
                         </td>
                     </tr>

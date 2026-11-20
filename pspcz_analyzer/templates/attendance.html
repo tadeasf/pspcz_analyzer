@@ -1,86 +1,35 @@
 {% extends "base.html" %}
-{% block title %}{{ _("nav.attendance") }} — {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ _("nav.attendance") }} · {{ _("site.short_title") }}{% endblock %}
 
+{% from "macros.html" import page_head %}
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("attendance.title") }}</h1>
-    <p>{{ _("attendance.subtitle") }}</p>
+{{ page_head("calendar", _("attendance.title"), _("attendance.subtitle")) }}
+{% set q = request.query_params %}
+<div class="box">
+    <p><b>{{ _("loyalty.what_title") }}</b> {{ _("att.what") }}</p>
+    <p class="lbl">{{ _("att.what_note") }}</p>
 </div>
-
-<details class="methodology">
-    <summary>{{ _("attendance.methodology_title") }}</summary>
-    <article>
-        <p>{{ _("attendance.methodology.intro") }}</p>
-        <ul>
-            <li><strong>{{ _("attendance.methodology.active") }}</strong></li>
-            <li><strong>{{ _("attendance.methodology.passive") }}</strong></li>
-            <li><strong>{{ _("attendance.methodology.absent") }}</strong></li>
-            <li><strong>{{ _("attendance.methodology.excused") }}</strong></li>
-        </ul>
-        <p><strong>{{ _("attendance.methodology.formula") }}</strong></p>
-        <p>{{ _("attendance.methodology.excused_note") }}</p>
-        <p>{{ _("attendance.methodology.breakdown_note") }}</p>
-    </article>
-</details>
-
-<form id="attendance-form" hx-get="/api/attendance" hx-target="#results" hx-indicator="#loading">
+<form class="filters" hx-get="/api/attendance" hx-target="#results" hx-indicator="#loading">
     <input type="hidden" name="period" value="{{ period }}">
-    <div class="form-row">
-        <label>
-            {{ _("form.top_n") }}
-            <input type="number" name="top" value="30" min="5" max="200" step="5">
-        </label>
-        <label>
-            {{ _("form.sort_by") }}
-            <select name="sort">
-                <optgroup label="{{ _('sort.optgroup.attendance') }}">
-                    <option value="worst">{{ _("sort.worst") }}</option>
-                    <option value="best">{{ _("sort.best") }}</option>
-                </optgroup>
-                <optgroup label="{{ _('sort.optgroup.activity') }}">
-                    <option value="most_active">{{ _("sort.most_active") }}</option>
-                    <option value="least_active">{{ _("sort.least_active") }}</option>
-                </optgroup>
-                <optgroup label="{{ _('sort.optgroup.breakdown') }}">
-                    <option value="most_yes">{{ _("sort.most_yes") }}</option>
-                    <option value="most_no">{{ _("sort.most_no") }}</option>
-                    <option value="most_abstained">{{ _("sort.most_abstained") }}</option>
-                </optgroup>
-                <optgroup label="{{ _('sort.optgroup.absence') }}">
-                    <option value="most_passive">{{ _("sort.most_passive") }}</option>
-                    <option value="most_absent">{{ _("sort.most_absent") }}</option>
-                    <option value="most_excused">{{ _("sort.most_excused") }}</option>
-                </optgroup>
-            </select>
-        </label>
-        <label>
-            {{ _("form.party_filter") }}
-            <input type="text" name="party" placeholder="{{ _('form.all_parties') }}" value="">
-        </label>
-        <div class="form-submit">
-            <label>&nbsp;</label>
-            <button type="submit">{{ _("btn.analyze") }}</button>
-        </div>
-    </div>
+    <label class="field" style="flex:2 1 180px"><span>{{ _("vd.search_mp") }}</span>
+        <input type="search" name="search" value="{{ q.get('search', '') }}" placeholder="{{ _('vd.search_mp_placeholder') }}"></label>
+    <label class="field" style="flex:1 1 160px"><span>{{ _("loyalty.sort") }}</span>
+        <select name="sort">{% for v, k in [("worst", "att.sort_worst"), ("best", "att.sort_best"), ("most_excused", "att.sort_excused")] %}
+            <option value="{{ v }}" {% if q.get('sort', 'worst') == v %}selected{% endif %}>{{ _(k) }}</option>{% endfor %}</select></label>
+    <label class="field" style="flex:1 1 150px"><span>{{ _("vd.club") }}</span>
+        <select name="party"><option value="">{{ _("loyalty.all_clubs") }}</option>
+            {% for c in clubs %}<option value="{{ c }}" {% if q.get('party') == c %}selected{% endif %}>{{ c|club_name }}</option>{% endfor %}</select></label>
+    <label class="field" style="flex:0 1 100px"><span>{{ _("att.count") }}</span>
+        <select name="per_page">{% for n in (10, 30, 0) %}<option value="{{ n }}" {% if q.get('per_page', '30') == n|string %}selected{% endif %}>{{ n if n else _("loyalty.per_page_all") }}</option>{% endfor %}</select></label>
+    <input type="hidden" name="view" id="att-view" value="{{ q.get('view', 'table') }}">
+    <button class="btn" type="submit">{{ _("vl.show") }}</button>
+    <div class="field" style="flex:0 1 auto"><span id="att-view-l">{{ _("att.view") }}</span>
+        <div class="tabs-s" role="tablist" aria-labelledby="att-view-l" style="margin:0">{% for v, k in [("table", "att.view_table"), ("chart", "att.view_chart")] %}
+            <button type="submit" role="tab" class="tab{% if q.get('view', 'table') == v %} on{% endif %}" aria-selected="{{ 'true' if q.get('view', 'table') == v else 'false' }}"
+                onclick="document.getElementById('att-view').value='{{ v }}';this.parentNode.querySelectorAll('[role=tab]').forEach(function(b){b.setAttribute('aria-selected', b === this ? 'true' : 'false');b.classList.toggle('on', b === this)}, this)">{{ _(k) }}</button>{% endfor %}</div></div>
 </form>
-
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
-
-<div class="chart-container">
-    <img id="attendance-chart" class="chart-img" src="/charts/attendance.png?period={{ period }}" alt="{{ _('attendance.title') }}" loading="lazy">
+<div id="results" hx-get="/api/attendance?{{ request.url.query or ('period=' ~ period) }}" hx-trigger="load" hx-indicator="#loading">
+    <div class="skeleton">{% for _ in range(8) %}<div class="skeleton-pulse skeleton-table-row"></div>{% endfor %}</div>
 </div>
-
-<div id="results" hx-get="/api/attendance?top=30&sort=worst&period={{ period }}" hx-trigger="load" hx-indicator="#loading">
-    <div class="skeleton">{% for _ in range(8) %}
-    <div class="skeleton-pulse skeleton-table-row"></div>
-    {% endfor %}</div>
-</div>
-
-<script>
-document.getElementById('attendance-form').addEventListener('htmx:beforeRequest', function() {
-    var form = this;
-    var params = new URLSearchParams(new FormData(form));
-    document.getElementById('attendance-chart').src = '/charts/attendance.png?' + params.toString();
-});
-</script>
 {% endblock %}

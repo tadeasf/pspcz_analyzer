@@ -1,4 +1,4 @@
-"""HTMX partial endpoints — user feedback submission."""
+"""HTMX partial endpoints – user feedback submission."""
 
 import asyncio
 from pathlib import Path
@@ -32,6 +32,7 @@ async def feedback_api(
     period: int = Form(default=0),
     title: str = Form(default=""),
     body: str = Form(default=""),
+    page: str = Form(default=""),
 ):
     """Submit user feedback as a GitHub issue."""
     lang = getattr(request.state, "lang", "cs")
@@ -74,7 +75,11 @@ async def feedback_api(
             },
         )
 
-    page_url = str(request.headers.get("referer", f"/votes/{vote_id}?period={period}"))
+    # The report page passes the page the reader came from; the vote form relies on Referer.
+    if page.startswith("/") and not page.startswith("//"):
+        page_url = page
+    else:
+        page_url = str(request.headers.get("referer", f"/votes/{vote_id}?period={period}"))
     client = GitHubFeedbackClient()
     result = await asyncio.to_thread(
         client.create_issue, title, body, vote_id, period, page_url, lang

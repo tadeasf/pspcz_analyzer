@@ -1,80 +1,36 @@
-{% from "macros.html" import driver_badge %}
-{% if not rows %}
-<p>{{ _("laws.no_data") }}</p>
-{% else %}
-<p>{{ _("laws.found").format(total=total, page=page, total_pages=total_pages) }}</p>
-<div class="overflow-auto">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _("th.tisk") }}</th>
-                <th>{{ _("th.topics") }}</th>
-                <th>{{ _("th.submitter_col") }}</th>
-                <th>{{ _("th.status") }}</th>
-                <th>{{ _("th.law_number") }}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                <td>
-                    <strong>{{ row.ct }}</strong><br>
-                    <small>{{ row.nazev[:80] }}{% if row.nazev|length > 80 %}...{% endif %}</small>
-                </td>
-                <td>
-                    {% for t in row.topics %}
-                    <button type="button" class="topic-badge topic-badge-link"
-                            hx-get="/api/laws?period={{ period }}&topic={{ t | urlencode }}"
-                            hx-target="#results" hx-indicator="#loading"
-                            title="{{ _('laws.filter_by_topic') }}">{{ t }}</button>
-                    {% endfor %}
-                </td>
-                <td><small>{{ row.submitter }}</small></td>
-                <td>
-                    {% set cat = row.status|status_category %}
-                    {% if cat == 'pass' %}
-                    <span class="vote-yes">{{ row.status }}</span>
-                    {% elif cat == 'fail' %}
-                    <span class="vote-no">{{ row.status }}</span>
-                    {% else %}
-                    <span class="vote-passive">{{ row.status }}</span>
-                    {% endif %}
-                    {% if row.has_amendments %}
-                    <br>
-                    <a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}" class="amend-inline-link">{{ row.amendment_count }} PN</a>
-                    {{ driver_badge(row.driver) }}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if row.law_number %}
-                    <small>{{ row.law_number }}</small>
-                    {% else %}
-                    <small class="law-number-pending" title="{{ _('laws.law_number_pending') }}">—</small>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="/laws/{{ row.ct }}?period={{ period }}" class="btn-outline btn-small">{{ _("btn.detail") }}</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% from "macros.html" import ai_label, page_links %}
+{% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&phase=" ~ (phase|urlencode) ~ "&submitter=" ~ (submitter|urlencode) ~ "&sort=" ~ sort ~ "&tab=" ~ tab %}
+<div class="tabs-s" role="tablist">
+    {% for t in ("navrhy", "smlouvy", "zpravy", "interpelace") %}
+    <button type="button" role="tab" class="tab{% if tab == t %} on{% endif %}" aria-selected="{{ 'true' if tab == t else 'false' }}"
+       onclick="document.getElementById('laws-tab').value='{{ t }}'"
+       hx-get="/api/laws" hx-include="#laws-form" hx-target="#results">{{ _("lw.tab_" ~ t) }} <span class="lbl">{{ tab_counts[t]|num }}</span></button>
+    {% endfor %}
 </div>
-
-{% if total_pages > 1 %}
-<nav class="pagination" aria-label="{{ _('pagination.label') }}">
-    {% if page > 1 %}
-    <button hx-get="/api/laws?period={{ period }}&search={{ search }}&status={{ status_filter }}&topic={{ topic }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">
-        {{ _("pagination.previous") }}
-    </button>
-    {% endif %}
-    <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
-    {% if page < total_pages %}
-    <button hx-get="/api/laws?period={{ period }}&search={{ search }}&status={{ status_filter }}&topic={{ topic }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">
-        {{ _("pagination.next") }}
-    </button>
-    {% endif %}
+{% if not rows %}
+{% if search %}<div class="empty"><b>{{ _("empty.search").format(q=search, p=period) }}</b>
+    <span>{% for p in periods if p.number == period - 1 %}<a href="/laws?period={{ p.number }}&search={{ search|urlencode }}">{{ _("empty.search_period").format(p=p.number) }}</a> · {% endfor %}<a href="/laws?period={{ period }}">{{ _("empty.clear") }}</a></span></div>
+{% else %}<div class="empty"><b>{{ _("laws.no_data") }}</b> <a href="/laws?period={{ period }}">{{ _("empty.clear") }}</a></div>{% endif %}
+{% else %}
+<p style="font-size:14px"><b>{{ total|count("lw.count_" ~ tab) }}</b> {{ _("lw.in_period").format(p=period) }}</p>
+{% for row in rows %}
+<div class="card">
+    <div class="top">
+        <span class="chip c-st">{% if tab == "navrhy" %}{{ _("lw.kind_" ~ (row.submitter_kind or "unknown")) }}{% else %}{{ _("lw.kind_tab_" ~ tab) }}{% endif %}</span>
+        <span class="lbl">{{ _("vd.tisk_n").format(ct=row.ct) }}</span>
+        {% if row.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(row.status|status_category, 'c-wait') }}">{{ _(row.phase_key) }}</span>{% endif %}
+    </div>
+    <h3 style="font-size:19px;margin:6px 0"><a href="/laws/{{ row.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ row.nazev }}</a></h3>
+    {% if row.has_summary %}<p>{{ row.summary_truncated }}</p><div>{{ ai_label(row.brief, row.ct) }}</div>
+    {% elif tab == "navrhy" %}<p class="lbl">{{ _("lw.no_summary") }}</p>{% endif %}
+    {% if row.has_amendments %}<p class="last"><a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}">{{ _("lw.amendments_n").format(n=row.amendment_count) }}</a>{% for s in ("opposition", "government", "mixed", "committee", "unknown") %}{% if row.amendment_tally.by_side[s].submitted %} · {{ _("pn.from_" ~ s) }} {{ row.amendment_tally.by_side[s].submitted|num }}, {{ _("pn.accepted_n") }} {{ row.amendment_tally.by_side[s].accepted|num }}{% endif %}{% endfor %}</p>{% endif %}
+    {% if row.last_step %}<p class="last">{{ row.last_step.date|cz_date(short=True) }} · {{ row.last_step.text }}</p>{% endif %}
+</div>
+{% endfor %}
+<nav class="pager" aria-label="{{ _('pagination.label') }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+    <span class="lbl">{{ _("loyalty.shown").format(first=(page - 1) * per_page + 1, last=[page * per_page, total]|min, total=total) }}</span>
+    <span style="display:flex;gap:10px">
+    {{ page_links("/api/laws?" ~ qs ~ "&page=", page, total_pages) }}
+    </span>
 </nav>
-{% endif %}
 {% endif %}

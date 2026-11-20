@@ -1,4 +1,4 @@
-"""HTMX partial endpoints — tisk text, evolution, and related bills."""
+"""HTMX partial endpoints – tisk text, evolution, and related bills."""
 
 import html as html_mod
 from dataclasses import asdict

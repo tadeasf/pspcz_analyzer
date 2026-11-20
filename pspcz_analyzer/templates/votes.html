@@ -1,55 +1,33 @@
 {% extends "base.html" %}
-{% block title %}{{ _("nav.votes") }} — {{ _("site.short_title") }}{% endblock %}
+{% block title %}{{ _("nav.votes") }} · {{ _("site.short_title") }}{% endblock %}
 
+{% from "macros.html" import page_head %}
 {% block content %}
-<div class="page-header">
-    <h1>{{ _("votes.title") }}</h1>
-    <p>{{ _("votes.subtitle") }}</p>
-</div>
+{{ page_head("ballot", _("votes.title"), _("votes.subtitle")) }}
 
-<details class="methodology">
-    <summary>{{ _("votes.methodology_title") }}</summary>
-    <article>
-        <p>{{ _("votes.methodology.intro") }}</p>
-        <p><strong>{{ _("votes.methodology.outcomes") }}</strong></p>
-        <p>{{ _("votes.methodology.click") }}</p>
-    </article>
-</details>
-
-<form hx-get="/api/votes" hx-target="#results" hx-indicator="#loading" hx-push-url="false">
+<form class="filters" hx-get="/api/votes" hx-target="#results" hx-indicator="#loading" hx-push-url="false">
     <input type="hidden" name="period" value="{{ period }}">
-    <div class="form-row">
-        <label>
-            {{ _("form.search_votes") }}
-            <input type="search" name="search" placeholder="{{ _('form.search_placeholder') }}" aria-label="{{ _('form.search_placeholder') }}" value="">
-        </label>
-        <label>
-            {{ _("form.outcome") }}
-            <select name="outcome">
-                <option value="">{{ _("form.all") }}</option>
-                <option value="A">{{ _("form.passed") }}</option>
-                <option value="R">{{ _("form.rejected") }}</option>
-            </select>
-        </label>
-        <label>
-            {{ _("form.topic") }}
-            <select name="topic">
-                <option value="">{{ _("form.all_topics") }}</option>
-                {% for t in topics %}
-                <option value="{{ t }}">{{ t }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <div class="form-submit">
-            <label>&nbsp;</label>
-            <button type="submit">{{ _("btn.search") }}</button>
-        </div>
-    </div>
+    <label class="field" style="flex:2 1 220px"><span>{{ _("vl.search") }}</span>
+        <input type="search" name="search" placeholder="{{ _('vl.search_placeholder') }}" value="{{ request.query_params.get('search', '') }}"></label>
+    <label class="field" style="flex:1 1 200px"><span>{{ _("vl.kind") }}</span>
+        <select name="kind">
+            <option value="">{{ _("vl.kind_all") }}</option>
+            {% for k in ("final", "amendment", "reject_return", "committee", "procedural") %}
+            <option value="{{ k }}" {% if request.query_params.get('kind') == k %}selected{% endif %}>{{ _("vl.filter_" ~ k) }}</option>
+            {% endfor %}
+        </select></label>
+    <label class="field" style="flex:1 1 130px"><span>{{ _("vl.outcome") }}</span>
+        <select name="outcome">
+            <option value="">{{ _("vl.outcome_all") }}</option>
+            <option value="A" {% if request.query_params.get('outcome') == 'A' %}selected{% endif %}>{{ _("vd.passed") }}</option>
+            <option value="R" {% if request.query_params.get('outcome') == 'R' %}selected{% endif %}>{{ _("vd.failed") }}</option>
+        </select></label>
+    <button class="btn" type="submit">{{ _("vl.show") }}</button>
 </form>
 
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 
-<div id="results" hx-get="/api/votes?period={{ period }}" hx-trigger="load" hx-indicator="#loading">
+<div id="results" hx-get="/api/votes?{{ request.url.query or ('period=' ~ period) }}" hx-trigger="load" hx-indicator="#loading">
     <div class="skeleton">{% for _ in range(8) %}
     <div class="skeleton-pulse skeleton-table-row"></div>
     {% endfor %}</div>

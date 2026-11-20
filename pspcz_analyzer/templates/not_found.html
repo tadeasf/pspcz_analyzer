@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ _("nf.title") }} · {{ _("site.short_title") }}{% endblock %}
+{% block content %}
+<div class="empty" style="display:flex;flex-direction:column;gap:10px;max-width:640px">
+    <h1 class="phead-h">{{ _("nf.title") }}</h1>
+    <p>{{ message or _("nf.text") }}</p>
+    <p><a href="/?period={{ period }}">{{ _("nf.home") }}</a> · <a href="/laws?period={{ period }}">{{ _("nav.laws") }}</a> · <a href="/votes?period={{ period }}">{{ _("nav.votes") }}</a> · <a href="/nahlasit-chybu?period={{ period }}">{{ _("footer.report") }}</a></p>
+</div>
+{% endblock %}

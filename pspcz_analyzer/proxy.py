@@ -113,5 +113,5 @@ def extract_client_ip(request: Request, trusted_proxies: Sequence[IPNetwork]) ->
     for entry in reversed(entries):
         if not is_ip_allowed(entry, trusted_proxies):
             return entry
-    # Every entry is a trusted proxy — return the leftmost as best effort.
+    # Every entry is a trusted proxy – return the leftmost as best effort.
     return entries[0]

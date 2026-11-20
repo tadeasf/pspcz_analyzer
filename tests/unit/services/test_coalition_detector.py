@@ -34,6 +34,10 @@ def _mp_votes(per_vote: dict[int, dict[int, str]]) -> pl.DataFrame:
     )
 
 
+def _with_party(mp_votes: pl.DataFrame, mp_info: pl.DataFrame) -> pl.DataFrame:
+    return mp_votes.join(mp_info.select("id_poslanec", "party"), on="id_poslanec", how="left")
+
+
 def _all_yes(mp_ids: range) -> dict[int, str]:
     return dict.fromkeys(mp_ids, "A")
 
@@ -45,14 +49,14 @@ def _gov_yes_opp_no() -> dict[int, str]:
 def test_detects_clean_coalition():
     votes = _votes([{"id_hlasovani": 1, "vysledek": "A", "nazev_dlouhy": "Vyslovení důvěry vládě"}])
     mp_votes = _mp_votes({1: _gov_yes_opp_no()})
-    assert detect_coalition_parties(votes, mp_votes, MP_INFO) == frozenset({"GOV"})
+    assert detect_coalition_parties(votes, _with_party(mp_votes, MP_INFO)) == frozenset({"GOV"})
 
 
 def test_near_unanimous_returns_empty():
     # Procedural vote sharing the confidence name: everyone YES → no opposing bloc
     votes = _votes([{"id_hlasovani": 2, "vysledek": "A", "nazev_dlouhy": "Vyslovení důvěry vládě"}])
     mp_votes = _mp_votes({2: _all_yes(range(1, 11))})
-    assert detect_coalition_parties(votes, mp_votes, MP_INFO) == frozenset()
+    assert detect_coalition_parties(votes, _with_party(mp_votes, MP_INFO)) == frozenset()
 
 
 def test_no_confidence_motion_excluded():
@@ -61,20 +65,20 @@ def test_no_confidence_motion_excluded():
         [{"id_hlasovani": 3, "vysledek": "A", "nazev_dlouhy": "Návrh na vyslovení nedůvěry vládě"}]
     )
     mp_votes = _mp_votes({3: _gov_yes_opp_no()})
-    assert detect_coalition_parties(votes, mp_votes, MP_INFO) == frozenset()
+    assert detect_coalition_parties(votes, _with_party(mp_votes, MP_INFO)) == frozenset()
 
 
 def test_no_matching_vote_returns_empty():
     votes = _votes([{"id_hlasovani": 4, "vysledek": "A", "nazev_dlouhy": "Novela zákona o daních"}])
     mp_votes = _mp_votes({4: _gov_yes_opp_no()})
-    assert detect_coalition_parties(votes, mp_votes, MP_INFO) == frozenset()
+    assert detect_coalition_parties(votes, _with_party(mp_votes, MP_INFO)) == frozenset()
 
 
 def test_failed_confidence_ignored():
     # vysledek != "A" (government did not win confidence)
     votes = _votes([{"id_hlasovani": 5, "vysledek": "R", "nazev_dlouhy": "Vyslovení důvěry vládě"}])
     mp_votes = _mp_votes({5: _gov_yes_opp_no()})
-    assert detect_coalition_parties(votes, mp_votes, MP_INFO) == frozenset()
+    assert detect_coalition_parties(votes, _with_party(mp_votes, MP_INFO)) == frozenset()
 
 
 def test_picks_most_recent_by_id():
@@ -103,4 +107,4 @@ def test_picks_most_recent_by_id():
         11: "A",
     }
     mp_votes = _mp_votes({10: older, 99: newer})
-    assert detect_coalition_parties(votes, mp_votes, mp_info) == frozenset({"A", "C"})
+    assert detect_coalition_parties(votes, _with_party(mp_votes, mp_info)) == frozenset({"A", "C"})

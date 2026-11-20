@@ -58,7 +58,7 @@
                     <label for="period">Period</label>
                     <select name="period" id="period" required>
                         {% for p in available_periods %}
-                        <option value="{{ p.number }}">{{ p.number }} — {{ p.label }}</option>
+                        <option value="{{ p.number }}">{{ p.number }} – {{ p.label }}</option>
                         {% endfor %}
                     </select>
                 </div>

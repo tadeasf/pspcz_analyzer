@@ -7,6 +7,7 @@ third-reading agenda items that likely had amendment votes.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date, datetime
 from pathlib import Path
 
 import polars as pl
@@ -18,8 +19,9 @@ from pspcz_analyzer.config import (
     TISKY_META_DIR,
 )
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
-from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.tisk.cache_manager import TiskCacheManager
+from pspcz_analyzer.services.tisk.io import HISTORY_PARSER_VERSION
 from pspcz_analyzer.services.tisk.metadata_scraper import scrape_histories_sync
 
 
@@ -67,12 +69,14 @@ def _ensure_tisk_histories(
     cache_mgr.invalidate(period)
     history_map = cache_mgr.load_history_cache(period)
 
-    # Re-scrape histories that are stale (missing amendment sub-tisk data) or,
+    # Re-scrape histories that are stale (missing amendment sub-tisk data or
+    # parsed by an older parser) or,
     # during a daily refresh, still active (so new third readings are detected).
     stale_cts = [
         ct
         for ct, h in history_map.items()
         if (h.amendment_tisk_ct1 is None and h.stages)
+        or h.parser_version < HISTORY_PARSER_VERSION
         or (refresh_active and h.current_status not in TERMINAL_TISK_STATUSES)
     ]
     if stale_cts:
@@ -99,6 +103,52 @@ def _ensure_tisk_histories(
     )
 
 
+def _parse_day(text: str | None) -> date | None:
+    """Parse "23. 9. 2026" (history) or "23.09.2026" (votes); None if unparseable."""
+    try:
+        return datetime.strptime((text or "").replace(" ", ""), "%d.%m.%Y").date()
+    except ValueError:
+        return None
+
+
+def _third_readings(tisk: TiskInfo) -> list[tuple[int | None, date | None]] | None:
+    """(sitting number, date) of each of the tisk's 3rd readings; None if it had none."""
+    if not (tisk.history and tisk.history.stages):
+        return None
+    readings = [
+        (s.session_number, _parse_day(s.date))
+        for s in tisk.history.stages
+        if s.stage_type == "3_cteni"
+    ]
+    return readings or None
+
+
+def _third_reading_match(
+    readings: list[tuple[int | None, date | None]], schuze: int, vote_days: list[str]
+) -> str | None:
+    """How an agenda item matches a 3rd reading of its tisk (#93).
+
+    Without this check, every agenda item of a bill that ever had a 3rd
+    reading (e.g. its 1st reading) with more than one vote became a candidate.
+
+    Returns:
+        "day" when it had a vote on a 3rd-reading day, "undated" when a 3rd
+        reading has neither sitting nor date (old behaviour), "sitting" when
+        only the sitting number matches (psp.cz history dates can be wrong,
+        e.g. tisk 56; but the 2nd and 3rd reading can share a sitting, so the
+        caller uses it only if no agenda item of the tisk matched by day),
+        None otherwise.
+    """
+    days = {_parse_day(d) for d in vote_days}
+    if any(day is not None and day in days for _, day in readings):
+        return "day"
+    if any(session is None and day is None for session, day in readings):
+        return "undated"
+    if any(session == schuze for session, _ in readings):
+        return "sitting"
+    return None
+
+
 def _identify_third_reading_bods(
     period_data: PeriodData,
 ) -> list[tuple[int, int, int, str]]:
@@ -107,6 +157,7 @@ def _identify_third_reading_bods(
     Looks for (schuze, bod) pairs where:
     - There's a tisk with legislative history showing 3. čtení
     - There are multiple votes on the same (schuze, bod)
+    - At least one of them took place on a 3rd-reading day
 
     Args:
         period_data: Loaded period data with tisk_lookup.
@@ -114,35 +165,37 @@ def _identify_third_reading_bods(
     Returns:
         List of (schuze, bod, ct, tisk_nazev) tuples.
     """
-    candidates: list[tuple[int, int, int, str]] = []
-
     # Group votes by (schuze, bod) and find those with multiple votes
     void_ids = period_data.void_votes.get_column("id_hlasovani")
     votes = period_data.votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
 
     vote_counts = (
         votes.group_by(["schuze", "bod"])
-        .agg(pl.col("id_hlasovani").count().alias("n_votes"))
+        .agg(
+            pl.col("id_hlasovani").count().alias("n_votes"),
+            pl.col("datum").cast(pl.Utf8).unique().alias("days"),
+        )
         .filter(pl.col("n_votes") > 1)  # Multiple votes = likely amendments
     )
 
+    matches: list[tuple[str, int, int, int, str]] = []
     for row in vote_counts.iter_rows(named=True):
         schuze = row["schuze"]
         bod = row["bod"]
         tisk = period_data.get_tisk(schuze, bod)
         if tisk is None:
             continue
+        readings = _third_readings(tisk)
+        kind = _third_reading_match(readings, schuze, row["days"]) if readings else None
+        if kind is not None:
+            matches.append((kind, schuze, bod, tisk.ct, tisk.nazev))
 
-        # Check if tisk history shows 3. čtení
-        has_third_reading = False
-        if tisk.history and tisk.history.stages:
-            for stage in tisk.history.stages:
-                if stage.stage_type == "3_cteni":
-                    has_third_reading = True
-                    break
-
-        if has_third_reading:
-            candidates.append((schuze, bod, tisk.ct, tisk.nazev))
+    day_cts = {ct for kind, _, _, ct, _ in matches if kind == "day"}
+    candidates = [
+        (schuze, bod, ct, nazev)
+        for kind, schuze, bod, ct, nazev in matches
+        if kind != "sitting" or ct not in day_cts
+    ]
 
     logger.info(
         "[amendment pipeline] Identified {} candidates from {} tisk entries for period {}",
@@ -160,7 +213,7 @@ def _resolve_vote_ids(
     """Resolve vote_number (cislo) to id_hlasovani via the votes DataFrame.
 
     Mutates the AmendmentVote objects in-place. A match is only accepted when
-    the official vote belongs to the same agenda item (bod) — guarding against
+    the official vote belongs to the same agenda item (bod) – guarding against
     steno spans overshooting into a neighbouring bod; votes with bod=0 are
     unassigned in psp.cz data and are accepted. Unresolved votes are recorded
     in the bill's parse_warnings so the gap is visible instead of silent.
@@ -188,11 +241,11 @@ def _resolve_vote_ids(
             if official_bod not in (None, 0, bill.bod):
                 bill.parse_warnings.append(
                     f"Vote {amend.vote_number} officially belongs to bod "
-                    f"{official_bod}, not bod {bill.bod} — left unlinked"
+                    f"{official_bod}, not bod {bill.bod} – left unlinked"
                 )
                 logger.warning(
                     "Bill {}/{} (period {}): vote {} officially belongs to "
-                    "bod {} (expected bod {}) — left unlinked",
+                    "bod {} (expected bod {}) – left unlinked",
                     bill.schuze,
                     bill.bod,
                     bill.period,

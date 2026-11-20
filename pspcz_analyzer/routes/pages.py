@@ -8,15 +8,24 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.responses import Response
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, GITHUB_FEEDBACK_ENABLED
+from pspcz_analyzer.config import (
+    ATTENDANCE_MIN_VOTES,
+    DAILY_REFRESH_HOUR,
+    DEFAULT_PERIOD,
+    SIMILARITY_MIN_SHARED_VOTES,
+)
 from pspcz_analyzer.i18n import SUPPORTED_LANGUAGES
 from pspcz_analyzer.i18n import gettext as _t
+from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.rate_limit import limiter
+from pspcz_analyzer.routes.context import excuses_as_of
 from pspcz_analyzer.routes.utils import validate_period
-from pspcz_analyzer.services.amendment_service import amendment_detail
+from pspcz_analyzer.services.amendment_listing import law_amendments
+from pspcz_analyzer.services.attendance_service import MP_VOTE_CATEGORIES, mp_votes_list
+from pspcz_analyzer.services.coalition_table import COALITION_TABLE
 from pspcz_analyzer.services.law_service import get_all_status_labels
 from pspcz_analyzer.services.law_service import law_detail as get_law_detail
-from pspcz_analyzer.services.legislation_overview import active_laws, recent_activity
+from pspcz_analyzer.services.legislation_overview import homepage_blocks
 from pspcz_analyzer.services.votes_service import vote_detail
 
 router = APIRouter(tags=["Pages"])
@@ -33,6 +42,12 @@ def _ctx(request: Request, period: int, **kwargs) -> dict:
         "lang": getattr(request.state, "lang", "cs"),
         **kwargs,
     }
+
+
+def _period_clubs(request: Request, period: int) -> list[str]:
+    """Clubs of the period's MPs (latest club), largest first."""
+    parties = request.app.state.data.get_period(period).mp_info.get_column("party").drop_nulls()
+    return parties.value_counts(sort=True).get_column("party").to_list()
 
 
 def _safe_referer(referer: str | None) -> str:
@@ -85,21 +100,36 @@ async def index(request: Request, period: int = DEFAULT_PERIOD):
         _ctx(
             request,
             period,
-            stats=pd.stats,
             active_page="index",
-            recent_activity=recent_activity(pd, lang),
-            active_laws=active_laws(pd, lang),
+            blocks=homepage_blocks(pd, lang),
         ),
     )
 
 
 @router.get("/loyalty")
 @limiter.limit("60/minute")
-async def loyalty_page(request: Request, period: int = DEFAULT_PERIOD):
+async def loyalty_page(request: Request, period: int = DEFAULT_PERIOD, tab: str = ""):
     validate_period(period)
+    clubs = _period_clubs(request, period)
     return templates.TemplateResponse(
         "loyalty.html",
-        _ctx(request, period, active_page="loyalty"),
+        _ctx(
+            request,
+            period,
+            active_page="loyalty",
+            tab="podobnost" if tab == "podobnost" else "rebelie",
+            clubs=clubs,
+        ),
+    )
+
+
+@router.get("/loyalty/all")
+@limiter.limit("60/minute")
+async def loyalty_all_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    return templates.TemplateResponse(
+        "loyalty_all.html",
+        _ctx(request, period, active_page="loyalty", clubs=_period_clubs(request, period)),
     )
 
 
@@ -109,18 +139,78 @@ async def attendance_page(request: Request, period: int = DEFAULT_PERIOD):
     validate_period(period)
     return templates.TemplateResponse(
         "attendance.html",
-        _ctx(request, period, active_page="attendance"),
+        _ctx(request, period, active_page="attendance", clubs=_period_clubs(request, period)),
+    )
+
+
+@router.get("/attendance/mp/{id_poslanec}")
+@limiter.limit("60/minute")
+async def attendance_mp_page(
+    request: Request,
+    id_poslanec: int,
+    period: int = DEFAULT_PERIOD,
+    cat: str = "present",
+    page: int = 1,
+):
+    """Votes of one MP behind an attendance number (#117, #91)."""
+    validate_period(period)
+    if cat not in MP_VOTE_CATEGORIES:
+        cat = "present"
+    pd = request.app.state.data.get_period(period)
+    detail = mp_votes_list(pd, id_poslanec, cat, max(1, page))
+    if detail is None:
+        return templates.TemplateResponse(
+            "not_found.html",
+            _ctx(request, period, active_page="attendance", message=_t("att.mp_not_found")),
+            status_code=404,
+        )
+    return templates.TemplateResponse(
+        "attendance_mp.html", _ctx(request, period, active_page="attendance", detail=detail)
+    )
+
+
+@router.get("/jak-se-v-tom-vyznat")
+@limiter.limit("60/minute")
+async def guide_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    return templates.TemplateResponse("guide.html", _ctx(request, period, active_page="guide"))
+
+
+@router.get("/o-datech")
+@limiter.limit("60/minute")
+async def about_data_page(request: Request, period: int = DEFAULT_PERIOD):
+    """How the site gets and computes its data (#118 "O datech")."""
+    validate_period(period)
+    return templates.TemplateResponse(
+        "about_data.html",
+        _ctx(
+            request,
+            period,
+            active_page="guide",
+            refresh_hour=DAILY_REFRESH_HOUR,
+            att_min=ATTENDANCE_MIN_VOTES,
+            sim_min=SIMILARITY_MIN_SHARED_VOTES,
+            coalition_table=COALITION_TABLE,
+        ),
+    )
+
+
+@router.get("/nahlasit-chybu")
+@limiter.limit("60/minute")
+async def report_page(request: Request, period: int = DEFAULT_PERIOD):
+    validate_period(period)
+    source_page = _safe_referer(request.headers.get("referer"))
+    return templates.TemplateResponse(
+        "report.html", _ctx(request, period, active_page="report", source_page=source_page)
     )
 
 
 @router.get("/similarity")
 @limiter.limit("60/minute")
-async def similarity_page(request: Request, period: int = DEFAULT_PERIOD):
+async def similarity_page(request: Request, period: int = DEFAULT_PERIOD) -> Response:
+    """Old URL: similarity is now a tab of the loyalty page (#105, #116)."""
     validate_period(period)
-    return templates.TemplateResponse(
-        "similarity.html",
-        _ctx(request, period, active_page="similarity"),
-    )
+    return RedirectResponse(f"/loyalty?period={period}&tab=podobnost", status_code=301)
 
 
 @router.get("/votes")
@@ -146,8 +236,9 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
     detail = vote_detail(pd, vote_id, lang)
     if detail is None:
         return templates.TemplateResponse(
-            "votes.html",
-            _ctx(request, period, active_page="votes", error=_t("vote.not_found")),
+            "not_found.html",
+            _ctx(request, period, active_page="votes", message=_t("vote.not_found")),
+            status_code=404,
         )
     return templates.TemplateResponse(
         "vote_detail.html",
@@ -156,7 +247,7 @@ async def vote_detail_page(request: Request, vote_id: int, period: int = DEFAULT
             period,
             detail=detail,
             active_page="votes",
-            feedback_enabled=GITHUB_FEEDBACK_ENABLED,
+            excuses_as_of=excuses_as_of(data_svc.cache_dir, period),
         ),
     )
 
@@ -191,8 +282,9 @@ async def law_detail_page(request: Request, ct: int, period: int = DEFAULT_PERIO
     detail = get_law_detail(pd, ct, data_svc.cache_dir, lang)
     if detail is None:
         return templates.TemplateResponse(
-            "laws.html",
-            _ctx(request, period, active_page="laws"),
+            "not_found.html",
+            _ctx(request, period, active_page="laws", message=_t("law.not_found").format(ct=ct)),
+            status_code=404,
         )
     return templates.TemplateResponse(
         "law_detail.html",
@@ -200,13 +292,19 @@ async def law_detail_page(request: Request, ct: int, period: int = DEFAULT_PERIO
     )
 
 
+def _clubs(pd: PeriodData) -> list[str]:
+    """Club names of the period's MPs, for the amendments club filter."""
+    return sorted({p for p in pd.mp_info.get_column("party").to_list() if p})
+
+
 @router.get("/amendments")
 @limiter.limit("60/minute")
 async def amendments_page(request: Request, period: int = DEFAULT_PERIOD):
     validate_period(period)
+    pd = request.app.state.data.get_period(period)
     return templates.TemplateResponse(
         "amendments.html",
-        _ctx(request, period, active_page="amendments"),
+        _ctx(request, period, active_page="amendments", clubs=_clubs(pd)),
     )
 
 
@@ -219,11 +317,18 @@ async def amendment_detail_page(
     data_svc = request.app.state.data
     pd = data_svc.get_period(period)
     lang = getattr(request.state, "lang", "cs")
-    detail = amendment_detail(pd, schuze, bod, lang)
+    detail = law_amendments(pd, schuze, bod, lang)
     if detail is None:
         return templates.TemplateResponse(
             "amendments.html",
-            _ctx(request, period, active_page="amendments"),
+            _ctx(
+                request,
+                period,
+                active_page="amendments",
+                clubs=_clubs(pd),
+                error=_t("pn.not_found"),
+            ),
+            status_code=404,
         )
     return templates.TemplateResponse(
         "amendment_detail.html",

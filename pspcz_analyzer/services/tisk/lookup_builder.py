@@ -34,7 +34,7 @@ def build_tisk_lookup(
     # Try primary path via schuze -> bod_schuze
     sessions = schuze.filter(pl.col("id_org") == organ_id)
     if sessions.height > 0:
-        return build_tisk_lookup_via_schuze(
+        lookup = build_tisk_lookup_via_schuze(
             period,
             sessions,
             bod_schuze,
@@ -44,6 +44,14 @@ def build_tisk_lookup(
             summary_cache,
             en_cache,
             en_topic_cache,
+        )
+        return add_unscheduled(
+            lookup,
+            period,
+            tisky.filter(pl.col("id_obdobi") == organ_id),
+            tisk_text,
+            (topic_cache.get(period, {}), en_topic_cache.get(period, {})),
+            (summary_cache.get(period, {}), en_cache.get(period, {})),
         )
 
     # Fallback: text matching for periods without schuze data
@@ -64,6 +72,58 @@ def build_tisk_lookup(
     )
 
 
+# Key ``(UNSCHEDULED_SCHUZE, ct)``: a tisk on no approved agenda yet (#110); no vote
+# links to it, but the laws list, the law detail and the pipelines see it.
+UNSCHEDULED_SCHUZE = -1
+
+
+def add_unscheduled(
+    lookup: dict[tuple[int, int], TiskInfo],
+    period: int,
+    period_tisky: pl.DataFrame,
+    tisk_text: TiskTextService,
+    topics: tuple[dict[int, list[str]], dict[int, list[str]]],
+    summaries: tuple[dict[int, str], dict[int, str]],
+) -> dict[tuple[int, int], TiskInfo]:
+    """Add every tisk of the period that no approved agenda item links.
+
+    Args:
+        lookup: ``(schuze, bod) -> TiskInfo`` from the agenda (updated in place).
+        period: Electoral period.
+        period_tisky: The period's rows of the tisky table.
+        tisk_text: Text availability service.
+        topics: ``(cs, en)`` topic maps of the period, keyed by ct.
+        summaries: ``(cs, en)`` summary maps of the period, keyed by ct.
+
+    Returns:
+        The same lookup.
+    """
+    have = {t.ct for t in lookup.values()}
+    added = 0
+    for row in period_tisky.iter_rows(named=True):
+        ct = row.get("ct")
+        if not ct or ct in have:
+            continue
+        lookup[(UNSCHEDULED_SCHUZE, ct)] = TiskInfo(
+            id_tisk=row["id_tisk"],
+            ct=ct,
+            nazev=row.get("nazev_tisku") or "",
+            period=period,
+            id_druh=row.get("id_druh"),
+            nazev_cely=row.get("nazev_cely") or "",
+            predkladatel=row.get("predkladatel") or "",
+            topics=topics[0].get(ct, []),
+            topics_en=topics[1].get(ct, []),
+            has_text=tisk_text.has_text(period, ct),
+            summary=summaries[0].get(ct, ""),
+            summary_en=summaries[1].get(ct, ""),
+        )
+        have.add(ct)
+        added += 1
+    logger.info("Period {}: {} tisky on no approved agenda added to the lookup", period, added)
+    return lookup
+
+
 def build_tisk_lookup_via_schuze(
     period: int,
     sessions: pl.DataFrame,
@@ -75,7 +135,13 @@ def build_tisk_lookup_via_schuze(
     summary_en_cache: dict[int, dict[int, str]] | None = None,
     topic_en_cache: dict[int, dict[int, list[str]]] | None = None,
 ) -> dict[tuple[int, int], TiskInfo]:
-    """Build lookup using the schuze -> bod_schuze -> tisky chain."""
+    """Build lookup using the schuze -> bod_schuze -> tisky chain.
+
+    Only the approved agenda (``pozvanka`` null) is used: vote ``bod`` numbers
+    refer to it, and the proposed agenda (``pozvanka`` 1) numbers items
+    differently. An approved item without a tisk stays unlinked.
+    """
+    sessions = sessions.filter(pl.col("pozvanka").is_null())
     session_map = dict(
         zip(
             sessions.get_column("id_schuze").to_list(),
@@ -87,6 +153,7 @@ def build_tisk_lookup_via_schuze(
 
     bods = bod_schuze.filter(
         pl.col("id_schuze").is_in(session_ids)
+        & pl.col("pozvanka").is_null()
         & pl.col("id_tisk").is_not_null()
         & (pl.col("id_tisk") != 0)
     )
@@ -111,6 +178,9 @@ def build_tisk_lookup_via_schuze(
                 ct=ct,
                 nazev=row.get("nazev_tisku") or "",
                 period=period,
+                id_druh=row.get("id_druh"),
+                nazev_cely=row.get("nazev_cely") or "",
+                predkladatel=row.get("predkladatel") or "",
                 topics=topic_map.get(ct, []),
                 topics_en=topic_en_map.get(ct, []),
                 has_text=tisk_text.has_text(period, ct),
@@ -172,6 +242,9 @@ def build_tisk_lookup_via_text(
                     ct=ct,
                     nazev=nazev,
                     period=period,
+                    id_druh=row.get("id_druh"),
+                    nazev_cely=row.get("nazev_cely") or "",
+                    predkladatel=row.get("predkladatel") or "",
                     topics=topic_map.get(ct, []),
                     topics_en=topic_en_map.get(ct, []),
                     has_text=tisk_text.has_text(period, ct),

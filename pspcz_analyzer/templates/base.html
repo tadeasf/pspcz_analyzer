@@ -4,52 +4,57 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{{ _('site.description') }}">
-    <meta name="theme-color" content="#3C71AC">
+    <meta name="theme-color" content="#1A4677">
     <title>{% block title %}{{ _("site.short_title") }}{% endblock %}</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/zpl.css">
+    <link rel="stylesheet" href="/static/site.css">
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 </head>
 <body>
+<div class="site">
     <a class="skip-link" href="#main-content">{{ _("nav.skip") }}</a>
-    <header class="site-header">
-        <div class="header-inner">
-            <a href="/" class="site-logo">
-                <img src="/static/logo-psp.png" alt="{{ _('site.logo_alt') }}">
-            </a>
-            <div class="header-right">
-                <span class="header-title">{{ _("site.title") }}</span>
-                <select class="period-select" onchange="switchPeriod(this.value)" aria-label="{{ _('period.select_aria') }}">
+    <header class="s-head"><div class="in">
+        <a href="/?period={{ period }}" class="s-brand" style="text-decoration:none">
+            <span class="s-title">{{ _("site.title") }}</span>
+            <span class="s-by s-by2">{{ _("site.byline") }}</span>
+        </a>
+        <div class="s-head-right">
+            <label class="field" style="font-size:12px"><span>{{ _("period.select_aria") }}</span>
+                <select onchange="switchPeriod(this.value)" aria-label="{{ _('period.select_aria') }}">
                     {% for p in periods %}
-                    <option value="{{ p.number }}" {% if p.number == period %}selected{% endif %}>
-                        {{ p.number }}. {{ _("period.label") }} ({{ p.label }})
-                    </option>
+                    <option value="{{ p.number }}" {% if p.number == period %}selected{% endif %}>{{ _("period.option").format(n=p.number, years=p.label|replace("present", _("period.present"))) }}</option>
                     {% endfor %}
                 </select>
-                <div class="lang-switcher">
-                    <a href="/set-lang/cs" {% if lang == "cs" %}class="active"{% endif %}>CZ</a>
-                    <a href="/set-lang/en" {% if lang == "en" %}class="active"{% endif %}>EN</a>
-                </div>
+            </label>
+            <div class="lang-switch" aria-label="{{ _('lang.switch_aria') }}">
+                <a href="/set-lang/cs" {% if lang == "cs" %}class="on" aria-current="true"{% endif %}>CZ</a>
+                <a href="/set-lang/en" {% if lang == "en" %}class="on" aria-current="true"{% endif %}>EN</a>
             </div>
         </div>
-    </header>
+    </div></header>
 
-    <nav class="site-nav" aria-label="{{ _('nav.main_aria') }}">
-        <div class="nav-inner">
-            <a href="/?period={{ period }}" {% if active_page == "index" %}aria-current="page"{% endif %}>{{ _("nav.dashboard") }}</a>
-            <a href="/laws?period={{ period }}" {% if active_page == "laws" %}aria-current="page"{% endif %}>{{ _("nav.laws") }}</a>
-            <a href="/amendments?period={{ period }}" {% if active_page == "amendments" %}aria-current="page"{% endif %}>{{ _("nav.amendments") }}</a>
-            <a href="/votes?period={{ period }}" {% if active_page == "votes" %}aria-current="page"{% endif %}>{{ _("nav.votes") }}</a>
-            <a href="/loyalty?period={{ period }}" {% if active_page == "loyalty" %}aria-current="page"{% endif %}>{{ _("nav.loyalty") }}</a>
-            <a href="/attendance?period={{ period }}" {% if active_page == "attendance" %}aria-current="page"{% endif %}>{{ _("nav.attendance") }}</a>
-            <a href="/similarity?period={{ period }}" {% if active_page == "similarity" %}aria-current="page"{% endif %}>{{ _("nav.similarity") }}</a>
-            <a href="https://tadeasf.github.io/pspcz_analyzer/" target="_blank" rel="noopener">{{ _("nav.docs") }}</a>
-        </div>
-    </nav>
+    {% set nav_on = {"similarity": "loyalty"}.get(active_page, active_page) %}
+    <nav class="s-nav" aria-label="{{ _('nav.main_aria') }}"><div class="in">
+        {% for key, href, label in [
+            ("index", "/", "nav.dashboard"),
+            ("laws", "/laws", "nav.laws"),
+            ("amendments", "/amendments", "nav.amendments"),
+            ("votes", "/votes", "nav.votes"),
+            ("loyalty", "/loyalty", "nav.loyalty"),
+            ("attendance", "/attendance", "nav.attendance"),
+            ("guide", "/jak-se-v-tom-vyznat", "nav.guide"),
+        ] %}
+        <a href="{{ href }}?period={{ period }}" {% if nav_on == key %}class="on" aria-current="page"{% endif %}>{{ _(label) }}</a>
+        {% endfor %}
+    </div></nav>
 
-    <main id="main-content" class="container">
+    <aside class="aiw" aria-label="AI"><div class="in">{{ _("ai.notice_before") }}<a href="/nahlasit-chybu?period={{ period }}">{{ _("ai.notice_link") }}</a>{{ _("ai.notice_after") }}</div></aside>
+
+    <main id="main-content"><div class="s-body">
         {% block content %}{% endblock %}
-    </main>
+    </div></main>
 
     <div id="htmx-error-box" class="error-box" role="alert" hidden
          data-network="{{ _('error.network') }}" data-server="{{ _('error.server') }}">
@@ -58,12 +63,23 @@
                 onclick="this.parentElement.hidden = true">×</button>
     </div>
 
-    <footer class="site-footer">
-        <p>{{ _("footer.source") }} <a href="https://www.psp.cz/sqw/hp.sqw?k=1300" target="_blank" rel="noopener">{{ _("footer.source_link") }}</a> | {{ _("footer.project") }}</p>
-        {% if data_updated %}
-        <p class="footer-updated" title="{{ data_updated.absolute }}">{{ _("footer.updated").format(time=data_updated.relative) }}</p>
-        {% endif %}
-    </footer>
+    <footer class="s-foot"><div class="in">
+        <div>
+            <b>{{ _("footer.data_title") }}</b>
+            <span>{% if last_vote_date %}{{ _("footer.votes").format(date=last_vote_date) }}{% else %}{{ _("footer.votes_none") }}{% endif %}</span>
+            <span>{% if histories_loaded %}{{ _("footer.histories").format(date=histories_loaded) }}{% else %}{{ _("footer.histories_none") }}{% endif %}</span>
+            <span>{{ _("footer.ai") }}</span>
+        </div>
+        <div>
+            <b>{{ _("site.title") }}</b>
+            <a href="/jak-se-v-tom-vyznat?period={{ period }}">{{ _("nav.guide") }}</a>
+            <a href="/nahlasit-chybu?period={{ period }}">{{ _("footer.report") }}</a>
+            <a href="https://github.com/tadeasf/pspcz_analyzer" rel="noopener">{{ _("footer.source_code") }}</a>
+            <span>{{ _("footer.authors") }}</span>
+            <span class="footer-version">{{ _("footer.version").format(sha=git_sha[:7]) }}</span>
+        </div>
+    </div></footer>
+</div>
 
     <script>
         function switchPeriod(newPeriod) {
@@ -86,7 +102,7 @@
             window.location.href = url.toString();
         }
 
-        document.querySelectorAll('.nav-inner a[href]').forEach(function(link) {
+        document.querySelectorAll('.s-nav a[href]').forEach(function(link) {
             link.addEventListener('click', function() {
                 var main = document.querySelector('main');
                 main.classList.add('skeleton');

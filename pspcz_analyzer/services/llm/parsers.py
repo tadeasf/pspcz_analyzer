@@ -161,7 +161,7 @@ def _parse_amendment_summaries_text(response: str) -> dict[str, str]:
             continue
         # Match patterns like "A: summary", "B1: summary", "- A: summary", "* b2 – summary"
         match = re.match(
-            r"^[-*•#]?\s*(?:amendment\s+)?([A-Za-z]\d*(?:\s*[aA]\s*[A-Za-z]\d*)?)\s*[:–—-]\s*(.+)",
+            r"^[-*•#]?\s*(?:amendment\s+)?([A-Za-z]\d*(?:\s*[aA]\s*[A-Za-z]\d*)?)\s*[:––-]\s*(.+)",
             line,
             re.IGNORECASE,
         )

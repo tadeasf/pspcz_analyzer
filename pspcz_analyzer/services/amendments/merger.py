@@ -152,7 +152,7 @@ def _pop_numeric_variants(
 ) -> list[AmendmentVote]:
     """Pop ALL steno amendments matching numeric variants of a PDF letter.
 
-    E.g., PDF letter "A" matches steno "A1", "A2", "A3" — every entry under
+    E.g., PDF letter "A" matches steno "A1", "A2", "A3" – every entry under
     those keys is returned (a key can hold several entries, e.g. revotes).
 
     Args:
@@ -195,6 +195,39 @@ def _pop_letter(
     return entry
 
 
+def _committee_stem(name: str) -> str:
+    """Distinctive word of a committee name: "hospodářského výboru" -> "hospod"."""
+    words = name.lower().split()
+    if "pro" in words and words.index("pro") + 1 < len(words):
+        return words[words.index("pro") + 1][:6]
+    return next((w[:6] for w in words if not w.startswith("výbor")), "")
+
+
+def _assign_committee_letters(
+    steno_by_letter: dict[str, list[AmendmentVote]], pdf_amendments: list[PdfAmendment]
+) -> None:
+    """Give letter-less steno votes on "návrh hospodářského výboru" the committee's letter.
+
+    Args:
+        steno_by_letter: Mutable steno lookup by letter ("" holds letter-less entries).
+        pdf_amendments: Letters of the consolidated amendment document.
+    """
+    loose = steno_by_letter.get("", [])
+    for pdf in pdf_amendments:
+        key = pdf.letter.strip().upper()
+        names = " ".join(pdf.submitter_names).lower()
+        if key in steno_by_letter or "výbor" not in names:
+            continue
+        for s in loose:
+            stems = [_committee_stem(n) for n in s.submitter_names if "výbor" in n.lower()]
+            if s.vote_number and not s.is_procedure and any(st and st in names for st in stems):
+                s.letter = key
+                s.match_source = "committee_name"
+                loose.remove(s)
+                steno_by_letter[key] = [s]
+                break
+
+
 def _merge_pdf_and_steno(
     bills: list[BillAmendmentData],
     pdf_data: dict[int, list[PdfAmendment]],
@@ -221,22 +254,23 @@ def _merge_pdf_and_steno(
             continue
 
         # Only surface PDF-only amendments when steno linked at least one vote for
-        # this bill — otherwise a wholesale steno failure would dump the entire PDF
+        # this bill – otherwise a wholesale steno failure would dump the entire PDF
         # as unvoted rows.
         has_steno_votes = any(a.vote_number for a in bill.amendments)
 
         if not has_steno_votes:
-            # PDF amendments exist but steno parsing found no recorded votes —
+            # PDF amendments exist but steno parsing found no recorded votes –
             # don't dump them as rows, but remember the count for the UI.
             bill.unlinked_amendment_count = len(pdf_amendments)
 
         # Build steno lookup by letter (uppercase, stripped). A letter key can
-        # hold several entries — letter-less entries ("") and same-letter
-        # revotes — so keep them all in a list; a match consumes the first.
+        # hold several entries – letter-less entries ("") and same-letter
+        # revotes – so keep them all in a list; a match consumes the first.
         steno_by_letter: dict[str, list[AmendmentVote]] = {}
         for amend in bill.amendments:
             key = amend.letter.strip().upper()
             steno_by_letter.setdefault(key, []).append(amend)
+        _assign_committee_letters(steno_by_letter, pdf_amendments)
 
         merged: list[AmendmentVote] = []
 
@@ -252,7 +286,7 @@ def _merge_pdf_and_steno(
                 steno_matches = _pop_numeric_variants(steno_by_letter, pdf_key)
 
             # Also check grouped_with: pull grouped letters into the en-bloc
-            # match so they are merged with the PDF text — previously they
+            # match so they are merged with the PDF text – previously they
             # were popped and silently discarded.
             for s in list(steno_matches):
                 for grouped_letter in s.grouped_with:
@@ -265,7 +299,7 @@ def _merge_pdf_and_steno(
 
             if steno_matches:
                 # Enrich all matching steno entries with PDF data.
-                # All matches get raw_text — steno "E1" means the entire
+                # All matches get raw_text – steno "E1" means the entire
                 # letter E section, typically voted en bloc.
                 for steno_item in steno_matches:
                     steno_item.amendment_text = pdf_amend.raw_text

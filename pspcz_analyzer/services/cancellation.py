@@ -1,7 +1,7 @@
 """Cooperative cancellation primitives for background pipelines.
 
 Pipeline bodies run in worker threads via ``asyncio.to_thread``, where
-``asyncio.Task.cancel()`` cannot interrupt them — the awaiting coroutine
+``asyncio.Task.cancel()`` cannot interrupt them – the awaiting coroutine
 is released, but the thread itself keeps running to completion. Instead,
 each running period owns a :class:`CancellationFlag`: HTTP handlers flip
 it instantly, and pipeline code calls :meth:`CancellationFlag.check` at
@@ -57,7 +57,7 @@ class CancellationFlag:
         """Raise PipelineCancelled if cancellation was requested.
 
         Called at stage boundaries and loop tops inside worker threads.
-        Reads without the lock — bool reads are atomic under the GIL
+        Reads without the lock – bool reads are atomic under the GIL
         and this sits on the hot path of long-running loops.
         """
         if self._cancelled:

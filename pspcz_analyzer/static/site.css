@@ -1,0 +1,22 @@
+/* Additions to zpl.css (the mockup styles) for parts the mockup does not cover. */
+.s-head-right { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.lang-switch { display: flex; gap: 2px; font-size: 13px; padding-bottom: 6px; }
+.lang-switch a { padding: 3px 7px; border-radius: 3px; text-decoration: none; color: #1A4677; }
+.lang-switch a.on { background: #1A4677; color: #fff; font-weight: 700; }
+.s-foot a { text-decoration: none; }
+.s-foot a:hover { text-decoration: underline; }
+.footer-version { font-size: 12px; color: #5a6573; }
+.phead-h { font-family: Georgia, "Times New Roman", serif; color: #1A4677; font-size: 30px; line-height: 1.2; margin: 0; border: 0; padding: 0; }
+.phead-p { color: #3a4552; margin: 0; }
+@media (max-width: 760px) { .phead-h { font-size: 24px; } }
+/* style.css colours every submit button; mockup buttons win */
+.site button.btn, .site button.btn:hover { background: #1A4677; border: 0; color: #fff; }
+.vg > summary, .club > summary { cursor: pointer; list-style: none; }
+.vg > summary::-webkit-details-marker, .club > summary::-webkit-details-marker { display: none; }
+.tabs-s a.tab { padding: 9px 14px; font-weight: 700; color: #2F5F8F; border-bottom: 3px solid transparent; text-decoration: none; }
+.tabs-s a.tab.on { color: #1A4677; border-bottom-color: #1A4677; }
+.ld-timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid #3C71AC; display: flex; flex-direction: column; gap: 6px; }
+.ld-timeline li .lbl { display: inline-block; min-width: 86px; }
+@media (max-width: 760px) { .ld-grid { grid-template-columns: minmax(0, 1fr) !important; } }
+.card-ic h2 { border: 0; padding: 0; color: #1A4677; font-family: Georgia, "Times New Roman", serif; }
+.aiw a,.crumb a,main p a{text-decoration:underline}

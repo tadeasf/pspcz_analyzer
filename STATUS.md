@@ -1,0 +1,68 @@
+# STATUS
+
+What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md). Decisions: [DECISIONS.md](DECISIONS.md).
+
+| Date | Item | Commit | Verified |
+|---|---|---|---|
+| 2026-11-19 | [#120] Phone and accessibility: no horizontal page scroll at 390 px; axe fixes (footer contrast, underlined text links, law link out of `<summary>`, focusable table scrollers, AI notice `<aside>`) | `928dce9` | axe-core 4.10 on 10 pages at 390 px: 0 serious/critical (3 moderate heading-order); screenshots; 688 tests |
+| 2026-11-19 | [#119] Unknown law/vote = 404 with "nenacházíme", HTML 404 page for unknown URLs (API keeps JSON); vote detail tells apart "stenozáznam zatím nevyšel" and "nepodařilo se spolehlivě určit, nehádáme" (mockup text) | `6834699` | Live: /laws/99999 and /neco return 404 pages; 3 API tests |
+| 2026-11-19 | English guide page (machine translation of the verified Czech text) | `2799832` | /jak-se-v-tom-vyznat in both languages |
+| 2026-11-19 | [#100] (rest) Admin "Data quality" page: parser score, warnings, unknown fates, unassigned votes, amendment summaries missing or flagged per bill; flagged AI briefs; vote steno coverage | `f8646f8` | Template rendered on real period-10 data (31 bills); admin login not exercised |
+| 2026-11-19 | [#108] "Teď se o tom mluví": speeches per agenda item and day from the sitting index + day-page speaker lists (chair excluded), bill with most speeches in the last 14 days, phase stepper from history stage types | `bb63b63`, `95c3153` | Screenshot: tisk 285 (37 speeches), stepper at 3rd reading; sitting 31 bod 3 = 30 + 27 speeches |
+| 2026-11-19 | [#102] What each vote was about: crawl of every sitting's steno, vote anchor `hlasy.sqw?G=<id>` closes the lead-in window, rules give the kind, the LLM writes question + verbatim quote, kept only if the quote is in the steno and the #97 check passes; vote list and detail show question, quote and link to the exact anchor | `e627c42` | Sitting 31 (tisk 246, 83): 14/14 correct; sitting 1: 18/20 with question, 2 "unknown"; screenshot of vote 86334. Full period-10 run in progress |
+| 2026-11-19 | [#109] + [#97] AI brief per bill (title, 1-2 sentences, who, how much, from when, cs+en, model/date/source hash), automatic check (non-Latin script, English in Czech, numbers not in the tisk), retry then warning; laws list/detail/homepage/search use it, old critical summaries hidden. Amendment summaries: descriptive prompt, no guessing without the letter's text, `summary_warning` | `d256a70` | Screenshot of tisk 7; 34 period-10 briefs so far, 0 flagged. Full run in progress |
+| 2026-11-19 | LLM client: `LLM_MAX_OUTPUT_TOKENS` (proxy otherwise reserves 131k reply tokens) and `LLM_ENABLE_THINKING=0` (qwen3_8_flash thinking runs away) | `554dba2` | 160k-token tisk 7 now goes through; brief in ~20 s instead of no reply |
+| 2026-11-19 | [#112] Amendments section per the mockup: period totals by side, filters (search incl. MP name, side, club, result), by-law and single-amendment views, sorting, per-law page with the submitted/adopted table, SD number and psp.cz link per letter. Parser confidence and warnings gone from the public pages. Known gaps: no LLM summaries yet ("Shrnutí zatím nemáme"); 88 of 189 period-10 letters are "zatím neznáme" because steno votes without a letter (e.g. "návrh hospodářského výboru", tisk 246 vote 8) are not tied to letters yet (#102); "Zatím se nehlasovalo" filter waits for 2X; tisk 94 (budget) fails steno parsing; `/api/amendment-coalitions` is no longer used by any page | `6265e4b` | Screenshots of the list, letters view and tisk 246; tisk 246 = 3 letters (výbor A, B1 SD 1731, B2 SD 1733) in the list, law detail and amendments page; 676 tests |
+| 2026-11-19 | [#93] Counting unit is the letter; fates always add up to the total; candidates only from 3rd-reading agenda items (day from history, sitting as fallback): period 10 has 31 laws with one entry each instead of 64 entries | `c663a8d`, `6265e4b` | Real data period 10: no tisk with more than one entry; unit tests for "E1 a F2" = 2 letters / 1 vote and re-vote |
+| 2026-11-19 | [#103] Side per letter: committee letters parsed from the consolidated document, PDF full names matched to MPs, government side from the coalition on the 3rd-reading date; undetermined when no club can be classified (e.g. Nezařazení) | `8060658`, `6265e4b` | Period 10: opposition 109 (12 adopted), government 43 (15), committee 20 (6), undetermined 17 |
+| 2026-11-19 | [#108] Homepage per the mockup: intro with illustration and search, tiles, under-debate / recently-passed / newest blocks from real data. "Teď se o tom mluví" hidden until the steno speech counts exist; last steps are the raw history outcome, not yet full sentences | `5e16538` | Screenshot, period 10; 668 tests |
+| 2026-11-19 | [#110] Laws list with document-type tabs and counts, phase and submitter filters, sorting by latest move, cards; [#111] law detail with the Chamber / Senate / President timeline, decisive vote meter, documents and side panel; official title from tisky.unl (parquet key `tisky_v2`) | `c3dabcb`, `6735e96` | Screenshots of the list and tisk 246 with locally scraped period-10 histories (186 tisky) |
+| 2026-11-19 | History-parser branch merged (#86-#90, #98, done by a sub-agent with psp.cz snapshots as fixtures) | `15f5047` | 666 tests at merge |
+| 2026-11-19 | [#98] `id_druh` carried into `TiskInfo` and law rows; submitter only from the Předkladatel section ("... vládou předložen" = Vláda, document type = empty, no whole-page fallback). Laws list filter/UI not changed | `ef56d0d` | Snapshot tests: 324 = Vláda, 314 and 142 empty, no fixture submitter is a druh name; lookup test for `id_druh` |
+| 2026-11-19 | [#86] `parser_version` in history JSON (missing = 0); histories below `HISTORY_PARSER_VERSION` (1) are re-scraped even when terminal. Needs one pipeline run to replace the cache | `cd49500` | Unit test: an unversioned terminal history is re-scraped; snapshots 231 and 201 give "projednáváno" and no law number |
+| 2026-11-19 | [#90] Status from the last decisive stage: v Senátu, schváleno/vráceno/zamítnuto Senátem, u prezidenta, vráceno prezidentem, podepsáno, odesláno k vyhlášení, vyhlášeno, zamítnuto, nepřijato, vzato zpět; terminal = vyhlášeno, zamítnuto, nepřijato, vzato zpět; government opinion from the Vláda section only; cs/en status keys | `511fa2b` | Snapshots: 167 status ladder, 85 nepřijato (24. 3. 2026, vote 46), 67/179 Sněmovna overrides Senate, 57 returned by Senate, 65 vzato zpět, 82 no opinion. "u prezidenta", veto and 1st-reading rejection only on synthetic pages |
+| 2026-11-19 | [#89] Stage date is the date of the sentence stating the outcome (or the nearest earlier dated sentence) | `39253c2` | Snapshot 82: signature 16. 7. 2026 (delivery 13. 7. stays in the text); 67: Sněmovna vote 9. 9. 2026 |
+| 2026-11-19 | [#88] "vyhlášeno" only from the "Zákon vyhlášen ... pod číslem" sentence; a Sbírka entry alone = "odesláno k vyhlášení"; whole-word outcomes | `2579ec6` | Snapshot 246 (sent 9. 11. 2026, not published): odesláno k vyhlášení, no number; 67 now published 215/2026 Sb. |
+| 2026-11-19 | [#87] Stages typed by (section, mark); publication stage and law number from `p.status`; parsing split from fetching (`parse_tisk_history`), 13 psp.cz snapshots in `tests/fixtures/history/` | `b2766d1` | Snapshots: 246 Senate steps 29. 9./30. 9./14. 10. are Senate stages; 82 no "Vláda", 129/2026 Sb.; 167 91/2026 Sb. |
+| 2026-11-19 | [#117] Attendance per the mockup: new definition (logged in / all votes in the mandate, excused shown separately), mandate column, small-sample flag under 50 votes, table and two SVG charts. Links from each number to its vote list are not done yet | `e39ea3e` | Screenshot of the chart view, period 10; 630 tests |
+| 2026-11-19 | [#115] (Ne)loajalita per the mockup (explanation, chart, sortable list, /loyalty/all); [#116] similarity as a tab with an SVG map in club colours and top-5 pair tables; `/similarity` redirects; [#107] club colours in config. "Jen o celých zákonech" toggle waits for #102 | `862dcd1` | Screenshots of both tabs, period 10; 631 tests |
+| 2026-11-19 | [#106] (part) Czech number, percent and date filters and the agreed terms (Prošlo/Neprošlo, Pro/Proti, Nepřihlášen, Nepřijat, Shrnutí AI). Left: glossary tooltips from one source (with #118), "Spolehlivost parseru" texts move to the admin with #100/#112, status labels with the history-parser branch | `a385912` | Filter unit tests; 630 tests |
+| 2026-11-19 | [#104] Similarity pairs show real agreement (% and "stejně v X z Y", min. 100 shared votes) and a government × opposition table (sides on the vote date) | `3012847` | Unit test 100 of 100 = 100 %; periods 9 and 10 compute in ~1 s |
+| 2026-11-19 | [#94] Amendment driver label reads "Pozměňovací návrhy podali: poslanci opozice" with a note on what is classified and as of which date | `2f53015` | 628 tests |
+| 2026-11-19 | [#96] Search and filters in the URL for laws, votes and amendments; links can be shared and Back restores the previous list | `b1859be` | Browser: search on /votes changes the URL, Back returns to the full list; 3 API tests |
+| 2026-11-19 | [#95] Search by tisk number ("246", "tisk 246", "ST 246"), without diacritics, tolerant to word forms; tisky full-title column fixed in the schema (searching it comes after the history-parser branch adds it to TiskInfo) | `2fc7978` | Real data: "televizi" finds 231 and 201, "ST 246" finds 11 votes of tisk 246 |
+| 2026-11-19 | [#113] Votes list grouped by agenda item with the needed-votes meter, void votes hatched; [#114] vote detail per the mockup (result, quorum bar, club table, MPs by club with search). Question and kind stay "zatím neznáme" until #102 (LLM). | `07975a1`, `dfe576d` | Screenshot of vote 88876 matches psp.cz club counts; 613 tests |
+| 2026-11-19 | Excuses refresh daily: the daily refresh re-parses `omluvy` with the current-period zip (it holds all periods), and the frontend watcher reloads the period when it changes | `880f1d4` | Unit test for the watcher |
+| 2026-11-19 | [#101] Club at the vote date (per-vote `party` from membership dates, only this period's clubs, function rows dropped); hand-kept government table with sources (period 9: Babiš until 16. 12. 2021, Fiala five-party until 30. 9. 2024, then without Piráti); gov/opposition labels use the government on the vote date | `41e93a8` | Vote 88876 matches psp.cz: ANO 80 (69 no, 1 not logged in, 10 excused). David Pražák (left ANO 1. 11. 2026) is counted in ANO for October votes. |
+| 2026-11-19 | [#105] Site frame from the mockup (header, menu, AI notice, footer with real dates); [#107] section headers with icons; [#118] guide page (Czech text from the mockup); [#119] generic 'Nahlásit chybu' form | `915d06f` | Screenshots at 1280 px and 390 px, no horizontal scroll; 604 tests |
+| 2026-11-19 | [#91] Vote code `K` counted as "zdržel se / nehlasoval"; excuses from `omluvy.unl` turn `@` into `M`; load-time check against the vote summary | `e610f82` | Vote 88876 matches live psp.cz (1 not logged in, 22 excused). Periods 1-10 load, no unknown codes. |
+| 2026-11-19 | Serena removed | `173425d` | - |
+| 2026-11-10 | [#92] Void votes loaded from `zmatecne.unl` and marked on the vote page | `733ec3f` | Period 10: 28 void votes, same as the issue. |
+| 2026-11-10 | [#85] Votes linked only via the approved agenda | `733ec3f` | Unit tests; 86822, 86479, 87746 reproduced locally. |
+| 2026-11-10 | [#84] Version (git SHA) in health endpoints and footer | `733ec3f` | Unit tests. |
+
+## Known gaps
+
+- Period 9 government × opposition pairs are led by ANO × SPD pairs from Oct-Dec 2021, when ANO alone was the government. Correct by definition; may need a minimum per side later.
+- Redesign: only the frame is done. Page contents (laws list, detail pages, homepage, charts) still use the old layout until #108-#117.
+- Guide page is Czech only (English shows a note); the "O datech" sub-pages it lists are not written yet.
+- #107 leftovers: alternating backgrounds and illustration come with the homepage (#108); club and vote colours come with the charts (#116, #117).
+- `/similarity` still has its own page (highlighted as loyalty in the menu); it becomes a loyalty tab with #115/#116.
+- Stages still hold one outcome per entry ([#89] S fix): the president's delivery and signature are one stage dated by the signature, not two events.
+- Locally no tisk histories are scraped yet, so the footer says "zatím nenačteno" and the laws list has no statuses.
+- Per-MP pages (attendance, similarity) show the MP's latest club in the period; per-vote tables use the club on the vote date.
+- The "77501 by club" acceptance item of [#101] cannot come from open data (the vote is missing there).
+- Periods 1-2 have no excuse data at psp.cz, so excused MPs show as not logged in.
+- LLM endpoint is down until Sun 2026-11-22.
+
+[#84]: https://github.com/tadeasf/pspcz_analyzer/issues/84
+[#85]: https://github.com/tadeasf/pspcz_analyzer/issues/85
+[#86]: https://github.com/tadeasf/pspcz_analyzer/issues/86
+[#87]: https://github.com/tadeasf/pspcz_analyzer/issues/87
+[#88]: https://github.com/tadeasf/pspcz_analyzer/issues/88
+[#89]: https://github.com/tadeasf/pspcz_analyzer/issues/89
+[#90]: https://github.com/tadeasf/pspcz_analyzer/issues/90
+[#98]: https://github.com/tadeasf/pspcz_analyzer/issues/98
+[#91]: https://github.com/tadeasf/pspcz_analyzer/issues/91
+[#92]: https://github.com/tadeasf/pspcz_analyzer/issues/92
+[#101]: https://github.com/tadeasf/pspcz_analyzer/issues/101

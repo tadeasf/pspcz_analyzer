@@ -1,27 +1,58 @@
-<table>
-    <thead>
-        <tr>
-            <th>{{ _("th.rank") }}</th>
-            <th>{{ _("th.mp1") }}</th>
-            <th>{{ _("th.party") }}</th>
-            <th>{{ _("th.mp2") }}</th>
-            <th>{{ _("th.party") }}</th>
-            <th>{{ _("th.similarity") }}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in rows %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ row.mp1_name }}</td>
-            <td>{{ row.mp1_party }}</td>
-            <td>{{ row.mp2_name }}</td>
-            <td>{{ row.mp2_party }}</td>
-            <td>{{ "%.1f"|format(row.similarity * 100) }}%</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% if not rows %}
-<p>{{ _("no_data") }}</p>
+{% if map.points %}
+<figure style="margin:0">
+    <svg viewBox="0 0 {{ map.width }} {{ map.height }}" role="group" aria-label="{{ _('sim.map_aria') }}" aria-describedby="sim-legend" style="width:100%;height:auto;background:#FAFBFD;border:1px solid #D0DCE8;border-radius:4px">
+        {% for g in map.groups %}<text x="{{ g.x }}" y="{{ g.y }}" text-anchor="middle" font-size="13" font-weight="700" fill="#3a4552">{{ _("sim.group_" ~ g.side) }}</text>{% endfor %}
+        {% for p in map.points %}<circle class="sim-dot" cx="{{ p.cx }}" cy="{{ p.cy }}" r="5" fill="{{ p.color }}" fill-opacity=".85" stroke="{{ '#8A6D00' if p.party == 'KDU-ČSL' else '#fff' }}" stroke-width="1" data-name="{{ p.name }}" data-club="{{ p.party|club_name }}" tabindex="0" role="button" aria-label="{{ p.name }} ({{ p.party|club_name }})" style="cursor:pointer"><title>{{ p.name }} ({{ p.party|club_name }})</title></circle>{% endfor %}
+    </svg>
+    <p id="sim-picked" class="lbl" aria-live="polite" style="min-height:1.4em;margin:6px 0 0"></p>
+    <script>
+    (function () {
+        var out = document.getElementById('sim-picked');
+        document.querySelectorAll('.sim-dot').forEach(function (c) {
+            c.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.dispatchEvent(new Event('click')); }
+            });
+            c.addEventListener('click', function () {
+                var name = c.dataset.name;
+                out.textContent = '';
+                var b = document.createElement('b'); b.textContent = name + ' (' + c.dataset.club + ')';
+                var a = document.createElement('a');
+                a.href = '/loyalty?period={{ period }}&search=' + encodeURIComponent(name);
+                a.textContent = ' {{ _("sim.mp_votes_link") }} →';
+                out.appendChild(b); out.appendChild(a);
+            });
+        });
+    })();
+    </script>
+    <figcaption class="legend" id="sim-legend" style="margin-top:8px">
+        {% for side in ("government", "opposition", "unknown") %}{% set items = map.legend|selectattr("side", "equalto", side)|list %}{% if items %}
+        <span><b>{{ _("sim.side_" ~ side) }}:</b></span>{% for l in items %}<span><i style="background:{{ l.color }}{% if l.party == 'KDU-ČSL' %};outline:1px solid #8A6D00{% endif %}"></i>{{ l.party|club_name }} ({{ l.count }})</span>{% endfor %}
+        {% endif %}{% endfor %}
+    </figcaption>
+    <p class="lbl">{{ _("sim.map_note") }}</p>
+</figure>
 {% endif %}
+
+{% macro pair_rows(rows, offset=0) %}
+{% for row in rows %}
+<tr><td>{{ loop.index + offset }}</td><td>{{ row.mp1_name }}</td><td>{{ row.mp1_party|club_name }}</td><td>{{ row.mp2_name }}</td><td>{{ row.mp2_party|club_name }}</td>
+    <td><b>{{ (row.agreement * 100)|pct }}</b></td><td class="lbl">{{ _("sim.same_of").format(same=row.same|num, shared=row.shared|num) }}</td></tr>
+{% endfor %}
+{% endmacro %}
+{% macro pair_table(rows, title, empty_text, key) %}
+<h2 class="h2s">{{ title }}</h2>
+{% if rows %}
+<div style="overflow-x:auto" tabindex="0"><table class="t">
+    <thead><tr><th>#</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("sim.agreement") }}</th><th>{{ _("sim.voted_same") }}</th></tr></thead>
+    <tbody>{{ pair_rows(rows[:5]) }}</tbody>
+</table></div>
+{% if rows|length > 5 %}
+<div id="pairs-{{ key }}"><button type="button" hx-get="/api/similarity/pairs?period={{ period }}&table={{ key }}&page=1" hx-target="#pairs-{{ key }}" hx-swap="innerHTML">{{ _("sim.show_all").format(n=rows|length|num) }}</button></div>
+{% endif %}
+{% else %}
+<p>{{ empty_text }}</p>
+{% endif %}
+{% endmacro %}
+{{ pair_table(tables.cross_party, _("sim.cross_title"), _("no_data"), "cross_party") }}
+{{ pair_table(tables.gov_opp, _("sim.govopp_title"), _("sim.govopp_unknown"), "gov_opp") }}
+<p class="lbl">{{ _("sim.note") }}</p>

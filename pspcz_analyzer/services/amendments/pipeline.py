@@ -33,6 +33,7 @@ from pspcz_analyzer.services.amendments.merger import (
     _merge_pdf_and_steno,
     _pdf_download_and_parse,
 )
+from pspcz_analyzer.services.amendments.pending import build_pending_bills, pending_cts
 from pspcz_analyzer.services.amendments.progress import (
     AmendmentProgress,
     AmendmentStage,
@@ -44,9 +45,8 @@ from pspcz_analyzer.services.amendments.steno_parser import (
 )
 from pspcz_analyzer.services.amendments.steno_scraper import StenoFailure, find_steno_for_bod
 from pspcz_analyzer.services.amendments.submitter_resolver import resolve_submitter_ids
-from pspcz_analyzer.services.amendments.summarizer import (
-    _summarize_amendments,
-)
+from pspcz_analyzer.services.amendments.summarizer import _summarize_amendments
+from pspcz_analyzer.services.amendments.summary_carry import carry_summaries
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
 
 
@@ -90,15 +90,23 @@ def _run_pipeline_sync(
     ct_to_pdf_text: dict[int, str] = {}
 
     if run_parse:
+        previous = load_amendments(cache_dir, period)
         bills, ct_to_pdf_text = _run_parse_stages(
-            period, period_data, cache_dir, progress, on_progress, refresh_active, cancel_check
+            period,
+            period_data,
+            cache_dir,
+            progress,
+            on_progress,
+            refresh_active,
+            cancel_check,
+            previous,
         )
     elif run_summarize:
         # Load cached bills from disk
         bills = list(load_amendments(cache_dir, period).values())
         if not bills:
             logger.warning(
-                "[amendment pipeline] No cached amendment data for period {} — "
+                "[amendment pipeline] No cached amendment data for period {} – "
                 "run PARSE mode first",
                 period,
             )
@@ -155,17 +163,18 @@ def _run_parse_stages(
     on_progress: Callable[[int, list[BillAmendmentData]], None] | None = None,
     refresh_active: bool = False,
     cancel_check: Callable[[], None] | None = None,
+    previous: dict[tuple[int, int], BillAmendmentData] | None = None,
 ) -> tuple[list[BillAmendmentData], dict[int, str]]:
     """Run parse stages of the amendment pipeline.
 
     Stage order:
-      0. SCRAPE_HISTORIES — ensure tisk histories exist
-      1. IDENTIFY — find third-reading amendment candidates
-      2. PDF_DOWNLOAD_PARSE — download/parse amendment PDFs
-      3. STENO_DOWNLOAD_PARSE — download/parse steno records
-      4. MERGE — combine PDF structure with steno vote data
-      5. RESOLVE_IDS — link vote numbers to vote IDs
-      6. RESOLVE_SUBMITTERS — resolve names to MP IDs
+      0. SCRAPE_HISTORIES – ensure tisk histories exist
+      1. IDENTIFY – find third-reading amendment candidates
+      2. PDF_DOWNLOAD_PARSE – download/parse amendment PDFs
+      3. STENO_DOWNLOAD_PARSE – download/parse steno records
+      4. MERGE – combine PDF structure with steno vote data
+      5. RESOLVE_IDS – link vote numbers to vote IDs
+      6. RESOLVE_SUBMITTERS – resolve names to MP IDs
       7. (LLM_SUMMARIZE is handled separately)
 
     Args:
@@ -175,6 +184,7 @@ def _run_parse_stages(
         progress: Progress tracker (mutated in-place).
         on_progress: Optional callback for UI refresh.
         cancel_check: Optional cancellation hook raised between stages/items.
+        previous: Bills of the previous run; unchanged letters keep their summaries.
 
     Returns:
         Tuple of (list of parsed BillAmendmentData, ct -> PDF text mapping).
@@ -193,10 +203,11 @@ def _run_parse_stages(
     progress.stage = AmendmentStage.IDENTIFY
     logger.info("[amendment pipeline] Identifying third-reading candidates...")
     candidates = _identify_third_reading_bods(period_data)
-    progress.bills_found = len(candidates)
+    pending = pending_cts(period_data, {ct for _, _, ct, _ in candidates})
+    progress.bills_found = len(candidates) + len(pending)
     progress.total_items = len(candidates)
 
-    if not candidates:
+    if not candidates and not pending:
         logger.info(
             "[amendment pipeline] No third-reading amendment bills found for period {}",
             period,
@@ -211,7 +222,7 @@ def _run_parse_stages(
     )
 
     # Build temporary bills to group by CT for PDF download
-    ct_set = {ct for _, _, ct, _ in candidates}
+    ct_set = {ct for _, _, ct, _ in candidates} | set(pending)
     temp_bills_for_pdf = [BillAmendmentData(period=period, schuze=0, bod=0, ct=ct) for ct in ct_set]
     pdf_data, ct_to_pdf_text = _pdf_download_and_parse(
         temp_bills_for_pdf, period, cache_dir, period_data, cancel_check
@@ -253,7 +264,7 @@ def _run_parse_stages(
                     ct,
                     failure,
                 )
-                # Without steno, there's no vote linkage — skip.
+                # Without steno, there's no vote linkage – skip.
                 # The tisk pipeline handles raw PDF content separately.
                 continue
 
@@ -308,7 +319,7 @@ def _run_parse_stages(
             progress.bills_parsed += 1
         finally:
             # Count the candidate as done regardless of outcome (previously
-            # set to `i` before processing — the bar lagged one item behind).
+            # set to `i` before processing – the bar lagged one item behind).
             progress.done_items = i + 1
 
     failure_detail = ", ".join(f"{r.value}={c}" for r, c in failure_counts.most_common())
@@ -357,10 +368,13 @@ def _run_parse_stages(
         total_after_merge,
     )
 
+    bills += build_pending_bills(period, pending, pdf_data, period_data)
+
     # Stage 6: Resolve submitter names to MP IDs
     progress.stage = AmendmentStage.RESOLVE_SUBMITTERS
     logger.info("[amendment pipeline] Resolving submitter names...")
-    resolve_submitter_ids(bills, period_data.mp_info)
+    resolve_submitter_ids(bills, period_data.mp_info, period_data.mp_votes)
+    carry_summaries(bills, previous or {})
 
     # Intermediate save: results visible before LLM
     save_amendments(cache_dir, period, bills)
@@ -477,7 +491,7 @@ class AmendmentPipelineService:
         """Prune a finished period's task + flag.
 
         Only removes the dict entries if this task is still the current
-        one — a restart for the same period may have replaced them
+        one – a restart for the same period may have replaced them
         before this done-callback fired.
         """
         if self._tasks.get(period) is task:
@@ -489,7 +503,7 @@ class AmendmentPipelineService:
 
         Flips the period's cancellation flag; the worker thread stops
         cooperatively at its next checkpoint. (task.cancel() alone cannot
-        interrupt work running inside asyncio.to_thread — it only
+        interrupt work running inside asyncio.to_thread – it only
         releases the awaiting coroutine.)
 
         Returns True if a cancellation was requested.
@@ -514,7 +528,7 @@ class AmendmentPipelineService:
     async def wait_stopped(self, timeout: float = 10.0) -> None:
         """Wait for running tasks to drain after cancel_all().
 
-        Tasks still running after *timeout* are hard-cancelled — that
+        Tasks still running after *timeout* are hard-cancelled – that
         releases the event-loop side immediately; worker threads exit
         at their next cancellation checkpoint.
         """
@@ -523,7 +537,7 @@ class AmendmentPipelineService:
             _, pending = await asyncio.wait(tasks, timeout=timeout)
             if pending:
                 logger.warning(
-                    "[amendment pipeline] {} tasks still draining after {}s — forcing cancellation",
+                    "[amendment pipeline] {} tasks still draining after {}s – forcing cancellation",
                     len(pending),
                     timeout,
                 )

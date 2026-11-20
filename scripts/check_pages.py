@@ -17,7 +17,7 @@ import sys
 
 import httpx
 
-PAGES = ["/", "/votes", "/laws", "/amendments", "/loyalty", "/attendance", "/similarity"]
+PAGES = ["/", "/votes", "/laws", "/amendments", "/loyalty", "/attendance", "/loyalty?tab=podobnost"]
 PARTIALS = [
     "/api/votes?period={p}",
     "/api/laws?period={p}",
@@ -124,7 +124,7 @@ def main() -> int:
         # so only assert the page renders (200 + no server error).
         detail_markers = {
             "law": (),
-            "vote": ("stat-card-green",),
+            "vote": ("club-h",),
             "amendment": ("driver-badge",),
         }
         for kind, path in details.items():

@@ -638,6 +638,7 @@ class TestCrossValidateAmendments:
         letters = [a.letter for a in result]
         assert "A" in letters
         assert "B" in letters
+        assert result[1].match_source == "vote_title"
 
     def test_detects_final_vote_from_title(self):
         """Cross-validation should detect final vote from 'jako celku'."""

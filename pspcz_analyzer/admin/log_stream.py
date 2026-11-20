@@ -47,7 +47,7 @@ class LogBroadcaster:
             self._sink_id = None
 
     def _handle_log(self, message: str) -> None:
-        """Loguru sink callback — buffer + broadcast to subscribers."""
+        """Loguru sink callback – buffer + broadcast to subscribers."""
         line = message.strip()
         if not line:
             return

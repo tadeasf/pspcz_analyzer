@@ -1,7 +1,7 @@
 """UNL table column definitions and Polars dtype schemas.
 
 Column names match psp.cz documentation exactly (Czech names) for traceability.
-UNL files have no headers — these lists define the column order.
+UNL files have no headers – these lists define the column order.
 """
 
 from typing import Any
@@ -146,7 +146,7 @@ ZARAZENI_DTYPES: PolarsSchemaDict = {
     "id_of": pl.Int32,
 }
 
-# ---- Void votes (zmatecne.unl from hl-XXXXps.zip) ----
+# ---- Void votes (zmatecne.unl, same all-periods table in every hl-XXXXps.zip) ----
 
 ZMATECNE_COLUMNS: list[str] = [
     "id_hlasovani",
@@ -154,6 +154,21 @@ ZMATECNE_COLUMNS: list[str] = [
 
 ZMATECNE_DTYPES: PolarsSchemaDict = {
     "id_hlasovani": pl.Int64,
+}
+
+# ---- Excuses (omluvy.unl, all periods, in every hl-*.zip) ----
+
+OMLUVY_COLUMNS: list[str] = [
+    "id_organ",
+    "id_poslanec",
+    "den",
+    "od",
+    "do",
+]
+
+OMLUVY_DTYPES: PolarsSchemaDict = {
+    "id_organ": pl.Int32,
+    "id_poslanec": pl.Int64,
 }
 
 # ---- Sessions (schuze.unl from schuze.zip) ----
@@ -172,6 +187,22 @@ SCHUZE_DTYPES: PolarsSchemaDict = {
     "id_schuze": pl.Int64,
     "id_org": pl.Int32,
     "schuze": pl.Int32,
+}
+
+# ---- Session states (schuze_stav.unl from schuze.zip) ----
+
+SCHUZE_STAV_COLUMNS: list[str] = [
+    "id_schuze",
+    "stav",  # 1 = OK, 2 = agenda not approved and the session was closed
+    "typ",
+    "text_dt",
+    "text_st",
+    "tm_line",
+]
+
+SCHUZE_STAV_DTYPES: PolarsSchemaDict = {
+    "id_schuze": pl.Int64,
+    "stav": pl.Int32,
 }
 
 # ---- Agenda items (bod_schuze.unl from schuze.zip) ----
@@ -222,7 +253,7 @@ TISKY_COLUMNS: list[str] = [
     "datum_rozeslani",
     "cas_doruceni",
     "lhuta",
-    "id_stav",
+    "nazev_cely",  # full official title (was mislabelled "id_stav" and cast to int, so null)
     "nazev_cast",
     "popis",
     "dalsi_cast",
@@ -243,5 +274,4 @@ TISKY_DTYPES: PolarsSchemaDict = {
     "id_org": pl.Int32,
     "id_obdobi": pl.Int32,
     "id_navrhovatele": pl.Int64,
-    "id_stav": pl.Int32,
 }

@@ -2,11 +2,8 @@
 
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
-from pspcz_analyzer.services.amendment_service import (
-    amendment_detail,
-    amendment_mp_votes,
-    list_amendment_bills,
-)
+from pspcz_analyzer.services.amendment_listing import _sd_numbers, law_amendments, list_amendments
+from pspcz_analyzer.services.amendment_service import amendment_mp_votes
 from tests.fixtures.sample_data import (
     make_mp_info,
     make_mp_votes,
@@ -65,62 +62,46 @@ def _make_data_with_amendments() -> PeriodData:
     )
 
 
-class TestListAmendmentBills:
-    def test_returns_pagination_dict(self):
-        data = _make_data_with_amendments()
-        result = list_amendment_bills(data)
-        assert isinstance(result, dict)
-        assert "rows" in result
-        assert "total" in result
-        assert "page" in result
-        assert "per_page" in result
-        assert "total_pages" in result
-
-    def test_total_matches_bills(self):
-        data = _make_data_with_amendments()
-        result = list_amendment_bills(data)
+class TestListAmendments:
+    def test_groups_by_law_and_counts_letters(self):
+        result = list_amendments(_make_data_with_amendments())
         assert result["total"] == 3
+        assert result["law_count"] == 3
+        assert result["period_tally"]["total"] == 9
+        assert sum(result["period_tally"]["by_fate"].values()) == 9
 
-    def test_search_filters_by_name(self):
-        data = _make_data_with_amendments()
-        result = list_amendment_bills(data, search="489")
-        assert result["total"] >= 1
-        for row in result["rows"]:
-            assert "489" in row["tisk_nazev"]
+    def test_search_by_tisk_number(self):
+        result = list_amendments(_make_data_with_amendments(), search="489")
+        assert [g["ct"] for g in result["rows"]] == [489]
 
-    def test_search_case_insensitive(self):
+    def test_search_folds_diacritics_and_case(self):
         data = _make_data_with_amendments()
-        result = list_amendment_bills(data, search="ZÁKON")
-        # All bills contain "zákon" in their name
-        assert result["total"] == 3
+        assert list_amendments(data, search="ZAKON testovani")["total"] == 3
 
-    def test_search_folds_diacritics(self):
-        data = _make_data_with_amendments()
-        # ASCII query must match "zákon o testování"
-        assert list_amendment_bills(data, search="zakon")["total"] == 3
-        assert list_amendment_bills(data, search="testovani")["total"] == 3
+    def test_fate_filter_keeps_only_matching_letters(self):
+        result = list_amendments(_make_data_with_amendments(), fate="rejected")
+        assert all(x["fate"] == "rejected" for g in result["rows"] for x in g["shown"])
+        assert sum(len(g["shown"]) for g in result["rows"]) == 4
 
-    def test_pagination(self):
+    def test_letters_view_and_pagination(self):
         data = _make_data_with_amendments()
-        result = list_amendment_bills(data, per_page=2, page=1)
-        assert len(result["rows"]) == 2
-        assert result["total_pages"] == 2
-
-    def test_page_2(self):
-        data = _make_data_with_amendments()
-        result = list_amendment_bills(data, per_page=2, page=2)
+        result = list_amendments(data, view="letters", per_page=4, page=3)
+        assert result["total"] == 9
         assert len(result["rows"]) == 1
+        assert result["rows"][0]["law"]["ct"]
 
-    def test_row_has_expected_fields(self):
+    def test_sort_most(self):
+        result = list_amendments(_make_data_with_amendments(), sort="most")
+        assert [g["ct"] for g in result["rows"]] == [510, 489, 500]
+
+    def test_same_law_in_two_sittings_is_one_group(self):
         data = _make_data_with_amendments()
-        result = list_amendment_bills(data)
-        row = result["rows"][0]
-        assert "schuze" in row
-        assert "bod" in row
-        assert "ct" in row
-        assert "tisk_nazev" in row
-        assert "amendment_count" in row
-        assert "parse_confidence" in row
+        data.amendment_data[(80, 3)] = _make_bill(80, 3, 489, 2)
+        result = list_amendments(data)
+        assert result["law_count"] == 3
+        group = next(g for g in result["rows"] if g["ct"] == 489)
+        assert len(group["letters"]) == 5
+        assert (group["schuze"], group["bod"]) == (80, 3)
 
     def test_empty_amendment_data(self):
         data = PeriodData(
@@ -130,54 +111,23 @@ class TestListAmendmentBills:
             void_votes=make_void_votes(),
             mp_info=make_mp_info(),
         )
-        result = list_amendment_bills(data)
+        result = list_amendments(data)
         assert result["total"] == 0
-        assert result["rows"] == []
+        assert result["law_count"] == 0
 
 
-class TestAmendmentDetail:
-    def test_returns_dict(self):
-        data = _make_data_with_amendments()
-        result = amendment_detail(data, schuze=78, bod=1)
-        assert isinstance(result, dict)
-
+class TestLawAmendments:
     def test_not_found_returns_none(self):
-        data = _make_data_with_amendments()
-        result = amendment_detail(data, schuze=99, bod=99)
-        assert result is None
+        assert law_amendments(_make_data_with_amendments(), schuze=99, bod=99) is None
 
-    def test_contains_amendments_list(self):
-        data = _make_data_with_amendments()
-        result = amendment_detail(data, schuze=78, bod=1)
+    def test_letters_and_tally(self):
+        result = law_amendments(_make_data_with_amendments(), schuze=78, bod=1)
         assert result is not None
-        assert "amendments" in result
-        assert len(result["amendments"]) == 3
-
-    def test_contains_final_vote(self):
-        data = _make_data_with_amendments()
-        result = amendment_detail(data, schuze=78, bod=1)
-        assert result is not None
-        assert "final_vote" in result
-        assert result["final_vote"] is not None
-        assert result["final_vote"]["is_final_vote"] is True
-
-    def test_amendment_has_fields(self):
-        data = _make_data_with_amendments()
-        result = amendment_detail(data, schuze=78, bod=1)
-        assert result is not None
-        amend = result["amendments"][0]
-        assert "letter" in amend
-        assert "vote_number" in amend
-        assert "result" in amend
-        assert "committee_stance" in amend
-
-    def test_bill_metadata(self):
-        data = _make_data_with_amendments()
-        result = amendment_detail(data, schuze=78, bod=1)
-        assert result is not None
-        assert result["schuze"] == 78
-        assert result["bod"] == 1
         assert result["ct"] == 489
+        assert [x["letter"] for x in result["letters"]] == ["A", "B", "C"]
+        assert result["tally"]["accepted"] == 2
+        assert result["final_result"] == "accepted"
+        assert result["letters"][0]["committee_stance"] == "doporucujici"
 
 
 class TestAmendmentMpVotes:
@@ -210,3 +160,10 @@ class TestAmendmentMpVotes:
         for mp in result["mp_votes"]:
             assert "vote_label" in mp
             assert "party" in mp
+
+
+def test_sd_numbers_per_sub_letter() -> None:
+    text = "G. \nPoslanec Patrik Pařil \nG.1. SD 1077 \ntext\nG.2. SD 1078\n"
+    assert _sd_numbers("G2", text) == ["1078"]
+    assert _sd_numbers("B1", "B1. SD 1731\n") == ["1731"]
+    assert _sd_numbers("G", text) == ["1077", "1078"]

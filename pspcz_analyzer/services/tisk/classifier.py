@@ -12,11 +12,12 @@ from pspcz_analyzer.services.llm import (
     LLMClient,
     create_llm_client,
     deserialize_topics,
+    llm_map,
     serialize_topics,
 )
 
 # How many newly classified tisky to accumulate before flushing the parquet.
-# Writing after every single tisk rewrites the whole period file — O(n²) I/O
+# Writing after every single tisk rewrites the whole period file – O(n²) I/O
 # that turns re-classification of a large cache into hours. Batching keeps
 # crash-resume cheap (at most this many classifications are redone).
 _SAVE_EVERY_TISKS = 25
@@ -67,7 +68,7 @@ def classify_and_save(
         elif ct not in existing:
             remaining[ct] = p
         elif not existing[ct].get("summary"):
-            # Has record but missing summary — needs re-processing
+            # Has record but missing summary – needs re-processing
             remaining[ct] = p
             incomplete[ct] = existing[ct]
 
@@ -78,7 +79,7 @@ def classify_and_save(
 
     if fully_done > 0 or incomplete:
         logger.info(
-            "[tisk pipeline] Resuming: {} fully done, {} need summaries, {} new — {} total",
+            "[tisk pipeline] Resuming: {} fully done, {} need summaries, {} new – {} total",
             fully_done,
             len(incomplete),
             len(remaining) - len(incomplete),
@@ -102,11 +103,13 @@ def classify_and_save(
         # Without LLM, return whatever we have cached
         return _build_topic_summary_maps(records, period)
 
-    new_since_save = 0
-    for i, (ct, text_path) in enumerate(sorted(remaining.items()), fully_done + 1):
+    numbered = list(enumerate(sorted(remaining.items()), fully_done + 1))
+
+    def _one(item: tuple[int, tuple[int, Path]]) -> dict:
+        i, (ct, text_path) = item
         if cancel_check:
             cancel_check()
-        record = _classify_single_tisk(
+        return _classify_single_tisk(
             ct,
             text_path,
             llm,
@@ -116,6 +119,9 @@ def classify_and_save(
             existing_record=incomplete.get(ct),
             cancel_check=cancel_check,
         )
+
+    new_since_save = 0
+    for (i, _item), record in zip(numbered, llm_map(_one, numbered), strict=True):
         records.append(record)
         new_since_save += 1
 
@@ -168,7 +174,7 @@ def _classify_single_tisk(
 
     if use_ai:
         if has_topics and not has_summary:
-            # Topics already cached — only generate summaries
+            # Topics already cached – only generate summaries
             topics = deserialize_topics(existing_record["topic"])  # type: ignore[index]
             topics_en = deserialize_topics(existing_record.get("topic_en", "[]"))  # type: ignore[arg-type]
             source = existing_record.get("source", f"llm:{llm.model}")  # type: ignore[union-attr]
@@ -184,7 +190,7 @@ def _classify_single_tisk(
             summary = summaries["cs"]
             summary_en = summaries["en"]
         else:
-            # No cached data — do combined classify+summarize (2 calls instead of 4)
+            # No cached data – do combined classify+summarize (2 calls instead of 4)
             logger.info(
                 "[tisk pipeline] [{}/{}] AI classify+summarize tisk ct={} (bilingual) ...",
                 i,
@@ -311,7 +317,7 @@ def consolidate_topics(
         new_topics_en = _apply_topic_mapping(old_topics_en, mapping_en)
         r["topic_en"] = serialize_topics(new_topics_en)
 
-    # Re-write parquet (atomic — the frontend may read it at any moment)
+    # Re-write parquet (atomic – the frontend may read it at any moment)
     write_parquet_atomic(pl.DataFrame(records), parquet_path)
 
     # Write marker so we don't re-consolidate on next startup
@@ -339,7 +345,7 @@ def _build_topic_summary_maps(
 ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
     """Build topic, summary, and summary_en maps from classification records.
 
-    English topics are not returned here — consumers read the ``topic_en``
+    English topics are not returned here – consumers read the ``topic_en``
     parquet column through TiskCacheManager.topic_en_cache instead.
     """
     topic_map: dict[int, list[str]] = {}

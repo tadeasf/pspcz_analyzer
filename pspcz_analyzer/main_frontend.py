@@ -1,4 +1,4 @@
-"""Frontend entrypoint — public web app with read-only data access."""
+"""Frontend entrypoint – public web app with read-only data access."""
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -7,14 +7,23 @@ import markdown as _md
 import markupsafe
 import nh3
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from loguru import logger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from pspcz_analyzer.config import DEFAULT_PERIOD, DEV, PORT
+from pspcz_analyzer.config import (
+    CLUB_COLOR_OTHER,
+    CLUB_COLORS,
+    DEFAULT_PERIOD,
+    DEV,
+    GIT_SHA,
+    PORT,
+)
 from pspcz_analyzer.i18n import setup_jinja2_i18n
 from pspcz_analyzer.i18n.middleware import LocaleMiddleware
 from pspcz_analyzer.logging_config import setup_logging
@@ -23,7 +32,7 @@ from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.amendments import router as amendments_router
 from pspcz_analyzer.routes.amendments import templates as amendments_templates
 from pspcz_analyzer.routes.charts import router as charts_router
-from pspcz_analyzer.routes.context import data_freshness_processor
+from pspcz_analyzer.routes.context import club_name, data_dates_processor
 from pspcz_analyzer.routes.feedback import router as feedback_router
 from pspcz_analyzer.routes.feedback import templates as feedback_templates
 from pspcz_analyzer.routes.health import router as health_router
@@ -74,6 +83,26 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
+
+async def _not_found_handler(request: Request, exc: StarletteHTTPException) -> Response:
+    """HTML 404 page for page URLs; API and other errors keep the default JSON."""
+    path = request.url.path
+    if exc.status_code != 404 or path.startswith(("/api/", "/static/", "/charts/")):
+        return await http_exception_handler(request, exc)
+    return pages_templates.TemplateResponse(
+        "not_found.html",
+        {
+            "request": request,
+            "period": DEFAULT_PERIOD,
+            "periods": request.app.state.data.available_periods,
+            "lang": getattr(request.state, "lang", "cs"),
+        },
+        status_code=404,
+    )
+
+
+app.add_exception_handler(StarletteHTTPException, _not_found_handler)  # type: ignore[arg-type]
+
 # Security: response headers
 app.add_middleware(SecurityHeadersMiddleware)
 
@@ -117,7 +146,11 @@ for t in (
 ):
     t.env.filters["markdown"] = _md_filter
     t.env.filters["status_category"] = status_category
-    t.context_processors.append(data_freshness_processor)
+    t.env.filters["club_name"] = club_name
+    t.env.globals["club_colors"] = CLUB_COLORS
+    t.env.globals["club_color_other"] = CLUB_COLOR_OTHER
+    t.env.globals["git_sha"] = GIT_SHA
+    t.context_processors.append(data_dates_processor)
     setup_jinja2_i18n(t.env)
 
 

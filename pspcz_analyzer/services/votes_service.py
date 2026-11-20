@@ -1,4 +1,4 @@
-"""Votes / laws browser — search, list, and detail views of parliamentary votes."""
+"""Votes / laws browser – search, list, and detail views of parliamentary votes."""
 
 from __future__ import annotations
 
@@ -7,10 +7,20 @@ import re
 import polars as pl
 
 from pspcz_analyzer.i18n import gettext as _
-from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.labels import mp_vote_label
-from pspcz_analyzer.utils.text import normalize_czech
+from pspcz_analyzer.services.tisk.brief import brief_view
+from pspcz_analyzer.services.vote_codes import category_count_exprs
+from pspcz_analyzer.services.vote_context import (
+    filter_kind,
+    group_result,
+    kind_on_item,
+    reading_at,
+    vote_kind,
+    vote_question,
+    vote_story,
+)
+from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 # Keys into i18n translations, resolved at call time
 _OUTCOME_KEYS: dict[str, str] = {
@@ -85,6 +95,22 @@ def _match_vote_to_stage(
     return None
 
 
+def _search_mask(votes: pl.DataFrame, data: PeriodData, search: str) -> pl.Series:
+    """Vote rows matching a tisk number or inflection-tolerant words (#95)."""
+    number = tisk_number_query(search)
+    tokens = search_tokens(search)
+    mask: list[bool] = []
+    for schuze, bod, long_name, short_name in votes.select(
+        "schuze", "bod", "nazev_dlouhy", "nazev_kratky"
+    ).iter_rows():
+        tisk = data.get_tisk(schuze, bod) if bod and bod > 0 else None
+        if number is not None:
+            mask.append(tisk is not None and tisk.ct == number)
+        else:
+            mask.append(matches_tokens(tokens, long_name, short_name, tisk.nazev if tisk else None))
+    return pl.Series(mask, dtype=pl.Boolean)
+
+
 def _apply_vote_filters(
     votes: pl.DataFrame,
     data: PeriodData,
@@ -100,17 +126,7 @@ def _apply_vote_filters(
     )
 
     if search.strip():
-        q = normalize_czech(search.strip())
-        votes = votes.filter(
-            pl.col("nazev_dlouhy").map_elements(
-                lambda s: q in normalize_czech(s or ""),
-                return_dtype=pl.Boolean,
-            )
-            | pl.col("nazev_kratky").map_elements(
-                lambda s: q in normalize_czech(s or ""),
-                return_dtype=pl.Boolean,
-            )
-        )
+        votes = votes.filter(_search_mask(votes, data, search))
 
     if outcome_filter:
         votes = votes.filter(pl.col("vysledek") == outcome_filter)
@@ -141,6 +157,8 @@ def _enrich_vote_rows(rows: list[dict], data: PeriodData, lang: str = "cs") -> N
         tisk = data.get_tisk(schuze, bod) if schuze and bod and bod > 0 else None
         r["tisk_url"] = tisk.url if tisk else None
         r["tisk_nazev"] = tisk.nazev if tisk else None
+        brief = brief_view(tisk.brief, lang) if tisk else None
+        r["tisk_title"] = brief["nazev"] if brief and brief.get("nazev") else None
         r["tisk_ct"] = tisk.ct if tisk else None
         if tisk:
             r["tisk_topics"] = tisk.topics_en if lang == "en" and tisk.topics_en else tisk.topics
@@ -148,35 +166,73 @@ def _enrich_vote_rows(rows: list[dict], data: PeriodData, lang: str = "cs") -> N
             r["tisk_topics"] = []
 
 
+def _group_rows(rows: list[dict]) -> list[dict]:
+    """Group consecutive rows (newest first) by sitting, agenda item and day."""
+    groups: list[dict] = []
+    for row in rows:
+        key = (row["schuze"], row["bod"], row["datum"])
+        if not groups or groups[-1]["key"] != key:
+            groups.append(
+                {
+                    "key": key,
+                    "schuze": row["schuze"],
+                    "bod": row["bod"],
+                    "datum": row["datum"],
+                    "rows": [],
+                }
+            )
+        groups[-1]["rows"].append(row)
+    for g in groups:
+        first = g["rows"][0]
+        g["title"] = first.get("tisk_title") or first.get("tisk_nazev") or first["nazev_dlouhy"]
+        g["title"] = g["title"] or first["nazev_kratky"]
+        g["tisk_ct"] = first.get("tisk_ct")
+        g["all_void"] = all(r["is_void"] for r in g["rows"])
+        g["result"] = group_result(g["rows"])
+    return groups
+
+
 def list_votes(
     data: PeriodData,
     search: str = "",
     page: int = 1,
-    per_page: int = 30,
+    per_page: int = 12,
     outcome_filter: str = "",
     topic_filter: str = "",
     lang: str = "cs",
+    kind_filter: str = "",
 ) -> dict:
-    """List votes with optional text search, topic filter, and pagination.
+    """List votes grouped by agenda item, with filters and pagination by group (#113).
+
+    Void votes stay in the list (marked ``is_void``) so readers see them.
 
     Args:
+        data: Period data.
+        search: Free-text search over the agenda item names.
+        page: 1-based page of groups.
+        per_page: Groups per page.
+        outcome_filter: "A" (passed) or "R" (rejected), empty for all.
+        topic_filter: Topic label of the linked tisk, empty for all.
         lang: Language code for topic labels ('cs' or 'en').
+        kind_filter: "final" or "amendment" (kinds known from amendment data).
 
-    Returns dict with keys: rows, total, page, per_page, total_pages.
+    Returns:
+        Dict with groups, rows (flat rows of the page), total (votes),
+        total_groups, page, per_page, total_pages.
     """
-    void_ids = data.void_votes.get_column("id_hlasovani")
-    votes = data.votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
+    votes = _apply_vote_filters(data.votes, data, search, outcome_filter, topic_filter)
+    votes = filter_kind(votes, data, kind_filter).sort("id_hlasovani", descending=True)
+    keys = votes.select("schuze", "bod", "datum").unique(maintain_order=True)
 
-    votes = _apply_vote_filters(votes, data, search, outcome_filter, topic_filter)
-
-    total = votes.height
-    total_pages = max(1, (total + per_page - 1) // per_page)
+    total_groups = keys.height
+    total_pages = max(1, (total_groups + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
+    page_keys = keys.slice((page - 1) * per_page, per_page)
+    page_rows = votes.join(
+        page_keys, on=["schuze", "bod", "datum"], how="semi", maintain_order="left"
+    )
 
-    votes = votes.sort("id_hlasovani", descending=True)
-    offset = (page - 1) * per_page
-    page_rows = votes.slice(offset, per_page)
-
+    void_ids = set(data.void_votes.get_column("id_hlasovani").to_list())
     rows = page_rows.select(
         "id_hlasovani",
         "datum",
@@ -192,13 +248,22 @@ def list_votes(
         "zdrzel",
         "nehlasoval",
         "prihlaseno",
+        "kvorum",
     ).to_dicts()
-
     _enrich_vote_rows(rows, data, lang)
+    for row in rows:
+        row["is_void"] = row["id_hlasovani"] in void_ids
+        row["kind"] = kind_on_item(vote_kind(data, row["id_hlasovani"]), row.get("tisk_ct"))
+        row["steno"] = vote_question(data, row["id_hlasovani"], lang)
 
+    groups = _group_rows(rows)
+    for g in groups:
+        g["reading"] = reading_at(data, g["tisk_ct"], g["schuze"])
     return {
+        "groups": groups,
         "rows": rows,
-        "total": total,
+        "total": votes.height,
+        "total_groups": total_groups,
         "page": page,
         "per_page": per_page,
         "total_pages": total_pages,
@@ -212,6 +277,7 @@ def _build_vote_info(vote_row: pl.DataFrame, data: PeriodData, lang: str = "cs")
         pl.col("nazev_kratky").fill_null(""),
     ).to_dicts()[0]
     info["outcome_label"] = _outcome_label(info.get("vysledek", ""))
+    info["is_void"] = info["id_hlasovani"] in data.void_votes.get_column("id_hlasovani")
 
     # Look up linked parliamentary print (tisk)
     schuze = info.get("schuze")
@@ -268,12 +334,7 @@ def _build_party_breakdown(mp_detail: pl.DataFrame) -> list[dict]:
     party_stats = (
         mp_detail.group_by("party")
         .agg(
-            (pl.col("vysledek") == VoteResult.YES).sum().alias("yes"),
-            (pl.col("vysledek") == VoteResult.NO).sum().alias("no"),
-            (pl.col("vysledek") == VoteResult.ABSTAINED).sum().alias("abstained"),
-            (pl.col("vysledek") == VoteResult.DID_NOT_VOTE).sum().alias("passive"),
-            (pl.col("vysledek") == VoteResult.ABSENT).sum().alias("absent"),
-            (pl.col("vysledek") == VoteResult.EXCUSED).sum().alias("excused"),
+            *category_count_exprs(),
             pl.len().alias("total"),
         )
         .sort("party")
@@ -302,8 +363,11 @@ def vote_detail(data: PeriodData, vote_id: int, lang: str = "cs") -> dict | None
 
     # Individual MP votes for this vote
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)
-    mp_detail = mp_rows.join(data.mp_info, on="id_poslanec", how="left")
+    mp_detail = mp_rows.join(data.mp_info.drop("party"), on="id_poslanec", how="left")
 
+    info["kind"] = kind_on_item(vote_kind(data, vote_id), info.get("tisk_ct"))
+    info["steno"] = vote_question(data, vote_id, lang)
+    info["story"] = vote_story(data, info, lang)
     return {
         "info": info,
         "party_breakdown": _build_party_breakdown(mp_detail),

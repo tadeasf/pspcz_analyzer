@@ -1,8 +1,8 @@
 """Scraper for proposed law changes and related bills from psp.cz.
 
 Parses:
-- ``historie.sqw?snzp=1`` — which existing laws a bill proposes to modify
-- ``tisky.sqw?idsb=...`` — all other bills modifying the same laws
+- ``historie.sqw?snzp=1`` – which existing laws a bill proposes to modify
+- ``tisky.sqw?idsb=...`` – all other bills modifying the same laws
 """
 
 import json

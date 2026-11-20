@@ -1,14 +1,17 @@
-"""LLM helper utilities — sanitization, truncation, and factory."""
+"""LLM helper utilities – sanitization, truncation, and factory."""
 
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable, Iterator
+from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pspcz_analyzer.services.llm.client import LLMClient
 
 from pspcz_analyzer.config import (
+    LLM_CONCURRENCY,
     LLM_MAX_TEXT_CHARS,
     LLM_PROVIDER,
     LLM_STRUCTURED_OUTPUT,
@@ -37,7 +40,7 @@ def _sanitize_llm_input(text: str) -> str:
     return _INJECTION_PHRASES_RE.sub("[REDACTED]", text)
 
 
-# Strip <think>...</think> blocks from responses (defensive — models with chain-of-thought)
+# Strip <think>...</think> blocks from responses (defensive – models with chain-of-thought)
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
 # Pattern for heading lines in Czech legislative texts
@@ -62,7 +65,8 @@ def truncate_legislative_text(
 ) -> str:
     """Truncate Czech legislative text via structural extraction for LLM processing.
 
-    When TISK_SHORTENER is disabled (0), returns the full text unmodified.
+    When TISK_SHORTENER is disabled (0), returns the full text, but still hard-capped
+    at `max_chars`: a text over the model context fails with HTTP 400 on every try.
 
     Strategy (when enabled and text exceeds max_chars):
     1. First `verbatim_chars` kept verbatim (covers explanatory report + most content)
@@ -70,7 +74,7 @@ def truncate_legislative_text(
     3. Hard cap at `max_chars` total
     """
     if not TISK_SHORTENER:
-        return text
+        return text[:max_chars]
 
     if len(text) <= max_chars:
         return text
@@ -131,3 +135,21 @@ def create_llm_client() -> LLMClient:
         case _:
             msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
             raise ValueError(msg)
+
+
+def llm_map[T, R](fn: Callable[[T], R], items: Iterable[T]) -> Iterator[R]:
+    """Results of ``fn`` over ``items`` in order, with ``LLM_CONCURRENCY`` calls at a time.
+
+    Args:
+        fn: Work for one item (thread-safe; LLMClient is, every request is its own POST).
+        items: Items to process.
+
+    Yields:
+        One result per item, in the order of ``items``. An exception in ``fn`` (also
+        PipelineCancelled) is raised here and the not yet started items are dropped.
+    """
+    pool = ThreadPoolExecutor(LLM_CONCURRENCY)
+    try:
+        yield from pool.map(fn, items)
+    finally:
+        pool.shutdown(cancel_futures=True)

@@ -27,6 +27,11 @@ class AmendmentVote:
         grouped_with: Other amendment letters voted together.
         is_final_vote: True for "zákon jako celku" final passage vote.
         is_leg_tech: True for §95 legislative-technical corrections.
+        is_procedure: True for a vote on the voting procedure, not on an amendment.
+        is_unvotable: True when the steno says the letter became unvotable.
+        match_source: How the vote was tied to the letter: "letter" (the steno names it),
+            "vote_title" (psp.cz's vote title names it), "committee_name" (only the
+            committee is named; uncertain), "" (no vote).
         amendment_text: Per-amendment text from PDF (or combined blob for legacy).
         summary: LLM-generated Czech summary.
         summary_en: LLM-generated English summary.
@@ -50,11 +55,20 @@ class AmendmentVote:
     grouped_with: list[str] = field(default_factory=list)
     is_final_vote: bool = False
     is_leg_tech: bool = False
+    is_procedure: bool = False
+    is_unvotable: bool = False
+    match_source: str = ""
     amendment_text: str = ""
     summary: str = ""
     summary_en: str = ""
+    summary_warning: bool = False  # automatic check (#97) found a possible error
+    summary_reviewed: bool = False  # corrected or confirmed in /admin/corrections
     pdf_submitter_names: list[str] = field(default_factory=list)
     pdf_letter_raw_text: str = ""
+
+
+# Sitting number of bills whose amendments are not voted yet; their key is (0, ct)
+PENDING_SCHUZE = 0
 
 
 @dataclass
@@ -63,8 +77,9 @@ class BillAmendmentData:
 
     Attributes:
         period: Electoral period number.
-        schuze: Session number.
-        bod: Agenda item number.
+        schuze: Session number; PENDING_SCHUZE (0) for a bill whose amendment
+            document is out but whose 3rd reading has not been voted yet.
+        bod: Agenda item number; the tisk number for a pending bill.
         ct: Tisk number (cislo tisku).
         tisk_nazev: Title of the tisk.
         steno_url: URL of the stenographic record page.
@@ -98,6 +113,11 @@ class BillAmendmentData:
     amendment_tisk_idd: int | None = None
     amendment_pdf_text: str = ""
     unlinked_amendment_count: int = 0
+
+    @property
+    def is_pending(self) -> bool:
+        """True for a bill before its 3rd-reading vote (key ``(0, ct)``)."""
+        return self.schuze == PENDING_SCHUZE
 
     @property
     def amendment_count(self) -> int:
