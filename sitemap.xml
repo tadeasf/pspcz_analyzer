@@ -97,6 +97,10 @@
          <lastmod>2026-11-20</lastmod>
     </url>
     <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/admin/steno_review/</loc>
+         <lastmod>2026-11-20</lastmod>
+    </url>
+    <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/data/</loc>
          <lastmod>2026-11-20</lastmod>
     </url>
@@ -305,6 +309,10 @@
          <lastmod>2026-11-20</lastmod>
     </url>
     <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/steno_page_state/</loc>
+         <lastmod>2026-11-20</lastmod>
+    </url>
+    <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/step_text/</loc>
          <lastmod>2026-11-20</lastmod>
     </url>
@@ -318,6 +326,10 @@
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/vote_steno/</loc>
+         <lastmod>2026-11-20</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/vote_steno_changes/</loc>
          <lastmod>2026-11-20</lastmod>
     </url>
     <url>
@@ -366,6 +378,10 @@
     </url>
     <url>
          <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/progress/</loc>
+         <lastmod>2026-11-20</lastmod>
+    </url>
+    <url>
+         <loc>https://tadeasf.github.io/pspcz_analyzer/reference/pspcz_analyzer/services/amendments/steno_changes/</loc>
          <lastmod>2026-11-20</lastmod>
     </url>
     <url>

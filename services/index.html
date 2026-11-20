@@ -1681,6 +1681,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/admin/steno_review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    steno_review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3230,6 +3258,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/amendments/steno_changes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    steno_changes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reference/pspcz_analyzer/services/amendments/steno_parser/" class="md-nav__link">
         
   
@@ -4201,6 +4257,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/steno_page_state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    steno_page_state
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reference/pspcz_analyzer/services/step_text/" class="md-nav__link">
         
   
@@ -4242,7 +4326,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_30" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_31" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -4264,14 +4348,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3_1_14_30" id="__nav_3_1_14_30_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3_1_14_31" id="__nav_3_1_14_31_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_14_30_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_1_14_30">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_14_31_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_14_31">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4413,7 +4497,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_30_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_31_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -4435,14 +4519,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3_1_14_30_5" id="__nav_3_1_14_30_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3_1_14_31_5" id="__nav_3_1_14_31_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_1_14_30_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_1_14_30_5">
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_1_14_31_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_14_31_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4847,6 +4931,34 @@
     
   
     vote_steno
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/pspcz_analyzer/services/vote_steno_changes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vote_steno_changes
   
 
     
@@ -6205,6 +6317,7 @@
 <p>Downloads and parses amendment PDFs from psp.cz. Extracts structured amendment data (amendment number, proposed changes, justification) from the PDF text.</p>
 <h3 id="steno-scraper-servicesamendmentssteno_scraperpy">Steno Scraper (<code>services/amendments/steno_scraper.py</code>)<a class="headerlink" href="#steno-scraper-servicesamendmentssteno_scraperpy" title="Permanent link">&para;</a></h3>
 <p>Scrapes stenographic record pages from psp.cz for third-reading sessions. Downloads HTML pages containing spoken-word records of amendment debates.</p>
+<p>Sub-pages are fetched through <code>_download_subpage_tracked</code>, shared with the vote steno stage. psp.cz first publishes a page as unauthorized and replaces it 3-6 weeks later (sometimes months) with the authorized text, which can differ (punctuation, added or removed sentences). <code>services/steno_page_state.py</code> keeps per sitting <code>steno/{period}/state_{schuze}.json</code> with each page's state, the hash of its speech text and the next check: unauthorized pages daily, authorized but not proofread every 14 days, final every 90 days (<code>STENO_RECHECK_*</code>). A cached page without an entry is checked once on its next use; its first hash is a baseline. A changed hash marks the page <code>amend_stale</code>: the amendment parse stage then redoes the summaries of the bills read from it and lists their corrected letters for review (<code>amendments/steno_changes.py</code>). Vote records compare their window on the speech text (<code>services/vote_steno_changes.py</code>) and are only re-extracted when the speech under them changed.</p>
 <h3 id="steno-parser-servicesamendmentssteno_parserpy">Steno Parser (<code>services/amendments/steno_parser.py</code>)<a class="headerlink" href="#steno-parser-servicesamendmentssteno_parserpy" title="Permanent link">&para;</a></h3>
 <p>Parses scraped steno HTML into structured data: speaker names, speech text, amendment references, and voting contexts.</p>
 <h3 id="submitter-resolver-servicesamendmentssubmitter_resolverpy">Submitter Resolver (<code>services/amendments/submitter_resolver.py</code>)<a class="headerlink" href="#submitter-resolver-servicesamendmentssubmitter_resolverpy" title="Permanent link">&para;</a></h3>
