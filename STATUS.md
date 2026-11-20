@@ -4,7 +4,8 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 | Date | Item | Commit | Verified |
 |---|---|---|---|
-| 2026-11-20 | LLM outage handling: `is_available()` sends a tiny real completion (the proxy answered `/models` while completions timed out), failed requests logged at WARNING, `LLMUnavailable` after 3 in a row stops the pipelines and the cache build (no archive), a failed vote steno call is not stored (an unknown answer still is) | this PR | 7 outage tests and updated client tests, 778 tests, pyright 0. Outage of 20 Nov: no output written after the last good reply (16:04:54) |
+| 2026-11-20 | Steno authorization: sub-pages re-checked by psp.cz state (unauthorized daily, authorized 14 days, final 90 days), speech-text hash per page, vote records re-extracted only when the speech under them changed (old record kept), amendment summaries of changed bills redone, corrected items back in review on `/admin/quality`, vote detail marks quotes from unauthorized steno | `846e7cd` | 17 tests on saved psp.cz pages (7 live states, period 9, two Wayback before/after pairs); 787 tests, pyright 0. No pipeline run on the real cache yet |
+| 2026-11-20 | LLM outage handling: `is_available()` sends a tiny real completion (the proxy answered `/models` while completions timed out), failed requests logged at WARNING, `LLMUnavailable` after 3 in a row stops the pipelines and the cache build (no archive), a failed vote steno call is not stored (an unknown answer still is) | `e5c4a40` | 7 outage tests and updated client tests, 778 tests, pyright 0. Outage of 20 Nov: no output written after the last good reply (16:04:54) |
 | 2026-11-19 | [#120] Phone and accessibility: no horizontal page scroll at 390 px; axe fixes (footer contrast, underlined text links, law link out of `<summary>`, focusable table scrollers, AI notice `<aside>`) | `928dce9` | axe-core 4.10 on 10 pages at 390 px: 0 serious/critical (3 moderate heading-order); screenshots; 688 tests |
 | 2026-11-19 | [#119] Unknown law/vote = 404 with "nenacházíme", HTML 404 page for unknown URLs (API keeps JSON); vote detail tells apart "stenozáznam zatím nevyšel" and "nepodařilo se spolehlivě určit, nehádáme" (mockup text) | `6834699` | Live: /laws/99999 and /neco return 404 pages; 3 API tests |
 | 2026-11-19 | English guide page (machine translation of the verified Czech text) | `2799832` | /jak-se-v-tom-vyznat in both languages |
@@ -44,6 +45,7 @@ What is done on `feat/zakony-pod-lupou`, newest first. Plan: [TASKS.md](TASKS.md
 
 ## Known gaps
 
+- Steno: the first run after deploy fetches every cached sub-page of the period once (no state yet, about 4 600 pages for period 10, 1-2 h at 1 request/s). Whether proofreading after authorization ("Autorizováno, neprošlo jazykovou korekturou" -> final) changes text was not observed.
 - Period 9 government × opposition pairs are led by ANO × SPD pairs from Oct-Dec 2021, when ANO alone was the government. Correct by definition; may need a minimum per side later.
 - Redesign: only the frame is done. Page contents (laws list, detail pages, homepage, charts) still use the old layout until #108-#117.
 - Guide page is Czech only (English shows a note); the "O datech" sub-pages it lists are not written yet.

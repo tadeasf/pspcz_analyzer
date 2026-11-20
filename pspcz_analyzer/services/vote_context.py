@@ -52,6 +52,8 @@ def vote_question(data: PeriodData, vote_id: int, lang: str) -> dict | None:
         "repeated_as": rec.get("repeated_as"),
         "repeats": rec.get("repeats"),
         "chair_repeated_as": rec.get("chair_repeated_as"),
+        # the quote's steno page is still the unauthorized version (steno_page_state)
+        "unauthorized": rec.get("steno_status") == "unauthorized",
     }
 
 

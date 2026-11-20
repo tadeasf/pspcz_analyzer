@@ -372,6 +372,8 @@ Downloads and parses amendment PDFs from psp.cz. Extracts structured amendment d
 
 Scrapes stenographic record pages from psp.cz for third-reading sessions. Downloads HTML pages containing spoken-word records of amendment debates.
 
+Sub-pages are fetched through `_download_subpage_tracked`, shared with the vote steno stage. psp.cz first publishes a page as unauthorized and replaces it 3-6 weeks later (sometimes months) with the authorized text, which can differ (punctuation, added or removed sentences). `services/steno_page_state.py` keeps per sitting `steno/{period}/state_{schuze}.json` with each page's state, the hash of its speech text and the next check: unauthorized pages daily, authorized but not proofread every 14 days, final every 90 days (`STENO_RECHECK_*`). A cached page without an entry is checked once on its next use; its first hash is a baseline. A changed hash marks the page `amend_stale`: the amendment parse stage then redoes the summaries of the bills read from it and lists their corrected letters for review (`amendments/steno_changes.py`). Vote records compare their window on the speech text (`services/vote_steno_changes.py`) and are only re-extracted when the speech under them changed.
+
 ### Steno Parser (`services/amendments/steno_parser.py`)
 
 Parses scraped steno HTML into structured data: speaker names, speech text, amendment references, and voting contexts.

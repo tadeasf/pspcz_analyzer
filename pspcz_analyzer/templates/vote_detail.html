@@ -51,7 +51,8 @@
     {% if st and st.question %}
     <section class="box" style="background:#F1F6FC">
         {% if st.status == "uncertain" %}<p class="lbl" style="margin:0 0 6px">{{ _("vd.uncertain") }}</p>{% endif %}
-        {% if st.quote %}<p style="margin:0;color:#3a4552">{{ _("vd.from_steno") }}: „{{ st.quote }}“ <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a></p>{% endif %}
+        {% if st.quote %}<p style="margin:0;color:#3a4552">{{ _("vd.from_steno") }}: „{{ st.quote }}“ <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a></p>
+        {% if st.unauthorized %}<p class="lbl" style="margin:4px 0 0">{{ _("vd.steno_unauthorized") }}</p>{% endif %}{% endif %}
         {% if st.edited %}<div class="ai"><b>{{ _("vd.edited_question") }}</b></div>
         {% else %}<div class="ai"><b>{{ _("vd.ai_question") }}</b><span>{{ _("vd.ai_question_note") }}</span></div>{% endif %}
     </section>

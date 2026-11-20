@@ -66,6 +66,14 @@ class TestVoteDetailRedesign:
         assert "Jak hlasovali jednotliví poslanci" in html
         assert "nepodařilo spolehlivě určit" in html  # old vote without a steno record
 
+    def test_quote_from_unauthorized_steno_is_marked(self, client, mock_period_data):
+        vote_id = mock_period_data.votes.get_column("id_hlasovani")[0]
+        rec = {"question": "Přijmout návrh?", "quote": "Kdo je pro?", "status": "ok", "url": "x"}
+        mock_period_data.vote_steno = {vote_id: rec | {"steno_status": "unauthorized"}}
+        assert "neautorizovaného stenozáznamu" in client.get(f"/votes/{vote_id}?period=1").text
+        mock_period_data.vote_steno = {vote_id: rec | {"steno_status": "final"}}
+        assert "neautorizovaného" not in client.get(f"/votes/{vote_id}?period=1").text
+
     def test_unknown_vote_and_law_are_404(self, client):
         assert client.get("/votes/999999999?period=1").status_code == 404
         resp = client.get("/laws/999999?period=1")

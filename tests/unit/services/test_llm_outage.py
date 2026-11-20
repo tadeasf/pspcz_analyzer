@@ -108,7 +108,7 @@ def _run(monkeypatch, tmp_path: Path, llm: _LLM, page: str) -> dict:
             "vysledek": ["A"],
         }
     )
-    monkeypatch.setattr(vote_steno, "sitting_pages", lambda *a, **k: [("s005001.htm", page)])
+    monkeypatch.setattr(vote_steno, "sitting_pages", lambda *a, **k: ([("s005001.htm", page)], {}))
     out = tmp_path / "5.json"
     records, _ = vote_steno._sitting_records(llm, 10, 5, votes, tmp_path, out)  # type: ignore[arg-type]
     out.write_text(json.dumps(records, ensure_ascii=False))

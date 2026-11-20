@@ -32,6 +32,8 @@ from pspcz_analyzer.config import (
     STENO_SUBPAGE_GAP_FILL,
     UNL_ENCODING,
 )
+from pspcz_analyzer.fileio import write_text_atomic
+from pspcz_analyzer.services import steno_page_state as page_state
 from pspcz_analyzer.services.vote_steno_text import normalize_vote_anchors
 
 
@@ -442,10 +444,55 @@ def _download_subpage(
     Returns:
         HTML content as string, or None on failure.
     """
+    return _download_subpage_tracked(base_url, subpage_name, period, schuze, cache_dir)[0]
+
+
+def _download_subpage_tracked(
+    base_url: str,
+    subpage_name: str,
+    period: int,
+    schuze: int,
+    cache_dir: Path,
+) -> tuple[str | None, str | None]:
+    """Cached sub-page, fetched again when its authorization state says so.
+
+    A cached page without a state entry is fetched once to learn its state (the cached
+    copy is not trusted to be current); after that the schedule in steno_page_state
+    decides. A failed re-check keeps the cached copy and tries again next run.
+
+    Args:
+        base_url: Base URL for this session.
+        subpage_name: Sub-page filename (e.g. "s045062.htm").
+        period: Electoral period number.
+        schuze: Session number.
+        cache_dir: Base cache directory.
+
+    Returns:
+        ``(html, previous html)``; previous is the replaced cached copy when the fetched
+        page differs from it in any byte, else None.
+    """
     url = base_url + subpage_name
     sdir = _steno_cache_dir(cache_dir, period)
     cache_file = sdir / f"{schuze}_sub_{subpage_name.replace('.htm', '.html')}"
-    return _download_cached(url, cache_file)
+    cached = cache_file.read_text(encoding="utf-8", errors="replace") if cache_file.exists() else ""
+    if not cached or _parse_negative_expiry(cached) is not None:
+        html = _download_cached(url, cache_file)
+        if html is not None:
+            page_state.record_check(sdir, schuze, subpage_name, html)
+        return html, None
+    if not page_state.is_due(sdir, schuze, subpage_name):
+        return cached, None
+    try:
+        html = _fetch_steno_page(url)
+    except httpx.HTTPStatusError:
+        html = None  # gone from psp.cz: keep the copy we have
+    if html is None:
+        return cached, None
+    page_state.record_check(sdir, schuze, subpage_name, html)
+    if html == cached:
+        return html, None
+    write_text_atomic(html, cache_file)
+    return html, cached
 
 
 # ── Public API ────────────────────────────────────────────────────────────
@@ -593,6 +640,7 @@ def find_steno_for_bod(
     schuze: int,
     bod: int,
     cache_dir: Path,
+    pages_out: list[str] | None = None,
 ) -> tuple[str | None, str, StenoFailure | None]:
     """Find and download steno transcript pages for a specific agenda item.
 
@@ -607,6 +655,7 @@ def find_steno_for_bod(
         schuze: Session number.
         bod: Agenda item number.
         cache_dir: Base cache directory.
+        pages_out: When given, the names of the sub-pages read are appended to it.
 
     Returns:
         Tuple of (concatenated transcript HTML or None, first sub-page URL,
@@ -658,6 +707,8 @@ def find_steno_for_bod(
     collected = _download_all_subpages(base_url, all_subpages, period, schuze, cache_dir)
     if not collected:
         return None, "", StenoFailure.SUBPAGE_DOWNLOAD_FAILED
+    if pages_out is not None:
+        pages_out.extend(name for name, _ in collected)
 
     first_url = base_url + collected[0][0]
     # same vote anchoring as vote_steno (#102 item 7): announcements read "Hlasování číslo N"
