@@ -60,6 +60,7 @@ ATTENDANCE_MIN_VOTES = 50
 
 # Minimum counted votes for an MP to appear in the 'highest rebellion rate' chart (#115)
 LOYALTY_CHART_MIN_VOTES = 100
+LOYALTY_FINAL_CHART_MIN_VOTES = 10  # same chart, "Jen o celých zákonech" (#115)
 
 # Club colours for the similarity map and attendance chart only (#107); others grey
 CLUB_COLORS: dict[str, str] = {

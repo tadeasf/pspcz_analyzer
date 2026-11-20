@@ -1,12 +1,12 @@
 {% from "macros.html" import page_links %}
-{% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&party=" ~ (party|urlencode) ~ "&per_page=" ~ per_page ~ ("&full=1" if full else "") %}
+{% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&party=" ~ (party|urlencode) ~ "&per_page=" ~ per_page ~ ("&full=1" if full else "") ~ "&scope=" ~ scope %}
 {% if not full and chart %}
 <h2 class="h2s">{{ _("loyalty.chart_title") }}</h2>
 <div>
     {% set max_pct = chart[0].rebellion_pct or 1 %}
     {% for r in chart %}
     <div class="hb">
-        <span class="hb-n">{{ r.jmeno }} {{ r.prijmeni }} <span class="lbl">({{ r.party|club_name }})</span></span>
+        <span class="hb-n"><a href="/loyalty?period={{ period }}&search={{ (r.jmeno ~ ' ' ~ r.prijmeni)|urlencode }}&scope={{ scope }}" hx-get="/api/loyalty?period={{ period }}&search={{ (r.jmeno ~ ' ' ~ r.prijmeni)|urlencode }}&scope={{ scope }}" hx-target="#results">{{ r.jmeno }} {{ r.prijmeni }}</a> <span class="lbl">({{ r.party|club_name }})</span></span>
         <span class="hb-t"><span class="hb-f" style="width:{{ '%.1f'|format(r.rebellion_pct * 100 / max_pct) }}%"></span></span>
         <span><b>{{ r.rebellion_pct|pct }}</b> <span class="lbl">{{ _("loyalty.x_of_y").format(x=r.rebellions|num, y=r.active_votes|num) }}</span></span>
     </div>
@@ -25,7 +25,7 @@
     <tbody>
     {% for r in rows %}
     <tr>
-        <td>{% if r.rebellion_votes %}<details><summary style="cursor:pointer">{{ r.jmeno }} {{ r.prijmeni }}</summary>
+        <td>{% if r.rebellion_votes %}<details{% if rows|length == 1 %} open{% endif %}><summary style="cursor:pointer">{{ r.jmeno }} {{ r.prijmeni }}</summary>
             <ul class="lbl" style="margin:6px 0 0 1em;padding:0">{% for v in r.rebellion_votes[:30] %}<li><a href="/votes/{{ v.id_hlasovani }}?period={{ period }}">{{ v.datum|cz_date }}</a> {{ v.nazev_dlouhy[:90] }}</li>{% endfor %}
             {% if r.rebellion_votes|length > 30 %}<li>{{ _("loyalty.more_votes").format(n=r.rebellion_votes|length - 30) }}</li>{% endif %}</ul></details>
             {% else %}{{ r.jmeno }} {{ r.prijmeni }}{% endif %}</td>

@@ -16,6 +16,7 @@ from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.routes.context import excuses_as_of
 from pspcz_analyzer.routes.utils import validate_period
 from pspcz_analyzer.services.amendment_listing import law_amendments
+from pspcz_analyzer.services.attendance_service import MP_VOTE_CATEGORIES, mp_votes_list
 from pspcz_analyzer.services.law_service import get_all_status_labels
 from pspcz_analyzer.services.law_service import law_detail as get_law_detail
 from pspcz_analyzer.services.legislation_overview import homepage_blocks
@@ -133,6 +134,32 @@ async def attendance_page(request: Request, period: int = DEFAULT_PERIOD):
     return templates.TemplateResponse(
         "attendance.html",
         _ctx(request, period, active_page="attendance", clubs=_period_clubs(request, period)),
+    )
+
+
+@router.get("/attendance/mp/{id_poslanec}")
+@limiter.limit("60/minute")
+async def attendance_mp_page(
+    request: Request,
+    id_poslanec: int,
+    period: int = DEFAULT_PERIOD,
+    cat: str = "present",
+    page: int = 1,
+):
+    """Votes of one MP behind an attendance number (#117, #91)."""
+    validate_period(period)
+    if cat not in MP_VOTE_CATEGORIES:
+        cat = "present"
+    pd = request.app.state.data.get_period(period)
+    detail = mp_votes_list(pd, id_poslanec, cat, max(1, page))
+    if detail is None:
+        return templates.TemplateResponse(
+            "not_found.html",
+            _ctx(request, period, active_page="attendance", message=_t("att.mp_not_found")),
+            status_code=404,
+        )
+    return templates.TemplateResponse(
+        "attendance_mp.html", _ctx(request, period, active_page="attendance", detail=detail)
     )
 
 

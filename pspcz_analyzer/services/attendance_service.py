@@ -5,7 +5,7 @@ import polars as pl
 from pspcz_analyzer.config import ATTENDANCE_MIN_VOTES
 from pspcz_analyzer.models.enums import VoteResult
 from pspcz_analyzer.models.tisk_models import PeriodData
-from pspcz_analyzer.services.vote_codes import category_count_exprs
+from pspcz_analyzer.services.vote_codes import category_count_exprs, vote_category
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens
 
 _SORTS: dict[str, tuple[str, bool]] = {
@@ -108,6 +108,7 @@ def compute_attendance(
         result = result.head(top)
 
     return result.select(
+        "id_poslanec",
         "jmeno",
         "prijmeni",
         "party",
@@ -163,13 +164,17 @@ def club_strips(rows: list[dict]) -> dict:
         rows: Output of compute_attendance(top=None).
 
     Returns:
-        {"clubs": [{party, points: [{name, pct}], median}], "axis_min": int}.
+        {"clubs": [{party, points: [{name, pct, id}], median}], "axis_min": int}.
     """
     ranked = [r for r in rows if not r["small_sample"] and r["attendance_pct"] is not None]
     clubs: dict[str, list[dict]] = {}
     for r in ranked:
         clubs.setdefault(r["party"] or "?", []).append(
-            {"name": f"{r['jmeno']} {r['prijmeni']}", "pct": r["attendance_pct"]}
+            {
+                "name": f"{r['jmeno']} {r['prijmeni']}",
+                "pct": r["attendance_pct"],
+                "id": r["id_poslanec"],
+            }
         )
     out = []
     for party, pts in sorted(clubs.items(), key=lambda kv: -len(kv[1])):
@@ -180,3 +185,59 @@ def club_strips(rows: list[dict]) -> dict:
     lowest = min((p["pct"] for c in out for p in c["points"]), default=0.0)
     axis_min = max(0, int(lowest // 10) * 10)
     return {"clubs": out, "axis_min": axis_min}
+
+
+MP_VOTE_CATEGORIES = ("present", "yes", "no", "abstained", "absent", "excused")
+_PRESENT = ("yes", "no", "abstained")
+
+
+def mp_votes_list(
+    data: PeriodData, id_poslanec: int, category: str, page: int = 1, per_page: int = 50
+) -> dict | None:
+    """Votes of one MP in one attendance category, for "každé číslo vede na seznam" (#117, #91).
+
+    Args:
+        data: Period data.
+        id_poslanec: The MP (id_poslanec of the period).
+        category: One of MP_VOTE_CATEGORIES ("present" = yes + no + abstained).
+        page: 1-based page.
+        per_page: Votes per page.
+
+    Returns:
+        Dict with ``mp``, ``counts`` per category, ``rows`` of the page and paging,
+        or None when the MP is not in the period.
+    """
+    info = data.mp_info.filter(pl.col("id_poslanec") == id_poslanec)
+    if info.height == 0:
+        return None
+    void_ids = data.void_votes.get_column("id_hlasovani")
+    mine = data.mp_votes.filter(
+        (pl.col("id_poslanec") == id_poslanec)
+        & ~pl.col("id_hlasovani").is_in(void_ids)
+        & (pl.col("vysledek") != VoteResult.BEFORE_OATH)
+    ).with_columns(
+        pl.col("vysledek").map_elements(vote_category, return_dtype=pl.String).alias("cat")
+    )
+    counts = {k: int((mine["cat"] == k).sum()) for k in MP_VOTE_CATEGORIES[1:]}
+    counts["present"] = sum(counts[k] for k in _PRESENT)
+    cats = _PRESENT if category == "present" else (category,)
+    picked = (
+        mine.filter(pl.col("cat").is_in(list(cats)))
+        .join(data.votes, on="id_hlasovani", how="inner")
+        .sort("id_hlasovani", descending=True)
+    )
+    total_pages = max(1, (picked.height + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    rows = picked.slice((page - 1) * per_page, per_page).to_dicts()
+    for r in rows:
+        rec = data.vote_steno.get(r["id_hlasovani"]) or {}
+        r["question"] = rec.get("question", "")
+    return {
+        "mp": info.row(0, named=True),
+        "counts": counts,
+        "category": category,
+        "rows": rows,
+        "total": picked.height,
+        "page": page,
+        "total_pages": total_pages,
+    }

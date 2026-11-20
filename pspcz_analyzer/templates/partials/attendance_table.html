@@ -13,7 +13,7 @@
     <text x="0" y="{{ y + 4 }}" font-size="12" fill="#1d232b">{{ c.party|club_name }}</text>
     {% set color = club_colors.get(c.party, club_color_other) %}
     {% for pnt in c.points %}{% set x = LW + (pnt.pct - amin) / (100 - amin) * (W - LW - 10) %}
-    <circle cx="{{ '%.1f'|format(x) }}" cy="{{ y }}" r="4.5" fill="{{ color }}" fill-opacity=".75" stroke="{{ '#8A6D00' if c.party == 'KDU-ČSL' else '#fff' }}"><title>{{ pnt.name }}: {{ pnt.pct|pct }}</title></circle>{% endfor %}
+    <a href="/attendance/mp/{{ pnt.id }}?period={{ period }}"><circle cx="{{ '%.1f'|format(x) }}" cy="{{ y }}" r="4.5" fill="{{ color }}" fill-opacity=".75" stroke="{{ '#8A6D00' if c.party == 'KDU-ČSL' else '#fff' }}"><title>{{ pnt.name }}: {{ pnt.pct|pct }}</title></circle></a>{% endfor %}
     {% set mx = LW + (c.median - amin) / (100 - amin) * (W - LW - 10) %}
     <line x1="{{ '%.1f'|format(mx) }}" x2="{{ '%.1f'|format(mx) }}" y1="{{ y - 11 }}" y2="{{ y + 11 }}" stroke="#1d232b" stroke-width="2"><title>{{ _("att.median") }} {{ c.median|pct }}</title></line>
     {% endfor %}
@@ -22,6 +22,7 @@
 
 {# 2. what the absence consists of #}
 <h2 class="h2s">{{ _("att.chart_parts") }}</h2>
+<p class="lbl">{{ _("att.chart_parts_sub") }}</p>
 {% for r in lowest %}{% set tot = r.mandate_votes or 1 %}
 <div class="hb">
     <span class="hb-n">{{ r.jmeno }} {{ r.prijmeni }} <span class="lbl">({{ r.party|club_name }})</span></span>
@@ -42,10 +43,10 @@
     <tr {% if r.small_sample %}style="color:#8A94A3"{% endif %}>
         <td>{{ r.jmeno }} {{ r.prijmeni }}{% if r.small_sample %} <span class="chip">{{ _("att.small_sample") }}</span>{% endif %}</td>
         <td>{{ r.party|club_name }}</td>
-        <td>{{ r.active|num }}</td>
+        <td><a href="/attendance/mp/{{ r.id_poslanec }}?period={{ period }}&cat=present">{{ r.active|num }}</a></td>
         <td>{{ r.mandate_votes|num }}</td>
-        <td style="min-width:150px">{% if r.attendance_pct is not none %}<span class="meter" style="display:inline-block;width:70px;vertical-align:middle"><span class="f" style="width:{{ '%.1f'|format(r.attendance_pct) }}%"></span></span> {{ r.attendance_pct|pct }}{% else %}{{ _("unknown_yet") }}{% endif %}</td>
-        <td>{{ r.excused|num }}</td>
+        <td style="min-width:150px">{% if r.small_sample %}{{ _("att.small_sample") }}{% elif r.attendance_pct is not none %}<span class="meter" style="display:inline-block;width:70px;vertical-align:middle"><span class="f" style="width:{{ '%.1f'|format(r.attendance_pct) }}%"></span></span> {{ r.attendance_pct|pct }}{% else %}{{ _("unknown_yet") }}{% endif %}</td>
+        <td><a href="/attendance/mp/{{ r.id_poslanec }}?period={{ period }}&cat=excused">{{ r.excused|num }}</a></td>
         <td>{% if r.from_start and r.to_end %}{{ _("att.whole_term") }}{% elif r.from_start %}{{ _("att.until").format(d=r.mandate_to|cz_date) }}{% elif r.to_end %}{{ _("att.since").format(d=r.mandate_from|cz_date) }}{% else %}{{ r.mandate_from|cz_date }} - {{ r.mandate_to|cz_date }}{% endif %}</td>
     </tr>
     {% endfor %}

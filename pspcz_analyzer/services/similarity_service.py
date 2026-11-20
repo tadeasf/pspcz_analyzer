@@ -131,7 +131,7 @@ def _pairs(
     names: list[str],
     parties: list[str | None],
     keep: Callable[[int, int], bool],
-    top: int,
+    top: int | None,
 ) -> list[dict]:
     """Top pairs by agreement among (i, j) with keep(i, j) and enough shared votes."""
     pairs = []
@@ -152,10 +152,10 @@ def _pairs(
                     }
                 )
     pairs.sort(key=lambda p: (p["agreement"], p["shared"]), reverse=True)
-    return pairs[:top]
+    return pairs[:top] if top else pairs
 
 
-def compute_cross_party_similarity(data: PeriodData, top: int = 20) -> dict[str, list[dict]]:
+def compute_cross_party_similarity(data: PeriodData, top: int | None = 20) -> dict[str, list[dict]]:
     """Most-agreeing MP pairs from different clubs and across government/opposition (#104).
 
     Agreement = votes where both voted the same way / votes where both voted
@@ -166,7 +166,7 @@ def compute_cross_party_similarity(data: PeriodData, top: int = 20) -> dict[str,
 
     Args:
         data: Period data.
-        top: Pairs per table.
+        top: Pairs per table (None = every eligible pair).
 
     Returns:
         {"cross_party": [...], "gov_opp": [...]}; each pair has names, parties,
@@ -236,4 +236,22 @@ def similarity_map(data: PeriodData) -> dict:
         }
         for party, n in sorted(counts.items(), key=lambda kv: -kv[1])
     ]
-    return {"points": points, "legend": legend, "width": _MAP_W, "height": _MAP_H}
+    return {
+        "points": points,
+        "legend": legend,
+        "groups": _side_labels(points, data.coalition_parties),
+        "width": _MAP_W,
+        "height": _MAP_H,
+    }
+
+
+def _side_labels(points: list[dict], coalition: frozenset[str]) -> list[dict]:
+    """Where to write "vládní kluby" / "opoziční kluby" on the map: each side's centre."""
+    out = []
+    for side in ("government", "opposition"):
+        pts = [p for p in points if classify_party(p["party"], coalition) == side]
+        if pts:
+            x = sum(p["cx"] for p in pts) / len(pts)
+            y = min(p["cy"] for p in pts) - 12
+            out.append({"side": side, "x": round(x, 1), "y": round(max(y, 14), 1)})
+    return out

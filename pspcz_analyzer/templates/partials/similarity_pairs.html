@@ -1,0 +1,10 @@
+{# All pairs of one similarity table, one page (#116). #}
+{% from "macros.html" import page_links %}
+<div style="overflow-x:auto" tabindex="0"><table class="t">
+    <thead><tr><th>#</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("th.mp") }}</th><th>{{ _("vd.club") }}</th><th>{{ _("sim.agreement") }}</th><th>{{ _("sim.voted_same") }}</th></tr></thead>
+    <tbody>{% for row in rows %}
+    <tr><td>{{ loop.index + offset }}</td><td>{{ row.mp1_name }}</td><td>{{ row.mp1_party|club_name }}</td><td>{{ row.mp2_name }}</td><td>{{ row.mp2_party|club_name }}</td>
+        <td><b>{{ (row.agreement * 100)|pct }}</b></td><td class="lbl">{{ _("sim.same_of").format(same=row.same|num, shared=row.shared|num) }}</td></tr>
+    {% endfor %}</tbody>
+</table></div>
+<nav class="pagination" aria-label="{{ _('pagination.label') }}">{{ page_links("/api/similarity/pairs?period=" ~ period ~ "&table=" ~ table ~ "&page=", page, total_pages, "#pairs-" ~ table) }}</nav>

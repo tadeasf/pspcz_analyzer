@@ -19,6 +19,11 @@ def vote_kind(data: PeriodData, vote_id: int) -> str | None:
     return None if kind in (None, "other") else kind
 
 
+def final_vote_ids(data: PeriodData) -> set[int]:
+    """Votes on a bill as a whole ("Jen o celých zákonech", #115)."""
+    return {v for v in data.votes["id_hlasovani"].to_list() if vote_kind(data, v) == "final"}
+
+
 def vote_question(data: PeriodData, vote_id: int, lang: str) -> dict | None:
     """Question, quote and steno link of a vote when the steno check passed (#102)."""
     rec = data.vote_steno.get(vote_id)

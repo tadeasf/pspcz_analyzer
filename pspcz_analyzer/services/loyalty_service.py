@@ -76,6 +76,7 @@ def compute_loyalty(
     data: PeriodData,
     top: int | None = 30,
     party_filter: str | None = None,
+    vote_ids: set[int] | None = None,
 ) -> list[dict]:
     """Compute rebellion rates for MPs.
 
@@ -83,10 +84,18 @@ def compute_loyalty(
     An MP "rebels" when they actively vote against that majority.
 
     Returns a list of dicts sorted by rebellion rate descending.
+
+    Args:
+        data: Period data.
+        top: Keep the first N rows (None = all).
+        party_filter: Club abbreviation, None for all.
+        vote_ids: Only these votes count (None = every valid vote).
     """
     # Exclude void votes
     void_ids = data.void_votes.get_column("id_hlasovani")
     mp_votes = data.mp_votes.filter(~pl.col("id_hlasovani").is_in(void_ids))
+    if vote_ids is not None:  # "Jen o celých zákonech" (#115): the final votes only
+        mp_votes = mp_votes.filter(pl.col("id_hlasovani").is_in(list(vote_ids)))
 
     # Only active votes (YES or NO)
     active_results = {VoteResult.YES, VoteResult.NO}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "macros.html" import page_links %}
+{% set mp = detail.mp %}
+{% block title %}{{ mp.jmeno }} {{ mp.prijmeni }} · {{ _("nav.attendance") }} · {{ _("site.short_title") }}{% endblock %}
+{% block content %}
+<div class="crumb"><a href="/attendance?period={{ period }}">{{ _("nav.attendance") }}</a> › {{ mp.jmeno }} {{ mp.prijmeni }}</div>
+<h1 class="phead-h">{{ mp.jmeno }} {{ mp.prijmeni }} <span class="lbl" style="font-size:16px">({{ mp.party|club_name }})</span></h1>
+<p>{{ _("att.mp_perex").format(p=period) }}</p>
+<nav class="tabs-s" role="tablist" aria-label="{{ _('att.mp_cats') }}">
+    {% for c in ("present", "yes", "no", "abstained", "absent", "excused") %}
+    <a role="tab" aria-selected="{{ 'true' if detail.category == c else 'false' }}" class="tab{% if detail.category == c %} on{% endif %}" href="/attendance/mp/{{ mp.id_poslanec }}?period={{ period }}&cat={{ c }}">{{ _("att.cat_" ~ c) }} <span class="lbl">{{ detail.counts[c]|num }}</span></a>
+    {% endfor %}
+</nav>
+<p class="lbl">{{ _("att.cat_note") }}</p>
+{% if detail.rows %}
+<div style="overflow-x:auto" tabindex="0"><table class="t">
+    <thead><tr><th>{{ _("th.date") }}</th><th>{{ _("vd.session_short") }}</th><th>{{ _("att.col_vote") }}</th></tr></thead>
+    <tbody>{% for r in detail.rows %}
+    <tr><td>{{ r.datum|cz_date }}</td><td>{{ r.schuze }}/{{ r.cislo }}</td>
+        <td><a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{{ r.question or r.nazev_dlouhy or _("vd.number_n").format(n=r.cislo) }}</a></td></tr>
+    {% endfor %}</tbody>
+</table></div>
+<nav class="pagination" aria-label="{{ _('pagination.label') }}">
+    {% if detail.total_pages > 1 %}<span class="pages" style="display:flex;flex-wrap:wrap;gap:6px">
+    {% for p in range(1, detail.total_pages + 1) %}{% if p == 1 or p == detail.total_pages or (p - detail.page)|abs <= 2 %}
+    {% if p == detail.page %}<span aria-current="page" style="font-weight:700;padding:0 6px">{{ p }}</span>{% else %}<a href="/attendance/mp/{{ mp.id_poslanec }}?period={{ period }}&cat={{ detail.category }}&page={{ p }}">{{ p }}</a>{% endif %}
+    {% elif p == 2 or p == detail.total_pages - 1 %}<span aria-hidden="true">…</span>{% endif %}{% endfor %}</span>{% endif %}
+</nav>
+{% else %}
+<div class="empty"><b>{{ _("att.mp_none") }}</b></div>
+{% endif %}
+{% endblock %}
