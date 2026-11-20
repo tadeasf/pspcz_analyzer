@@ -300,7 +300,8 @@ An independent check of every issue against code and the live app (period 10) fo
 - Tests and checks: #85 integration test, `scripts/check_statuses.py` (#86/#90), #89 two President events, #95, #97, #100.
 
 Known differences from the mockup, kept on purpose: tisk 246 letters B1 and B2 were both filed by Jan Papajanovský according to the psp.cz document and steno (the mockup names other MPs); 640 Kč in tisk 246 is the rate for vehicles up to 50 g/km, not electric cars.
-Not done: club by vote date in the similarity map and attendance per club (#101 last bullet), RSS per tisk (pending confirmation).
+#101 last bullet: every computation that depends on the club now uses the club on the vote date (rebellion, gov × opposition, and since round 2 the cross-club pairs). The similarity map and the attendance chart place each MP once, so they colour and group by the MP's latest club; attendance itself does not depend on the club.
+Not done: RSS per tisk (pending confirmation).
 
 ## Data migration checklist (VPS)
 

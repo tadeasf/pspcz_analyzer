@@ -98,3 +98,16 @@ class TestAgreement:
         data = _two_mp_data(100, ["A"] * 100)
         data.coalition_parties = frozenset()
         assert compute_cross_party_similarity(data)["gov_opp"] == []
+
+
+def test_cross_club_counts_only_votes_in_different_clubs() -> None:
+    """MP 2 sat in MP 1's club for the first 50 votes: only the other 150 count (#101)."""
+    data = _two_mp_data(200, ["A"] * 200)
+    data.mp_votes = data.mp_votes.with_columns(
+        pl.when((pl.col("id_poslanec") == 2) & (pl.col("id_hlasovani") < 1050))
+        .then(pl.lit("GOV"))
+        .otherwise(pl.col("party"))
+        .alias("party")
+    )
+    pair = compute_cross_party_similarity(data)["cross_party"][0]
+    assert (pair["same"], pair["shared"]) == (150, 150)

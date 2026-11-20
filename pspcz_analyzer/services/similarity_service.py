@@ -104,6 +104,24 @@ def _agreement_counts(
     return same, p_left @ p_right.T
 
 
+def _cross_club_counts(
+    mp_votes: pl.DataFrame, mp_ids: list[int], vote_ids: list[int]
+) -> tuple[np.ndarray, np.ndarray]:
+    """(same, both) over the votes where the pair sat in different clubs that day (#101).
+
+    All votes minus, for each club, the votes where both were in that club.
+    """
+    same, both = _agreement_counts(*[_indicator_matrices(mp_votes, mp_ids, vote_ids)] * 2)
+    for club in mp_votes.get_column("party").unique().to_list():
+        rows = mp_votes.filter(
+            pl.col("party").is_null() if club is None else pl.col("party") == club
+        )
+        m = _indicator_matrices(rows, mp_ids, vote_ids)
+        s_c, b_c = _agreement_counts(m, m)
+        same, both = same - s_c, both - b_c
+    return same, both
+
+
 def _side_per_record(data: PeriodData, mp_votes: pl.DataFrame) -> pl.Series:
     """government / opposition / unknown for each record, by club and government on the vote date."""
     vote_day = data.votes.select(
@@ -160,7 +178,8 @@ def compute_cross_party_similarity(data: PeriodData, top: int | None = 20) -> di
 
     Agreement = votes where both voted the same way / votes where both voted
     (yes, no, or abstained-or-did-not-vote; not logged in and excused do not
-    count). Pairs need SIMILARITY_MIN_SHARED_VOTES shared votes. The
+    count). The cross-club table counts only votes where the two MPs were in
+    different clubs on that day. Pairs need SIMILARITY_MIN_SHARED_VOTES shared votes. The
     government x opposition table counts only votes where one MP's club was
     in government and the other's in opposition on that day.
 
@@ -182,9 +201,8 @@ def compute_cross_party_similarity(data: PeriodData, top: int | None = 20) -> di
     names = (info.get_column("jmeno") + " " + info.get_column("prijmeni")).to_list()
     parties = info.get_column("party").to_list()
 
-    mats = _indicator_matrices(mp_votes, mp_ids, vote_ids)
-    same, both = _agreement_counts(mats, mats)
-    cross = _pairs(same, both, names, parties, lambda i, j: parties[i] != parties[j], top)
+    same, both = _cross_club_counts(mp_votes, mp_ids, vote_ids)
+    cross = _pairs(same, both, names, parties, lambda i, j: True, top)
 
     sides = _side_per_record(data, mp_votes)
     gov = _indicator_matrices(mp_votes.filter(sides == GOVERNMENT), mp_ids, vote_ids)
