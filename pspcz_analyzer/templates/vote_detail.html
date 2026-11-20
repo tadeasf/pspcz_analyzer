@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ _("detail.vote_id").format(id=detail.info.id_hlasovani) }} · {{ _("site.short_title") }}{% endblock %}
+{% set stq = detail.info.steno.question if detail.info.steno and detail.info.steno.question else "" %}
+{% block title %}{{ stq or _("detail.vote_id").format(id=detail.info.id_hlasovani) }} · {{ _("site.short_title") }}{% endblock %}
 {% block content %}
 {% set info = detail.info %}
 {% set rows = detail.party_breakdown|sort(attribute="total", reverse=true) %}
@@ -17,21 +18,38 @@
 <div style="display:flex;flex-direction:column;gap:10px;max-width:820px">
     <div>
         {% set al = info.amendment_link %}
-        <span class="chip c-st">{% if al and al.is_final_vote %}{{ _("amendments.vote_about_final") }}{% elif al and al.letter %}{{ _("amendments.vote_about_amendment").format(letter=al.letter) }}{% elif info.kind %}{{ _("vl.kind_" ~ info.kind) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
-        {% if info.tisk_ct %}<a href="/laws/{{ info.tisk_ct }}?period={{ period }}">{{ info.tisk_nazev or info.nazev_dlouhy }} ({{ _("vd.tisk_n").format(ct=info.tisk_ct) }})</a>{% endif %}
+        <span class="chip c-st">{% if (al and al.is_final_vote) or info.kind == "final" %}{{ _("vd.kind_final_long") }}{% elif al and al.letter %}{{ _("amendments.vote_about_amendment").format(letter=al.letter) }}{% elif info.kind == "procedural" and info.steno and info.steno.subkind and info.steno.subkind != "other" %}{{ _("vl.sub_" ~ info.steno.subkind) }}{% elif info.kind %}{{ _("vl.kind_" ~ info.kind) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
+        {% set story = info.story %}
+        {% if story.reading %}<span class="lbl">· {{ _("vl.reading_" ~ story.reading) }}</span>{% endif %}
+        {% if info.tisk_ct %}<a href="/laws/{{ info.tisk_ct }}?period={{ period }}">{{ story.tisk_title or info.nazev_dlouhy }} ({{ _("vd.tisk_n").format(ct=info.tisk_ct) }})</a>{% endif %}
     </div>
-    <h1 class="phead-h">{{ info.nazev_dlouhy or _("vd.number_n").format(n=info.cislo) }}</h1>
+    <h1 class="phead-h">{% if stq %}{{ stq }}{% elif info.kind == "final" %}{{ _("vl.q_final") }}{% else %}{{ info.nazev_dlouhy or _("vd.number_n").format(n=info.cislo) }}{% endif %}</h1>
     {% if info.is_void %}
     <div class="zm" style="padding:12px 14px;border-radius:3px"><span class="chip">{{ _("vd.void_label") }}</span> {{ _("vd.void_text") }}</div>
     {% else %}
+    {% if story.invalid %}
+    <div style="display:flex;flex-direction:column;gap:6px;background:#FFF1DF;padding:12px 14px;border-radius:3px">
+        <span><span class="chip" style="background:#B35C00;color:#fff;font-size:14px;padding:4px 10px">{{ _("vd.invalid") }}</span>
+        {{ _("vd.invalid_text").format(first=_("vd.passed_l") if passed else _("vd.failed_l"), pro=info.pro, kvorum=info.kvorum) }}
+        {% if story.challenger %}{{ _("vd.invalid_by").format(name=story.challenger) }}{% endif %}
+        {% if story.repeat %}{{ _("vd.repeat_text").format(n=story.repeat.cislo, res=_("vd.passed_l") if story.repeat.vysledek == "A" else _("vd.failed_l"), pro=story.repeat.pro, kvorum=story.repeat.kvorum) }}
+        <a href="/votes/{{ story.repeat.id_hlasovani }}?period={{ period }}">{{ _("vd.number_n").format(n=story.repeat.cislo) }} →</a>{% endif %}</span>
+    </div>
+    {% else %}
     <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:{{ '#E7F3E8' if passed else '#FFF1DF' }};padding:12px 14px;border-radius:3px">
         <span class="chip" style="background:{{ '#1f6b2a' if passed else '#B35C00' }};color:#fff;font-size:14px;padding:4px 10px">{{ _("vd.passed") if passed else _("vd.failed") }}</span>
+        {% if story.consequence %}<span>{{ _(story.consequence) }}</span>{% endif %}
     </div>
+    {% endif %}
+    {% if story.chair_repeat %}<p class="lbl">{{ _("vd.chair_repeat").format(n=story.chair_repeat.cislo) }} <a href="/votes/{{ story.chair_repeat.id_hlasovani }}?period={{ period }}">{{ _("vd.number_n").format(n=story.chair_repeat.cislo) }} →</a></p>{% endif %}
+    {% if story.repeats %}<p class="lbl">{{ _("vd.repeats").format(n=story.repeats.cislo) }} <a href="/votes/{{ story.repeats.id_hlasovani }}?period={{ period }}">{{ _("vd.number_n").format(n=story.repeats.cislo) }} →</a></p>{% endif %}
+    {% if story.final_meaning %}<p>{{ _("vd.meant_final") }}</p>
+    {% elif story.pro %}<p>{{ _("vd.meant_pro").format(pro=story.pro) }}{% if story.proposer %} {{ _("vd.proposed_by").format(name=story.proposer) }}{% endif %}</p>{% endif %}
     {% endif %}
     {% set st = info.steno %}
     {% if st and st.question %}
     <section class="box" style="background:#F1F6FC">
-        <p style="font-size:18px;margin:0 0 6px"><b>{{ st.question }}</b></p>
+        {% if st.status == "uncertain" %}<p class="lbl" style="margin:0 0 6px">{{ _("vd.uncertain") }}</p>{% endif %}
         {% if st.quote %}<p style="margin:0;color:#3a4552">{{ _("vd.from_steno") }}: „{{ st.quote }}“ <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_link") }} ↗</a></p>{% endif %}
         {% if st.edited %}<div class="ai"><b>{{ _("vd.edited_question") }}</b></div>
         {% else %}<div class="ai"><b>{{ _("vd.ai_question") }}</b><span>{{ _("vd.ai_question_note") }}</span></div>{% endif %}
@@ -94,7 +112,8 @@
     {% for r in rows %}
     <details class="club" {% if loop.index > 3 %}{% else %}open{% endif %}>
         <summary class="club-h"><b>{{ r.party|club_name }}</b> <span class="lbl">({{ r.total }})</span>
-            <span class="club-c">{% for key, field in [("YES", "yes"), ("NO", "no"), ("ABSTAINED", "abstained"), ("Absent", "absent"), ("Excused", "excused")] if r[field] %}{% if not loop.first %} · {% endif %}<span aria-hidden="true" class="ic {{ icons[key][1] }}">{{ icons[key][0] }}</span>{{ _(icons[key][2]) }} <b>{{ r[field] }}</b>{% endfor %}</span></summary>
+            <span class="club-c">{% for key, field in [("YES", "yes"), ("NO", "no"), ("ABSTAINED", "abstained"), ("Absent", "absent"), ("Excused", "excused")] if r[field] %}{% if not loop.first %} · {% endif %}<span aria-hidden="true" class="ic {{ icons[key][1] }}">{{ icons[key][0] }}</span>{{ _(icons[key][2]) }} <b>{{ r[field] }}</b>{% endfor %}</span>
+            <span class="lbl vg-more" aria-hidden="true">{{ _("vl.expand") }} ▾</span></summary>
         <div class="mpg">
             {% for mp in detail.mp_votes if mp.party == r.party %}
             {% set ic = icons.get(mp.vote_label, ("?", "i-0", "vd.other")) %}
@@ -107,6 +126,7 @@
 
 <div style="display:flex;flex-wrap:wrap;gap:8px 24px;font-size:14px;border-top:1px solid #D0DCE8;padding-top:14px">
     <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record_full") }}</a>
+    {% if info.steno and info.steno.url %}<a href="{{ info.steno.url }}" rel="noopener">{{ _("vd.steno_part_link") }} ↗</a>{% endif %}
     <a href="#" id="copy-link">{{ _("vd.copy_link") }}</a>
     <a href="/nahlasit-chybu?period={{ period }}">{{ _("footer.report") }}</a>
 </div>

@@ -9,7 +9,16 @@ import polars as pl
 from pspcz_analyzer.i18n import gettext as _
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.labels import mp_vote_label
+from pspcz_analyzer.services.tisk.brief import brief_view
 from pspcz_analyzer.services.vote_codes import category_count_exprs
+from pspcz_analyzer.services.vote_context import (
+    filter_kind,
+    group_result,
+    reading_at,
+    vote_kind,
+    vote_question,
+    vote_story,
+)
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 # Keys into i18n translations, resolved at call time
@@ -147,43 +156,13 @@ def _enrich_vote_rows(rows: list[dict], data: PeriodData, lang: str = "cs") -> N
         tisk = data.get_tisk(schuze, bod) if schuze and bod and bod > 0 else None
         r["tisk_url"] = tisk.url if tisk else None
         r["tisk_nazev"] = tisk.nazev if tisk else None
+        brief = brief_view(tisk.brief, lang) if tisk else None
+        r["tisk_title"] = brief["nazev"] if brief and brief.get("nazev") else None
         r["tisk_ct"] = tisk.ct if tisk else None
         if tisk:
             r["tisk_topics"] = tisk.topics_en if lang == "en" and tisk.topics_en else tisk.topics
         else:
             r["tisk_topics"] = []
-
-
-def _vote_kind(data: PeriodData, vote_id: int) -> str | None:
-    """Kind from amendment data ('final' / 'amendment'), else from the steno rules (#102)."""
-    ctx = data.get_amendment_for_vote(vote_id)
-    if ctx is not None and (ctx[3] or ctx[2]):
-        return "final" if ctx[3] else "amendment"
-    kind = data.vote_steno.get(vote_id, {}).get("kind")
-    return None if kind in (None, "other") else kind
-
-
-def _vote_question(data: PeriodData, vote_id: int, lang: str) -> dict | None:
-    """Question, quote and steno link of a vote when the steno check passed (#102)."""
-    rec = data.vote_steno.get(vote_id)
-    if not rec:
-        return None
-    q = rec.get("question_en") if lang == "en" else None
-    return {
-        "question": q or rec.get("question", ""),
-        "quote": rec.get("quote", ""),
-        "url": rec.get("url", ""),
-        "status": rec.get("status", "unknown"),
-        "edited": rec.get("edited"),
-    }
-
-
-def _filter_kind(votes: pl.DataFrame, data: PeriodData, kind: str) -> pl.DataFrame:
-    """Keep votes of a known kind; unknown kinds cannot be filtered yet."""
-    if kind not in ("final", "amendment"):
-        return votes
-    ids = [v for v in votes.get_column("id_hlasovani").to_list() if _vote_kind(data, v) == kind]
-    return votes.filter(pl.col("id_hlasovani").is_in(ids))
 
 
 def _group_rows(rows: list[dict]) -> list[dict]:
@@ -204,9 +183,11 @@ def _group_rows(rows: list[dict]) -> list[dict]:
         groups[-1]["rows"].append(row)
     for g in groups:
         first = g["rows"][0]
-        g["title"] = first.get("tisk_nazev") or first["nazev_dlouhy"] or first["nazev_kratky"]
+        g["title"] = first.get("tisk_title") or first.get("tisk_nazev") or first["nazev_dlouhy"]
+        g["title"] = g["title"] or first["nazev_kratky"]
         g["tisk_ct"] = first.get("tisk_ct")
         g["all_void"] = all(r["is_void"] for r in g["rows"])
+        g["result"] = group_result(g["rows"])
     return groups
 
 
@@ -239,7 +220,7 @@ def list_votes(
         total_groups, page, per_page, total_pages.
     """
     votes = _apply_vote_filters(data.votes, data, search, outcome_filter, topic_filter)
-    votes = _filter_kind(votes, data, kind_filter).sort("id_hlasovani", descending=True)
+    votes = filter_kind(votes, data, kind_filter).sort("id_hlasovani", descending=True)
     keys = votes.select("schuze", "bod", "datum").unique(maintain_order=True)
 
     total_groups = keys.height
@@ -271,11 +252,14 @@ def list_votes(
     _enrich_vote_rows(rows, data, lang)
     for row in rows:
         row["is_void"] = row["id_hlasovani"] in void_ids
-        row["kind"] = _vote_kind(data, row["id_hlasovani"])
-        row["steno"] = _vote_question(data, row["id_hlasovani"], lang)
+        row["kind"] = vote_kind(data, row["id_hlasovani"])
+        row["steno"] = vote_question(data, row["id_hlasovani"], lang)
 
+    groups = _group_rows(rows)
+    for g in groups:
+        g["reading"] = reading_at(data, g["tisk_ct"], g["schuze"])
     return {
-        "groups": _group_rows(rows),
+        "groups": groups,
         "rows": rows,
         "total": votes.height,
         "total_groups": total_groups,
@@ -380,8 +364,9 @@ def vote_detail(data: PeriodData, vote_id: int, lang: str = "cs") -> dict | None
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)
     mp_detail = mp_rows.join(data.mp_info.drop("party"), on="id_poslanec", how="left")
 
-    info["kind"] = _vote_kind(data, vote_id)
-    info["steno"] = _vote_question(data, vote_id, lang)
+    info["kind"] = vote_kind(data, vote_id)
+    info["steno"] = vote_question(data, vote_id, lang)
+    info["story"] = vote_story(data, info, lang)
     return {
         "info": info,
         "party_breakdown": _build_party_breakdown(mp_detail),

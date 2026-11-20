@@ -12,8 +12,9 @@
     <label class="field" style="flex:1 1 200px"><span>{{ _("vl.kind") }}</span>
         <select name="kind">
             <option value="">{{ _("vl.kind_all") }}</option>
-            <option value="final" {% if request.query_params.get('kind') == 'final' %}selected{% endif %}>{{ _("vl.kind_final") }}</option>
-            <option value="amendment" {% if request.query_params.get('kind') == 'amendment' %}selected{% endif %}>{{ _("vl.kind_amendment") }}</option>
+            {% for k in ("final", "amendment", "reject_return", "committee", "procedural") %}
+            <option value="{{ k }}" {% if request.query_params.get('kind') == k %}selected{% endif %}>{{ _("vl.filter_" ~ k) }}</option>
+            {% endfor %}
         </select></label>
     <label class="field" style="flex:1 1 130px"><span>{{ _("vl.outcome") }}</span>
         <select name="outcome">

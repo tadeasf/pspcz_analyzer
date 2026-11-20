@@ -103,6 +103,7 @@ body.nomarks .m{display:none}
 .seg{display:flex}.seg span{font-size:13px;padding:6px 12px;border:1px solid #9fb3c8;margin-left:-1px;background:#fff}.seg span.on{background:#1A4677;color:#fff;border-color:#1A4677}
 .vg{border:1px solid #D0DCE8;border-radius:4px;overflow:hidden}
 .vg-h{padding:14px 16px;background:#FAFBFD;display:flex;flex-direction:column;gap:4px}
+details.vg[open] .vg-more,details.club[open] .vg-more{display:none}
 .vrow{display:grid;grid-template-columns:52px minmax(0,1fr) 170px 86px;gap:12px;align-items:center;padding:11px 16px;border-top:1px solid #E3EAF2}
 .meter{position:relative;height:9px;background:#EEF0F3;border-radius:2px}
 .meter .f{position:absolute;inset:0 auto 0 0;background:#1A4677;border-radius:2px}

@@ -11,6 +11,9 @@
         <span style="font:700 18px Georgia,serif;color:#1A4677">
             {{ g.title or _("vl.no_item") }}
         </span>
+        {% if g.tisk_ct or g.reading %}<span class="lbl">{% if g.tisk_ct %}{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}{% endif %}{% if g.reading %} · {{ _("vl.reading_" ~ g.reading) }}{% endif %}</span>{% endif %}
+        {% if g.result %}<span style="font-size:14px">{{ _("vl.group_result") }} {{ _(g.result) }}</span>{% endif %}
+        <span class="lbl vg-more" aria-hidden="true">{{ _("vl.expand") }} ▾</span>
     </summary>
     {# the law link lives outside <summary>: a link inside it is a nested control (axe nested-interactive) #}
     {% if g.tisk_ct %}<div style="padding:4px 14px 0;font-size:14px"><a href="/laws/{{ g.tisk_ct }}?period={{ period }}">{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}</a></div>{% endif %}
@@ -27,7 +30,8 @@
         <span class="lbl">{{ r.cas }}</span>
         <span>
             <span class="chip {{ 'c-st' if r.kind == 'final' else 'c-proc' }}">{% if r.kind %}{{ _("vl.kind_" ~ r.kind) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
-            <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{% if r.steno and r.steno.question %}{{ r.steno.question }}{% elif r.kind == "final" %}<b>{{ _("vl.q_final") }}</b>{% else %}{{ _("vl.q_unknown").format(n=r.cislo) }}{% endif %}</a>
+            <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{% if r.steno and r.steno.question %}{{ r.steno.question }}{% elif r.kind == "final" %}<b>{{ _("vl.q_final") }}</b>{% else %}{{ _("vl.q_unknown") }}{% endif %}</a>
+            {% if r.steno and r.steno.invalid_by %}<span class="chip c-no">{{ _("vd.invalid") }}</span>{% endif %}
         </span>
         <div>
             {% if r.prihlaseno %}
