@@ -345,3 +345,27 @@ def clean_proposer(names: str, context: str) -> str:
         full = " ".join(words).lower()
         kept.append(" ".join(words) if full[:-1] in low else surname)
     return ", ".join(kept)
+
+
+_OWN_PROPOSAL_RE = re.compile(
+    r"\bnavrhuj[ui]\b|dávám (?:procedurální )?návrh|podávám (?:procedurální )?návrh", re.I
+)
+
+
+def quote_speaker(text: str, end: int, quote: str) -> str:
+    """Who proposed it, when the quote is the speaker's own proposal ("navrhuji, aby …").
+
+    Args:
+        text: Plain text of the sitting.
+        end: Where the vote is announced (the quote is searched before it).
+        quote: Verbatim quote of the record.
+
+    Returns:
+        The speaker's name, or "" when the quote is not a first-person proposal or not found.
+    """
+    if not quote or not _OWN_PROPOSAL_RE.search(quote):
+        return ""
+    head = " ".join(quote.split())[:60].lower()
+    lo = max(0, end - HISTORY_CHARS)
+    pos = text[lo:end].lower().rfind(head)  # the model may change the first letter's case
+    return speaker_before(text, lo + pos) if pos >= 0 else ""

@@ -12,6 +12,7 @@ from pspcz_analyzer.services.vote_steno_text import (
     earlier_proposals,
     is_referential,
     link_repeats,
+    quote_speaker,
     rule_kind,
     sitting_text,
     vote_kind,
@@ -215,3 +216,15 @@ def test_proposer_first_name_must_stand_by_the_surname() -> None:
     assert clean_proposer("Jan Benda", text) == "Benda"
     assert clean_proposer("Jan Jakob", text) == "Jan Jakob"
     assert clean_proposer("Karel Haas", text) == ""
+
+
+def test_quote_speaker_names_who_proposed() -> None:
+    text = (
+        "Poslanec Tomáš Helebrant : Děkuji. Poslanec Karel Haas : navrhuju, aby Poslanecká "
+        "sněmovna revokovala usnesení. Předseda PSP Tomio Okamura : Zahajuji hlasování."
+    )
+    assert (
+        quote_speaker(text, len(text), "navrhuju, aby Poslanecká sněmovna revokovala usnesení")
+        == "Karel Haas"
+    )
+    assert quote_speaker(text, len(text), "Zahajuji hlasování.") == ""

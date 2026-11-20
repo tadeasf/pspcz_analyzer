@@ -60,6 +60,7 @@ from pspcz_analyzer.services.vote_steno_text import (
     is_result_formula,
     link_repeats,
     norm_quote,
+    quote_speaker,
     rule_kind,
     sitting_text,
     speaker_before,
@@ -162,6 +163,7 @@ def _ask(
             out = _ask_once(llm, window, more, cislo, bod)
     if out.get("kind") == "committee" and out["proposer"] == speaker_before(text, span["end"]):
         out["proposer"] = ""  # the chair only puts the referral to the vote
+    out["proposer"] = quote_speaker(text, span["end"], out.get("quote", "")) or out["proposer"]
     return out
 
 
