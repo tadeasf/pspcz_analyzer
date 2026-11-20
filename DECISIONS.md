@@ -32,6 +32,7 @@ Plan and per-issue notes: [TASKS.md](TASKS.md). What is done: [STATUS.md](STATUS
 | Vote kind chip ([#102]) | Shown from the rules even when the question is unknown; it can be off for resolutions (e.g. committee set-up labelled procedural). The question is the reliable part. | decided 2026-11-19 (by me) |
 | Branch and deploy | All work goes to `feat/zakony-pod-lupou`, committed per issue. Tuned locally; Martin deploys when it is ready. No checks against snemovna.hlidacstatu.cz. | decided 2026-11-19 |
 | Serena | Removed from the repo, not used. | decided 2026-11-19 |
+| LLM outage | A failed LLM call (timeout, transport error, HTTP 5xx/429, empty or unreadable reply) is never a result: vote steno does not store it, briefs and summaries were already retried. An answer that fails the quote checks is a result (`unknown`, cached). After 3 failed requests in a row the run stops (`LLMUnavailable`); the cache build checks a real completion before and after each period and writes no archive when the model is down. Availability is a test completion, not a model list. | decided 2026-11-20 |
 
 [#84]: https://github.com/tadeasf/pspcz_analyzer/issues/84
 [#85]: https://github.com/tadeasf/pspcz_analyzer/issues/85

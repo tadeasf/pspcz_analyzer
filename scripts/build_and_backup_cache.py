@@ -69,6 +69,7 @@ from pspcz_analyzer.data.downloader import (  # noqa: E402
 from pspcz_analyzer.logging_config import setup_logging  # noqa: E402
 from pspcz_analyzer.models.pipeline_progress import AmendmentMode, TiskMode  # noqa: E402
 from pspcz_analyzer.services.data_service import DataService  # noqa: E402
+from pspcz_analyzer.services.llm import LLMUnavailable, create_llm_client  # noqa: E402
 
 DEFAULT_PERIODS: tuple[int, ...] = (10, 9, 8, 7, 6, 5)
 
@@ -164,16 +165,31 @@ async def _run_all(
     """
     results: list[PeriodResult] = []
     for period in periods:
+        await asyncio.to_thread(_require_llm, f"before period {period}")
         if skip_download:
             logger.info("[period {}] --skip-download set, using cached raw data", period)
         else:
             await asyncio.to_thread(_download_raw, svc.cache_dir, period, force=force_download)
         try:
             results.append(await _process_period(svc, period))
+        except LLMUnavailable:
+            raise
         except Exception:
             logger.opt(exception=True).error("[period {}] Processing failed", period)
             results.append(PeriodResult(period, False, False, "error"))
+        # a stage that found the model down skipped its AI work: stop rather than ship that
+        await asyncio.to_thread(_require_llm, f"after period {period}")
     return results
+
+
+def _require_llm(when: str) -> None:
+    """Stop the build when the model does not answer a test completion.
+
+    Raises:
+        LLMUnavailable: The test completion failed.
+    """
+    if not create_llm_client().is_available():
+        raise LLMUnavailable(f"the model did not answer a test completion {when}")
 
 
 def _make_backup(cache_dir: Path, out_path: Path) -> Path:
@@ -278,14 +294,18 @@ def main() -> int:
     svc = DataService(cache_dir)
     svc.initialize(period=periods[0])
 
-    results = asyncio.run(
-        _run_all(
-            svc,
-            periods,
-            skip_download=args.skip_download,
-            force_download=args.force_download,
+    try:
+        results = asyncio.run(
+            _run_all(
+                svc,
+                periods,
+                skip_download=args.skip_download,
+                force_download=args.force_download,
+            )
         )
-    )
+    except LLMUnavailable as exc:
+        logger.error("Build stopped, LLM unavailable: {}. No archive written.", exc)
+        return 2
     _print_summary(results)
 
     if args.no_backup:

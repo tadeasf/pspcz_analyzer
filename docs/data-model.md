@@ -239,6 +239,8 @@ All configuration is via environment variables, loaded from `.env` by `python-do
 | `TISK_SHORTENER` | `0` | Truncate tisk text for LLM (`0` = full, `1` = truncate) |
 | `LLM_STRUCTURED_OUTPUT` | `1` | JSON schema structured output (`0` = regex fallback) |
 | `LLM_EMPTY_RETRIES` | `2` | Extra LLM attempts on empty free-text results |
+| `LLM_MAX_CONSECUTIVE_FAILURES` | `3` | Failed LLM requests in a row that stop the run |
+| `LLM_PROBE_TIMEOUT` | `60` | Seconds for the test completion of the availability check |
 | `LLM_CONCURRENCY` | `4` | Parallel LLM requests per pipeline stage |
 | `ADMIN_PORT` | `8001` | Admin backend server port |
 | `ADMIN_USERNAME` | `admin` | Admin dashboard login username |

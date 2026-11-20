@@ -8,7 +8,16 @@ from fastapi.testclient import TestClient
 
 from pspcz_analyzer.rate_limit import limiter
 from pspcz_analyzer.services.data_service import DataService
+from pspcz_analyzer.services.llm.health import failures
 from tests.fixtures.sample_data import make_period_data
+
+
+@pytest.fixture(autouse=True)
+def _reset_llm_failures():
+    """Failed LLM requests are counted per process; tests start from zero."""
+    failures.reset()
+    yield
+    failures.reset()
 
 
 @pytest.fixture(autouse=True)

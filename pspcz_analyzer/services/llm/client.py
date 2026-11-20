@@ -18,6 +18,12 @@ from pspcz_analyzer.config import (
     LLM_MAX_OUTPUT_TOKENS,
     LLM_TIMEOUT,
 )
+from pspcz_analyzer.services.llm.health import (
+    describe,
+    failures,
+    is_outage,
+    probe_completion,
+)
 from pspcz_analyzer.services.llm.helpers import (
     _THINK_RE,
     _sanitize_llm_input,
@@ -135,18 +141,26 @@ class LLMClient:
     # ── Availability detection ────────────────────────────────────────
 
     def is_available(self) -> bool:
-        """Check if the LLM backend is reachable. Caches after first call."""
+        """Check that the model answers a tiny test completion. Caches after first call."""
         if self._available is not None:
             return self._available
 
         match self.provider:
             case "ollama":
-                return self._check_ollama_availability()
+                reachable = self._check_ollama_availability()
             case "openai":
-                return self._check_openai_availability()
+                reachable = True
             case _:
-                self._available = False
-                return False
+                reachable = False
+        compat = self.provider == "openai" or self._openai_compat
+        self._available = reachable and probe_completion(
+            self.base_url, self._headers, self.model, compat
+        )
+        if not self._available:
+            logger.warning(
+                "{} Not available at {} ({})", self._log_prefix, self.base_url, self.model
+            )
+        return self._available
 
     def _check_ollama_availability(self) -> bool:
         """Try native Ollama, then fall back to OpenAI-compatible endpoint."""
@@ -169,22 +183,6 @@ class LLMClient:
         self._available = False
         logger.info("[ollama] Not available (connection failed)")
         return False
-
-    def _check_openai_availability(self) -> bool:
-        """Check if the OpenAI-compatible API is reachable."""
-        try:
-            resp = httpx.get(
-                f"{self.base_url}/models",
-                headers=self._headers,
-                timeout=LLM_HEALTH_TIMEOUT,
-            )
-            resp.raise_for_status()
-            self._available = True
-            logger.info("[openai] Available at {} with model {}", self.base_url, self.model)
-        except Exception:
-            self._available = False
-            logger.info("[openai] Not available (connection to {} failed)", self.base_url)
-        return self._available
 
     def _check_native_ollama(self) -> bool:
         """Try native Ollama ``GET /api/tags``. Returns True if reachable."""
@@ -300,18 +298,17 @@ class LLMClient:
             raw_schema = response_format.get("json_schema", {}).get("schema")
             if raw_schema is not None:
                 payload["format"] = raw_schema
-        try:
-            resp = httpx.post(
-                f"{self.base_url}/api/generate",
-                headers=self._headers,
-                json=payload,
-                timeout=self.timeout,
-            )
-            resp.raise_for_status()
-            return resp.json().get("response")
-        except Exception:
-            logger.opt(exception=True).debug("[ollama] Native generation request failed")
+        resp = self._post(f"{self.base_url}/api/generate", payload)
+        if resp is None:
             return None
+        try:
+            text = resp.json().get("response")
+        except ValueError:
+            logger.warning("[ollama] Native generation returned no JSON")
+            return None
+        if not text:
+            logger.warning("[ollama] Native generation returned an empty reply")
+        return text
 
     def _generate_openai_compat(
         self,
@@ -334,22 +331,37 @@ class LLMClient:
             payload["response_format"] = response_format
         if LLM_ENABLE_THINKING:
             payload["chat_template_kwargs"] = {"enable_thinking": LLM_ENABLE_THINKING == "1"}
+        resp = self._post(f"{self.base_url}/chat/completions", payload)
+        if resp is None:
+            return None
         try:
-            resp = httpx.post(
-                f"{self.base_url}/chat/completions",
-                headers=self._headers,
-                json=payload,
-                timeout=self.timeout,
-            )
+            choices = resp.json().get("choices", [])
+        except ValueError:
+            logger.warning("{} Chat completion returned no JSON", self._log_prefix)
+            return None
+        text = choices[0].get("message", {}).get("content") if choices else None
+        if not text:
+            logger.warning("{} Chat completion returned an empty reply", self._log_prefix)
+        return text
+
+    def _post(self, url: str, payload: dict[str, Any]) -> httpx.Response | None:
+        """POST a generation request; None when it failed.
+
+        Raises:
+            LLMUnavailable: Too many requests in a row failed (health.failures).
+        """
+        try:
+            resp = httpx.post(url, headers=self._headers, json=payload, timeout=self.timeout)
             resp.raise_for_status()
-            data = resp.json()
-            choices = data.get("choices", [])
-            if choices:
-                return choices[0].get("message", {}).get("content")
+        except httpx.HTTPError as exc:
+            if is_outage(exc):
+                failures.failed(self._log_prefix, describe(exc))
+            else:
+                failures.ok()  # the backend answered, it rejected this request
+                logger.warning("{} LLM request rejected: {}", self._log_prefix, describe(exc))
             return None
-        except Exception:
-            logger.opt(exception=True).debug("{} Chat completion request failed", self._log_prefix)
-            return None
+        failures.ok()
+        return resp
 
     # ── Structured JSON generation with fallback ─────────────────────
 

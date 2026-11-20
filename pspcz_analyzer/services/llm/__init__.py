@@ -1,6 +1,7 @@
 """LLM integration package – re-exports public API for backward compatibility."""
 
 from pspcz_analyzer.services.llm.client import LLMClient
+from pspcz_analyzer.services.llm.health import LLMUnavailable
 from pspcz_analyzer.services.llm.helpers import (
     _sanitize_llm_input,
     create_llm_client,
@@ -14,6 +15,7 @@ from pspcz_analyzer.services.llm.parsers import (
 
 __all__ = [
     "LLMClient",
+    "LLMUnavailable",
     "_sanitize_llm_input",
     "create_llm_client",
     "deserialize_topics",
