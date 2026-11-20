@@ -72,7 +72,7 @@
     {% if n_total %}
     <div style="position:relative;padding-top:18px">
         <div class="bar5" role="img" aria-label="{{ _('vd.bar_aria').format(total=n_total, yes=n_yes, no=n_no, abst=n_abst, absent=n_absent, exc=n_exc, kvorum=info.kvorum) }}">
-            <span class="p" style="width:{{ "%.1f"|format(n_yes * 100 / n_total) }}%">{% if n_yes > 15 %}{{ _("vd.yes_n").format(n=n_yes) }}{% endif %}</span><span class="x" style="width:{{ "%.1f"|format(n_no * 100 / n_total) }}%">{% if n_no > 15 %}{{ _("vd.no_n").format(n=n_no) }}{% endif %}</span><span class="z" style="width:{{ "%.1f"|format(n_abst * 100 / n_total) }}%"></span><span class="o" style="width:{{ "%.1f"|format(n_absent * 100 / n_total) }}%;background:#AEBBCB"></span><span class="o" style="width:{{ "%.1f"|format(n_exc * 100 / n_total) }}%">{% if n_exc > 15 %}{{ n_exc }}{% endif %}</span>
+            <span class="p" style="width:{{ "%.1f"|format(n_yes * 100 / n_total) }}%">{% if n_yes > 15 %}{{ _("vd.yes_n").format(n=n_yes) }}{% endif %}</span><span class="x" style="width:{{ "%.1f"|format(n_no * 100 / n_total) }}%">{% if n_no > 15 %}{{ _("vd.no_n").format(n=n_no) }}{% endif %}</span><span class="z" style="width:{{ "%.1f"|format(n_abst * 100 / n_total) }}%"></span><span class="n0" style="width:{{ "%.1f"|format(n_absent * 100 / n_total) }}%"></span><span class="o" style="width:{{ "%.1f"|format(n_exc * 100 / n_total) }}%">{% if n_exc > 15 %}{{ n_exc }}{% endif %}</span>
         </div>
         {% if info.kvorum %}
         <div style="position:absolute;left:{{ "%.1f"|format(info.kvorum * 100 / n_total) }}%;top:0;bottom:-4px;border-left:2px solid #1d232b"></div>
@@ -87,7 +87,7 @@
 <div style="display:flex;flex-direction:column;gap:10px">
     <h2 class="h2s">{{ _("vd.clubs_title") }}</h2>
     <div style="overflow-x:auto" tabindex="0"><table class="t">
-        <thead><tr><th>{{ _("vd.club") }}</th><th>{{ _("vd.yes") }}</th><th>{{ _("vd.no") }}</th><th>{{ _("vd.abst_pl") }}</th><th>{{ term("omluven-neprihlasen", _("vd.absent_pl")) }}</th><th>{{ term("omluven-neprihlasen", _("vd.excused_pl")) }}</th><th>{{ _("vd.total") }}</th></tr></thead>
+        <thead><tr><th>{{ _("vd.club") }}</th><th>{{ _("vd.yes") }}</th><th>{{ _("vd.no") }}</th><th>{{ _("vd.abst_pl") }}</th><th>{{ _("vd.absent_pl") }}</th><th>{{ _("vd.excused_pl") }}</th><th>{{ _("vd.total") }}</th></tr></thead>
         <tbody>
         {% for r in rows %}
         {% set top = [r.yes, r.no, r.abstained]|max %}
@@ -99,7 +99,7 @@
         <tr class="sum"><td>{{ _("vd.total") }}</td><td>{{ n_yes }}</td><td>{{ n_no }}</td><td>{{ n_abst }}</td><td>{{ n_absent }}</td><td>{{ n_exc }}</td><td>{{ n_total }}</td></tr>
         </tbody>
     </table></div>
-    <p class="lbl">{{ _("vd.clubs_note") }}</p>
+    <p class="lbl">{{ _("vd.clubs_note") }} {{ term("omluven-neprihlasen", _("vd.what_codes")) }}</p>
 </div>
 
 <div style="display:flex;flex-direction:column;gap:10px" id="mp-votes">

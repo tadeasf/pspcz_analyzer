@@ -56,6 +56,7 @@ async def laws_api(
         {
             "request": request,
             "period": period,
+            "periods": request.app.state.data.available_periods,
             "search": search,
             "status_filter": status_filter,
             "topic": topic,

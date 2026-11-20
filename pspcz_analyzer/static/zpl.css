@@ -110,7 +110,7 @@ details.vg[open] .vg-more,details.club[open] .vg-more{display:none}
 .meter .t{position:absolute;top:-4px;bottom:-4px;width:2px;background:#1d232b}
 .bar5{display:flex;height:28px;border-radius:3px;overflow:hidden;font:700 12px/28px Arial,sans-serif}
 .bar5 span{white-space:nowrap;overflow:hidden;padding-left:6px}
-.p{background:#1A4677;color:#fff}.x{background:#E08A00;color:#1d232b}.z{background:#8FA7C2;color:#1d232b}.o{background:#C9D3E0;color:#1d232b}
+.p{background:#1A4677;color:#fff}.x{background:#E08A00;color:#1d232b}.z{background:#8FA7C2;color:#1d232b}.o{background:#fff;color:#1d232b;box-shadow:inset 0 0 0 1px #AEBBCB}.n0{background:#AEBBCB;color:#1d232b}
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:#3a4552}
 .legend i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
 table.t{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
@@ -143,7 +143,7 @@ dl.gl dd{margin:2px 0 0}
 .pdfp{background:#fff;height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding:26px 16px;gap:2px;color:#111}
 .agg td:first-child{font-weight:400}
 .ic{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:3px;font:700 12px/1 Arial,sans-serif;flex:none;margin-right:6px;vertical-align:-5px}
-.i-a{background:#1A4677;color:#fff}.i-n{background:#E08A00;color:#1d232b}.i-z{background:#8FA7C2;color:#1d232b}.i-0{background:#EEF0F3;color:#4a5562;border:1px solid #C9D3E0}.i-m{background:#fff;color:#5a6573;border:1px solid #9fb3c8}
+.i-a{background:#1A4677;color:#fff}.i-n{background:#E08A00;color:#1d232b}.i-z{background:#8FA7C2;color:#1d232b}.i-0{background:#AEBBCB;color:#1d232b}.i-m{background:#fff;color:#5a6573;border:1px solid #AEBBCB}
 .club{display:flex;flex-direction:column;gap:8px}
 .club-h{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;border-bottom:1px solid #D0DCE8;padding:8px 0 6px;font-size:15px}
 .club-h b{font-family:Georgia,serif;color:#1A4677;font-size:17px}
@@ -249,3 +249,8 @@ details.more[open] summary{margin-bottom:6px}
 @media (max-width:760px){ main > .s-body{padding:16px} }
 .kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:10px 0}.kv dt{font-weight:700;color:#3D4A5C}.kv dd{margin:0}@media(max-width:600px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
 .term{color:inherit;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
+/* links inside running text need more than colour (axe link-in-text-block, #120) */
+main a{text-decoration:underline;text-underline-offset:2px}
+main a.btn,main a.tab,main a.boxlink,main a.linkbtn,main .toc a,main h2 a,main h3 a,main h4 a{text-decoration:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+button.tab{background:none;border:0;font:inherit;cursor:pointer}

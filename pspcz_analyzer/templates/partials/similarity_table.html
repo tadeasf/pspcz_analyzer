@@ -1,6 +1,6 @@
 {% if map.points %}
 <figure style="margin:0">
-    <svg viewBox="0 0 {{ map.width }} {{ map.height }}" role="img" aria-label="{{ _('sim.map_aria') }}" style="width:100%;height:auto;background:#FAFBFD;border:1px solid #D0DCE8;border-radius:4px">
+    <svg viewBox="0 0 {{ map.width }} {{ map.height }}" role="img" aria-label="{{ _('sim.map_aria') }}" aria-describedby="sim-legend" style="width:100%;height:auto;background:#FAFBFD;border:1px solid #D0DCE8;border-radius:4px">
         {% for g in map.groups %}<text x="{{ g.x }}" y="{{ g.y }}" text-anchor="middle" font-size="13" font-weight="700" fill="#3a4552">{{ _("sim.group_" ~ g.side) }}</text>{% endfor %}
         {% for p in map.points %}<circle class="sim-dot" cx="{{ p.cx }}" cy="{{ p.cy }}" r="5" fill="{{ p.color }}" fill-opacity=".85" stroke="{{ '#8A6D00' if p.party == 'KDU-ČSL' else '#fff' }}" stroke-width="1" data-name="{{ p.name }}" data-club="{{ p.party|club_name }}" style="cursor:pointer"><title>{{ p.name }} ({{ p.party|club_name }})</title></circle>{% endfor %}
     </svg>
@@ -21,7 +21,7 @@
         });
     })();
     </script>
-    <figcaption class="legend" style="margin-top:8px">
+    <figcaption class="legend" id="sim-legend" style="margin-top:8px">
         {% for side in ("government", "opposition", "unknown") %}{% set items = map.legend|selectattr("side", "equalto", side)|list %}{% if items %}
         <span><b>{{ _("sim.side_" ~ side) }}:</b></span>{% for l in items %}<span><i style="background:{{ l.color }}{% if l.party == 'KDU-ČSL' %};outline:1px solid #8A6D00{% endif %}"></i>{{ l.party|club_name }} ({{ l.count }})</span>{% endfor %}
         {% endif %}{% endfor %}

@@ -2,13 +2,15 @@
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&phase=" ~ (phase|urlencode) ~ "&submitter=" ~ (submitter|urlencode) ~ "&sort=" ~ sort ~ "&tab=" ~ tab %}
 <div class="tabs-s" role="tablist">
     {% for t in ("navrhy", "smlouvy", "zpravy", "interpelace") %}
-    <a href="#" role="tab" class="tab{% if tab == t %} on{% endif %}" aria-selected="{{ 'true' if tab == t else 'false' }}"
+    <button type="button" role="tab" class="tab{% if tab == t %} on{% endif %}" aria-selected="{{ 'true' if tab == t else 'false' }}"
        onclick="document.getElementById('laws-tab').value='{{ t }}'"
-       hx-get="/api/laws" hx-include="#laws-form" hx-target="#results">{{ _("lw.tab_" ~ t) }} <span class="lbl">{{ tab_counts[t]|num }}</span></a>
+       hx-get="/api/laws" hx-include="#laws-form" hx-target="#results">{{ _("lw.tab_" ~ t) }} <span class="lbl">{{ tab_counts[t]|num }}</span></button>
     {% endfor %}
 </div>
 {% if not rows %}
-<p>{{ _("laws.no_data") }}</p>
+{% if search %}<div class="empty"><b>{{ _("empty.search").format(q=search, p=period) }}</b>
+    <span>{% for p in periods if p.number == period - 1 %}<a href="/laws?period={{ p.number }}&search={{ search|urlencode }}">{{ _("empty.search_period").format(p=p.number) }}</a> · {% endfor %}<a href="/laws?period={{ period }}">{{ _("empty.clear") }}</a></span></div>
+{% else %}<div class="empty"><b>{{ _("laws.no_data") }}</b> <a href="/laws?period={{ period }}">{{ _("empty.clear") }}</a></div>{% endif %}
 {% else %}
 <p style="font-size:14px"><b>{{ total|count("lw.count_" ~ tab) }}</b> {{ _("lw.in_period").format(p=period) }}</p>
 {% for row in rows %}

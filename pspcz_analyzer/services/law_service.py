@@ -6,11 +6,13 @@ from pspcz_analyzer.config import TISKY_PDF_DIR
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
-from pspcz_analyzer.services.amendment_listing import law_amendments, law_tally
+from pspcz_analyzer.services.amendment_listing import law_tally
 from pspcz_analyzer.services.law_detail import (
     amended_laws,
     documents,
+    law_letters,
     published_law_url,
+    second_reading_done,
     status_sentence,
     timeline,
     votes_by_reading,
@@ -201,13 +203,6 @@ def _build_law_row(
     }
 
 
-def _law_letters(data: PeriodData, ct: int, lang: str) -> list[dict]:
-    """Amendment letter cards of a bill (empty when it has no amendment data)."""
-    t = law_tally(data, ct)
-    detail = law_amendments(data, t["schuze"], t["bod"], lang) if t else None
-    return detail["letters"] if detail else []
-
-
 def _deduplicate_tisky(data: PeriodData) -> list[TiskInfo]:
     """Get unique TiskInfo entries from tisk_lookup, deduplicated by ct.
 
@@ -396,5 +391,6 @@ def law_detail(
         "documents": documents(tisk),
         "amended_laws": amended_laws(tisk.nazev_cely),
         "published_url": published_law_url(law_number),
-        "letters": _law_letters(data, ct, lang),
+        "letters": law_letters(data, ct, lang),
+        "second_reading_done": second_reading_done(tisk),
     }

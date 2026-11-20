@@ -245,6 +245,7 @@ async def votes_api(
         {
             "request": request,
             "period": period,
+            "periods": request.app.state.data.available_periods,
             "search": search,
             "outcome": outcome,
             "topic": topic,

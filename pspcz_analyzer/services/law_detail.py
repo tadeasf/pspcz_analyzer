@@ -8,7 +8,8 @@ sentence of psp.cz's own text.
 import re
 from datetime import date
 
-from pspcz_analyzer.models.tisk_models import TiskInfo
+from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
+from pspcz_analyzer.services.amendment_listing import law_amendments, law_tally
 from pspcz_analyzer.services.law_filters import submitter_kind, tab_of
 from pspcz_analyzer.services.step_text import phase_key, president_deadline, step_sentence
 
@@ -187,3 +188,15 @@ def published_law_url(law_number: str | None) -> str:
     """e-Sbírka link of a published law ("129/2026 Sb."), "" when not published."""
     m = re.match(r"\s*(\d+)/(\d{4})", law_number or "")
     return f"https://www.e-sbirka.cz/sb/{m.group(2)}/{m.group(1)}" if m else ""
+
+
+def law_letters(data: PeriodData, ct: int, lang: str) -> list[dict]:
+    """Amendment letter cards of a bill (empty when it has no amendment data)."""
+    t = law_tally(data, ct)
+    detail = law_amendments(data, t["schuze"], t["bod"], lang) if t else None
+    return detail["letters"] if detail else []
+
+
+def second_reading_done(tisk: TiskInfo) -> bool:
+    """Whether the bill went through 2nd reading, when amendments are filed (#119)."""
+    return bool(tisk.history and any(s.stage_type == "2_cteni" for s in tisk.history.stages))

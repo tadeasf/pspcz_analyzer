@@ -10,7 +10,7 @@
 </div>
 
 {% if not rows %}
-<div class="empty"><b>{{ _("pn.none") }}</b></div>
+<div class="empty"><b>{{ _("empty.search").format(q=search, p=period) if search else _("pn.none") }}</b> <a href="/amendments?period={{ period }}">{{ _("empty.clear") }}</a></div>
 {% elif view == "letters" %}
 {% for x in rows %}
 <p class="lbl" style="margin:12px 0 4px">{{ _("vd.tisk_n").format(ct=x.ct) }} · <a href="/amendments/{{ x.law.schuze }}/{{ x.law.bod }}?period={{ period }}">{{ x.law.title }}</a></p>

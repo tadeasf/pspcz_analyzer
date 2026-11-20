@@ -1,6 +1,8 @@
 {% from "macros.html" import page_links, term %}
 {% if not groups %}
-<p>{{ _("votes.no_data") }}</p>
+{% if search %}<div class="empty"><b>{{ _("empty.search").format(q=search, p=period) }}</b>
+    <span>{% for p in periods if p.number == period - 1 %}<a href="/votes?period={{ p.number }}&search={{ search|urlencode }}">{{ _("empty.search_period").format(p=p.number) }}</a> · {% endfor %}<a href="/votes?period={{ period }}">{{ _("empty.clear") }}</a></span></div>
+{% else %}<div class="empty"><b>{{ _("votes.no_data") }}</b> <a href="/votes?period={{ period }}">{{ _("empty.clear") }}</a></div>{% endif %}
 {% else %}
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&outcome=" ~ (outcome|urlencode) ~ "&topic=" ~ (topic|urlencode) ~ "&kind=" ~ (kind|urlencode) %}
 <p class="lbl">{{ _("vl.found").format(total=total, groups=total_groups) }}</p>
@@ -11,7 +13,7 @@
         <span style="font:700 18px Georgia,serif;color:#1A4677">
             {{ g.title or _("vl.no_item") }}
         </span>
-        {% if g.tisk_ct or g.reading %}<span class="lbl">{% if g.tisk_ct %}{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}{% endif %}{% if g.reading %} · {{ term("cteni" ~ g.reading[0], _("vl.reading_" ~ g.reading)) }}{% endif %}</span>{% endif %}
+        {% if g.tisk_ct or g.reading %}<span class="lbl">{% if g.tisk_ct %}{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}{% endif %}{% if g.reading %} · {{ _("vl.reading_" ~ g.reading) }}{% endif %}</span>{% endif %}
         {% if g.result %}<span style="font-size:14px">{{ _("vl.group_result") }} {{ _(g.result) }}</span>{% endif %}
         <span class="lbl vg-more" aria-hidden="true">{{ _("vl.expand") }} ▾</span>
     </summary>

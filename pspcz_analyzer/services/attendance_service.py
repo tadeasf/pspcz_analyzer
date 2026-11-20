@@ -1,5 +1,7 @@
 """Attendance / participation rate analysis (#91, #117)."""
 
+from datetime import datetime
+
 import polars as pl
 
 from pspcz_analyzer.config import ATTENDANCE_MIN_VOTES
@@ -107,7 +109,7 @@ def compute_attendance(
     if top:
         result = result.head(top)
 
-    return result.select(
+    rows = result.select(
         "id_poslanec",
         "jmeno",
         "prijmeni",
@@ -126,6 +128,18 @@ def compute_attendance(
         "from_start",
         "to_end",
     ).to_dicts()
+    for r in rows:
+        r["mandate_days"] = _days(r["mandate_from"], r["mandate_to"])
+    return rows
+
+
+def _days(start: str | None, end: str | None) -> int | None:
+    """Days of a mandate from its first to its last vote date ("dd.mm.yyyy"), inclusive."""
+    try:
+        a, b = (datetime.strptime(d or "", "%d.%m.%Y").date() for d in (start, end))
+    except ValueError:
+        return None
+    return (b - a).days + 1
 
 
 def attendance_view(rows: list[dict], search: str, page: int, per_page: int) -> dict:

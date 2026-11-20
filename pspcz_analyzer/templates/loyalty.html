@@ -4,9 +4,9 @@
 {% block content %}
 {{ page_head("people", _("loyalty.title"), _("loyalty.subtitle")) }}
 
-<nav class="tabs-s" aria-label="{{ _('loyalty.tabs_aria') }}">
-    <a href="/loyalty?period={{ period }}" class="tab{% if tab == 'rebelie' %} on{% endif %}" {% if tab == 'rebelie' %}aria-current="page"{% endif %}>{{ _("loyalty.tab_rebellion") }}</a>
-    <a href="/loyalty?period={{ period }}&tab=podobnost" class="tab{% if tab == 'podobnost' %} on{% endif %}" {% if tab == 'podobnost' %}aria-current="page"{% endif %}>{{ _("loyalty.tab_similarity") }}</a>
+<nav class="tabs-s" role="tablist" aria-label="{{ _('loyalty.tabs_aria') }}">
+    <a role="tab" href="/loyalty?period={{ period }}" class="tab{% if tab == 'rebelie' %} on{% endif %}" aria-selected="{{ 'true' if tab == 'rebelie' else 'false' }}">{{ _("loyalty.tab_rebellion") }}</a>
+    <a role="tab" href="/loyalty?period={{ period }}&tab=podobnost" class="tab{% if tab == 'podobnost' %} on{% endif %}" aria-selected="{{ 'true' if tab == 'podobnost' else 'false' }}">{{ _("loyalty.tab_similarity") }}</a>
 </nav>
 
 {% if tab == "podobnost" %}

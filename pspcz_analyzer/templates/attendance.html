@@ -21,9 +21,12 @@
             {% for c in clubs %}<option value="{{ c }}" {% if q.get('party') == c %}selected{% endif %}>{{ c|club_name }}</option>{% endfor %}</select></label>
     <label class="field" style="flex:0 1 100px"><span>{{ _("att.count") }}</span>
         <select name="per_page">{% for n in (10, 30, 0) %}<option value="{{ n }}" {% if q.get('per_page', '30') == n|string %}selected{% endif %}>{{ n if n else _("loyalty.per_page_all") }}</option>{% endfor %}</select></label>
-    <label class="field" style="flex:0 1 120px"><span>{{ _("att.view") }}</span>
-        <select name="view">{% for v, k in [("table", "att.view_table"), ("chart", "att.view_chart")] %}<option value="{{ v }}" {% if q.get('view', 'table') == v %}selected{% endif %}>{{ _(k) }}</option>{% endfor %}</select></label>
+    <input type="hidden" name="view" id="att-view" value="{{ q.get('view', 'table') }}">
     <button class="btn" type="submit">{{ _("vl.show") }}</button>
+    <div class="field" style="flex:0 1 auto"><span id="att-view-l">{{ _("att.view") }}</span>
+        <div class="tabs-s" role="tablist" aria-labelledby="att-view-l" style="margin:0">{% for v, k in [("table", "att.view_table"), ("chart", "att.view_chart")] %}
+            <button type="submit" role="tab" class="tab{% if q.get('view', 'table') == v %} on{% endif %}" aria-selected="{{ 'true' if q.get('view', 'table') == v else 'false' }}"
+                onclick="document.getElementById('att-view').value='{{ v }}';this.parentNode.querySelectorAll('[role=tab]').forEach(function(b){b.setAttribute('aria-selected', b === this ? 'true' : 'false');b.classList.toggle('on', b === this)}, this)">{{ _(k) }}</button>{% endfor %}</div></div>
 </form>
 <span id="loading" class="htmx-indicator" aria-busy="true">{{ _("loading") }}</span>
 <div id="results" hx-get="/api/attendance?{{ request.url.query or ('period=' ~ period) }}" hx-trigger="load" hx-indicator="#loading">

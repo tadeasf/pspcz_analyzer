@@ -30,7 +30,7 @@
         <div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("ld.ai_source").format(ct=detail.ct) }}{% if detail.history and detail.history.submitter_date %} ({{ detail.history.submitter_date|cz_date }}){% endif %}
             · {% if b.edited %}{{ _("ai.reviewed") }}{% elif b.status == "ok" %}{{ _("ai.check_ok") }}{% else %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}
             {% if detail.amendments and detail.amendments.tally.accepted %} {{ _("ld.amended_note") }}{% endif %}</span></div>
-        {% else %}<p>{{ _("lw.no_summary") }}</p>{% endif %}
+        {% else %}<p>{{ _("empty.not_processed") }} <a href="{{ detail.url }}" rel="noopener">{{ _("empty.open_psp") }} ↗</a></p>{% endif %}
     </section>
 
     <section>
@@ -49,7 +49,7 @@
         </ol>
         {% elif not sec.future %}<p class="lbl" style="border-left:2px dashed #AEBBCB;padding-left:8px">{{ _("ld.not_yet") }}</p>{% endif %}
         {% if sec.future %}<p class="lbl" style="border-left:2px dashed #AEBBCB;padding-left:8px">{% if sec.deadline %}{{ _("ld.until").format(d=sec.deadline|cz_date(short=True)) }} {% endif %}{{ _(sec.future) }}</p>{% endif %}
-        {% else %}<p>{{ _("ld.no_history") }}</p>{% endfor %}
+        {% else %}<p>{{ _("empty.not_processed") }} <a href="{{ detail.url }}" rel="noopener">{{ _("empty.open_psp") }} ↗</a></p>{% endfor %}
     </section>
 
     <section>
@@ -74,13 +74,16 @@
         {% if not detail.related_votes %}<p>{{ _("ld.no_votes") }}</p>{% endif %}
     </section>
 
-    {% if detail.amendments %}
+    {% if detail.amendments or is_bill %}
     <section>
         <h2 class="h2s">{{ _("ld.amendments") }}</h2>
+        {% if detail.amendments %}
         {{ side_table(detail.amendments.tally) }}
         <p class="lbl"><a href="/amendments/{{ detail.amendments.schuze }}/{{ detail.amendments.bod }}?period={{ period }}">{{ _("ld.all_amendments") }}</a></p>
         {% for x in detail.letters[:3] %}{{ letter_card(x, period) }}{% endfor %}
         {% if detail.letters|length > 3 %}<p class="lbl"><a href="/amendments/{{ detail.amendments.schuze }}/{{ detail.amendments.bod }}?period={{ period }}">{{ _("pn.more_n").format(n=detail.letters|length - 3) }}</a></p>{% endif %}
+        {% elif detail.second_reading_done %}<p>{{ _("empty.no_amendments") }}</p>
+        {% else %}<p>{{ _("empty.amendments_later") }}</p>{% endif %}
     </section>
     {% endif %}
 
@@ -90,7 +93,10 @@
             <li>{{ _("ld.doc_" ~ d.kind) }} · {{ _("ld.senate_tisk_n").format(n=d.number) if d.kind == "senate" else _("ld.tisk_n").format(ct=d.number) }}{% if d.date %} · {{ d.date|cz_date }}{% endif %} — <a href="{{ d.url }}" rel="noopener">{{ _("ld.on_psp") }} ↗</a>{% if d.kind == "original" and detail.has_pdf %} · <a href="{{ detail.pdf_url }}" target="_blank" rel="noopener">PDF</a>{% endif %}</li>{% endfor %}</ul>{% endif %}
         {% if detail.has_pdf %}
         <h3 style="font-size:16px;margin:10px 0 6px">{{ _("ld.pdf_title") }} <a href="{{ detail.pdf_url }}" target="_blank" rel="noopener" style="font-size:14px;font-weight:400">{{ _("ld.open_pdf") }} ↗</a></h3>
-        <iframe class="pdf-viewer" src="{{ detail.pdf_url }}" loading="lazy" title="{{ _('ld.pdf_title') }}" style="width:100%;height:560px;border:1px solid #D0DCE8"></iframe>
+        <object class="pdf-viewer" data="{{ detail.pdf_url }}" type="application/pdf" aria-label="{{ _('ld.pdf_title') }}" style="width:100%;height:560px;border:1px solid #D0DCE8">
+            <div class="empty"><b>{{ _("empty.pdf") }}</b><span>{{ _("empty.pdf_why") }}</span>
+                <span><a href="{{ detail.pdf_url }}" target="_blank" rel="noopener">{{ _("ld.open_pdf") }}</a> · <a href="{{ detail.pdf_url }}" download>{{ _("empty.pdf_download") }}</a> · <a href="{{ detail.url }}" rel="noopener">{{ _("empty.open_psp") }} ↗</a></span></div>
+        </object>
         <p class="lbl">{{ _("ld.pdf_note") }}</p>
         {% endif %}
         <p style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px"><a href="{{ detail.url }}" rel="noopener">{{ _("ld.tisk_on_psp").format(ct=detail.ct) }} ↗</a>
