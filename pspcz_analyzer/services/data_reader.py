@@ -64,6 +64,7 @@ from pspcz_analyzer.services.overrides import (
     load_overrides,
     overrides_path,
 )
+from pspcz_analyzer.services.speeches import VOTE_STENO_DIR, load_speeches
 from pspcz_analyzer.services.tisk import (
     TiskCacheManager,
     TiskTextService,
@@ -71,7 +72,7 @@ from pspcz_analyzer.services.tisk import (
 )
 from pspcz_analyzer.services.tisk.brief import BRIEFS_DIR, load_briefs
 from pspcz_analyzer.services.vote_codes import check_vote_totals, normalize_vote_codes
-from pspcz_analyzer.services.vote_steno import VOTE_STENO_DIR, load_speeches, load_vote_steno
+from pspcz_analyzer.services.vote_steno import load_anchor_checks, load_vote_steno
 
 _WATCH_INTERVAL_S = 30
 _SCHUZE_STAV_UNAPPROVED = 2  # psp.cz: agenda not approved, session closed
@@ -188,6 +189,7 @@ class DataReader:
         diffs_map, diffs_en_map = self._cache_mgr.load_version_diffs_cache(period)
         brief_map = load_briefs(self.cache_dir, period)
         pd.vote_steno = load_vote_steno(self.cache_dir, period)
+        pd.anchor_checks = load_anchor_checks(self.cache_dir, period)
         pd.speeches = load_speeches(self.cache_dir, period)
         pd.overrides = load_overrides(self.cache_dir, period)
         apply_briefs(brief_map, pd.overrides)

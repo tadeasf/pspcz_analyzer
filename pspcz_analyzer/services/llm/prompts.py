@@ -551,3 +551,62 @@ _AMENDMENT_SUMMARIES_PROMPT_EN = (
     "B1: summary of amendment B1\n"
     "etc."
 )
+
+
+# ── What each vote was about, from steno (#102, services/vote_steno) ──
+
+VOTE_KINDS = ("final", "amendment", "reject", "return", "committee", "procedural")
+VOTE_SUBKINDS = (
+    "agenda",
+    "speaking_time",
+    "fixed_time",
+    "revocation",
+    "objection",
+    "challenge",
+    "reopen",
+    "break",
+    "other",
+)
+
+VOTE_STENO_SYSTEM = (
+    "Z úryvku stenozáznamu Poslanecké sněmovny zjistíš, o čem se hlasovalo v hlasování, "
+    "kterým úryvek končí. Jen popisuješ, nehodnotíš. Používáš jen to, co v textu stojí. "
+    "Česká pole píšeš česky, pole končící _en anglicky."
+)
+VOTE_STENO_PROMPT = """Vyplň pole o hlasování č. {cislo}, kterým končí text PŘED HLASOVÁNÍM:
+- druh: final = o celém návrhu zákona (3. čtení); amendment = pozměňovací návrh nebo jeho část, legislativně technická úprava; reject = návrh zákona zamítnout; return = vrátit návrh navrhovateli k dopracování; committee = přikázat návrh výboru, zkrátit nebo prodloužit lhůtu k projednání; procedural = cokoli jiného o průběhu jednání.
+- podtyp: jen u druhu procedural, jinak prázdné. agenda = pořad schůze, zařazení, vyřazení nebo přesun bodu; speaking_time = řečnická doba; fixed_time = pevný čas hlasování; revocation = revokace (zrušení) dřívějšího usnesení; objection = námitka proti postupu předsedajícího; challenge = zpochybnění hlasování; reopen = znovuotevření rozpravy; break = přestávka; other = jiné.
+- otazka: o čem se hlasovalo, jako konkrétní otázka o jedné větě, např. "Omezit řečnickou dobu na 10 minut?" nebo "Přikázat návrh výboru pro zdravotnictví?"
+- otazka_en: totéž anglicky.
+- pro_znamena: co znamenal hlas Pro, krátce, např. "omezit řečnickou dobu na 10 minut".
+- pro_znamena_en: totéž anglicky.
+- navrhovatel: jméno a příjmení toho, kdo návrh podal, když zazní; předsedající, který jen dává hlasovat, navrhovatelem není. Jinak prázdné.
+- citace: jedna věta z textu níže, ze které předmět plyne, zkopírovaná doslova. Musí obsahovat samotný předmět, ne jen odkaz na něj ("můj návrh", "opět budeme hlasovat").
+Věty "Hlasování číslo …, přihlášeno …" a "Návrh byl přijat/zamítnut" patří k předchozímu hlasování, jako citaci je nepoužívej.
+Když text před hlasováním na předmět jen odkazuje ("můj návrh", "opět budeme hlasovat"), použij DŘÍVĚJŠÍ NÁVRHY.
+Když předmět poznat nejde, vrať otazka a citace prázdné.
+
+Bod: {bod}
+{earlier}PŘED HLASOVÁNÍM:
+---BEGIN USER TEXT---
+{window}
+---END USER TEXT---"""
+VOTE_STENO_EARLIER = "DŘÍVĚJŠÍ NÁVRHY (z dřívější části jednání):\n---BEGIN USER TEXT---\n{snips}\n---END USER TEXT---\n"
+VOTE_STENO_STR_FIELDS = (
+    "otazka",
+    "otazka_en",
+    "pro_znamena",
+    "pro_znamena_en",
+    "navrhovatel",
+    "citace",
+)
+VOTE_STENO_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "druh": {"type": "string", "enum": [*VOTE_KINDS, ""]},
+        "podtyp": {"type": "string", "enum": [*VOTE_SUBKINDS, ""]},
+        **{k: {"type": "string"} for k in VOTE_STENO_STR_FIELDS},
+    },
+    "required": ["druh", "podtyp", *VOTE_STENO_STR_FIELDS],
+    "additionalProperties": False,
+}

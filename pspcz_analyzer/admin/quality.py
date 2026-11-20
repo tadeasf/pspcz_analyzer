@@ -45,7 +45,8 @@ def quality_report(data: PeriodData) -> dict:
 
     Returns:
         Dict with ``bills``, ``briefs`` (total, flagged list) and ``votes``
-        (total, with steno record, with question).
+        (total, with steno record, with question, uncertain) plus ``anchor_checks``
+        (agenda items whose steno-anchored vote count is off).
     """
     briefs = {t.ct for t in data.tisk_lookup.values() if t.brief}
     recs = data.vote_steno.values()
@@ -56,4 +57,6 @@ def quality_report(data: PeriodData) -> dict:
         "votes_total": data.votes.height,
         "votes_steno": len(data.vote_steno),
         "votes_question": sum(r.get("status") == "ok" for r in recs),
+        "votes_uncertain": sum(r.get("status") == "uncertain" for r in recs),
+        "anchor_checks": data.anchor_checks,
     }

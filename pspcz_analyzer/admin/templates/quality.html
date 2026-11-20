@@ -10,8 +10,24 @@
 
 <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">AI briefs</div><div class="stat-value">{{ r.briefs_total }}</div><div class="stat-sub">{{ r.briefs_flagged|length }} flagged by the check</div></div>
-    <div class="stat-card"><div class="stat-label">Votes with steno record</div><div class="stat-value">{{ r.votes_steno }}</div><div class="stat-sub">of {{ r.votes_total }}; {{ r.votes_question }} with a checked question</div></div>
+    <div class="stat-card"><div class="stat-label">Votes with steno record</div><div class="stat-value">{{ r.votes_steno }}</div><div class="stat-sub">of {{ r.votes_total }}; {{ r.votes_question }} with a checked question, {{ r.votes_uncertain }} uncertain (from earlier context)</div></div>
     <div class="stat-card"><div class="stat-label">Bills with amendments</div><div class="stat-value">{{ r.bills|length }}</div><div class="stat-sub">lowest parser score first</div></div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">Steno anchoring: agenda items with missing votes ({{ r.anchor_checks|length }})</div>
+    <div class="card-body">
+        {% if r.anchor_checks %}
+        <table>
+            <thead><tr><th>Sitting</th><th>Item (bod)</th><th>Votes in hl_hlasovani</th><th>Anchored in steno</th></tr></thead>
+            <tbody>
+            {% for c in r.anchor_checks %}
+            <tr><td>{{ c.schuze }}</td><td>{{ c.bod }}</td><td>{{ c.votes }}</td><td>{{ c.anchored }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}<p>Every vote of every item with a published steno is anchored.</p>{% endif %}
+    </div>
 </div>
 
 <div class="card mb-2">

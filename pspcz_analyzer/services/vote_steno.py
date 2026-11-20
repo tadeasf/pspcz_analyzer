@@ -1,18 +1,20 @@
 """What each vote was about, from the steno record (#102).
 
-Every vote in a steno page is anchored as ``<a href="/sqw/hlasy.sqw?G=<id>" id="hN">``,
-so the text between the previous vote's anchor and this one is the chair's and
-rapporteur's lead-in to the vote. Rules classify its kind; the LLM writes the
-question plus a verbatim quote, which must be found in the steno text (and pass the
-#97 text check), otherwise the question stays unknown.
+Votes are anchored at their announcement in the steno (``vote_steno_text``); the text
+since the previous announcement is the lead-in. The LLM extracts kind, question, what
+"Pro" meant, the proposer and a verbatim quote. The quote must be in the steno and the
+#97 text check must pass, otherwise the question stays unknown. When the lead-in only
+points at an earlier proposal ("o mém návrhu"), earlier proposals of the sitting are
+added and a found answer is stored as ``uncertain``. A deterministic pass then links
+challenged and repeated votes.
 
-Output: ``vote_steno/{period}/{schuze}.json`` = ``{id_hlasovani: record}``.
+Output: ``vote_steno/{period}/{schuze}.json`` = ``{id_hlasovani: record}`` and
+``vote_steno/{period}/checks/{schuze}.json`` = agenda items whose anchored vote count
+differs from ``hl_hlasovani``.
 """
 
 import hashlib
-import html
 import json
-import re
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -26,7 +28,6 @@ from loguru import logger
 from pspcz_analyzer.config import PARQUET_DIR, PERIOD_YEARS, PSP_REQUEST_DELAY
 from pspcz_analyzer.fileio import write_json_atomic
 from pspcz_analyzer.services.amendments.steno_scraper import (
-    _BOD_ANCHOR_RE,
     _DAY_PAGE_LINK_RE,
     _SUBPAGE_LINK_RE,
     _SUBPAGE_NUM_RE,
@@ -34,121 +35,132 @@ from pspcz_analyzer.services.amendments.steno_scraper import (
     _download_day_page,
     _download_index,
     _download_subpage,
-    _find_bod_day_pages,
     _steno_cache_dir,
 )
 from pspcz_analyzer.services.llm import LLMClient, create_llm_client
 from pspcz_analyzer.services.llm.helpers import _sanitize_llm_input
+from pspcz_analyzer.services.llm.prompts import (
+    VOTE_KINDS,
+    VOTE_STENO_EARLIER,
+    VOTE_STENO_PROMPT,
+    VOTE_STENO_SCHEMA,
+    VOTE_STENO_STR_FIELDS,
+    VOTE_STENO_SYSTEM,
+)
+from pspcz_analyzer.services.speeches import SPEECHES_DIR, VOTE_STENO_DIR, sitting_speeches
 from pspcz_analyzer.services.tisk.brief import text_issues
+from pspcz_analyzer.services.vote_steno_text import (
+    WINDOW_CHARS,
+    anchor_check,
+    clean_proposer,
+    earlier_proposals,
+    is_referential,
+    is_result_formula,
+    link_repeats,
+    norm_quote,
+    rule_kind,
+    sitting_text,
+    speaker_before,
+)
 
-VOTE_STENO_DIR = "vote_steno"
-VERSION = 1  # bump when rules or prompt change: all records regenerate
-WINDOW_CHARS = 2500
-RECENT_DAYS = 21  # sittings this fresh get their index and day pages re-fetched
+VERSION = 2  # bump when rules or prompt change: all records regenerate
+CHECKS_DIR = "checks"
+SHORT_LEAD_IN = 700
+CONTEXT_CHARS = 1800
+_PREV_LABEL = "Souvislost před předchozím hlasováním"
+_RECENT_LABEL = "Hlasování těsně předtím (už proběhla)"
+_RECENT_VOTES = 6
+RECENT_DAYS = 21
+_EXTRA_DAYS = 2  # unlinked day pages probed after the last linked one  # sittings this fresh get their index and day pages re-fetched
 _LLM_WORKERS = 4
 
-_VOTE_ANCHOR_RE = re.compile(r'<a\b[^>]*hlasy\.sqw\?G=(\d+)[^>]*\bid="h(\d+)"[^>]*>', re.I)
-_TAG_RE = re.compile(r"<[^>]+>")
-
-# Kind -> pattern; the kind whose last match is closest to the vote wins.
-_KIND_PATTERNS: dict[str, re.Pattern[str]] = {
-    "final": re.compile(
-        r"celém návrhu zákona|návrh(?:u|em)? zákona jako celku|o zákonu jako celku"
-    ),
-    "amendment": re.compile(
-        r"pozměňovací|\bnávrh(?:u|em)? [A-Z]\d*(?:\.\d+)?\b|legislativně technick|návrh(?:u)? výboru|"
-        r"stanovisko (?:výboru|navrhovatele|ministr)"
-    ),
-    "reject": re.compile(r"zamítnutí|zamítnout|zamítl"),
-    "return": re.compile(r"vrácení|vrátit (?:návrh )?(?:navrhovateli|k dopracování)"),
-    "objection": re.compile(r"námitk"),
-    "challenge": re.compile(r"zpochybn"),
-    "procedural": re.compile(
-        r"pořad|přestávk|zkrác|lhůt|procedur|protinávrh|sloučen|jednat (?:a hlasovat )?i po|"
-        r"přikáza|en bloc|po \d+\. hodině|zařazení|vyřazení|přerušení"
-    ),
-}
-
-_SYSTEM = (
-    "Z úryvku stenozáznamu Poslanecké sněmovny zjistíš, o čem se hlasovalo v hlasování, "
-    "kterým úryvek končí. Jen popisuješ, nehodnotíš. Používáš jen to, co v úryvku stojí. "
-    "Česká pole píšeš česky, pole končící _en anglicky."
-)
-_PROMPT = """Vyplň pole:
-- otazka: o čem se hlasovalo, jako otázka o jedné větě, např. "Přijmout pozměňovací návrh B1 poslance Papajanovského (kraje by dostaly 6 % daně z minerálních olejů)?"
-- otazka_en: totéž anglicky.
-- citace: jedna věta z úryvku, ze které to plyne, zkopírovaná doslova.
-Když se to z úryvku nedá poznat, vrať všechna pole prázdná.
-
-Hlasování č. {cislo}, bod: {bod}
----BEGIN USER TEXT---
-{window}
----END USER TEXT---"""
-_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {k: {"type": "string"} for k in ("otazka", "otazka_en", "citace")},
-    "required": ["otazka", "otazka_en", "citace"],
-    "additionalProperties": False,
+_UNKNOWN: dict[str, str] = {
+    "question": "",
+    "question_en": "",
+    "pro": "",
+    "pro_en": "",
+    "proposer": "",
+    "quote": "",
+    "status": "unknown",
 }
 
 
-def _plain(fragment: str) -> str:
-    """HTML fragment -> plain text with collapsed whitespace."""
-    return " ".join(html.unescape(_TAG_RE.sub(" ", fragment)).split())
-
-
-def vote_windows(pages: list[tuple[str, str]]) -> dict[int, dict[str, Any]]:
-    """Lead-in text of every vote anchored in a sitting's steno pages.
-
-    Args:
-        pages: ``(page name, html)`` in page order.
-
-    Returns:
-        ``{id_hlasovani: {"cislo", "page", "window"}}``.
-    """
-    out: dict[int, dict[str, Any]] = {}
-    carry = ""
-    for name, page in pages:
-        pos = 0
-        for m in _VOTE_ANCHOR_RE.finditer(page):
-            text = (carry + " " + _plain(page[pos : m.start()])).strip()
-            out[int(m.group(1))] = {
-                "cislo": int(m.group(2)),
-                "page": name,
-                "window": text[-WINDOW_CHARS:],
-            }
-            carry, pos = "", m.end()
-        carry = (carry + " " + _plain(page[pos:]))[-WINDOW_CHARS:]
+def _ask_once(llm: LLMClient, window: str, snips: list[str], cislo: int, bod: str) -> dict:
+    """One LLM extraction; ``status`` ok/uncertain/unknown after the quote checks."""
+    earlier = (
+        VOTE_STENO_EARLIER.format(snips=_sanitize_llm_input("\n\n".join(snips))) if snips else ""
+    )
+    prompt = VOTE_STENO_PROMPT.format(
+        cislo=cislo,
+        bod=_sanitize_llm_input(bod or "-"),
+        earlier=earlier,
+        window=_sanitize_llm_input(window),
+    )
+    data = llm._generate_json(prompt, VOTE_STENO_SYSTEM, VOTE_STENO_SCHEMA) or {}
+    f = {k: str(data.get(k, "")).strip() for k in ("druh", "podtyp", *VOTE_STENO_STR_FIELDS)}
+    nq = norm_quote(f["citace"])
+    context = window + " " + " ".join(snips)
+    in_window, in_context = nq in norm_quote(window), nq in norm_quote(context)
+    # the chair's opening formula and result announcements say nothing about the subject
+    ok = bool(f["otazka"]) and len(nq) >= 15 and in_context
+    ok = ok and not nq.startswith("zahajuji") and not is_result_formula(nq)
+    ok = ok and not (len(nq) < 80 and is_referential(nq))  # "o mém návrhu" names no subject
+    cs = f"{f['otazka']} {f['pro_znamena']}"
+    if not ok or text_issues(cs, f"{f['otazka_en']} {f['pro_znamena_en']}", context):
+        return dict(_UNKNOWN)
+    out = {
+        "question": f["otazka"],
+        "question_en": f["otazka_en"],
+        "pro": f["pro_znamena"],
+        "pro_en": f["pro_znamena_en"],
+        "proposer": clean_proposer(f["navrhovatel"], context),
+        "quote": f["citace"],
+        "status": "ok" if in_window else "uncertain",
+    }
+    if f["druh"] in VOTE_KINDS:
+        out["kind"] = f["druh"]
+        out["subkind"] = f["podtyp"] if f["druh"] == "procedural" and f["podtyp"] else ""
     return out
 
 
-def vote_kind(window: str) -> str:
-    """Rule-based kind of a vote from its lead-in text (``other`` if none matches)."""
-    best, best_pos = "other", -1
-    for kind, pattern in _KIND_PATTERNS.items():
-        hits = [m.end() for m in pattern.finditer(window)]
-        if hits and hits[-1] > best_pos:
-            best, best_pos = kind, hits[-1]
-    return best
+def _ask(
+    llm: LLMClient,
+    text: str,
+    span: dict[str, Any],
+    cislo: int,
+    bod: str,
+    recent: list[str] | None = None,
+) -> dict:
+    """Extract the subject, adding earlier proposals when the lead-in only refers to one.
 
+    Args:
+        llm: LLM client.
+        text: Plain steno text of the sitting.
+        span: The vote's ``sitting_text`` span.
+        cislo: Vote number.
+        bod: Agenda item name.
+        recent: Questions of the votes just before (second pass for unknown votes).
 
-def _norm(text: str) -> str:
-    return " ".join(text.replace("„", '"').replace("“", '"').split()).strip(' "').lower()
-
-
-def _ask(llm: LLMClient, window: str, cislo: int, bod: str) -> dict[str, str]:
-    """LLM question + quote, kept only when the quote is in the steno and the check passes."""
-    prompt = _PROMPT.format(
-        cislo=cislo, bod=_sanitize_llm_input(bod or "-"), window=_sanitize_llm_input(window)
-    )
-    data = llm._generate_json(prompt, _SYSTEM, _SCHEMA) or {}
-    q, q_en, quote = (str(data.get(k, "")).strip() for k in ("otazka", "otazka_en", "citace"))
-    nq = _norm(quote)
-    # the chair's opening formula says nothing about the subject
-    ok = bool(q) and len(nq) >= 15 and nq in _norm(window) and not nq.startswith("zahajuji")
-    if ok and not text_issues(q, q_en, window):
-        return {"question": q, "question_en": q_en, "quote": quote, "status": "ok"}
-    return {"question": "", "question_en": "", "quote": "", "status": "unknown"}
+    Returns:
+        The extracted fields with ``status``.
+    """
+    start = max(span["start"], span["end"] - WINDOW_CHARS)
+    window = text[start : span["end"]].strip()
+    prev = ""
+    if len(window) < SHORT_LEAD_IN and span["start"] > 0:
+        # a bare "a teď o mém návrhu" lead-in: the vote series context sits before it
+        prev = text[max(0, span["start"] - CONTEXT_CHARS) : span["start"]].strip()
+    snips = earlier_proposals(text, start, window, prev) if is_referential(window) else []
+    out = _ask_once(llm, window, snips, cislo, bod)
+    if out["status"] == "unknown":
+        more = [f"{_RECENT_LABEL}: " + " ".join(recent)] if recent else []
+        more += [f"{_PREV_LABEL}: {prev}"] if prev else []
+        more += snips or earlier_proposals(text, start, window, prev)
+        if more:
+            out = _ask_once(llm, window, more, cislo, bod)
+    if out.get("kind") == "committee" and out["proposer"] == speaker_before(text, span["end"]):
+        out["proposer"] = ""  # the chair only puts the referral to the vote
+    return out
 
 
 def _is_recent(datum: str) -> bool:
@@ -158,6 +170,22 @@ def _is_recent(datum: str) -> bool:
         )
     except ValueError:
         return False
+
+
+def _day_pages(index: str, schuze: int) -> list[str]:
+    """Day pages linked from the index plus the next few, which the index sometimes omits.
+
+    psp.cz left day 6 of sitting 10 (``10-6.html``) out of the index; missing pages are
+    negatively cached, so probing costs one request per sitting and run at most.
+    """
+    days = sorted({m.group(2) for m in _DAY_PAGE_LINK_RE.finditer(index)}, key=_day_no)
+    last = max((_day_no(d) for d in days), default=0)
+    extra = [f"{schuze}-{n}" for n in range(last + 1, last + 1 + _EXTRA_DAYS)]
+    return [d + ".html" for d in days + extra]
+
+
+def _day_no(day: str) -> int:
+    return int(day.rsplit("-", 1)[1])
 
 
 def sitting_pages(
@@ -186,8 +214,10 @@ def sitting_pages(
         return []
     base = PSP_STENO_BASE_TEMPLATE.format(year=PERIOD_YEARS[period], session=schuze)
     nums: set[int] = set()
-    for day in sorted({m.group(2) + ".html" for m in _DAY_PAGE_LINK_RE.finditer(index)}):
+    for day in _day_pages(index, schuze):
         day_html = _download_day_page(base, day, period, schuze, cache_dir) or ""
+        if not day_html:
+            continue
         for link in _SUBPAGE_LINK_RE.findall(day_html):
             if m := _SUBPAGE_NUM_RE.match(link):
                 nums.add(int(m.group(1)))
@@ -210,29 +240,43 @@ def _sitting_records(
     votes: pl.DataFrame,
     cache_dir: Path,
     out_path: Path,
-) -> dict[str, dict]:
-    """Records for one sitting, reusing unchanged ones from ``out_path``."""
+) -> tuple[dict[str, dict], set[int]]:
+    """Records for one sitting, reusing unchanged ones from ``out_path``.
+
+    Returns:
+        ``(records, anchored vote ids)``.
+    """
     old: dict[str, dict] = json.loads(out_path.read_text()) if out_path.exists() else {}
     refresh = any(_is_recent(d) for d in votes["datum"].to_list())
-    windows = vote_windows(sitting_pages(period, schuze, cache_dir, refresh=refresh))
+    text, spans = sitting_text(sitting_pages(period, schuze, cache_dir, refresh=refresh))
+    if spans and not refresh and not set(votes["id_hlasovani"].to_list()) <= set(spans):
+        # a cached index from before the last days were published: fetch it again
+        text, spans = sitting_text(sitting_pages(period, schuze, cache_dir, refresh=True))
     bods = dict(zip(votes["id_hlasovani"].to_list(), votes["nazev_dlouhy"].to_list(), strict=True))
     base = PSP_STENO_BASE_TEMPLATE.format(year=PERIOD_YEARS[period], session=schuze)
     records: dict[str, dict] = {}
     todo: list[tuple[str, dict]] = []
-    for vid, w in windows.items():
+    for vid, span in spans.items():
         if vid not in bods:
             continue
-        sha = hashlib.sha256(w["window"].encode()).hexdigest()[:16]
+        window = text[span["start"] : span["end"]]
+        sha = hashlib.sha256(window[-WINDOW_CHARS:].encode()).hexdigest()[:16]
         prev = old.get(str(vid))
         if prev and prev.get("version") == VERSION and prev.get("sha") == sha:
-            records[str(vid)] = prev
+            records[str(vid)] = {
+                k: v
+                for k, v in prev.items()
+                if k not in ("invalid_by", "repeated_as", "repeats", "chair_repeated_as")
+            }
             continue
+        kind, subkind = rule_kind(window[-WINDOW_CHARS:])
         rec = {
             "version": VERSION,
             "sha": sha,
-            "cislo": w["cislo"],
-            "kind": vote_kind(w["window"]),
-            "url": f"{base}{w['page']}#h{w['cislo']}",
+            "cislo": span["cislo"],
+            "kind": kind,
+            "subkind": subkind,
+            "url": f"{base}{span['page']}#h{span['cislo']}",
             "model": llm.model,
         }
         todo.append((str(vid), rec))
@@ -240,11 +284,41 @@ def _sitting_records(
 
     def _fill(item: tuple[str, dict]) -> None:
         vid, rec = item
-        rec.update(_ask(llm, windows[int(vid)]["window"], rec["cislo"], bods[int(vid)] or ""))
+        rec.update(_ask(llm, text, spans[int(vid)], rec["cislo"], bods[int(vid)] or ""))
 
     with ThreadPoolExecutor(_LLM_WORKERS) as pool:
         list(pool.map(_fill, todo))
-    return records
+    _second_pass(llm, text, spans, records, [vid for vid, _ in todo], bods)
+    link_repeats(records, votes, text, spans)
+    return records, set(spans)
+
+
+def _second_pass(
+    llm: LLMClient,
+    text: str,
+    spans: dict[int, dict[str, Any]],
+    records: dict[str, dict],
+    asked: list[str],
+    bods: dict[int, str],
+) -> None:
+    """Re-ask unknown votes with the questions of the votes just before them.
+
+    "A teď o mém návrhu" after a series of votes is answerable once the model knows
+    which proposals were already voted on.
+    """
+    order = sorted(records, key=lambda v: records[v]["cislo"])
+    for vid in sorted(asked, key=lambda v: records[v]["cislo"]):
+        rec = records[vid]
+        if rec.get("status") != "unknown":
+            continue
+        before = order[: order.index(vid)][-_RECENT_VOTES:]
+        recent = [
+            f"č. {records[b]['cislo']}: {records[b]['question']}"
+            for b in before
+            if records[b].get("status") in ("ok", "uncertain")
+        ]
+        if recent:
+            rec.update(_ask(llm, text, spans[int(vid)], rec["cislo"], bods[int(vid)] or "", recent))
 
 
 def generate_vote_steno_sync(
@@ -274,15 +348,18 @@ def generate_vote_steno_sync(
     for i, schuze in enumerate(sittings, 1):
         if cancel_check:
             cancel_check()
-        out_path = cache_dir / VOTE_STENO_DIR / str(period) / f"{schuze}.json"
+        out_dir = cache_dir / VOTE_STENO_DIR / str(period)
         sitting_votes = votes.filter(pl.col("schuze") == schuze)
-        records = _sitting_records(llm, period, schuze, sitting_votes, cache_dir, out_path)
+        records, anchored = _sitting_records(
+            llm, period, schuze, sitting_votes, cache_dir, out_dir / f"{schuze}.json"
+        )
         if records:
-            write_json_atomic(records, out_path)
-        speeches = _sitting_speeches(period, schuze, cache_dir)
+            write_json_atomic(records, out_dir / f"{schuze}.json")
+            _write_check(out_dir, schuze, anchor_check(sitting_votes, anchored), period)
+        speeches = sitting_speeches(period, schuze, cache_dir)
         if speeches:
-            write_json_atomic(speeches, out_path.parent / SPEECHES_DIR / f"{schuze}.json")
-        ok = sum(r.get("status") == "ok" for r in records.values())
+            write_json_atomic(speeches, out_dir / SPEECHES_DIR / f"{schuze}.json")
+        known = sum(r.get("status") in ("ok", "uncertain") for r in records.values())
         total += len(records)
         logger.info(
             "[vote steno] period {} sitting {}: {}/{} votes, {} with question",
@@ -290,11 +367,25 @@ def generate_vote_steno_sync(
             schuze,
             len(records),
             sitting_votes.height,
-            ok,
+            known,
         )
         if progress_callback:
             progress_callback(i, len(sittings))
     return total
+
+
+def _write_check(out_dir: Path, schuze: int, check: dict[str, dict[str, int]], period: int) -> None:
+    """Store (and log) agenda items whose anchored vote count is off."""
+    for bod, c in check.items():
+        logger.warning(
+            "[vote steno] period {} sitting {} bod {}: {} of {} votes anchored in the steno",
+            period,
+            schuze,
+            bod,
+            c["anchored"],
+            c["votes"],
+        )
+    write_json_atomic(check, out_dir / CHECKS_DIR / f"{schuze}.json")
 
 
 def load_vote_steno(cache_dir: Path, period: int) -> dict[int, dict]:
@@ -308,89 +399,13 @@ def load_vote_steno(cache_dir: Path, period: int) -> dict[int, dict]:
     return out
 
 
-# ── Speech counts per agenda item (#108 "Teď se o tom mluví") ─────────────
-
-SPEECHES_DIR = "speeches"
-_SECTION_RE = re.compile(r'<a\s+name="(q\d+)"', re.I)
-_SPEAKER_RE = re.compile(r'<a href="s\d+\.htm#r\d+">([^<]+)</a>', re.I)
-_CHAIR_RE = re.compile(r"^(?:Místo)?předsed(?:a|kyně) PSP", re.I)
-_H1_DATE_RE = re.compile(r"(\d{1,2})\.\s*([a-zěščřžýáíéůú]+)\s+(\d{4})")
-_MONTHS = {
-    m: i
-    for i, m in enumerate(
-        [
-            "ledna",
-            "února",
-            "března",
-            "dubna",
-            "května",
-            "června",
-            "července",
-            "srpna",
-            "září",
-            "října",
-            "listopadu",
-            "prosince",
-        ],
-        1,
-    )
-}
-
-
-def _day_date(day_html: str) -> str:
-    """ISO date from a day page heading ("24. března 2026"), "" if not found."""
-    m = _H1_DATE_RE.search(html.unescape(day_html[:5000]).replace("\xa0", " "))
-    if not m or m.group(2) not in _MONTHS:
-        return ""
-    return date(int(m.group(3)), _MONTHS[m.group(2)], int(m.group(1))).isoformat()
-
-
-def speech_counts(index_html: str, day_pages: dict[str, str]) -> dict[int, dict[str, int]]:
-    """Speeches per agenda item and day, without the chair's procedural turns.
-
-    Args:
-        index_html: Sitting index (bod anchors ``bN`` followed by day-page links).
-        day_pages: ``{day page file: html}`` (TOC of speakers under ``qN`` anchors).
-
-    Returns:
-        ``{bod: {iso date: speeches}}``.
-    """
-    out: dict[int, dict[str, int]] = {}
-    for bod in {int(m.group(1)) for m in _BOD_ANCHOR_RE.finditer(index_html)}:
-        for page, anchor in _find_bod_day_pages(index_html, bod):
-            day_html = day_pages.get(page, "")
-            starts = [(m.group(1), m.start()) for m in _SECTION_RE.finditer(day_html)]
-            for i, (q, pos) in enumerate(starts):
-                if q != anchor:
-                    continue
-                end = starts[i + 1][1] if i + 1 < len(starts) else len(day_html)
-                names = _SPEAKER_RE.findall(day_html[pos:end])
-                n = sum(not _CHAIR_RE.match(html.unescape(x).strip()) for x in names)
-                if n:
-                    day = out.setdefault(bod, {})
-                    key = _day_date(day_html)
-                    day[key] = day.get(key, 0) + n
-    return out
-
-
-def _sitting_speeches(period: int, schuze: int, cache_dir: Path) -> dict[int, dict[str, int]]:
-    """Speech counts of a sitting from the (already cached) index and day pages."""
-    index = _download_index(period, schuze, cache_dir)
-    if not index:
-        return {}
-    base = PSP_STENO_BASE_TEMPLATE.format(year=PERIOD_YEARS[period], session=schuze)
-    days = {m.group(2) + ".html" for m in _DAY_PAGE_LINK_RE.finditer(index)}
-    pages = {d: _download_day_page(base, d, period, schuze, cache_dir) or "" for d in days}
-    return speech_counts(index, pages)
-
-
-def load_speeches(cache_dir: Path, period: int) -> dict[tuple[int, int], dict[str, int]]:
-    """All speech counts of a period: ``{(schuze, bod): {iso date: speeches}}``."""
-    out: dict[tuple[int, int], dict[str, int]] = {}
-    for path in (cache_dir / VOTE_STENO_DIR / str(period) / SPEECHES_DIR).glob("*.json"):
+def load_anchor_checks(cache_dir: Path, period: int) -> list[dict[str, int]]:
+    """Agenda items with an anchoring mismatch: ``[{schuze, bod, votes, anchored}]``."""
+    out: list[dict[str, int]] = []
+    for path in sorted((cache_dir / VOTE_STENO_DIR / str(period) / CHECKS_DIR).glob("*.json")):
         try:
-            schuze = int(path.stem)
-            out.update({(schuze, int(b)): v for b, v in json.loads(path.read_text()).items()})
+            for bod, c in json.loads(path.read_text()).items():
+                out.append({"schuze": int(path.stem), "bod": int(bod), **c})
         except (ValueError, OSError):
-            logger.opt(exception=True).warning("Unreadable speeches file {}", path)
-    return out
+            logger.opt(exception=True).warning("Unreadable anchor check file {}", path)
+    return sorted(out, key=lambda c: (c["schuze"], c["bod"]))

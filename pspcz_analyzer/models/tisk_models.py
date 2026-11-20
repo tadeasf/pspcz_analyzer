@@ -87,6 +87,8 @@ class PeriodData:
     coalition_spans: tuple[CoalitionSpan, ...] = ()
     # What each vote was about, from steno (#102): id_hlasovani -> record (services/vote_steno)
     vote_steno: dict[int, dict] = field(default_factory=dict)
+    # Agenda items whose steno-anchored vote count differs from hl_hlasovani (#102)
+    anchor_checks: list[dict[str, int]] = field(default_factory=list)
     # Speeches per agenda item and day from steno (#108): (schuze, bod) -> {iso date: n}
     speeches: dict[tuple[int, int], dict[str, int]] = field(default_factory=dict)
     # Admin corrections (services/overrides): kind -> key -> record
