@@ -18,8 +18,8 @@ from pspcz_analyzer.models.amendment_models import AmendmentVote
 # ── Compiled regex patterns ────────────────────────────────────────────────
 
 # Start of amendment voting section. Czech chairs open the third-reading vote
-# several ways — "Přikročíme k hlasování", "Budeme hlasovat", "Zahájíme
-# hlasování" — often WITHOUT the "o pozměňovacích návrzích" suffix. Match the
+# several ways – "Přikročíme k hlasování", "Budeme hlasovat", "Zahájíme
+# hlasování" – often WITHOUT the "o pozměňovacích návrzích" suffix. Match the
 # transition-to-voting verb forms; the suffix is no longer required.
 _START_RE = re.compile(
     r"(?:přikročíme|přistoupíme|budeme|zaháj\w+)\s+"
@@ -47,14 +47,14 @@ _LETTER_FALLBACK_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Committee (výbor) stance — inline: "Stanovisko výboru je doporučující"
+# Committee (výbor) stance – inline: "Stanovisko výboru je doporučující"
 _COMMITTEE_INLINE_RE = re.compile(
     r"[Ss]tanovisko\s+(?:garančního\s+)?(?:výboru|zpravodaj\w*)\s+.*?"
     r"(doporučující|nedoporučující|bez\s+stanovisk\w*|kladn\w*|záporn\w*)",
     re.IGNORECASE | re.DOTALL,
 )
 
-# Committee stance — parenthesized: "(Zpravodajka: Doporučující.)"
+# Committee stance – parenthesized: "(Zpravodajka: Doporučující.)"
 _COMMITTEE_PAREN_RE = re.compile(
     r"(?:[Ss]tanovisko\s+(?:garančního\s+)?(?:výboru|zpravodaj\w*)|"
     r"[Zz]pravodaj\w*)\s*[^(]{0,80}"
@@ -62,14 +62,14 @@ _COMMITTEE_PAREN_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
-# Proposer stance — dialogue: "Stanovisko předkladatele? (Souhlasné.)"
+# Proposer stance – dialogue: "Stanovisko předkladatele? (Souhlasné.)"
 _PROPOSER_DIALOGUE_RE = re.compile(
     r"(?:předkladatel|navrhovatel|ministr)\w*\??\s*"
     r"\(([^)]+)\)",
     re.IGNORECASE,
 )
 
-# Standalone parenthesized stance — "(Souhlas.)" "(Ministr: Nesouhlas.)"
+# Standalone parenthesized stance – "(Souhlas.)" "(Ministr: Nesouhlas.)"
 _PAREN_STANCE_RE = re.compile(
     r"\("
     r"(?:(?:Ministr\w*|Ministryně|Navrhovatel\w*|Předkladatel\w*"
@@ -80,12 +80,12 @@ _PAREN_STANCE_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Vote number anchor — "Hlasování číslo N" / "Hlasování (číslo N)" / "č. N".
+# Vote number anchor – "Hlasování číslo N" / "Hlasování (číslo N)" / "č. N".
 # Every announced vote carries this regardless of result phrasing; used to COUNT
 # announced votes (multi-day detection) independently of whether a result matched.
 _VOTE_NUMBER_RE = re.compile(r"[Hh]lasování\s+\(?(?:číslo|č\.)\s*(\d+)")
 
-# Vote result with vote number — allows "Hlasování (číslo N)" paren format.
+# Vote result with vote number – allows "Hlasování (číslo N)" paren format.
 # The result alternation is broad: beyond bare "Přijato/Zamítnuto" it covers the
 # "(ne)byl přijat/zamítnut" and "Konstatuji, že …" phrasings chairs use, so votes
 # whose result is announced in a non-standard way still produce a block.
@@ -99,7 +99,7 @@ _VOTE_RESULT_RE = re.compile(
     r"|[Kk]onstatuji[,\s]+že\s+návrh\s+(?:byl\s+|nebyl\s+)?(?:přijat|zamítnut)\w*"
     # Final-passage consent: "s návrhem (zákona) byl vysloven souhlas"
     r"|s\s+návrhem\s+(?:zákona\s+)?(?:byl\s+vysloven\s+souhlas|nebyl\s+vysloven\s+souhlas)"
-    # Unanimous tally announced without an explicit result phrase —
+    # Unanimous tally announced without an explicit result phrase –
     # "pro 171 poslanců, proti žádný" (accepted) / "pro žádný, proti 150"
     # (rejected). Only matches extreme tallies, so votes with an explicit
     # result phrase still resolve via the alternatives above.
@@ -108,7 +108,7 @@ _VOTE_RESULT_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
-# Final passage vote — "návrh zákona jako celku" or the chair's consent
+# Final passage vote – "návrh zákona jako celku" or the chair's consent
 # formula "s návrhem zákona byl vysloven souhlas". The "návrh" prefix is
 # REQUIRED: bare "zákon jako celku" appears in debate and in the
 # rapporteur's vote-list reading, which must not flag amendment blocks.
@@ -118,7 +118,7 @@ _FINAL_VOTE_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Vote challenge — "zpochybňuji hlasování"
+# Vote challenge – "zpochybňuji hlasování"
 _CHALLENGE_RE = re.compile(
     r"zpochybňuji\s+hlasování",
     re.IGNORECASE,
@@ -157,7 +157,7 @@ _LEG_TECH_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Submitter name extraction — Pattern A (dominant): letter + genitive name
+# Submitter name extraction – Pattern A (dominant): letter + genitive name
 # e.g. "pozměňovací návrh B1 pana poslance Exnera"
 _SUBMITTER_AFTER_LETTER_RE = re.compile(
     r"pozměňovac\w+\s+návrh\w*\s+"
@@ -170,7 +170,7 @@ _SUBMITTER_AFTER_LETTER_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Submitter name extraction — Pattern B: "předloženy" (singular/plural past tense)
+# Submitter name extraction – Pattern B: "předloženy" (singular/plural past tense)
 # e.g. "předloženy panem poslancem Bauerem B1 až B6"
 _SUBMITTER_PREDLOZENY_RE = re.compile(
     r"předložen[ýáy]\s+"
@@ -181,7 +181,7 @@ _SUBMITTER_PREDLOZENY_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Submitter name extraction — Pattern D: plural genitive
+# Submitter name extraction – Pattern D: plural genitive
 # e.g. "návrh poslanců Nováka, Horáka a Štěpánka"
 _SUBMITTER_PLURAL_RE = re.compile(
     r"(?:návrh\w*|předložen\w*)\s+(?:pan\w+\s+)?"
@@ -191,7 +191,7 @@ _SUBMITTER_PLURAL_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Submitter name extraction — Pattern C: "návrh [pana/paní] [kolegy] poslanc* Name"
+# Submitter name extraction – Pattern C: "návrh [pana/paní] [kolegy] poslanc* Name"
 # e.g. "návrh pana kolegy poslance Šafránkové"
 _SUBMITTER_NAVRH_RE = re.compile(
     r"návrh\w*\s+"
@@ -256,7 +256,7 @@ def _extract_section(text: str) -> str:
     """Narrow cleaned steno text to the amendment voting section.
 
     When the start marker is present, slice from it to drop preceding debate
-    (reduces noise) — UNLESS voting also happens before the marker, which means
+    (reduces noise) – UNLESS voting also happens before the marker, which means
     the bill was voted across multiple days and the first marker belongs to a
     later day. In that case keep the full text so earlier-day votes are not
     discarded. When no marker is present, keep the full text too: block-splitting
@@ -288,7 +288,7 @@ def _normalize_result(raw: str) -> str:
         Normalized result: "accepted", "rejected", or "unknown".
     """
     lower = raw.lower().strip()
-    # Rejection phrasings first — some contain the substring "přijat"
+    # Rejection phrasings first – some contain the substring "přijat"
     # (e.g. "návrh nebyl přijat"), so they must win over the "přijat" check.
     if "nebyl přijat" in lower or "nepřijat" in lower or "zamítnut" in lower or "neprošel" in lower:
         return "rejected"
@@ -402,7 +402,7 @@ def _parse_block(block_text: str) -> _ParseBlock:
     """
     pb = _ParseBlock(text=block_text)
 
-    # Extract letter — try primary regex first, then fallback
+    # Extract letter – try primary regex first, then fallback
     letter_match = _LETTER_RE.search(block_text)
     if not letter_match:
         letter_match = _LETTER_FALLBACK_RE.search(block_text)
@@ -642,7 +642,7 @@ def parse_steno_amendments(
         confidence -= 0.05
     section = _extract_section(text)
 
-    # Split into blocks — no vote-numbered blocks means genuinely no votes here.
+    # Split into blocks – no vote-numbered blocks means genuinely no votes here.
     raw_blocks = _split_into_blocks(section)
     if not raw_blocks:
         warnings.append("No vote blocks found in steno text")
@@ -778,6 +778,7 @@ def cross_validate_amendments(
             extracted = _extract_letter_from_vote_title(title)
             if extracted:
                 a.letter = extracted
+                a.match_source = "vote_title"  # psp.cz's vote title names it, not the steno
                 warnings.append(
                     f"Filled letter '{extracted}' from vote title "
                     f"(vote {a.vote_number}, schuze={schuze}, bod={bod})"

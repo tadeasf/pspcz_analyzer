@@ -100,9 +100,8 @@ def _tisk_submitter(tisk: TiskInfo) -> str:
     Returns:
         Submitter string or empty.
     """
-    if tisk.history:
-        return tisk.history.submitter
-    return ""
+    # the history names the submitter; else the open data's own short form (#98)
+    return (tisk.history.submitter if tisk.history else "") or tisk.predkladatel
 
 
 def _tisk_law_number(tisk: TiskInfo) -> str:
@@ -172,10 +171,11 @@ def _build_law_row(
         amendment_count = amendments["tally"]["total"]
         amendment_link = {"schuze": amendments["schuze"], "bod": amendments["bod"]}
 
-    # Summary — truncated for list view
+    # Summary – truncated for list view
     brief = brief_view(tisk.brief, lang)
     summary = brief["shrnuti"] if brief else ""
-    summary_truncated = (summary[:150] + "...") if len(summary) > 150 else summary
+    # cut at a word boundary, never inside a word (#109/#110)
+    summary_truncated = summary if len(summary) <= 220 else summary[:220].rsplit(" ", 1)[0] + " …"
 
     return {
         "ct": tisk.ct,

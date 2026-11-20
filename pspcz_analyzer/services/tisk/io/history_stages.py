@@ -48,6 +48,10 @@ _PUBLISHED_RE = re.compile(
     re.DOTALL,
 )
 _DELIVERED_RE = re.compile(r"\bdoručen prezidentovi\b")
+# Senate bills and treaties start in the Senate: their "PS" entry there is a submission,
+# not the Chamber's hand-over (#87)
+_SUBMITTED_TO_SENATE_RE = re.compile(r"^\W*(?:\w+\s+){0,4}předložil[a]?\s+Senátu\b")
+SUBMITTED_TO_SENATE = "předloženo Senátu"
 
 # (regex, outcome label) in priority order: the first pattern found in any
 # sentence of an entry is its outcome. Matched as whole words, so "schválen" does
@@ -168,6 +172,10 @@ def _build_stage(section: str, mark_text: str, content_text: str) -> TiskHistory
 
     stage_type, label = mapping
     outcome, outcome_date = _extract_outcome(content_text)
+    if stage_type == "senat_postoupeno" and _SUBMITTED_TO_SENATE_RE.search(content_text):
+        # the entry text runs on into the Senate committee items; its own date comes first
+        outcome, outcome_date = SUBMITTED_TO_SENATE, None
+        label = "Předloženo Senátu"
     # The outcome sentence's date; without an outcome, the entry's first date
     date = outcome_date or _extract_first_date(content_text)
     session_m = _SESSION_RE.search(content_text)

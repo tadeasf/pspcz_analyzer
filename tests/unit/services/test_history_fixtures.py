@@ -11,7 +11,7 @@ from pathlib import Path
 
 from pspcz_analyzer.config import TERMINAL_TISK_STATUSES
 from pspcz_analyzer.models.tisk_models import TiskInfo
-from pspcz_analyzer.services.step_text import president_deadline
+from pspcz_analyzer.services.step_text import before_chamber, president_deadline, step_sentence
 from pspcz_analyzer.services.tisk.io.history_scraper import TiskHistory, parse_tisk_history
 from pspcz_analyzer.services.tisk.io.history_stages import _stage_status
 
@@ -287,3 +287,31 @@ class TestSubmitter:
         for f in _FIXTURES.glob("*.html"):
             period, ct = f.stem[1:].split("_t")
             assert _parse(int(period), int(ct)).submitter not in _DRUH_NAMES, f.name
+
+
+class TestSubmittedToSenate:
+    """#87: a Senate bill or a treaty is submitted to the Senate, not sent by the Chamber."""
+
+    def test_senate_bill_starts_in_the_senate(self):
+        h = _parse(10, 190)
+        first = h.stages[0]
+        assert (first.stage_type, first.outcome, first.date) == (
+            "senat_postoupeno",
+            "předloženo Senátu",
+            "11. 2. 2026",
+        )
+        tisk = TiskInfo(id_tisk=1, ct=190, nazev="Senátní návrh", period=10, id_druh=1)
+        tisk.history = h
+        assert before_chamber(tisk, h.stages[1])
+        early = before_chamber(tisk, first)
+        assert step_sentence(
+            first.stage_type, first.outcome or "", "", "navrhy", "cs", None, early
+        ) == ("Senát dostal návrh k projednání.")
+        handover = next(s for s in h.stages if s.outcome == "postoupeno Senátu")
+        assert not before_chamber(tisk, handover)
+
+    def test_treaty_submitted_to_senate_sets_no_status(self):
+        h = _parse(10, 314)
+        senate = next(s for s in h.stages if s.stage_type == "senat_postoupeno")
+        assert (senate.outcome, senate.date) == ("předloženo Senátu", "23. 9. 2026")
+        assert _stage_status(senate) is None

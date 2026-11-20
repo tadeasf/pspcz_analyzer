@@ -20,7 +20,7 @@
 {% for g in rows %}
 <div class="vg">
     <div class="vg-h"><span class="lbl">{% if g.date %}{{ _("pn.third_reading").format(d=g.date|cz_date) }} · {% endif %}{{ _("vd.tisk_n").format(ct=g.ct) }}</span>
-        <h4 style="font-size:20px"><a href="/amendments/{{ g.schuze }}/{{ g.bod }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ g.title }}</a></h4>
+        <h2 style="font-size:20px;margin:0"><a href="/amendments/{{ g.schuze }}/{{ g.bod }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ g.title }}</a></h2>
         <p style="font-size:14px">{{ side_line(g.tally) }}{% if g.final_result in ("accepted", "rejected") %} · {{ _("pn.law_passed" if g.final_result == "accepted" else "pn.law_failed")|safe }}{% endif %}</p>
         <p class="lbl">{{ fate_line(g.tally) }}</p>
         {% if g.unassigned %}<p class="lbl">{{ _("pn.incomplete_votes").format(n=g.unassigned) }}</p>{% endif %}</div>

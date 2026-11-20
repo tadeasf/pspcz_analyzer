@@ -16,7 +16,8 @@ class CoalitionSpan(NamedTuple):
     start: date
     end: date | None
     parties: frozenset[str]
-    source: str
+    source: str  # Czech, shown on /o-datech
+    source_en: str = ""
 
 
 COALITION_TABLE: dict[int, tuple[CoalitionSpan, ...]] = {
@@ -25,6 +26,8 @@ COALITION_TABLE: dict[int, tuple[CoalitionSpan, ...]] = {
             date(2021, 10, 12),
             date(2021, 12, 16),
             frozenset({"ANO"}),
+            "Druhá vláda Andreje Babiše (ANO + ČSSD; ČSSD v 9. období nemá poslance) vládla do "
+            "17. 12. 2021, orgán psp.cz 1494 (27. 6. 2018 - 17. 12. 2021)",
             "Babiš's 2nd government (ANO + ČSSD; ČSSD has no MPs in period 9) governed until "
             "17. 12. 2021, psp.cz organ 1494 (27. 6. 2018 - 17. 12. 2021)",
         ),
@@ -32,6 +35,8 @@ COALITION_TABLE: dict[int, tuple[CoalitionSpan, ...]] = {
             date(2021, 12, 17),
             date(2024, 9, 30),
             frozenset({"ODS", "KDU-ČSL", "TOP09", "STAN", "Piráti"}),
+            "Vláda Petra Fialy jmenována 17. 12. 2021 (orgán psp.cz 1628); fórum Pirátů "
+            "odhlasovalo odchod 30. 9. 2024: https://www.novinky.cz/clanek/domaci-pirati-si-odhlasovali-konec-ve-vlade-40490984",
             "Fiala government appointed 17. 12. 2021 (psp.cz organ 1628); the Pirate forum "
             "voted to leave on 30. 9. 2024: https://www.novinky.cz/clanek/domaci-pirati-si-odhlasovali-konec-ve-vlade-40490984",
         ),
@@ -39,6 +44,8 @@ COALITION_TABLE: dict[int, tuple[CoalitionSpan, ...]] = {
             date(2024, 10, 1),
             None,
             frozenset({"ODS", "KDU-ČSL", "TOP09", "STAN"}),
+            "Ministři za Piráty odešli z vlády 1. 10. 2024: "
+            "https://www.ceskenoviny.cz/zpravy/-pirati-opousteji-vladu-mmr-ma-ridit-jurecka-fiala-podporil-lipavskeho/2573644",
             "Pirate ministers resigned on 1. 10. 2024: "
             "https://www.ceskenoviny.cz/zpravy/-pirati-opousteji-vladu-mmr-ma-ridit-jurecka-fiala-podporil-lipavskeho/2573644",
         ),

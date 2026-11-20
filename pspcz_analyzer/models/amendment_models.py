@@ -30,7 +30,8 @@ class AmendmentVote:
         is_procedure: True for a vote on the voting procedure, not on an amendment.
         is_unvotable: True when the steno says the letter became unvotable.
         match_source: How the vote was tied to the letter: "letter" (the steno names it),
-            "committee_name" (only the committee is named; uncertain), "" (no vote).
+            "vote_title" (psp.cz's vote title names it), "committee_name" (only the
+            committee is named; uncertain), "" (no vote).
         amendment_text: Per-amendment text from PDF (or combined blob for legacy).
         summary: LLM-generated Czech summary.
         summary_en: LLM-generated English summary.
@@ -61,6 +62,7 @@ class AmendmentVote:
     summary: str = ""
     summary_en: str = ""
     summary_warning: bool = False  # automatic check (#97) found a possible error
+    summary_reviewed: bool = False  # corrected or confirmed in /admin/corrections
     pdf_submitter_names: list[str] = field(default_factory=list)
     pdf_letter_raw_text: str = ""
 

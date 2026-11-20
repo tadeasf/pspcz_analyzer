@@ -40,6 +40,7 @@ AMENDMENTS_SCHEMA = {
     "amendment_text": pl.Utf8,
     "summary": pl.Utf8,
     "summary_en": pl.Utf8,
+    "summary_warning": pl.Boolean,
     "pdf_submitter_names": pl.Utf8,
     "submitter_parties": pl.Utf8,
     "bill_summary": pl.Utf8,
@@ -210,7 +211,7 @@ def save_amendments(
             )
 
         if not all_amendments and bill.unlinked_amendment_count > 0:
-            # Bill has PDF amendments but no recorded votes — keep a
+            # Bill has PDF amendments but no recorded votes – keep a
             # placeholder row so the unlinked count survives the round-trip.
             rows.append(_placeholder_row(bill))
 
@@ -220,7 +221,7 @@ def save_amendments(
 
     df = pl.DataFrame(rows, schema=AMENDMENTS_SCHEMA)
     path = _cache_path(cache_dir, period)
-    # Atomic — the frontend may read this parquet at any moment.
+    # Atomic – the frontend may read this parquet at any moment.
     write_parquet_atomic(df, path)
     logger.info(
         "Saved {} amendment rows for {} bills (period {}) to {}",

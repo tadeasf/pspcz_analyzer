@@ -11,7 +11,12 @@ from datetime import date
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.amendment_listing import law_amendments, law_tally
 from pspcz_analyzer.services.law_filters import submitter_kind, tab_of
-from pspcz_analyzer.services.step_text import phase_key, president_deadline, step_sentence
+from pspcz_analyzer.services.step_text import (
+    before_chamber,
+    phase_key,
+    president_deadline,
+    step_sentence,
+)
 
 SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
@@ -54,6 +59,7 @@ def _step(tisk: TiskInfo, stage: object, votes: list[dict], lang: str) -> dict:
         tab_of(tisk),
         lang,
         submitter_kind(tisk),
+        before_chamber(tisk, stage),
     ) or _first_sentence(getattr(stage, "details", "") or getattr(stage, "label", ""))
     vote = None
     if getattr(stage, "vote_number", None) and getattr(stage, "session_number", None):

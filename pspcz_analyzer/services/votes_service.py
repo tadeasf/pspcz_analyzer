@@ -1,4 +1,4 @@
-"""Votes / laws browser — search, list, and detail views of parliamentary votes."""
+"""Votes / laws browser – search, list, and detail views of parliamentary votes."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from pspcz_analyzer.services.vote_codes import category_count_exprs
 from pspcz_analyzer.services.vote_context import (
     filter_kind,
     group_result,
+    kind_on_item,
     reading_at,
     vote_kind,
     vote_question,
@@ -252,7 +253,7 @@ def list_votes(
     _enrich_vote_rows(rows, data, lang)
     for row in rows:
         row["is_void"] = row["id_hlasovani"] in void_ids
-        row["kind"] = vote_kind(data, row["id_hlasovani"])
+        row["kind"] = kind_on_item(vote_kind(data, row["id_hlasovani"]), row.get("tisk_ct"))
         row["steno"] = vote_question(data, row["id_hlasovani"], lang)
 
     groups = _group_rows(rows)
@@ -364,7 +365,7 @@ def vote_detail(data: PeriodData, vote_id: int, lang: str = "cs") -> dict | None
     mp_rows = data.mp_votes.filter(pl.col("id_hlasovani") == vote_id)
     mp_detail = mp_rows.join(data.mp_info.drop("party"), on="id_poslanec", how="left")
 
-    info["kind"] = vote_kind(data, vote_id)
+    info["kind"] = kind_on_item(vote_kind(data, vote_id), info.get("tisk_ct"))
     info["steno"] = vote_question(data, vote_id, lang)
     info["story"] = vote_story(data, info, lang)
     return {

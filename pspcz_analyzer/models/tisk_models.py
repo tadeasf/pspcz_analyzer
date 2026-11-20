@@ -43,6 +43,7 @@ class TiskInfo:
     period: int
     id_druh: int | None = None
     nazev_cely: str = ""  # full official title (tisky.unl column 15)
+    predkladatel: str = ""  # submitter as tisky.unl names it ("min. financí", #98)
     topics: list[str] = field(default_factory=list)
     topics_en: list[str] = field(default_factory=list)
     has_text: bool = False

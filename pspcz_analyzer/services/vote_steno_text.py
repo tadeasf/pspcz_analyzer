@@ -369,3 +369,41 @@ def quote_speaker(text: str, end: int, quote: str) -> str:
     lo = max(0, end - HISTORY_CHARS)
     pos = text[lo:end].lower().rfind(head)  # the model may change the first letter's case
     return speaker_before(text, lo + pos) if pos >= 0 else ""
+
+
+_NAMED_PROPOSAL_RE = re.compile(r"\b(?:navrhl[a]?|podal[a]?|přidal[a]? se)\b", re.I)
+_TITLED_NAME_RE = re.compile(  # nominative titles only: "paní poslankyni Krškové" is no proposer
+    r"\b(?:pan|paní)\s+(?:poslanec|poslankyně|předseda|předsedkyně|ministr|ministryně)\s+"
+    r"((?:[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+\s+)?[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)"
+)
+_CHALLENGE_RE = re.compile(r"\bzpochybňuj[ui] hlasování", re.I)
+
+
+def quote_named(proposer: str, quote: str) -> str:
+    """Add proposers the chair names in the quote ("navrhl pan poslanec Baxa a přidal se …").
+
+    Args:
+        proposer: The proposer found so far (names joined by ", ").
+        quote: Verbatim quote of the record.
+
+    Returns:
+        The named proposers when they include every surname of ``proposer`` and add one,
+        else ``proposer`` unchanged.
+    """
+    if not quote or not _NAMED_PROPOSAL_RE.search(quote):
+        return proposer
+    named = list(dict.fromkeys(m.group(1) for m in _TITLED_NAME_RE.finditer(quote)))
+    have = {n.split()[-1] for n in proposer.split(", ") if n}
+    if len(named) > len(have) and have <= {n.split()[-1] for n in named}:
+        return ", ".join(named)
+    return proposer
+
+
+def challengers(text: str, start: int, end: int) -> str:
+    """MPs who challenged the previous vote ("Zpochybňuji hlasování.") in a vote window.
+
+    Returns:
+        Their names in speaking order joined by ", ", or "".
+    """
+    names = [speaker_before(text, m.start()) for m in _CHALLENGE_RE.finditer(text, start, end)]
+    return ", ".join(dict.fromkeys(n for n in names if n))

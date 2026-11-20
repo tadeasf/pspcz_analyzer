@@ -22,9 +22,9 @@
         <span class="chip c-st">{% if (al and al.is_final_vote) or info.kind == "final" %}{{ _("vd.kind_final_long") }}{% elif al and al.letter %}{{ _("amendments.vote_about_amendment").format(letter=al.letter) }}{% elif info.kind == "procedural" and info.steno and info.steno.subkind and info.steno.subkind != "other" %}{{ _("vl.sub_" ~ info.steno.subkind) }}{% elif info.kind %}{{ _("vl.kind_" ~ info.kind) }}{% else %}{{ _("vd.kind_unknown") }}{% endif %}</span>
         {% set story = info.story %}
         {% if story.reading %}<span class="lbl">· {{ term("cteni" ~ story.reading[0], _("vl.reading_" ~ story.reading)) }}</span>{% endif %}
-        {% if info.tisk_ct %}<a href="/laws/{{ info.tisk_ct }}?period={{ period }}">{{ story.tisk_title or info.nazev_dlouhy }} ({{ _("vd.tisk_n").format(ct=info.tisk_ct) }})</a>{% endif %}
+        {% if info.tisk_ct %}<a href="/laws/{{ info.tisk_ct }}?period={{ period }}">{{ story.tisk_title or info.nazev_dlouhy }} ({{ _("vd.tisk_n").format(ct=info.tisk_ct) }})</a>{% elif info.nazev_dlouhy %}{{ info.nazev_dlouhy }}{% endif %}
     </div>
-    <h1 class="phead-h">{% if stq %}{{ stq }}{% elif info.kind == "final" %}{{ _("vl.q_final") }}{% else %}{{ info.nazev_dlouhy or _("vd.number_n").format(n=info.cislo) }}{% endif %}</h1>
+    <h1 class="phead-h">{% if stq %}{{ stq }}{% elif info.kind == "final" %}{{ _("vl.q_final") }}{% else %}{{ _("vl.q_unknown") }}{% endif %}</h1>
     {% if info.is_void %}
     <div class="zm" style="padding:12px 14px;border-radius:3px"><span class="chip">{{ term("zmatecne", _("vd.void_label")) }}</span> {{ _("vd.void_text") }}</div>
     {% else %}
@@ -55,8 +55,8 @@
         {% if st.edited %}<div class="ai"><b>{{ _("vd.edited_question") }}</b></div>
         {% else %}<div class="ai"><b>{{ _("vd.ai_question") }}</b><span>{{ _("vd.ai_question_note") }}</span></div>{% endif %}
     </section>
-    {% elif st %}
-    <p style="color:#3a4552">{{ _("vd.subject_unsure") }} <a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_part") }} ↗</a> · <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }} ↗</a></p>
+    {% elif st or not story.steno_pending %}
+    <p style="color:#3a4552">{{ _("vd.subject_unsure") }} {% if st.url %}<a href="{{ st.url }}" rel="noopener">{{ _("vd.steno_part") }} ↗</a> · {% endif %}<a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }} ↗</a></p>
     {% else %}
     <p style="color:#3a4552">{{ _("vd.subject_unknown") }}
         <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ info.id_hlasovani }}" rel="noopener">{{ _("vd.psp_record") }}</a>.</p>

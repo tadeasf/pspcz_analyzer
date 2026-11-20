@@ -7,7 +7,7 @@ from datetime import date
 
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.labels import vote_outcome_label
-from pspcz_analyzer.services.step_text import president_deadline, step_sentence
+from pspcz_analyzer.services.step_text import before_chamber, president_deadline, step_sentence
 from pspcz_analyzer.services.tisk.io.history_stages import TiskHistoryStage
 
 _CZ_DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
@@ -110,6 +110,7 @@ def _step_text(tisk: TiskInfo, stage: TiskHistoryStage, lang: str) -> str:
         tab_of(tisk),
         lang,
         submitter_kind(tisk),
+        before_chamber(tisk, stage),
     )
     if not text:
         return stage.outcome or stage.label

@@ -32,7 +32,9 @@ from pspcz_analyzer.services.tisk.io.history_stages import (
 # Bump whenever parsing changes what is stored. Cached histories with a lower
 # version (0 = written before versioning) are re-scraped, terminal or not, so
 # stale statuses and law numbers never stay frozen in the cache.
-HISTORY_PARSER_VERSION = 2  # 2: President delivery and signature are two stages (#89)
+HISTORY_PARSER_VERSION = (
+    3  # 2: President delivery and signature are two stages (#89); 3: submitted to Senate (#87)
+)
 
 
 @dataclass

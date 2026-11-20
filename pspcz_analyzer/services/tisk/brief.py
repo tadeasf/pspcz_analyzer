@@ -72,6 +72,15 @@ _SCHEMA: dict[str, Any] = {
 
 _NUMBER_RE = re.compile(r"\d+(?:[  .]\d{3})*")
 _ENGLISH_RE = re.compile(r"\b(?:the|and|of|is|will|with|for)\b", re.IGNORECASE)
+# English word forms Czech never has ("definition", "awareness"); one is enough (#97)
+_ENGLISH_FORM_RE = re.compile(r"\b[a-z]+(?:tion|tions|ness)\b")
+_STRAY_SIGN_RE = re.compile(r"×(?!\s?\d)|[¤�]")  # "×" not in "3 × 2"
+_SENTENCE_END_RE = re.compile(r"[.!?…\"“”)»]\s*$")
+
+
+def _english(text: str) -> bool:
+    """English drift: two common English words or one English-only word form."""
+    return len(_ENGLISH_RE.findall(text)) >= 2 or bool(_ENGLISH_FORM_RE.search(text))
 
 
 def _numbers(text: str) -> set[str]:
@@ -93,11 +102,13 @@ def text_issues(cs: str, en: str, source: str) -> list[str]:
         source: Text it was generated from.
 
     Returns:
-        Issue codes: ``script``, ``english``, ``number:<n>``; empty when it passes.
+        Issue codes: ``script``, ``english``, ``sign``, ``number:<n>``; empty when it passes.
     """
     issues = ["script"] if _non_latin(cs) or _non_latin(en) else []
-    if len(_ENGLISH_RE.findall(cs)) >= 2:
+    if _english(cs):
         issues.append("english")
+    if _STRAY_SIGN_RE.search(cs):
+        issues.append("sign")
     return issues + [f"number:{n}" for n in sorted(_numbers(cs) - _numbers(source))]
 
 
@@ -111,14 +122,17 @@ def brief_issues(cs: dict[str, str], en: dict[str, str], source: str) -> list[st
 
     Returns:
         Issue codes, empty when the brief passes: ``empty``, ``script:<field>``,
-        ``english:<field>``, ``number:<n>``.
+        ``english:<field>``, ``sign:<field>``, ``unfinished:shrnuti``, ``number:<n>``.
     """
     issues: list[str] = []
     if not cs.get("nazev") or not cs.get("shrnuti"):
         issues.append("empty")
     for lang, fields in (("cs", cs), ("en", en)):
         issues += [f"script:{f}_{lang}" for f, v in fields.items() if _non_latin(v)]
-    issues += [f"english:{f}" for f, v in cs.items() if len(_ENGLISH_RE.findall(v)) >= 2]
+    issues += [f"english:{f}" for f, v in cs.items() if _english(v)]
+    issues += [f"sign:{f}" for f, v in cs.items() if _STRAY_SIGN_RE.search(v)]
+    if cs.get("shrnuti") and not _SENTENCE_END_RE.search(cs["shrnuti"]):
+        issues.append("unfinished:shrnuti")
     known = _numbers(source)
     cs_text = " ".join(cs.get(f, "") for f in ("shrnuti", "kolik", "od_kdy"))
     issues += [f"number:{n}" for n in sorted(_numbers(cs_text) - known)]

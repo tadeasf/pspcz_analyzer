@@ -64,7 +64,7 @@ class TestVoteDetailRedesign:
         html = client.get(f"/votes/{vote_id}?period=1").text
         assert "Jak hlasovaly poslanecké kluby" in html
         assert "Jak hlasovali jednotliví poslanci" in html
-        assert "otázku doplníme" in html  # no steno record yet
+        assert "nepodařilo spolehlivě určit" in html  # old vote without a steno record
 
     def test_unknown_vote_and_law_are_404(self, client):
         assert client.get("/votes/999999999?period=1").status_code == 404

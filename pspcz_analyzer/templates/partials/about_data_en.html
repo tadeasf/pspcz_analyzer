@@ -27,7 +27,7 @@
 </ul>
 <h3 style="font-size:16px">Hand-kept government composition (where the confidence vote is not enough)</h3>
 <div style="overflow-x:auto" tabindex="0"><table class="t"><thead><tr><th>Term</th><th>From</th><th>To</th><th>Government clubs</th><th>Source</th></tr></thead><tbody>
-{% for p, spans in coalition_table.items() %}{% for s in spans %}<tr><td>{{ p }}</td><td>{{ s.start|cz_date }}</td><td>{{ s.end|cz_date if s.end else "–" }}</td><td>{{ s.parties|sort|join(", ") }}</td><td class="lbl">{{ s.source|urlize(40, true) }}</td></tr>{% endfor %}{% endfor %}
+{% for p, spans in coalition_table.items() %}{% for s in spans %}<tr><td>{{ p }}</td><td>{{ s.start|cz_date }}</td><td>{{ s.end|cz_date if s.end else "–" }}</td><td>{{ s.parties|sort|join(", ") }}</td><td class="lbl">{{ (s.source_en or s.source)|urlize(40, true) }}</td></tr>{% endfor %}{% endfor %}
 </tbody></table></div>
 <p class="lbl">Amendments are assigned a side by the submitter's club on the day of the third-reading vote; the bill's sponsor comes from the print history.</p></section>
 

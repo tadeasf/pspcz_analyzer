@@ -95,6 +95,8 @@ def apply_vote_questions(vote_steno: dict[int, dict], ov: dict[str, dict[str, di
             status="ok",
             edited=_edited(rec),
         )
+        # optional fields of a correction made outside the form ("pro", sub-kind)
+        target.update({k: rec[k] for k in ("pro", "pro_en", "subkind") if k in rec})
 
 
 def apply_briefs(briefs: dict[int, dict], ov: dict[str, dict[str, dict]]) -> None:
@@ -135,6 +137,7 @@ def apply_amendment_summaries(
                     amend.summary = rec.get("summary", "")
                     amend.summary_en = rec.get("summary_en", "")
                     amend.summary_warning = False
+                    amend.summary_reviewed = True
 
 
 def _live_pick(ov: dict[str, dict[str, dict]]) -> dict:

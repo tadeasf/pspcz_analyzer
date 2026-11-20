@@ -91,6 +91,10 @@ _SENTENCES: dict[tuple[str, str], tuple[str, str]] = {
         "Sněmovna poslala {a} Senátu.",
         "The Chamber sent it to the Senate.",
     ),
+    ("senat_postoupeno", "předloženo Senátu"): (
+        "Senát dostal {a} k projednání.",
+        "The Senate received the {e}.",
+    ),
     ("senat_organizacni", ""): (
         "Senát určil výbor, který {a} projedná.",
         "The Senate named the committee to discuss it.",
@@ -222,6 +226,7 @@ def step_sentence(
     tab: str,
     lang: str = "cs",
     submitter: str | None = None,
+    before_chamber: bool = False,
 ) -> str:
     """One history step as a sentence with a verb.
 
@@ -233,6 +238,8 @@ def step_sentence(
         lang: "cs" or "en".
         submitter: Submitter kind of a bill (vlada/poslanci/senat/kraje), names the
             first step ("Vláda předložila návrh.").
+        before_chamber: The step is a Senate bill's own Senate proceeding, before the
+            Chamber got it, so it is still a "návrh", not a "zákon".
 
     Returns:
         The sentence; "" when the step has no known wording.
@@ -252,9 +259,22 @@ def step_sentence(
     pair = _SENTENCES.get((stage_type, outcome or "")) or _SENTENCES.get((stage_type, ""))
     if not pair:
         return ""
-    if tab == "navrhy" and stage_type in _LAW_STAGES:
+    if tab == "navrhy" and stage_type in _LAW_STAGES and not before_chamber:
         acc, nom = "zákon", "Zákon"
     return (pair[1] if lang == "en" else pair[0]).format(a=acc, N=nom, e=en)
+
+
+def before_chamber(tisk: TiskInfo, stage: object) -> bool:
+    """Whether a Senate step comes before the Chamber got the bill (a Senate bill)."""
+    stages = tisk.history.stages if tisk.history else []
+    if not getattr(stage, "stage_type", "").startswith("senat"):
+        return False
+    for s in stages:
+        if s is stage:
+            return True
+        if not s.stage_type.startswith("senat"):
+            return False
+    return False
 
 
 def president_deadline(tisk: TiskInfo) -> date | None:

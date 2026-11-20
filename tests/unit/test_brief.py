@@ -42,6 +42,17 @@ def test_english_in_czech_field_and_empty_flagged() -> None:
     assert "english:koho" in issues
 
 
+def test_issue_97_sample_is_flagged() -> None:
+    """The corrupt text from #97: one English word, a stray "×", an unfinished sentence."""
+    cs = {
+        **CS,
+        "shrnuti": "Změněn byl rozsah definition internalizátora. Vymezeny × se výjimek",
+    }
+    issues = brief_issues(cs, EN, SOURCE)
+    assert {"english:shrnuti", "sign:shrnuti", "unfinished:shrnuti"} <= set(issues)
+    assert brief_issues({**CS, "kolik": "3 × 2 570 Kč"}, EN, SOURCE + " 3") == []
+
+
 def test_view_falls_back_to_czech() -> None:
     brief = {"status": "ok", "cs": CS, "en": {"shrnuti": ""}}
     assert (brief_view(brief, "en") or {})["nazev"] == CS["nazev"]

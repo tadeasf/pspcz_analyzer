@@ -5,7 +5,7 @@
 {% else %}<div class="empty"><b>{{ _("votes.no_data") }}</b> <a href="/votes?period={{ period }}">{{ _("empty.clear") }}</a></div>{% endif %}
 {% else %}
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&outcome=" ~ (outcome|urlencode) ~ "&topic=" ~ (topic|urlencode) ~ "&kind=" ~ (kind|urlencode) %}
-<p class="lbl">{{ _("vl.found").format(total=total, groups=total_groups) }}</p>
+<p class="lbl">{{ _("vl.found").format(total=total|num, groups=total_groups|num) }}</p>
 {% for g in groups %}
 <details class="vg{% if g.all_void %} zm{% endif %}" {% if loop.index <= 4 %}open{% endif %}>
     <summary class="vg-h">

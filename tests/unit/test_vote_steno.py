@@ -8,10 +8,12 @@ from pspcz_analyzer.services.speeches import speech_counts
 from pspcz_analyzer.services.vote_steno import _ask, _ask_once
 from pspcz_analyzer.services.vote_steno_text import (
     anchor_check,
+    challengers,
     clean_proposer,
     earlier_proposals,
     is_referential,
     link_repeats,
+    quote_named,
     quote_speaker,
     rule_kind,
     sitting_text,
@@ -228,3 +230,20 @@ def test_quote_speaker_names_who_proposed() -> None:
         == "Karel Haas"
     )
     assert quote_speaker(text, len(text), "Zahajuji hlasování.") == ""
+
+
+def test_proposers_named_by_the_chair_and_challengers() -> None:
+    """Votes 286, 287 and 281 of sitting 34 (#102)."""
+    quote = "na vrácení, což navrhl pan poslanec Baxa a přidal se pan poslanec Hladík."
+    assert quote_named("Baxa", quote) == "Baxa, Hladík"
+    quote = "Návrh na zamítnutí, podal ho pan poslanec Jakob a pan poslanec Hladík."
+    assert quote_named("", quote) == "Jakob, Hladík"
+    assert quote_named("Marek Výborný", "navrhla to paní poslankyně Kršková") == "Marek Výborný"
+    assert quote_named("", "Zahajuji hlasování, pan poslanec Baxa.") == ""
+    text = (
+        "Poslanec Radim Fiala : Zpochybňuju hlasování. "
+        "Předseda PSP Tomio Okamura : Pan poslanec Bureš zpochybňuje hlasování. "
+        "Poslanec Matěj Gregor : Zpochybňuji hlasování. "
+        "Předseda PSP Tomio Okamura : Takže budeme hlasovat o zpochybnění hlasování."
+    )
+    assert challengers(text, 0, len(text)) == "Radim Fiala, Matěj Gregor"

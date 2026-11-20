@@ -8,6 +8,7 @@ what "Pro" meant, who proposed it, and whether a challenge voided the result.
 import polars as pl
 
 from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.services.vote_steno_pages import is_recent
 
 
 def vote_kind(data: PeriodData, vote_id: int) -> str | None:
@@ -17,6 +18,14 @@ def vote_kind(data: PeriodData, vote_id: int) -> str | None:
         return "final" if ctx[3] else "amendment"
     kind = data.vote_steno.get(vote_id, {}).get("kind")
     return None if kind in (None, "other") else kind
+
+
+_BILL_KINDS = frozenset({"final", "amendment", "reject", "return", "committee"})
+
+
+def kind_on_item(kind: str | None, tisk_ct: int | None) -> str | None:
+    """A bill kind on an item with no bill ("Pořad schůze") is procedural (#113)."""
+    return "procedural" if kind in _BILL_KINDS and not tisk_ct else kind
 
 
 def final_vote_ids(data: PeriodData) -> set[int]:
@@ -157,4 +166,5 @@ def vote_story(data: PeriodData, info: dict, lang: str = "cs") -> dict:
         "repeat": _vote_brief(data, st.get("repeated_as")),
         "chair_repeat": _vote_brief(data, st.get("chair_repeated_as")),
         "repeats": _vote_brief(data, st.get("repeats")),
+        "steno_pending": is_recent(info.get("datum") or ""),
     }

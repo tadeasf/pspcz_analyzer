@@ -23,7 +23,7 @@
     <h3 style="font-size:19px;margin:6px 0"><a href="/laws/{{ row.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ row.nazev }}</a></h3>
     {% if row.has_summary %}<p>{{ row.summary_truncated }}</p><div>{{ ai_label(row.brief, row.ct) }}</div>
     {% elif tab == "navrhy" %}<p class="lbl">{{ _("lw.no_summary") }}</p>{% endif %}
-    {% if row.has_amendments %}<p class="last"><a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}">{{ _("lw.amendments_n").format(n=row.amendment_count) }}</a>{% for s in ("opposition", "government", "mixed", "committee") %}{% if row.amendment_tally.by_side[s].submitted %} · {{ _("pn.from_" ~ s) }} {{ row.amendment_tally.by_side[s].submitted|num }}, {{ _("pn.accepted_n") }} {{ row.amendment_tally.by_side[s].accepted|num }}{% endif %}{% endfor %}</p>{% endif %}
+    {% if row.has_amendments %}<p class="last"><a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}">{{ _("lw.amendments_n").format(n=row.amendment_count) }}</a>{% for s in ("opposition", "government", "mixed", "committee", "unknown") %}{% if row.amendment_tally.by_side[s].submitted %} · {{ _("pn.from_" ~ s) }} {{ row.amendment_tally.by_side[s].submitted|num }}, {{ _("pn.accepted_n") }} {{ row.amendment_tally.by_side[s].accepted|num }}{% endif %}{% endfor %}</p>{% endif %}
     {% if row.last_step %}<p class="last">{{ row.last_step.date|cz_date(short=True) }} · {{ row.last_step.text }}</p>{% endif %}
 </div>
 {% endfor %}

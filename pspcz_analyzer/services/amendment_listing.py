@@ -83,6 +83,7 @@ def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
         "summary": summary,
         "summary_core": split_core(summary),
         "summary_warning": a.summary_warning,
+        "summary_reviewed": a.summary_reviewed,
         "description": a.description,
         "id_hlasovani": a.id_hlasovani,
         "committee_stance": a.committee_stance,
