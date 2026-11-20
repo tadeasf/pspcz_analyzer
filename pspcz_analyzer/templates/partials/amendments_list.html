@@ -5,7 +5,7 @@
 {% else %}
 <div class="box" style="display:flex;flex-direction:column;gap:6px;font-size:14px">
     <span><b>{{ _("pn.in_period").format(p=period) }}</b> {{ period_tally.total|count("pn.n") }} {{ _("pn.to_law_one") if law_count == 1 else _("pn.to_laws").format(n=law_count|num) }}</span>
-    <span>{% for s in ("opposition", "government", "mixed", "committee") %}{% if not loop.first %} · {% endif %}{{ _("pn.from_" ~ s) }} <b>{{ period_tally.by_side[s].submitted|num }}</b>, {{ _("pn.accepted_n") }} <b>{{ period_tally.by_side[s].accepted|num }}</b>{% endfor %}</span>
+    <span>{% for s in ("opposition", "government", "mixed", "committee", "unknown") %}{% if s != "unknown" or period_tally.by_side[s].submitted %}{% if not loop.first %} · {% endif %}{{ _("pn.from_" ~ s) }} <b>{{ period_tally.by_side[s].submitted|num }}</b>, {{ _("pn.accepted_n") }} <b>{{ period_tally.by_side[s].accepted|num }}</b>{% endif %}{% endfor %}</span>
 </div>
 
 {% if not rows %}

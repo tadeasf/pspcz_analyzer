@@ -27,6 +27,8 @@ class AmendmentVote:
         grouped_with: Other amendment letters voted together.
         is_final_vote: True for "zákon jako celku" final passage vote.
         is_leg_tech: True for §95 legislative-technical corrections.
+        is_procedure: True for a vote on the voting procedure, not on an amendment.
+        is_unvotable: True when the steno says the letter became unvotable.
         amendment_text: Per-amendment text from PDF (or combined blob for legacy).
         summary: LLM-generated Czech summary.
         summary_en: LLM-generated English summary.
@@ -50,6 +52,8 @@ class AmendmentVote:
     grouped_with: list[str] = field(default_factory=list)
     is_final_vote: bool = False
     is_leg_tech: bool = False
+    is_procedure: bool = False
+    is_unvotable: bool = False
     amendment_text: str = ""
     summary: str = ""
     summary_en: str = ""

@@ -130,6 +130,27 @@ _WITHDRAWAL_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Vote on the voting procedure itself ("hlasovat o protinávrhu" on the order of letters),
+# looked for just before the vote announcement
+_PROCEDURE_RE = re.compile(
+    r"protinávrh\w*\s+(?:na\s+)?(?:hlasovací\s+)?procedur|o\s+návrhu\s+procedury|"
+    r"hlasovat\s+o\s+(?:tomto\s+)?protinávrhu|o\s+proceduře|hlasovací\s+proceduru",
+    re.IGNORECASE,
+)
+_PROCEDURE_TAIL_CHARS = 450
+
+# Letter-less committee amendment: "pozměňovací návrh hospodářského výboru",
+# "návrh výboru pro zdravotnictví"
+_COMMITTEE_NAME_RE = re.compile(
+    r"návrh\w*\s+(\w+(?:ého|ního|ích))\s+výbor\w*|návrh\w*\s+výbor\w*\s+pro\s+(\w+)",
+    re.IGNORECASE,
+)
+
+# "stal se B2 nehlasovatelný", "B1 a B3 jsou nehlasovatelné"
+_UNVOTABLE_RE = re.compile(
+    r"\b([A-Z]\d*(?:(?:,\s*|\s+a\s+)[A-Z]\d*)*)\s+(?:(?:je|jsou|se\s+stal\w*)\s+)?nehlasovateln"
+)
+
 # §95 legislative-technical corrections
 _LEG_TECH_RE = re.compile(
     r"(?:§\s*95|legislativně[\s-]+technick)",
@@ -197,6 +218,8 @@ class _ParseBlock:
     is_challenge: bool = False
     is_withdrawal: bool = False
     is_leg_tech: bool = False
+    is_procedure: bool = False
+    committee_name: str = ""
     grouped_letters: list[str] = field(default_factory=list)
     submitter_names: list[str] = field(default_factory=list)
 
@@ -441,8 +464,10 @@ def _parse_block(block_text: str) -> _ParseBlock:
         pb.vote_number = int(result_match.group(1))
         pb.result = _normalize_result(result_match.group(2))
 
-    # Final vote
+    # Final vote; letters named before it ("jelikož jsme schválili návrh A") are not its subject
     pb.is_final = bool(_FINAL_VOTE_RE.search(block_text))
+    if pb.is_final:
+        pb.letter, pb.grouped_letters = "", []
 
     # Challenge
     pb.is_challenge = bool(_CHALLENGE_RE.search(block_text))
@@ -452,6 +477,14 @@ def _parse_block(block_text: str) -> _ParseBlock:
 
     # Legislative-technical
     pb.is_leg_tech = bool(_LEG_TECH_RE.search(block_text))
+
+    # Vote on the procedure: its letters are the proposed order, not the subject
+    tail = block_text[: result_match.start()] if result_match else block_text
+    if _PROCEDURE_RE.search(tail[-_PROCEDURE_TAIL_CHARS:]) and not pb.is_final:
+        pb.is_procedure = True
+        pb.letter, pb.grouped_letters = "", []
+    elif not pb.letter and (cm := _COMMITTEE_NAME_RE.search(tail[-_PROCEDURE_TAIL_CHARS * 2 :])):
+        pb.committee_name = (cm.group(1) or cm.group(2)).lower()
 
     # ── Submitter names ───────────────────────────────────────────────────
     # Try Pattern A: letter + genitive (most specific)
@@ -531,10 +564,12 @@ def _blocks_to_amendments(blocks: list[_ParseBlock]) -> list[AmendmentVote]:
             proposer_stance=block.proposer_stance,
             is_final_vote=block.is_final,
             is_leg_tech=block.is_leg_tech,
+            is_procedure=block.is_procedure,
             is_revote=is_revote,
             original_vote_number=last_vote_number if is_revote else None,
             grouped_with=block.grouped_letters,
-            submitter_names=block.submitter_names,
+            submitter_names=block.submitter_names
+            or ([f"{block.committee_name} výbor"] if block.committee_name else []),
         )
 
         amendments.append(amendment)
@@ -543,6 +578,32 @@ def _blocks_to_amendments(blocks: list[_ParseBlock]) -> list[AmendmentVote]:
             last_letter = block.letter
 
     return amendments
+
+
+def _unvotable_letters(section: str, amendments: list[AmendmentVote]) -> list[AmendmentVote]:
+    """Letters the steno calls unvotable ("stal se B2 nehlasovatelný") and nobody voted on.
+
+    Args:
+        section: The amendment voting section text.
+        amendments: Entries parsed from the vote blocks.
+
+    Returns:
+        One unvoted entry (``vote_number=0``, ``is_unvotable``) per such letter.
+    """
+    voted = {
+        k.upper()
+        for a in amendments
+        if a.vote_number and not a.is_procedure
+        for k in [a.letter, *a.grouped_with]
+        if k
+    }
+    out: list[AmendmentVote] = []
+    for m in _UNVOTABLE_RE.finditer(section):
+        primary, grouped = _parse_letter_groups(m.group(1))
+        for letter in [primary, *grouped]:
+            if letter.upper() not in voted and all(a.letter != letter for a in out):
+                out.append(AmendmentVote(letter=letter, vote_number=0, is_unvotable=True))
+    return out
 
 
 def parse_steno_amendments(
@@ -604,7 +665,9 @@ def parse_steno_amendments(
 
     # Count blocks without letter designations
     no_letter = sum(
-        1 for b in parsed_blocks if not b.letter and b.vote_number is not None and not b.is_final
+        1
+        for b in parsed_blocks
+        if not b.letter and b.vote_number is not None and not b.is_final and not b.is_procedure
     )
     if no_letter > 0:
         confidence -= 0.05 * min(no_letter, 3)
@@ -612,6 +675,7 @@ def parse_steno_amendments(
 
     # Convert to amendments
     amendments = _blocks_to_amendments(parsed_blocks)
+    amendments += _unvotable_letters(section, amendments)
 
     confidence = max(0.0, min(1.0, confidence))
 

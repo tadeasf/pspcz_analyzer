@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% from "partials/amendment_card.html" import letter_card, side_table %}
-{% block title %}{{ _("pn.detail_title").format(t=detail.title) }} · {{ _("site.short_title") }}{% endblock %}
+{% set heading = _("pn.detail_title_law").format(l=detail.law_name, t=detail.title) if detail.law_name else _("pn.detail_title").format(t=detail.title) %}
+{% block title %}{{ heading }} · {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
-<div class="crumb"><a href="/amendments?period={{ period }}">{{ _("amendments.title") }}</a> › {{ _("lw.in_period").format(p=period) }} › {{ detail.title }}</div>
+<div class="crumb"><a href="/amendments?period={{ period }}">{{ _("amendments.title") }}</a> › {{ _("pn.period_crumb").format(p=period) }} › {{ detail.title }}</div>
 <div style="display:flex;flex-direction:column;gap:6px;max-width:760px">
-    <h1 style="font-size:28px">{{ _("pn.detail_title").format(t=detail.title) }}</h1>
+    <h1 style="font-size:28px">{{ heading }}</h1>
     <p style="color:#3a4552">{{ _("pn.detail_perex") }}</p>
     <p class="lbl">{% if detail.date %}{{ _("pn.third_reading").format(d=detail.date|cz_date) }} · {% endif %}<a href="/laws/{{ detail.ct }}?period={{ period }}">{{ _("vd.tisk_n").format(ct=detail.ct) }}</a>{% if detail.final_result in ("accepted", "rejected") %} · {{ _("pn.law_passed" if detail.final_result == "accepted" else "pn.law_failed")|safe }}{% endif %}</p>
 </div>

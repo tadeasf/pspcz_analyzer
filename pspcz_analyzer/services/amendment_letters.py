@@ -37,6 +37,8 @@ def _fate(amend: AmendmentVote, bill_voted: bool, all_assigned: bool, pending: b
     """
     if amend.is_withdrawn:
         return "withdrawn"
+    if amend.is_unvotable:
+        return "not_voted"
     if pending:
         return "pending"
     if not amend.vote_number:
@@ -87,7 +89,7 @@ def bill_letters(bill: BillAmendmentData, coalition: frozenset[str]) -> list[dic
         keys = _letter_keys(amend)
         if amend.is_revote and not keys:
             keys = _revoted_keys(amend, letters)
-        if amend.is_leg_tech or amend.is_final_vote or not keys:
+        if amend.is_leg_tech or amend.is_procedure or amend.is_final_vote or not keys:
             continue
         for key in keys:
             if key in letters and not amend.is_revote:
@@ -107,7 +109,9 @@ def unassigned_votes(bill: BillAmendmentData) -> int:
     return sum(
         1
         for a in bill.amendments
-        if a.vote_number and not _letter_keys(a) and not a.is_leg_tech and not a.is_revote
+        if a.vote_number
+        and not _letter_keys(a)
+        and not (a.is_leg_tech or a.is_procedure or a.is_revote)
     )
 
 

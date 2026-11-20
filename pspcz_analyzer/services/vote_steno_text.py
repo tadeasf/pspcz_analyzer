@@ -21,7 +21,7 @@ MAX_SNIPPETS = 6
 
 _VOTE_ANCHOR_RE = re.compile(r'<a\b[^>]*hlasy\.sqw\?G=(\d+)[^>]*\bid="h(\d+)"[^>]*>', re.I)
 _TAG_RE = re.compile(r"<[^>]+>")
-_ANNOUNCED_RE = re.compile(r"přihlášen", re.I)
+_ANNOUNCED_RE = re.compile(r"[\s,.:;)]*(?:\(na tabuli[^)]*\)\s*)?přihlášen", re.I)
 
 # Kind -> pattern; the kind whose last match is closest to the vote wins (rule fallback).
 _KIND_PATTERNS: dict[str, re.Pattern[str]] = {
@@ -73,8 +73,10 @@ def _anchor_events(pages: list[tuple[str, str]]) -> list[tuple[int, re.Match[str
     events = []
     for i, (_, page) in enumerate(pages):
         for m in _VOTE_ANCHOR_RE.finditer(page):
-            after = _plain(page[m.end() : m.end() + 400])[:160]
-            events.append((i, m, bool(_ANNOUNCED_RE.search(after))))
+            close = page.find("</a>", m.end())
+            close = m.end() if close < 0 else close + 4
+            after = _plain(page[close : close + 300])[:80]  # ", přihlášeno 152 poslanců"
+            events.append((i, m, bool(_ANNOUNCED_RE.match(after))))
     return events
 
 
@@ -90,6 +92,38 @@ def _chosen_anchors(events: list[tuple[int, re.Match[str], bool]]) -> set[tuple[
         elif vid not in chosen:
             chosen[vid] = (i, m.start())
     return set(chosen.values())
+
+
+_VOTE_LINK_RE = re.compile(
+    r'(<a\b[^>]*hlasy\.sqw\?G=\d+[^>]*\bid="h(\d+)"[^>]*>)(.*?)</a>', re.I | re.S
+)
+
+
+def normalize_vote_anchors(pages: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """Rewrite vote links so the amendment parser anchors votes like ``sitting_text``.
+
+    The chosen announcement becomes "Hlasování číslo N" (covers "hlasování 278" and
+    "(číslo 273"); any other link to a vote, e.g. a speaker citing an older vote,
+    becomes "(odkaz na hlasování N)", which no vote-number pattern matches.
+
+    Args:
+        pages: ``(page name, html)`` in page order.
+
+    Returns:
+        The pages with rewritten vote links.
+    """
+    chosen = _chosen_anchors(_anchor_events(pages))
+    out = []
+    for i, (name, page) in enumerate(pages):
+
+        def _sub(m: re.Match[str], i: int = i) -> str:
+            n = m.group(2)
+            if (i, m.start()) in chosen:
+                return f"Hlasování číslo {n}"
+            return f"(odkaz na hlasování {n})"
+
+        out.append((name, _VOTE_LINK_RE.sub(_sub, page)))
+    return out
 
 
 def sitting_text(pages: list[tuple[str, str]]) -> tuple[str, dict[int, dict[str, Any]]]:

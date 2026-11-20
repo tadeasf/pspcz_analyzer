@@ -195,6 +195,38 @@ def _pop_letter(
     return entry
 
 
+def _committee_stem(name: str) -> str:
+    """Distinctive word of a committee name: "hospodářského výboru" -> "hospod"."""
+    words = name.lower().split()
+    if "pro" in words and words.index("pro") + 1 < len(words):
+        return words[words.index("pro") + 1][:6]
+    return next((w[:6] for w in words if not w.startswith("výbor")), "")
+
+
+def _assign_committee_letters(
+    steno_by_letter: dict[str, list[AmendmentVote]], pdf_amendments: list[PdfAmendment]
+) -> None:
+    """Give letter-less steno votes on "návrh hospodářského výboru" the committee's letter.
+
+    Args:
+        steno_by_letter: Mutable steno lookup by letter ("" holds letter-less entries).
+        pdf_amendments: Letters of the consolidated amendment document.
+    """
+    loose = steno_by_letter.get("", [])
+    for pdf in pdf_amendments:
+        key = pdf.letter.strip().upper()
+        names = " ".join(pdf.submitter_names).lower()
+        if key in steno_by_letter or "výbor" not in names:
+            continue
+        for s in loose:
+            stems = [_committee_stem(n) for n in s.submitter_names if "výbor" in n.lower()]
+            if s.vote_number and not s.is_procedure and any(st and st in names for st in stems):
+                s.letter = key
+                loose.remove(s)
+                steno_by_letter[key] = [s]
+                break
+
+
 def _merge_pdf_and_steno(
     bills: list[BillAmendmentData],
     pdf_data: dict[int, list[PdfAmendment]],
@@ -237,6 +269,7 @@ def _merge_pdf_and_steno(
         for amend in bill.amendments:
             key = amend.letter.strip().upper()
             steno_by_letter.setdefault(key, []).append(amend)
+        _assign_committee_letters(steno_by_letter, pdf_amendments)
 
         merged: list[AmendmentVote] = []
 

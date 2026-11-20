@@ -6,7 +6,7 @@
 {% macro letter_card(x, period, stances=false) %}
 <div class="card">
     <div class="top"><span class="lbl">{{ _("pn.what_changes") }}</span><span class="lbl">{{ _("pn.letter").format(l=x.letter) }}</span></div>
-    {% if x.summary %}<p style="font-size:16px">{{ x.summary }}</p><div class="ai"><b>{{ _("detail.ai_generated") }}</b>{% if x.summary_warning %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}</div>
+    {% if x.summary %}<p style="font-size:16px"><b>{{ x.summary_core[0] }}</b>{{ x.summary_core[1] }}</p><div class="ai"><b>{{ _("detail.ai_generated") }}</b>{% if x.summary_warning %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}</div>
     {% elif x.description %}<p style="font-size:16px">{{ x.description }}</p><span class="lbl">{{ _("pn.from_steno") }}</span>
     {% else %}<p class="lbl">{{ _("pn.no_summary") }}</p>{% endif %}
     <div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;align-items:center">
@@ -20,7 +20,8 @@
         {% if stances and (x.committee_stance or x.proposer_stance) %}<span>
             {% if x.committee_stance %}{{ _("pn.committee_stance") }}: {{ _("amendments.stance." ~ x.committee_stance) }}{% endif %}
             {% if x.committee_stance and x.proposer_stance %} · {% endif %}
-            {% if x.proposer_stance %}{{ _("pn.proposer_stance") }}: {{ _("amendments.stance." ~ x.proposer_stance) }}{% endif %}</span>{% endif %}
+            {% if x.proposer_stance and x.gov_bill %}{{ _("pn.gov_stance") }}: {{ _("amendments.stance_f." ~ x.proposer_stance) if x.proposer_stance in ("souhlas", "nesouhlas", "neutralni") else _("amendments.stance." ~ x.proposer_stance) }}
+            {% elif x.proposer_stance %}{{ _("pn.proposer_stance") }}: {{ _("amendments.stance." ~ x.proposer_stance) }}{% endif %}</span>{% endif %}
         {% if x.id_hlasovani %}<a href="/votes/{{ x.id_hlasovani }}?period={{ period }}">{{ _("pn.who_voted") }}</a>{% endif %}
         {% if x.pdf_url %}<a href="{{ x.pdf_url }}" target="_blank" rel="noopener">{{ _("pn.full_text") }}</a>{% endif %}
     </div>
@@ -28,7 +29,7 @@
 {% endmacro %}
 
 {% macro side_line(t) -%}
-{{ t.total|count("pn.n") }}{% for s in ("opposition", "government", "mixed", "committee") %}{% if t.by_side[s].submitted %} · {{ _("pn.from_" ~ s) }} <b>{{ t.by_side[s].submitted|num }}</b>, {{ _("pn.accepted_n") }} <b>{{ t.by_side[s].accepted|num }}</b>{% endif %}{% endfor %}
+{{ t.total|count("pn.n") }}{% for s in ("opposition", "government", "mixed", "committee", "unknown") %}{% if t.by_side[s].submitted %} · {{ _("pn.from_" ~ s) }} <b>{{ t.by_side[s].submitted|num }}</b>, {{ _("pn.accepted_n") }} <b>{{ t.by_side[s].accepted|num }}</b>{% endif %}{% endfor %}
 {%- endmacro %}
 
 {% macro side_table(t) %}

@@ -32,6 +32,7 @@ from pspcz_analyzer.config import (
     STENO_SUBPAGE_GAP_FILL,
     UNL_ENCODING,
 )
+from pspcz_analyzer.services.vote_steno_text import normalize_vote_anchors
 
 
 class StenoFailure(StrEnum):
@@ -659,5 +660,6 @@ def find_steno_for_bod(
         return None, "", StenoFailure.SUBPAGE_DOWNLOAD_FAILED
 
     first_url = base_url + collected[0][0]
-    combined_parts = [html for _, html in collected]
+    # same vote anchoring as vote_steno (#102 item 7): announcements read "Hlasování číslo N"
+    combined_parts = [html for _, html in normalize_vote_anchors(collected)]
     return "\n".join(combined_parts), first_url, None

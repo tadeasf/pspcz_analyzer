@@ -12,6 +12,8 @@ import polars as pl
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData
 from pspcz_analyzer.services.amendment_letters import bill_letters, tally, unassigned_votes
+from pspcz_analyzer.services.law_filters import submitter_kind
+from pspcz_analyzer.services.tisk.brief import brief_view
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
 SORTS = ("newest", "most", "oldest")
@@ -43,6 +45,19 @@ def _sd_numbers(letter: str, text: str) -> list[str]:
     return own or list(dict.fromkeys(re.findall(r"\bSD\s*(\d+)", text)))
 
 
+def split_core(summary: str) -> tuple[str, str]:
+    """Summary split into the bold core of the change and the rest (#112 "tučně jádro").
+
+    The core is the text up to the first comma or dash when that comes early,
+    otherwise the first sentence.
+    """
+    m = re.search(r",\s|\s[–-]\s", summary)
+    if m and 15 <= m.start() <= 110:
+        return summary[: m.start()], summary[m.start() :]
+    end = summary.find(". ")
+    return (summary[: end + 1], summary[end + 1 :]) if 0 < end <= 160 else (summary, "")
+
+
 def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
     """Template-friendly dict for one letter.
 
@@ -64,6 +79,7 @@ def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
         "names": a.pdf_submitter_names or a.submitter_names,
         "parties": sorted(set(a.submitter_parties)),
         "summary": summary,
+        "summary_core": split_core(summary),
         "summary_warning": a.summary_warning,
         "description": a.description,
         "id_hlasovani": a.id_hlasovani,
@@ -77,10 +93,21 @@ def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
     }
 
 
-def _law_title(data: PeriodData, bill: BillAmendmentData) -> str:
-    """Bill title from the tisk lookup, falling back to the amendment record."""
+def _law_titles(data: PeriodData, bill: BillAmendmentData, lang: str) -> tuple[str, str]:
+    """``(plain title from the AI brief, official short title)`` of a bill."""
     tisk = next((t for t in data.tisk_lookup.values() if t.ct == bill.ct), None)
-    return (tisk.nazev if tisk else "") or bill.tisk_nazev
+    official = (tisk.nazev if tisk else "") or bill.tisk_nazev
+    brief = brief_view(tisk.brief, lang) if tisk else None
+    return (str(brief["nazev"]) if brief and brief.get("nazev") else official), official
+
+
+def law_name(official: str) -> str:
+    """The law a bill amends, from its short title: "Novela z. o pozemních …" -> "zákona o …".
+
+    Returns "" when the title does not name an amended law.
+    """
+    m = re.match(r"(?:Novela|Změna)\s+(?:z\.|zákona)\s+(.+)", official.strip(), re.I)
+    return f"zákona {m.group(1)}" if m else ""
 
 
 def _bill_date(bill: BillAmendmentData, dates: dict[int, str]) -> str:
@@ -90,12 +117,13 @@ def _bill_date(bill: BillAmendmentData, dates: dict[int, str]) -> str:
     return next((dates[i] for i in ids if i in dates), "")
 
 
-def law_groups(data: PeriodData, lang: str = "cs") -> list[dict]:
+def law_groups(data: PeriodData, lang: str = "cs", include_empty: bool = False) -> list[dict]:
     """One group per law with all its letters, newest 3rd reading first.
 
     Args:
         data: Period data with amendment_data.
         lang: Language code for summaries.
+        include_empty: Keep laws whose 3rd reading has no amendment letter.
 
     Returns:
         Groups with ct, title, date, final_result, link, letters, unassigned.
@@ -113,10 +141,20 @@ def law_groups(data: PeriodData, lang: str = "cs") -> list[dict]:
             for bill in bills
             for row in bill_letters(bill, data.coalition_for_bill(bill))
         ]
+        if not letters and not latest.is_pending and not include_empty:
+            continue  # a 3rd reading without any amendment letter
+        title, official = _law_titles(data, latest, lang)
+        tisk = next((t for t in data.tisk_lookup.values() if t.ct == ct), None)
+        gov_bill = bool(tisk and submitter_kind(tisk) == "vlada")
+        for x in letters:
+            x["gov_bill"] = gov_bill
         groups.append(
             {
                 "ct": ct,
-                "title": _law_title(data, latest),
+                "title": title,
+                "official": official,
+                "law_name": law_name(official),
+                "pending": latest.is_pending,
                 "date": _bill_date(latest, dates),
                 "final_result": latest.final_vote.result if latest.final_vote else "",
                 "schuze": latest.schuze,
@@ -149,7 +187,9 @@ def _filter_groups(groups: list[dict], search: str, side: str, club: str, fate: 
     for g in groups:
         if number is not None and g["ct"] != number:
             continue
-        title_hit = number is not None or not tokens or matches_tokens(tokens, g["title"])
+        title_hit = (
+            number is not None or not tokens or matches_tokens(tokens, g["title"], g["official"])
+        )
         letters = [
             x
             for x in g["letters"]
@@ -166,6 +206,8 @@ def _sort_key(sort: str) -> Callable[[dict], tuple]:
 
     def date_key(g: dict) -> tuple:
         d = g["date"].split(".")
+        if g.get("pending"):
+            return ("9999", "", "")  # not voted yet: the newest
         return (d[2], d[1], d[0]) if len(d) == 3 else ("", "", "")
 
     match sort:
@@ -248,7 +290,7 @@ def law_amendments(data: PeriodData, schuze: int, bod: int, lang: str = "cs") ->
     bill = data.get_amendments(schuze, bod)
     if bill is None:
         return None
-    group = next(g for g in law_groups(data, lang) if g["ct"] == bill.ct)
+    group = next(g for g in law_groups(data, lang, include_empty=True) if g["ct"] == bill.ct)
     entries = [b for b in data.amendment_data.values() if b.ct == bill.ct]
     return {
         **group,

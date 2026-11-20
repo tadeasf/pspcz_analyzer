@@ -47,6 +47,7 @@ from pspcz_analyzer.services.amendments.steno_scraper import StenoFailure, find_
 from pspcz_analyzer.services.amendments.submitter_resolver import resolve_submitter_ids
 from pspcz_analyzer.services.amendments.summarizer import (
     _summarize_amendments,
+    carry_summaries,
 )
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
 
@@ -91,8 +92,16 @@ def _run_pipeline_sync(
     ct_to_pdf_text: dict[int, str] = {}
 
     if run_parse:
+        previous = load_amendments(cache_dir, period)
         bills, ct_to_pdf_text = _run_parse_stages(
-            period, period_data, cache_dir, progress, on_progress, refresh_active, cancel_check
+            period,
+            period_data,
+            cache_dir,
+            progress,
+            on_progress,
+            refresh_active,
+            cancel_check,
+            previous,
         )
     elif run_summarize:
         # Load cached bills from disk
@@ -156,6 +165,7 @@ def _run_parse_stages(
     on_progress: Callable[[int, list[BillAmendmentData]], None] | None = None,
     refresh_active: bool = False,
     cancel_check: Callable[[], None] | None = None,
+    previous: dict[tuple[int, int], BillAmendmentData] | None = None,
 ) -> tuple[list[BillAmendmentData], dict[int, str]]:
     """Run parse stages of the amendment pipeline.
 
@@ -176,6 +186,7 @@ def _run_parse_stages(
         progress: Progress tracker (mutated in-place).
         on_progress: Optional callback for UI refresh.
         cancel_check: Optional cancellation hook raised between stages/items.
+        previous: Bills of the previous run; unchanged letters keep their summaries.
 
     Returns:
         Tuple of (list of parsed BillAmendmentData, ct -> PDF text mapping).
@@ -365,6 +376,7 @@ def _run_parse_stages(
     progress.stage = AmendmentStage.RESOLVE_SUBMITTERS
     logger.info("[amendment pipeline] Resolving submitter names...")
     resolve_submitter_ids(bills, period_data.mp_info)
+    carry_summaries(bills, previous or {})
 
     # Intermediate save: results visible before LLM
     save_amendments(cache_dir, period, bills)

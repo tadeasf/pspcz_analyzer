@@ -105,6 +105,36 @@ def _build_amendment_meta(amend: AmendmentVote) -> dict[str, str]:
     return meta
 
 
+def carry_summaries(
+    bills: list[BillAmendmentData], previous: dict[tuple[int, int], BillAmendmentData]
+) -> int:
+    """Copy summaries from the previous run onto letters whose text did not change.
+
+    A rerun then only sends new or changed letters to the LLM.
+
+    Args:
+        bills: Freshly parsed bills (updated in place).
+        previous: Bills of the previous run keyed by ``(schuze, bod)``.
+
+    Returns:
+        Number of letters that kept their summary.
+    """
+    kept = 0
+    for bill in bills:
+        old = previous.get((bill.schuze, bill.bod))
+        if not old:
+            continue
+        by_letter = {(a.letter, a.amendment_text): a for a in old.amendments if a.summary}
+        for amend in bill.amendments:
+            prev = by_letter.get((amend.letter, amend.amendment_text))
+            if prev and amend.letter and amend.amendment_text:
+                amend.summary, amend.summary_en = prev.summary, prev.summary_en
+                amend.summary_warning = prev.summary_warning
+                kept += 1
+    logger.info("[amendment pipeline] kept {} letter summaries from the previous run", kept)
+    return kept
+
+
 def _summarize_per_amendment(
     llm: LLMClient,
     bill: BillAmendmentData,
@@ -152,6 +182,9 @@ def _summarize_per_amendment(
 
     if not amendments_meta:
         return 0
+    todo = [a for a in bill.amendments if a.letter and not a.is_final_vote and not a.is_withdrawn]
+    if all(a.summary for a in todo):
+        return len(todo)  # all carried over from the previous run (carry_summaries)
 
     amendments_with_text = sum(1 for a in amendments_meta if a.get("amendment_text"))
     logger.debug(
