@@ -16,7 +16,7 @@ from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentD
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.amendments.cache_manager import save_amendments
 from pspcz_analyzer.services.amendments.progress import AmendmentProgress
-from pspcz_analyzer.services.llm import LLMClient, create_llm_client, llm_map
+from pspcz_analyzer.services.llm import LLMClient, LLMUnavailable, create_llm_client, llm_map
 from pspcz_analyzer.services.tisk.brief import text_issues
 
 # How many summarized bills to accumulate before flushing the parquet +
@@ -68,6 +68,8 @@ def _summarize_bill_text(
             len(en),
         )
         return cs, en
+    except LLMUnavailable:
+        raise
     except Exception:
         logger.warning(
             "[amendment pipeline] [{}/{}] bill '{}' LLM failed",
@@ -182,6 +184,8 @@ def _summarize_per_amendment(
             amendments_meta,
             bill_context=bill_context,
         )
+    except LLMUnavailable:
+        raise
     except Exception:
         logger.warning(
             "[amendment pipeline] [{}/{}] per-amendment LLM failed for '{}'",

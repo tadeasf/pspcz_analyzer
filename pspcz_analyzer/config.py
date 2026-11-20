@@ -176,6 +176,11 @@ LLM_STRUCTURED_OUTPUT = (
 TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "0") == "1"
 LLM_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 LLM_HEALTH_TIMEOUT = 5.0  # connectivity check
+# is_available() sends a tiny real completion (a model list can answer while the model does not)
+LLM_PROBE_TIMEOUT = float(os.environ.get("LLM_PROBE_TIMEOUT", "60"))
+# Failed LLM requests in a row (timeout, connection error, HTTP 5xx/429) after which the run
+# stops with LLMUnavailable instead of going on and storing empty results
+LLM_MAX_CONSECUTIVE_FAILURES = int(os.environ.get("LLM_MAX_CONSECUTIVE_FAILURES", "3"))
 LLM_EMPTY_RETRIES = int(os.environ.get("LLM_EMPTY_RETRIES", "2"))
 # Parallel LLM requests per pipeline stage (briefs, classification, diffs, steno, amendments)
 LLM_CONCURRENCY = max(1, int(os.environ.get("LLM_CONCURRENCY", "4")))

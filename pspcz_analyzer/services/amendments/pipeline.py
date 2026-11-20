@@ -48,6 +48,7 @@ from pspcz_analyzer.services.amendments.submitter_resolver import resolve_submit
 from pspcz_analyzer.services.amendments.summarizer import _summarize_amendments
 from pspcz_analyzer.services.amendments.summary_carry import carry_summaries
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
+from pspcz_analyzer.services.llm import LLMUnavailable
 
 
 def _run_pipeline_sync(
@@ -461,6 +462,13 @@ class AmendmentPipelineService:
             except asyncio.CancelledError:
                 prog.status = AmendmentStatus.CANCELLED
                 logger.info("[amendment pipeline] Cancelled for period {}", period)
+                raise
+            except LLMUnavailable as exc:
+                prog.status = AmendmentStatus.FAILED
+                prog.stage = AmendmentStage.FAILED
+                logger.error(
+                    "[amendment pipeline] Period {} stopped, LLM unavailable: {}", period, exc
+                )
                 raise
             except Exception:
                 prog.status = AmendmentStatus.FAILED

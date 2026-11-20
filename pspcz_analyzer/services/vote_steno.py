@@ -66,6 +66,7 @@ CONTEXT_CHARS = 1800
 _PREV_LABEL = "Souvislost před předchozím hlasováním"
 _RECENT_LABEL = "Hlasování těsně předtím (už proběhla)"
 _RECENT_VOTES = 6
+_LINK_KEYS = ("invalid_by", "repeated_as", "repeats", "chair_repeated_as")
 
 _UNKNOWN: dict[str, str] = {
     "question": "",
@@ -76,6 +77,11 @@ _UNKNOWN: dict[str, str] = {
     "quote": "",
     "status": "unknown",
 }
+
+
+class NoAnswer(Exception):
+    """The LLM call for a vote failed; unlike an answer that fails the quote checks
+    (stored as ``unknown``), nothing is stored and the next run asks again."""
 
 
 def _ask_once(llm: LLMClient, window: str, snips: list[str], cislo: int, bod: str) -> dict:
@@ -89,7 +95,9 @@ def _ask_once(llm: LLMClient, window: str, snips: list[str], cislo: int, bod: st
         earlier=earlier,
         window=_sanitize_llm_input(window),
     )
-    data = llm._generate_json(prompt, VOTE_STENO_SYSTEM, VOTE_STENO_SCHEMA) or {}
+    data = llm._generate_json(prompt, VOTE_STENO_SYSTEM, VOTE_STENO_SCHEMA)
+    if data is None:  # transport error, timeout, empty or unreadable reply: no answer at all
+        raise NoAnswer(f"vote {cislo}")
     f = {k: str(data.get(k, "")).strip() for k in ("druh", "podtyp", *VOTE_STENO_STR_FIELDS)}
     nq = norm_quote(f["citace"])
     context = window + " " + " ".join(snips)
@@ -192,11 +200,7 @@ def _sitting_records(
         sha = hashlib.sha256(window[-WINDOW_CHARS:].encode()).hexdigest()[:16]
         prev = old.get(str(vid))
         if prev and prev.get("version") == VERSION and prev.get("sha") == sha:
-            records[str(vid)] = {
-                k: v
-                for k, v in prev.items()
-                if k not in ("invalid_by", "repeated_as", "repeats", "chair_repeated_as")
-            }
+            records[str(vid)] = _unlinked(prev)
             continue
         kind, subkind = rule_kind(window[-WINDOW_CHARS:])
         rec = {
@@ -211,14 +215,38 @@ def _sitting_records(
         todo.append((str(vid), rec))
         records[str(vid)] = rec
 
+    failed: set[str] = set()
+
     def _fill(item: tuple[str, dict]) -> None:
         vid, rec = item
-        rec.update(_ask(llm, text, spans[int(vid)], rec["cislo"], bods[int(vid)] or ""))
+        try:
+            rec.update(_ask(llm, text, spans[int(vid)], rec["cislo"], bods[int(vid)] or ""))
+        except NoAnswer:
+            failed.add(vid)
 
     list(llm_map(_fill, todo))
-    _second_pass(llm, text, spans, records, [vid for vid, _ in todo], bods)
+    _second_pass(
+        llm, text, spans, records, [vid for vid, _ in todo if vid not in failed], bods, failed
+    )
+    for vid in failed:
+        # keep the old record if there is one (its sha no longer matches, so it is asked again)
+        if vid in old:
+            records[vid] = _unlinked(old[vid])
+        else:
+            records.pop(vid, None)
+    if failed:
+        logger.warning(
+            "[vote steno] sitting {}: no LLM answer for {} votes, asked again next run",
+            schuze,
+            len(failed),
+        )
     link_repeats(records, votes, text, spans)
     return records, set(spans)
+
+
+def _unlinked(rec: dict) -> dict:
+    """A stored record without the repeat links, which link_repeats sets again."""
+    return {k: v for k, v in rec.items() if k not in _LINK_KEYS}
 
 
 def _second_pass(
@@ -228,11 +256,12 @@ def _second_pass(
     records: dict[str, dict],
     asked: list[str],
     bods: dict[int, str],
+    failed: set[str],
 ) -> None:
     """Re-ask unknown votes with the questions of the votes just before them.
 
     "A teď o mém návrhu" after a series of votes is answerable once the model knows
-    which proposals were already voted on.
+    which proposals were already voted on. A vote whose call fails joins ``failed``.
     """
     order = sorted(records, key=lambda v: records[v]["cislo"])
     for vid in sorted(asked, key=lambda v: records[v]["cislo"]):
@@ -246,7 +275,12 @@ def _second_pass(
             if records[b].get("status") in ("ok", "uncertain")
         ]
         if recent:
-            rec.update(_ask(llm, text, spans[int(vid)], rec["cislo"], bods[int(vid)] or "", recent))
+            try:
+                rec.update(
+                    _ask(llm, text, spans[int(vid)], rec["cislo"], bods[int(vid)] or "", recent)
+                )
+            except NoAnswer:
+                failed.add(vid)
 
 
 def generate_vote_steno_sync(

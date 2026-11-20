@@ -8,6 +8,7 @@ import pytest
 
 from pspcz_analyzer.services.llm import (
     LLMClient,
+    LLMUnavailable,
     create_llm_client,
 )
 from pspcz_analyzer.services.llm.parsers import (
@@ -213,10 +214,17 @@ class TestOpenAIProviderGenerate:
 # ── OpenAI provider is_available tests ───────────────────────────────────
 
 
-class TestOpenAIProviderIsAvailable:
-    """Tests for LLMClient.is_available() with provider='openai'."""
+def _probe_ok() -> httpx.Response:
+    """Reply to the test completion of is_available (native and OpenAI-compatible keys)."""
+    resp = httpx.Response(
+        200, json={"response": "ahoj", "choices": [{"message": {"content": "Ahoj"}}]}
+    )
+    resp.request = httpx.Request("POST", "http://test/chat/completions")
+    return resp
 
-    _DUMMY_GET_REQUEST = httpx.Request("GET", "https://api.example.com/v1/models")
+
+class TestOpenAIProviderIsAvailable:
+    """Tests for LLMClient.is_available() with provider='openai' (a real test completion)."""
 
     def _make_client(self) -> LLMClient:
         return LLMClient(
@@ -227,29 +235,34 @@ class TestOpenAIProviderIsAvailable:
             api_key="sk-test",
         )
 
-    def _ok_response(self, json_data: dict) -> httpx.Response:
-        resp = httpx.Response(200, json=json_data)
-        resp.request = self._DUMMY_GET_REQUEST
-        return resp
-
-    def test_available_on_success(self):
+    def test_available_when_the_model_answers(self):
         client = self._make_client()
-        mock_response = self._ok_response({"data": [{"id": "gpt-4o-mini"}]})
-        with patch("httpx.get", return_value=mock_response):
+        with patch("httpx.post", return_value=_probe_ok()) as mock_post:
             assert client.is_available() is True
+        assert mock_post.call_args.args[0].endswith("/chat/completions")
 
     def test_not_available_on_error(self):
         client = self._make_client()
-        with patch("httpx.get", side_effect=httpx.ConnectError("Connection refused")):
+        with patch("httpx.post", side_effect=httpx.ConnectError("Connection refused")):
+            assert client.is_available() is False
+
+    def test_model_list_answering_is_not_enough(self):
+        """20 Nov 2026: /models answered in 0.1 s while every completion timed out."""
+        client = self._make_client()
+        models = httpx.Response(200, json={"data": [{"id": "gpt-4o-mini"}]})
+        models.request = httpx.Request("GET", "https://api.example.com/v1/models")
+        with (
+            patch("httpx.get", return_value=models),
+            patch("httpx.post", side_effect=httpx.ReadTimeout("timed out")),
+        ):
             assert client.is_available() is False
 
     def test_caches_result(self):
         client = self._make_client()
-        mock_response = self._ok_response({"data": []})
-        with patch("httpx.get", return_value=mock_response) as mock_get:
+        with patch("httpx.post", return_value=_probe_ok()) as mock_post:
             client.is_available()
             client.is_available()
-        assert mock_get.call_count == 1
+        assert mock_post.call_count == 1
 
 
 # ── Structured output tests (OpenAI provider) ────────────────────────────
@@ -1020,12 +1033,14 @@ class TestOllamaFallbackCombined:
         assert topics == ["Pravo"]
         assert "Zpřísňuje tresty" in summary
 
-    def test_combined_returns_empty_on_failure(self):
+    def test_combined_stops_after_repeated_connection_failures(self):
+        """Three failed attempts in a row (retries included) stop the run, nothing is stored."""
         client = self._make_client()
-        with patch("httpx.post", side_effect=httpx.ConnectError("fail")):
-            topics, summary = client.classify_and_summarize("text", "title")
-        assert topics == []
-        assert summary == ""
+        with (
+            patch("httpx.post", side_effect=httpx.ConnectError("fail")),
+            pytest.raises(LLMUnavailable),
+        ):
+            client.classify_and_summarize("text", "title")
 
 
 # ── Ollama OpenAI-compat auto-detection tests ─────────────────────────────
@@ -1050,7 +1065,10 @@ class TestOllamaCompatDetection:
         client = self._make_client()
         tags_resp = httpx.Response(200, json={"models": [{"name": "llama3:latest"}]})
         tags_resp.request = self._DUMMY_TAGS_REQUEST
-        with patch("httpx.get", return_value=tags_resp):
+        with (
+            patch("httpx.get", return_value=tags_resp),
+            patch("httpx.post", return_value=_probe_ok()),
+        ):
             assert client.is_available() is True
         assert client._openai_compat is False
         assert client._log_prefix == "[ollama]"
@@ -1068,7 +1086,10 @@ class TestOllamaCompatDetection:
                 return tags_resp
             return models_resp
 
-        with patch("httpx.get", side_effect=mock_get):
+        with (
+            patch("httpx.get", side_effect=mock_get),
+            patch("httpx.post", return_value=_probe_ok()),
+        ):
             assert client.is_available() is True
         assert client._openai_compat is True
         assert client._log_prefix == "[ollama/openai-compat]"
@@ -1085,7 +1106,10 @@ class TestOllamaCompatDetection:
         client = self._make_client()
         tags_resp = httpx.Response(200, json={"models": [{"name": "llama3:latest"}]})
         tags_resp.request = self._DUMMY_TAGS_REQUEST
-        with patch("httpx.get", return_value=tags_resp) as mock_get:
+        with (
+            patch("httpx.get", return_value=tags_resp) as mock_get,
+            patch("httpx.post", return_value=_probe_ok()),
+        ):
             client.is_available()
             client.is_available()
         assert mock_get.call_count == 1
@@ -1103,7 +1127,10 @@ class TestOllamaCompatDetection:
                 return tags_resp
             return models_resp
 
-        with patch("httpx.get", side_effect=mock_get):
+        with (
+            patch("httpx.get", side_effect=mock_get),
+            patch("httpx.post", return_value=_probe_ok()),
+        ):
             assert client.is_available() is True
         assert client._openai_compat is True
 

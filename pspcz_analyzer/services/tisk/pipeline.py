@@ -32,7 +32,7 @@ from pspcz_analyzer.models.pipeline_progress import (
 # module import: vote_steno -> amendments -> tisk -> this module is a cycle when vote_steno loads first
 from pspcz_analyzer.services import vote_steno
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
-from pspcz_analyzer.services.llm import deserialize_topics
+from pspcz_analyzer.services.llm import LLMUnavailable, deserialize_topics
 from pspcz_analyzer.services.tisk.brief import generate_briefs_sync
 from pspcz_analyzer.services.tisk.classifier import classify_and_save, consolidate_topics
 from pspcz_analyzer.services.tisk.downloader_pipeline import process_period_sync
@@ -572,6 +572,10 @@ class TiskPipelineService:
             logger.info("[tisk pipeline] Period {} cancelled", period)
         except asyncio.CancelledError:
             logger.info("[tisk pipeline] Pipeline cancelled for period {}", period)
+            raise
+        except LLMUnavailable as exc:
+            self._set_period_status(period, PeriodStatus.FAILED)
+            logger.error("[tisk pipeline] Period {} stopped, LLM unavailable: {}", period, exc)
             raise
         except Exception:
             self._set_period_status(period, PeriodStatus.FAILED)
