@@ -158,7 +158,7 @@ All of these need a **full re-scrape of history JSON** after [#87]. It is cheap:
 
 Order from [#99]: #100 → #101 → #102 → #103 → #104.
 
-- [ ] **[#100] When the subject of a vote or amendment content can't be determined, say so** (P1, L). Correct.
+- [x] **[#100] When the subject of a vote or amendment content can't be determined, say so** (P1, L). Done 2026-11-20: vote subjects are ok / uncertain / unknown with a verbatim quote, letters carry `match_source` and a certainty (uncertain when matched by committee name only), letters without their own text get no summary.
   - Confidence is stored once per agenda item (`amendment_models.py:93`) and shown to readers (`amendments_list.html:43`, `amendment_detail.html:25,43-47`).
   - A letter with no text of its own is still sent to the LLM with the whole bill's text (`summarizer.py:144-148`), so guessing is possible.
   - Fix:
@@ -287,6 +287,20 @@ Total for set 3 alone: about 33 dev-days (estimate), before the extra items from
 - [x] **English version**: AI-translate the new Czech texts into `i18n/translations.py` (decided).
 
 ---
+
+## Round 2: closing the verifier findings (2026-11-20)
+
+An independent check of every issue against code and the live app (period 10) found most issues partly done. Closed in round 2:
+- #102 anchoring at the vote announcement, kinds incl. committee referral, proposer, what Pro meant, challenged / repeated votes, per-item anchoring check, day pages the index omits. Hard referential cases (vote 279 of sitting 34) end as uncertain or unknown, correctable in `/admin/corrections`.
+- #103 / #93 / #112 procedure votes, committee amendments by name, unvotable letters, fates that add up, plain titles, "Vláda: souhlasila".
+- #110 / #111 / #106 / #108 all tisky incl. those on no agenda, step sentences, phase labels, law detail per the mockup, homepage threshold / agenda / pick expiry / merged debates.
+- #113 / #114 votes list and detail per the mockup.
+- #115 / #116 / #117 / #91 loyalty switch, all similarity pairs, attendance numbers linking to the MP's votes by kind.
+- #118 / #119 / #120 / #107 glossary as one source with term explanations, `/o-datech`, empty states, axe clean at 390 px, vote colours.
+- Tests and checks: #85 integration test, `scripts/check_statuses.py` (#86/#90), #89 two President events, #95, #97, #100.
+
+Known differences from the mockup, kept on purpose: tisk 246 letters B1 and B2 were both filed by Jan Papajanovský according to the psp.cz document and steno (the mockup names other MPs); 640 Kč in tisk 246 is the rate for vehicles up to 50 g/km, not electric cars.
+Not done: club by vote date in the similarity map and attendance per club (#101 last bullet), RSS per tisk (pending confirmation).
 
 ## Data migration checklist (VPS)
 

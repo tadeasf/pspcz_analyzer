@@ -14,6 +14,7 @@ Czech Parliamentary Voting Analyzer — an OSINT tool that downloads, parses, an
 - **Add a dependency:** `uv add <package>`
 - **Run unit + API tests:** `uv run pytest -m "not integration" --cov`
 - **Run integration tests:** `uv run pytest -m integration -v` (requires network — hits real psp.cz)
+- **Check cached statuses against psp.cz:** `uv run python -m scripts.check_statuses --period 10 [--limit N]` (exit 1 on differences, #86/#90)
 - **Lint:** `uv run ruff check .`
 - **Format:** `uv run ruff format .`
 - **Type check:** `uv run pyright`
@@ -113,6 +114,7 @@ Dict-based Czech/English localization using `contextvars.ContextVar` for per-req
 - **`i18n/__init__.py`** — `gettext()`, `ngettext()`, `setup_jinja2_i18n()` for Jinja2 i18n extension
 - **`i18n/translations.py`** — all UI strings in `TRANSLATIONS["cs"]` / `TRANSLATIONS["en"]`
 - **`i18n/middleware.py`** — `LocaleMiddleware` reads `lang` cookie, sets ContextVar + `request.state.lang`
+- **`i18n/glossary.py`** - the guide's glossary (14 terms plus readings and the lead committee), the one source of term texts (#118/#106): the guide renders it and the `term(slug)` macro in `macros.html` shows an entry as an explanation on any page (Jinja globals `gloss`, `gloss_entry`, `gloss_order`)
 
 Language is switched via `/set-lang/{lang}` which sets a cookie and redirects back.
 
@@ -158,11 +160,11 @@ Pipeline stage `BRIEFS` (after topic consolidation) writes `tisky_meta/{period}/
 
 ### Vote questions from steno (`services/vote_steno.py`, #102)
 
-Pipeline stage `VOTE_STENO` crawls every sitting's steno sub-pages (whole numeric range between the first and last page linked from the day pages; index/day pages of sittings from the last 21 days are re-fetched). Each vote anchor `<a href="/sqw/hlasy.sqw?G=<id>" id="hN">` closes a window of lead-in text; rules give the kind, the LLM writes the question + a verbatim quote, kept only when the quote is in the steno and `text_issues` passes (else `status: unknown`). Output `vote_steno/{period}/{schuze}.json`, loaded into `PeriodData.vote_steno`.
+Pipeline stage `VOTE_STENO` crawls every sitting's steno sub-pages (whole numeric range between the first and last page linked from the day pages, plus up to 2 day pages after the last linked one, which the index sometimes omits; index/day pages of sittings from the last 21 days, or with votes missing from the cached pages, are re-fetched). `services/vote_steno_text.py` (no LLM) anchors each vote at its announcement (`<a href="/sqw/hlasy.sqw?G=<id>" id="hN">` followed by "přihlášeno"); links to older votes inside speeches neither cut nor overwrite windows. The same anchoring feeds the amendment parser (`normalize_vote_anchors` in `find_steno_for_bod`). The LLM (prompt in `llm/prompts.py`) gives kind (`final`/`amendment`/`reject`/`return`/`committee`/`procedural` + sub-kind), question, what "Pro" meant, proposer (kept only when in the text) and a verbatim quote; no quote in the steno, a result formula or a bare "o mém návrhu" quote = `status: unknown`. Referential lead-ins get earlier proposals of the sitting and, on a second pass, the questions of the votes just before; an answer quoted only from that earlier context is `status: uncertain`. `link_repeats` marks challenged votes (`invalid_by`, `repeated_as`, `repeats`) and chair-repeated ones (`chair_repeated_as`, not called void). Per agenda item, anchored vs `hl_hlasovani` counts are logged and written to `vote_steno/{period}/checks/{schuze}.json` (admin data quality page). Output `vote_steno/{period}/{schuze}.json`, loaded into `PeriodData.vote_steno`. Speech counts per item (incl. merged debates, counted for every merged item) live in `services/speeches.py`. `services/vote_context.py` turns a record into the vote kind, the six-way kind filter of the votes list, the item result and the vote detail story (consequence, what Pro meant, invalid/repeat links).
 
 ### Law Service (`services/law_service.py`)
 
-Provides data for the laws browser. Loads tisk metadata and legislative histories, returns paginated/filterable bill lists. Each law row carries its linked amendment count, `(schuze, bod)` link, and gov/opposition `driver` (via `affiliation`).
+Provides data for the laws browser. Loads tisk metadata and legislative histories, returns paginated/filterable bill lists. Each law row carries its linked amendment count and side tally, `(schuze, bod)` link, the phase label and the last step as a sentence. `services/step_text.py` turns history steps into sentences with a verb ("Zákon dostal k podpisu prezident. Rozhodnout musí do 14. 11.") and phase labels (`phl.*`); `services/law_detail.py` builds the law detail parts: timeline by Chamber / Senate / President with the dashed next step, the President's deadline, votes by reading, document versions from the history, amended laws and e-Sbírka links. Tisky on no approved agenda are in `tisk_lookup` under `(UNSCHEDULED_SCHUZE=-1, ct)` (`lookup_builder.add_unscheduled`) so the list and detail show them.
 
 ### Amendment Service (`services/amendment_service.py`)
 
@@ -178,7 +180,11 @@ Auto-derives the governing coalition per period from the chamber's investiture *
 
 ### Legislation Overview (`services/legislation_overview.py`)
 
-Powers the homepage legislation-first dashboard: `recent_activity()` (bills that moved most recently, by latest dated legislative stage) and `active_laws()` (non-terminal bills still being decided). Each row links a law to its amendments and shows the gov/opposition driver.
+Powers the homepage (#108): "Teď se o tom mluví" (most speeches in 14 days, at least `MIN_SPEECHES`=10, admin pin / hide / expiry via `homepage_pick`), bills of the latest agenda with a bill still in the Chamber, recently passed laws, newest bills, and the void vote count.
+
+### About the data (`/o-datech`, #118)
+
+`templates/partials/about_data_{cs,en}.html` describe sources and refresh, AI summaries and their check, statistics and vote matching, and list `services/coalition_table.py`. Keep them in sync when the pipelines change.
 
 ### LLM Integration (`services/llm/`)
 
