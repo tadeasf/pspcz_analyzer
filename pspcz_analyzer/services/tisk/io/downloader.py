@@ -110,7 +110,7 @@ def download_period_tisky(
         if path is not None:
             results[ct] = path
 
-        # Rate limit — be polite to psp.cz
+        # Rate limit – be polite to psp.cz
         if i < total:
             time.sleep(PSP_REQUEST_DELAY)
 

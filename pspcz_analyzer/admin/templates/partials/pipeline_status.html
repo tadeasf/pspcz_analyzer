@@ -1,11 +1,11 @@
-{# Bare HTML partial — no {% extends %}. Returned by /admin/partials/pipeline-status for HTMX polling. #}
+{# Bare HTML partial – no {% extends %}. Returned by /admin/partials/pipeline-status for HTMX polling. #}
 
 {% if tisk_progress.running %}
 <div style="margin-bottom: 0.75rem;">
     <div class="flex items-center gap-1 mb-1">
         <span class="badge badge-running"><span class="pulse-dot"></span> Running</span>
         {% if pipeline_info %}
-        <span class="text-sm text-muted">{{ pipeline_type_labels.get(pipeline_info.pipeline_type, pipeline_info.pipeline_type) }} — Period {{ pipeline_info.period }}</span>
+        <span class="text-sm text-muted">{{ pipeline_type_labels.get(pipeline_info.pipeline_type, pipeline_info.pipeline_type) }} – Period {{ pipeline_info.period }}</span>
         {% endif %}
     </div>
 
@@ -89,7 +89,7 @@
 </div>
 
 {% elif amendment_progress %}
-{# Check if any amendment pipeline is running — use namespace to escape loop scoping #}
+{# Check if any amendment pipeline is running – use namespace to escape loop scoping #}
 {% set ns = namespace(any_amend_running=false) %}
 {% for period_num, ap in amendment_progress.items() %}
     {% if ap.status.value == 'running' %}

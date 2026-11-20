@@ -41,14 +41,14 @@ _CLASSIFICATION_PROMPT_TEMPLATE = (
 _SUMMARY_SYSTEM = (
     "Jsi kriticko-analytický komentátor českého parlamentu. Píšeš ostře, věcně a bez přikrašlování. "
     "Odhaluješ skryté dopady zákonů, rizika zneužití, a kdo z novely skutečně profituje. "
-    "Neboj se pojmenovat problémy přímo — např. oslabení nezávislosti úředníků, rozšíření pravomocí "
+    "Neboj se pojmenovat problémy přímo – např. oslabení nezávislosti úředníků, rozšíření pravomocí "
     "bez kontroly, skryté privatizace, nebo omezení občanských práv. 3–4 věty."
     + _LANG_CS
     + _FORMAT_CS
 )
 
 _SUMMARY_PROMPT_TEMPLATE = (
-    "Analyzuj následující parlamentní tisk KRITICKY. Nestačí říct 'co mění' — vysvětli:\n"
+    "Analyzuj následující parlamentní tisk KRITICKY. Nestačí říct 'co mění' – vysvětli:\n"
     "1. Co KONKRÉTNĚ se mění (žádné vágní formulace)\n"
     "2. Komu to prospívá a komu škodí\n"
     "3. Jaké je RIZIKO zneužití nebo nezamýšlený důsledek\n"
@@ -73,7 +73,7 @@ _CONSOLIDATION_PROMPT_TEMPLATE = (
 
 _COMPARISON_SYSTEM = (
     "Jsi analyticko-právní expert na českou legislativu. Srovnáváš verze parlamentních tisků "
-    "a identifikuješ KONKRÉTNÍ změny mezi nimi — čísla paragrafů, co bylo přidáno, odebráno či změněno."
+    "a identifikuješ KONKRÉTNÍ změny mezi nimi – čísla paragrafů, co bylo přidáno, odebráno či změněno."
     + _LANG_CS
     + _FORMAT_CS
 )
@@ -83,7 +83,7 @@ _COMPARISON_PROMPT_TEMPLATE = (
     "1. Které paragrafy/články se změnily a jak\n"
     "2. Co bylo přidáno nebo odebráno\n"
     "3. Jaký je celkový charakter změn (zpřísnění/zmírnění/technická úprava)\n"
-    "3–4 věty v češtině. Buď konkrétní — cituj čísla paragrafů.\n\n"
+    "3–4 věty v češtině. Buď konkrétní – cituj čísla paragrafů.\n\n"
     "VERZE {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
     "VERZE {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
 )
@@ -100,7 +100,7 @@ _CLASSIFICATION_SYSTEM_EN = (
 _CLASSIFICATION_PROMPT_TEMPLATE_EN = (
     "Identify 1-3 main topics of the following Czech parliamentary bill. "
     "Use short English topic names (2-4 words). "
-    "Be specific — e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
+    "Be specific – e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
     "Bill title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
     "Bill text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---\n\n"
     "Respond ONLY: TOPICS: topic1, topic2, topic3"
@@ -122,13 +122,13 @@ _CONSOLIDATION_PROMPT_TEMPLATE_EN = (
 _SUMMARY_SYSTEM_EN = (
     "You are a critical analyst of the Czech Parliament. You write sharp, factual assessments "
     "without embellishment. You expose hidden impacts of laws, risks of abuse, and who truly "
-    "benefits from amendments. Don't hesitate to name problems directly — e.g. weakening of "
+    "benefits from amendments. Don't hesitate to name problems directly – e.g. weakening of "
     "official independence, expanding powers without oversight, hidden privatizations, or "
     "restrictions on civil rights. 3-4 sentences." + _LANG_EN + _FORMAT_EN
 )
 
 _SUMMARY_PROMPT_TEMPLATE_EN = (
-    "Analyze the following Czech parliamentary bill CRITICALLY. Don't just say 'what it changes' — explain:\n"
+    "Analyze the following Czech parliamentary bill CRITICALLY. Don't just say 'what it changes' – explain:\n"
     "1. What SPECIFICALLY changes (no vague formulations)\n"
     "2. Who benefits and who is harmed\n"
     "3. What is the RISK of abuse or unintended consequence\n"
@@ -140,7 +140,7 @@ _SUMMARY_PROMPT_TEMPLATE_EN = (
 
 _COMPARISON_SYSTEM_EN = (
     "You are a legal expert on Czech legislation. You compare versions of parliamentary bills "
-    "and identify SPECIFIC changes between them — paragraph numbers, what was added, removed, or modified."
+    "and identify SPECIFIC changes between them – paragraph numbers, what was added, removed, or modified."
     + _LANG_EN
     + _FORMAT_EN
 )
@@ -150,7 +150,7 @@ _COMPARISON_PROMPT_TEMPLATE_EN = (
     "1. Which paragraphs/articles changed and how\n"
     "2. What was added or removed\n"
     "3. What is the overall character of changes (tightening/loosening/technical adjustment)\n"
-    "3-4 sentences in English. Be specific — cite paragraph numbers.\n\n"
+    "3-4 sentences in English. Be specific – cite paragraph numbers.\n\n"
     "VERSION {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
     "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
 )
@@ -310,7 +310,7 @@ _STRUCTURED_CLASSIFICATION_SYSTEM_EN = (
 _STRUCTURED_CLASSIFICATION_PROMPT_EN = (
     "Identify 1-3 main topics of the following Czech parliamentary bill. "
     "Use short English topic names (2-4 words). "
-    "Be specific — e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
+    "Be specific – e.g. instead of 'Law' write 'Criminal Law' or 'Civil Law'.\n\n"
     "Bill title:\n---BEGIN USER TEXT---\n{title}\n---END USER TEXT---\n\n"
     "Bill text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
 )
@@ -318,7 +318,7 @@ _STRUCTURED_CLASSIFICATION_PROMPT_EN = (
 _STRUCTURED_SUMMARY_SYSTEM_CS = (
     "Jsi kriticko-analytický komentátor českého parlamentu. Píšeš ostře, věcně a bez přikrašlování. "
     "Odhaluješ skryté dopady zákonů, rizika zneužití, a kdo z novely skutečně profituje. "
-    "Neboj se pojmenovat problémy přímo — např. oslabení nezávislosti úředníků, rozšíření pravomocí "
+    "Neboj se pojmenovat problémy přímo – např. oslabení nezávislosti úředníků, rozšíření pravomocí "
     "bez kontroly, skryté privatizace, nebo omezení občanských práv." + _LANG_CS
 )
 
@@ -374,7 +374,7 @@ _STRUCTURED_CONSOLIDATION_PROMPT_EN = (
 
 _STRUCTURED_COMPARISON_SYSTEM_CS = (
     "Jsi analyticko-právní expert na českou legislativu. Srovnáváš verze parlamentních tisků "
-    "a identifikuješ KONKRÉTNÍ změny mezi nimi — čísla paragrafů, co bylo přidáno, odebráno či změněno."
+    "a identifikuješ KONKRÉTNÍ změny mezi nimi – čísla paragrafů, co bylo přidáno, odebráno či změněno."
     + _LANG_CS
 )
 
@@ -383,14 +383,14 @@ _STRUCTURED_COMPARISON_PROMPT_CS = (
     "Pro pole 'changed_paragraphs': Které paragrafy/články se změnily a jak\n"
     "Pro pole 'additions_removals': Co bylo přidáno nebo odebráno\n"
     "Pro pole 'overall_character': Celkový charakter změn (zpřísnění/zmírnění/technická úprava)\n"
-    "Buď konkrétní — cituj čísla paragrafů. 1–2 věty na pole.\n\n"
+    "Buď konkrétní – cituj čísla paragrafů. 1–2 věty na pole.\n\n"
     "VERZE {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
     "VERZE {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
 )
 
 _STRUCTURED_COMPARISON_SYSTEM_EN = (
     "You are a legal expert on Czech legislation. You compare versions of parliamentary bills "
-    "and identify SPECIFIC changes between them — paragraph numbers, what was added, removed, or modified."
+    "and identify SPECIFIC changes between them – paragraph numbers, what was added, removed, or modified."
     + _LANG_EN
 )
 
@@ -399,7 +399,7 @@ _STRUCTURED_COMPARISON_PROMPT_EN = (
     "For 'changed_paragraphs': Which paragraphs/articles changed and how\n"
     "For 'additions_removals': What was added or removed\n"
     "For 'overall_character': Overall character of changes (tightening/loosening/technical adjustment)\n"
-    "Be specific — cite paragraph numbers. 1-2 sentences per field.\n\n"
+    "Be specific – cite paragraph numbers. 1-2 sentences per field.\n\n"
     "VERSION {ct1_old} ({label_old}):\n---BEGIN USER TEXT---\n{text_old}\n---END USER TEXT---\n\n"
     "VERSION {ct1_new} ({label_new}):\n---BEGIN USER TEXT---\n{text_new}\n---END USER TEXT---"
 )
@@ -415,9 +415,9 @@ _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_CS = (
 
 _STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_CS = (
     "Analyzuj následující parlamentní tisk.\n\n"
-    "ÚKOL 1 — TÉMATA: Urči 1–3 hlavní témata. Použij krátké české názvy (2–4 slova). "
-    "Buď konkrétní — např. 'Trestní právo', ne 'Právo'.\n\n"
-    "ÚKOL 2 — KRITICKÁ ANALÝZA:\n"
+    "ÚKOL 1 – TÉMATA: Urči 1–3 hlavní témata. Použij krátké české názvy (2–4 slova). "
+    "Buď konkrétní – např. 'Trestní právo', ne 'Právo'.\n\n"
+    "ÚKOL 2 – KRITICKÁ ANALÝZA:\n"
     "Pro pole 'changes': Co KONKRÉTNĚ se mění (žádné vágní formulace)\n"
     "Pro pole 'impact': Komu to prospívá a komu škodí\n"
     "Pro pole 'risks': Jaké je RIZIKO zneužití nebo nezamýšlený důsledek\n"
@@ -435,9 +435,9 @@ _STRUCTURED_CLASSIFY_AND_SUMMARIZE_SYSTEM_EN = (
 
 _STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_EN = (
     "Analyze the following Czech parliamentary bill.\n\n"
-    "TASK 1 — TOPICS: Identify 1-3 main topics. Use short English names (2-4 words). "
-    "Be specific — e.g. 'Criminal Law', not 'Law'.\n\n"
-    "TASK 2 — CRITICAL ANALYSIS:\n"
+    "TASK 1 – TOPICS: Identify 1-3 main topics. Use short English names (2-4 words). "
+    "Be specific – e.g. 'Criminal Law', not 'Law'.\n\n"
+    "TASK 2 – CRITICAL ANALYSIS:\n"
     "For 'changes': What SPECIFICALLY changes (no vague formulations)\n"
     "For 'impact': Who benefits and who is harmed\n"
     "For 'risks': What is the RISK of abuse or unintended consequence\n"
@@ -446,7 +446,7 @@ _STRUCTURED_CLASSIFY_AND_SUMMARIZE_PROMPT_EN = (
     "Text:\n---BEGIN USER TEXT---\n{text}\n---END USER TEXT---"
 )
 
-# ── Per-amendment summaries — JSON schema ─────────────────────────────
+# ── Per-amendment summaries – JSON schema ─────────────────────────────
 
 _AMENDMENT_SUMMARIES_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -468,7 +468,7 @@ _AMENDMENT_SUMMARIES_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
-# ── Per-amendment summaries — structured output prompts ───────────────
+# ── Per-amendment summaries – structured output prompts ───────────────
 
 _STRUCTURED_AMENDMENT_SUMMARIES_SYSTEM_CS = (
     "Jsi analytik českého parlamentu. Pro každý pozměňovací návrh napiš stručné shrnutí (1–2 věty), "
@@ -506,7 +506,7 @@ _STRUCTURED_AMENDMENT_SUMMARIES_PROMPT_EN = (
     "For each amendment, return its letter and summary."
 )
 
-# ── Per-amendment summaries — free-text fallback prompts ──────────────
+# ── Per-amendment summaries – free-text fallback prompts ──────────────
 
 _AMENDMENT_SUMMARIES_SYSTEM_CS = (
     "Jsi analytik českého parlamentu. Pro každý pozměňovací návrh napiš stručné shrnutí (1–2 věty). "

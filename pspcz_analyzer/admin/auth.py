@@ -27,7 +27,7 @@ _SESSION_TTL = 86400  # 24 hours
 # HTTP methods that need no CSRF origin check (safe, side-effect-free).
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
-# Auto-generate secret if not provided (ephemeral — sessions lost on restart)
+# Auto-generate secret if not provided (ephemeral – sessions lost on restart)
 _session_secret = ADMIN_SESSION_SECRET or secrets.token_hex(32)
 
 _allowed_networks = parse_ip_networks(ADMIN_ALLOWED_IPS)
@@ -104,7 +104,7 @@ class AdminAuthMiddleware(BaseHTTPMiddleware):
         path = request.url.path
 
         # Allow the login page and the health endpoint without a session
-        # (still IP-whitelisted) — docker healthchecks need the latter.
+        # (still IP-whitelisted) – docker healthchecks need the latter.
         if path in ("/admin/login", "/admin/api/health"):
             return await self._check_ip_then_proceed(request, call_next)
 

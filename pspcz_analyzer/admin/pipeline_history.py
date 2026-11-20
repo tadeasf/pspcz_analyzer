@@ -1,4 +1,4 @@
-"""Pipeline run history — JSON-backed record of recent pipeline executions."""
+"""Pipeline run history – JSON-backed record of recent pipeline executions."""
 
 import json
 import time
@@ -47,7 +47,7 @@ class PipelineHistory:
             logger.opt(exception=True).warning("[pipeline-history] Failed to load {}", self._path)
 
     def _save(self) -> None:
-        """Persist history to JSON file (atomic — never leaves a torn file)."""
+        """Persist history to JSON file (atomic – never leaves a torn file)."""
         write_json_atomic(dict(self._runs), self._path)
 
     def record(self, run: PipelineRun) -> None:

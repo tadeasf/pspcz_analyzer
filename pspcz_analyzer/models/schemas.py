@@ -1,7 +1,7 @@
 """UNL table column definitions and Polars dtype schemas.
 
 Column names match psp.cz documentation exactly (Czech names) for traceability.
-UNL files have no headers — these lists define the column order.
+UNL files have no headers – these lists define the column order.
 """
 
 from typing import Any

@@ -1,4 +1,4 @@
-"""Tisk I/O subpackage — scraping, downloading, and text extraction for parliamentary prints."""
+"""Tisk I/O subpackage – scraping, downloading, and text extraction for parliamentary prints."""
 
 from pspcz_analyzer.services.tisk.io.downloader import (
     download_period_tisky,

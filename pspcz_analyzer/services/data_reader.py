@@ -83,7 +83,7 @@ class SharedTables:
     """Shared cross-period tables, narrowed to non-Optional after loading.
 
     ``_ensure_shared_loaded`` returns these so callers hold locally-typed
-    references — pyright does not narrow instance attributes across method
+    references – pyright does not narrow instance attributes across method
     calls, which otherwise forces redundant asserts at every call site.
     """
 
@@ -121,7 +121,7 @@ def _collect_amendment_mtimes(cache_dir: Path) -> dict[int, float]:
 
 
 class DataReader:
-    """Reads cached data (parquet/JSON) — no pipeline orchestration."""
+    """Reads cached data (parquet/JSON) – no pipeline orchestration."""
 
     def __init__(self, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
         self.cache_dir = cache_dir
@@ -175,7 +175,7 @@ class DataReader:
     def _refresh_tisk_data(self, period: int) -> None:
         """Update in-memory tisk_lookup from the latest parquet cache.
 
-        Called on every get_period — only re-reads if the parquet mtime changed.
+        Called on every get_period – only re-reads if the parquet mtime changed.
         """
         pd = self._periods.get(period)
         if pd is None:
@@ -547,7 +547,7 @@ class DataReader:
 
         The filesystem scan and any period reloads run in worker threads so
         a large reload (re-parsing several periods) never blocks the event
-        loop — HTTP requests keep being served during a refresh.
+        loop – HTTP requests keep being served during a refresh.
         """
         while True:
             await asyncio.sleep(_WATCH_INTERVAL_S)

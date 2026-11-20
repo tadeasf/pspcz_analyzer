@@ -74,11 +74,11 @@ class TiskPipelineService:
         mode: TiskMode = TiskMode.FULL,
         refresh_active: bool = False,
     ) -> None:
-        """Start background processing for a period. Idempotent — skips if already running.
+        """Start background processing for a period. Idempotent – skips if already running.
 
         When *refresh_active* is True, cached metadata, sub-tisk versions and AI
         outputs are re-generated for bills whose status is still active
-        (not terminal) — used by the daily refresh to pick up new legislative
+        (not terminal) – used by the daily refresh to pick up new legislative
         steps, amendments and version diffs without re-processing finished bills.
         """
         if period in self._tasks and not self._tasks[period].done():
@@ -149,7 +149,7 @@ class TiskPipelineService:
         """Prune a finished period's task + flag.
 
         Only removes the dict entries if this task is still the current
-        one — a restart for the same period may have replaced them
+        one – a restart for the same period may have replaced them
         before this done-callback fired.
         """
         if self._tasks.get(period) is task:
@@ -222,7 +222,7 @@ class TiskPipelineService:
 
         Returns the period flag's bound check(), which raises
         PipelineCancelled once cancellation is requested. Safe to call
-        from worker threads — flag reads are atomic under the GIL.
+        from worker threads – flag reads are atomic under the GIL.
         """
         return self._flag_for(period).check
 
@@ -242,7 +242,7 @@ class TiskPipelineService:
         return True
 
     def cancel_period(self, period: int) -> bool:
-        """Cancel a single period — pending or in-progress.
+        """Cancel a single period – pending or in-progress.
 
         For pending periods, marks SKIPPED immediately.
         For in-progress periods, flips the period's cancellation flag;
@@ -333,7 +333,7 @@ class TiskPipelineService:
     ) -> tuple[dict[int, list[str]], dict[int, str], dict[int, str]]:
         """Load previously cached topic/summary data from parquet (no LLM).
 
-        Returns (topic_map, summary_map, summary_en_map) — empty dicts if
+        Returns (topic_map, summary_map, summary_en_map) – empty dicts if
         no cache exists yet.
         """
         parquet_path = (
@@ -468,7 +468,7 @@ class TiskPipelineService:
                     text_paths = self._load_cached_text_paths(period)
                 if not text_paths:
                     logger.warning(
-                        "[tisk pipeline] No cached text files for period {} — skipping classify",
+                        "[tisk pipeline] No cached text files for period {} – skipping classify",
                         period,
                     )
                 elif DEV_SKIP_CLASSIFY_AND_SUMMARIZE:
@@ -595,7 +595,7 @@ class TiskPipelineService:
         """Request cancellation of all running pipelines.
 
         Flips every period flag (and pre-cancels any flag created
-        afterwards) — running stages stop cooperatively at their next
+        afterwards) – running stages stop cooperatively at their next
         checkpoint, and queued periods are skipped by the sequential
         loop. Await wait_stopped() to let the tasks drain.
         """
@@ -607,7 +607,7 @@ class TiskPipelineService:
     async def wait_stopped(self, timeout: float = 10.0) -> None:
         """Wait for pipeline tasks to drain after cancel_all().
 
-        Tasks still running after *timeout* are hard-cancelled — that
+        Tasks still running after *timeout* are hard-cancelled – that
         releases the event-loop side immediately; worker threads exit
         at their next cancellation checkpoint. Clears task/flag state
         and marks the run as no longer running.
@@ -619,7 +619,7 @@ class TiskPipelineService:
             _, pending = await asyncio.wait(tasks, timeout=timeout)
             if pending:
                 logger.warning(
-                    "[tisk pipeline] {} tasks still draining after {}s — forcing cancellation",
+                    "[tisk pipeline] {} tasks still draining after {}s – forcing cancellation",
                     len(pending),
                     timeout,
                 )

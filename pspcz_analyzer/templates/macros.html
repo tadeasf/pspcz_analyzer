@@ -2,7 +2,7 @@
 
 {% macro driver_badge(driver, tooltip="") %}
 {#- Renders nothing for driver == 'unknown' (e.g. periods where the governing
-    coalition cannot be derived) — a neutral gray badge on every row would be
+    coalition cannot be derived) – a neutral gray badge on every row would be
     noise. Pass tooltip= to expose the submitters on hover. -#}
 {%- if driver == 'government' -%}
 <span class="driver-badge driver-government"{% if tooltip %} title="{{ tooltip }}"{% endif %}>{{ _("driver.government") }}</span>

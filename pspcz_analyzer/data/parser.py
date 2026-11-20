@@ -40,7 +40,7 @@ def parse_unl(
         infer_schema_length=0,
         truncate_ragged_lines=True,
         encoding="utf8",
-        # UNL files never use CSV-style quoting — any double quotes in the
+        # UNL files never use CSV-style quoting – any double quotes in the
         # data are literal characters.  Always disable to avoid misparses
         # (e.g. period 2 / 1996 voting data contains stray quotes).
         quote_char=None,

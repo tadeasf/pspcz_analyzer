@@ -108,7 +108,7 @@ def _run_pipeline_sync(
         bills = list(load_amendments(cache_dir, period).values())
         if not bills:
             logger.warning(
-                "[amendment pipeline] No cached amendment data for period {} — "
+                "[amendment pipeline] No cached amendment data for period {} – "
                 "run PARSE mode first",
                 period,
             )
@@ -170,13 +170,13 @@ def _run_parse_stages(
     """Run parse stages of the amendment pipeline.
 
     Stage order:
-      0. SCRAPE_HISTORIES — ensure tisk histories exist
-      1. IDENTIFY — find third-reading amendment candidates
-      2. PDF_DOWNLOAD_PARSE — download/parse amendment PDFs
-      3. STENO_DOWNLOAD_PARSE — download/parse steno records
-      4. MERGE — combine PDF structure with steno vote data
-      5. RESOLVE_IDS — link vote numbers to vote IDs
-      6. RESOLVE_SUBMITTERS — resolve names to MP IDs
+      0. SCRAPE_HISTORIES – ensure tisk histories exist
+      1. IDENTIFY – find third-reading amendment candidates
+      2. PDF_DOWNLOAD_PARSE – download/parse amendment PDFs
+      3. STENO_DOWNLOAD_PARSE – download/parse steno records
+      4. MERGE – combine PDF structure with steno vote data
+      5. RESOLVE_IDS – link vote numbers to vote IDs
+      6. RESOLVE_SUBMITTERS – resolve names to MP IDs
       7. (LLM_SUMMARIZE is handled separately)
 
     Args:
@@ -266,7 +266,7 @@ def _run_parse_stages(
                     ct,
                     failure,
                 )
-                # Without steno, there's no vote linkage — skip.
+                # Without steno, there's no vote linkage – skip.
                 # The tisk pipeline handles raw PDF content separately.
                 continue
 
@@ -321,7 +321,7 @@ def _run_parse_stages(
             progress.bills_parsed += 1
         finally:
             # Count the candidate as done regardless of outcome (previously
-            # set to `i` before processing — the bar lagged one item behind).
+            # set to `i` before processing – the bar lagged one item behind).
             progress.done_items = i + 1
 
     failure_detail = ", ".join(f"{r.value}={c}" for r, c in failure_counts.most_common())
@@ -493,7 +493,7 @@ class AmendmentPipelineService:
         """Prune a finished period's task + flag.
 
         Only removes the dict entries if this task is still the current
-        one — a restart for the same period may have replaced them
+        one – a restart for the same period may have replaced them
         before this done-callback fired.
         """
         if self._tasks.get(period) is task:
@@ -505,7 +505,7 @@ class AmendmentPipelineService:
 
         Flips the period's cancellation flag; the worker thread stops
         cooperatively at its next checkpoint. (task.cancel() alone cannot
-        interrupt work running inside asyncio.to_thread — it only
+        interrupt work running inside asyncio.to_thread – it only
         releases the awaiting coroutine.)
 
         Returns True if a cancellation was requested.
@@ -530,7 +530,7 @@ class AmendmentPipelineService:
     async def wait_stopped(self, timeout: float = 10.0) -> None:
         """Wait for running tasks to drain after cancel_all().
 
-        Tasks still running after *timeout* are hard-cancelled — that
+        Tasks still running after *timeout* are hard-cancelled – that
         releases the event-loop side immediately; worker threads exit
         at their next cancellation checkpoint.
         """
@@ -539,7 +539,7 @@ class AmendmentPipelineService:
             _, pending = await asyncio.wait(tasks, timeout=timeout)
             if pending:
                 logger.warning(
-                    "[amendment pipeline] {} tasks still draining after {}s — forcing cancellation",
+                    "[amendment pipeline] {} tasks still draining after {}s – forcing cancellation",
                     len(pending),
                     timeout,
                 )

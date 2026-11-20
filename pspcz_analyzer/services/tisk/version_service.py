@@ -87,7 +87,7 @@ def download_subtisk_versions_sync(
         scraped += 1
 
         if len(versions_data) <= 1:
-            # Only CT1=0 or nothing — save empty list to cache so we don't re-scrape
+            # Only CT1=0 or nothing – save empty list to cache so we don't re-scrape
             scan_cache.write_text("[]", encoding="utf-8")
             time.sleep(PSP_REQUEST_DELAY)
             if progress_callback:
@@ -179,7 +179,7 @@ def analyze_version_diffs_sync(
     diff_dir = cache_dir / TISKY_META_DIR / str(period) / TISKY_VERSION_DIFFS_DIR
     diff_dir.mkdir(parents=True, exist_ok=True)
 
-    # Phase 1 — collect version texts and count total pairs
+    # Phase 1 – collect version texts and count total pairs
     ct_versions: list[tuple[int, list[tuple[int, Path]]]] = []
     total_pairs = 0
     for ct in ct_numbers:
@@ -194,7 +194,7 @@ def analyze_version_diffs_sync(
         ct_versions.append((ct, versions))
         total_pairs += len(versions) - 1
 
-    # Phase 2 — compare with per-pair progress tracking
+    # Phase 2 – compare with per-pair progress tracking
     result: dict[str, str] = {}
     result_en: dict[str, str] = {}
     pairs_done = 0
@@ -212,7 +212,7 @@ def analyze_version_diffs_sync(
             diff_file = diff_dir / f"{diff_key}.txt"
             diff_file_en = diff_dir / f"{diff_key}_en.txt"
 
-            # Check cache — both CS and EN (forced cts always recompute)
+            # Check cache – both CS and EN (forced cts always recompute)
             if diff_file.exists() and ct not in force_cts:
                 result[diff_key] = diff_file.read_text(encoding="utf-8")
                 if diff_file_en.exists():

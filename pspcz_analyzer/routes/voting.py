@@ -1,4 +1,4 @@
-"""HTMX partial endpoints — voting analysis (loyalty, attendance, similarity, votes)."""
+"""HTMX partial endpoints – voting analysis (loyalty, attendance, similarity, votes)."""
 
 from pathlib import Path
 

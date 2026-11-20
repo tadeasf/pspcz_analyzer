@@ -1,4 +1,4 @@
-"""HTMX partial endpoints — amendments and amendment coalitions."""
+"""HTMX partial endpoints – amendments and amendment coalitions."""
 
 from pathlib import Path
 

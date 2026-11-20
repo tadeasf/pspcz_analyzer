@@ -213,7 +213,7 @@ def _resolve_vote_ids(
     """Resolve vote_number (cislo) to id_hlasovani via the votes DataFrame.
 
     Mutates the AmendmentVote objects in-place. A match is only accepted when
-    the official vote belongs to the same agenda item (bod) — guarding against
+    the official vote belongs to the same agenda item (bod) – guarding against
     steno spans overshooting into a neighbouring bod; votes with bod=0 are
     unassigned in psp.cz data and are accepted. Unresolved votes are recorded
     in the bill's parse_warnings so the gap is visible instead of silent.
@@ -241,11 +241,11 @@ def _resolve_vote_ids(
             if official_bod not in (None, 0, bill.bod):
                 bill.parse_warnings.append(
                     f"Vote {amend.vote_number} officially belongs to bod "
-                    f"{official_bod}, not bod {bill.bod} — left unlinked"
+                    f"{official_bod}, not bod {bill.bod} – left unlinked"
                 )
                 logger.warning(
                     "Bill {}/{} (period {}): vote {} officially belongs to "
-                    "bod {} (expected bod {}) — left unlinked",
+                    "bod {} (expected bod {}) – left unlinked",
                     bill.schuze,
                     bill.bod,
                     bill.period,

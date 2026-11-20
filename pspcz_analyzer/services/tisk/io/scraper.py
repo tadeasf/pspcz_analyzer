@@ -52,7 +52,7 @@ def scrape_tisk_documents(period: int, ct: int) -> list[TiskDocument]:
         desc = link.get_text(strip=True)
         parent_text = link.parent.get_text(strip=True) if link.parent else desc
 
-        # Detect format from context — psp.cz labels PDFs
+        # Detect format from context – psp.cz labels PDFs
         fmt = "PDF" if "PDF" in parent_text.upper() or href.endswith(".pdf") else "unknown"
         is_complete = "cel" in desc.lower() or "úplné znění" in desc.lower()
 
@@ -70,7 +70,7 @@ def scrape_tisk_documents(period: int, ct: int) -> list[TiskDocument]:
 
 
 def get_best_pdf(period: int, ct: int) -> TiskDocument | None:
-    """Return the best PDF document for a tisk — prefer complete prints."""
+    """Return the best PDF document for a tisk – prefer complete prints."""
     docs = scrape_tisk_documents(period, ct)
     if not docs:
         return None
@@ -124,7 +124,7 @@ def _scrape_subtisk_page(period: int, ct: int, ct1: int) -> list[TiskDocument] |
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    # Check for empty/error page — psp.cz returns 200 with minimal content
+    # Check for empty/error page – psp.cz returns 200 with minimal content
     body_text = soup.get_text(strip=True)
     if len(body_text) < 50 or "nebyl nalezen" in body_text.lower():
         return None

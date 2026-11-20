@@ -152,7 +152,7 @@ def _pop_numeric_variants(
 ) -> list[AmendmentVote]:
     """Pop ALL steno amendments matching numeric variants of a PDF letter.
 
-    E.g., PDF letter "A" matches steno "A1", "A2", "A3" — every entry under
+    E.g., PDF letter "A" matches steno "A1", "A2", "A3" – every entry under
     those keys is returned (a key can hold several entries, e.g. revotes).
 
     Args:
@@ -254,18 +254,18 @@ def _merge_pdf_and_steno(
             continue
 
         # Only surface PDF-only amendments when steno linked at least one vote for
-        # this bill — otherwise a wholesale steno failure would dump the entire PDF
+        # this bill – otherwise a wholesale steno failure would dump the entire PDF
         # as unvoted rows.
         has_steno_votes = any(a.vote_number for a in bill.amendments)
 
         if not has_steno_votes:
-            # PDF amendments exist but steno parsing found no recorded votes —
+            # PDF amendments exist but steno parsing found no recorded votes –
             # don't dump them as rows, but remember the count for the UI.
             bill.unlinked_amendment_count = len(pdf_amendments)
 
         # Build steno lookup by letter (uppercase, stripped). A letter key can
-        # hold several entries — letter-less entries ("") and same-letter
-        # revotes — so keep them all in a list; a match consumes the first.
+        # hold several entries – letter-less entries ("") and same-letter
+        # revotes – so keep them all in a list; a match consumes the first.
         steno_by_letter: dict[str, list[AmendmentVote]] = {}
         for amend in bill.amendments:
             key = amend.letter.strip().upper()
@@ -286,7 +286,7 @@ def _merge_pdf_and_steno(
                 steno_matches = _pop_numeric_variants(steno_by_letter, pdf_key)
 
             # Also check grouped_with: pull grouped letters into the en-bloc
-            # match so they are merged with the PDF text — previously they
+            # match so they are merged with the PDF text – previously they
             # were popped and silently discarded.
             for s in list(steno_matches):
                 for grouped_letter in s.grouped_with:
@@ -299,7 +299,7 @@ def _merge_pdf_and_steno(
 
             if steno_matches:
                 # Enrich all matching steno entries with PDF data.
-                # All matches get raw_text — steno "E1" means the entire
+                # All matches get raw_text – steno "E1" means the entire
                 # letter E section, typically voted en bloc.
                 for steno_item in steno_matches:
                     steno_item.amendment_text = pdf_amend.raw_text

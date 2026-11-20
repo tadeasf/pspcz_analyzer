@@ -14,7 +14,7 @@ def strip_diacritics(text: str) -> str:
 
 
 def normalize_czech(text: str) -> str:
-    """Lowercase and strip diacritics — suitable for search matching."""
+    """Lowercase and strip diacritics – suitable for search matching."""
     return strip_diacritics(text.lower())
 
 

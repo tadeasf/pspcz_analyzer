@@ -54,7 +54,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         # Bill PDFs are embedded in our own law-detail page via a same-origin
-        # iframe, so they must allow same-origin framing — the default DENY /
+        # iframe, so they must allow same-origin framing – the default DENY /
         # frame-ancestors 'none' would block our own embed.
         if request.url.path.startswith("/api/tisk-pdf/"):
             response.headers["X-Frame-Options"] = "SAMEORIGIN"
@@ -90,7 +90,7 @@ async def run_with_timeout(
     Returns the result or raises HTTP 503 on timeout.
 
     Note: a timed-out computation keeps running in its worker thread and its
-    result is discarded — futures cannot be cancelled mid-flight. The pool is
+    result is discarded – futures cannot be cancelled mid-flight. The pool is
     sized with headroom (COMPUTE_POOL_WORKERS) so such zombies don't starve
     subsequent requests.
     """

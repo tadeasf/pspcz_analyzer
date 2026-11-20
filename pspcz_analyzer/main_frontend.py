@@ -1,4 +1,4 @@
-"""Frontend entrypoint — public web app with read-only data access."""
+"""Frontend entrypoint – public web app with read-only data access."""
 
 from contextlib import asynccontextmanager
 from pathlib import Path

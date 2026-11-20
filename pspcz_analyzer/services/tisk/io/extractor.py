@@ -16,7 +16,7 @@ from pspcz_analyzer.config import DEFAULT_CACHE_DIR, TISKY_TEXT_DIR
 
 # Suppress noisy MuPDF C-level warnings/errors on malformed PDFs from psp.cz
 # (e.g. "no XObject subtype specified", "unknown cid font type").
-# Text extraction still works — these are non-fatal parse warnings.
+# Text extraction still works – these are non-fatal parse warnings.
 pymupdf.TOOLS.mupdf_display_warnings(False)
 pymupdf.TOOLS.mupdf_display_errors(False)
 

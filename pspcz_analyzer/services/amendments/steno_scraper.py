@@ -1,11 +1,11 @@
 """Download and cache stenographic record HTML pages from psp.cz.
 
 The steno structure for each session (schůze) has three levels:
-  1. Index page: .../{NNN}schuz/index.htm — lists all agenda items (bods) with
+  1. Index page: .../{NNN}schuz/index.htm – lists all agenda items (bods) with
      anchors like <a name="b1"> and links to day-pages (e.g. 45-3.html#q230).
-  2. Day-pages: .../{NNN}schuz/45-3.html — TOC for one day of the session,
+  2. Day-pages: .../{NNN}schuz/45-3.html – TOC for one day of the session,
      listing speakers with links to individual transcript sub-pages.
-  3. Sub-pages: .../{NNN}schuz/s045062.htm — actual speech transcript text.
+  3. Sub-pages: .../{NNN}schuz/s045062.htm – actual speech transcript text.
 
 The amendment voting text (e.g. "přikročíme k hlasování o pozměňovacích
 návrzích") lives in the sub-pages, so we must follow all three levels.
@@ -109,8 +109,8 @@ def _parse_negative_expiry(content: str) -> float | None:
     Returns:
         None if the content is real HTML (a positive cache hit), otherwise
         the marker's expiry epoch in seconds. The bare legacy marker written
-        by older versions (no expiry suffix) is reported as ``0.0`` — i.e.
-        already expired — so permanently-poisoned caches retry once.
+        by older versions (no expiry suffix) is reported as ``0.0`` – i.e.
+        already expired – so permanently-poisoned caches retry once.
     """
     if content == _NEGATIVE_CACHE_MARKER:
         return 0.0
@@ -120,7 +120,7 @@ def _parse_negative_expiry(content: str) -> float | None:
     try:
         return float(content[len(prefix) :])
     except ValueError:
-        # Unparseable marker — treat as expired so it is retried and rewritten.
+        # Unparseable marker – treat as expired so it is retried and rewritten.
         return 0.0
 
 
@@ -144,7 +144,7 @@ def _fetch_steno_page(url: str) -> str | None:
         resp.raise_for_status()
     except httpx.HTTPStatusError as exc:
         if exc.response.status_code == 404:
-            # Genuinely missing — cache the miss so reruns skip the request.
+            # Genuinely missing – cache the miss so reruns skip the request.
             logger.warning("[amendment pipeline] Not found (404): {}", url)
             raise
         # 5xx etc. are transient; don't poison the cache.
@@ -169,7 +169,7 @@ def _download_cached(
     Only genuine HTTP 404s are negative-cached (with an expiry), so a page
     psp.cz publishes later is picked up after STENO_NEGATIVE_CACHE_TTL.
     Transient failures (timeouts, 5xx) return None without writing a marker
-    and are retried on the next pipeline run — previously ANY HTTP error
+    and are retried on the next pipeline run – previously ANY HTTP error
     poisoned the cache permanently.
 
     Args:
@@ -186,7 +186,7 @@ def _download_cached(
             return content
         if time.time() < expiry:
             return None
-        # Expired negative marker — fall through and retry the download.
+        # Expired negative marker – fall through and retry the download.
 
     try:
         html = _fetch_steno_page(url)

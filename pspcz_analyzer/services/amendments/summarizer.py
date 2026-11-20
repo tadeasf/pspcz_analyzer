@@ -21,7 +21,7 @@ from pspcz_analyzer.services.tisk.brief import text_issues
 
 # How many summarized bills to accumulate before flushing the parquet +
 # notifying the UI. Saving after every single bill rewrites the whole period
-# file — O(n²) I/O — while batching by 10 keeps the admin UI's incremental
+# file – O(n²) I/O – while batching by 10 keeps the admin UI's incremental
 # refresh responsive.
 _SAVE_EVERY_BILLS = 10
 
@@ -354,7 +354,7 @@ def _summarize_amendments(
             else:
                 progress.summaries_failed += 1
         else:
-            # No tisk summary and no amendment text — skip
+            # No tisk summary and no amendment text – skip
             progress.done_items = i + 1
             continue
 

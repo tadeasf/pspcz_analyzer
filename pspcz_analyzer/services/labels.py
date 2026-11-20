@@ -3,7 +3,7 @@
 These tokens are *machine-facing*: Jinja2 templates compare them to
 select CSS classes and then render their own localized strings via
 gettext (see vote_detail.html, law_detail.html, loyalty_table.html).
-They must never be localized here — templates would silently fall
+They must never be localized here – templates would silently fall
 through to their else branches.
 """
 

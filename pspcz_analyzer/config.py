@@ -100,11 +100,11 @@ DEFAULT_PERIOD = 10
 
 # Government-coalition detection (services/coalition_detector.py) reads the
 # governing coalition automatically from the chamber's investiture confidence
-# vote — no manual per-period list. A coalition is only emitted when a passed
+# vote – no manual per-period list. A coalition is only emitted when a passed
 # confidence vote is clearly polarized: at least one club votes YES with a
 # fraction >= CONFIDENCE_YES_BLOC and at least one votes YES with a fraction
 # <= CONFIDENCE_NO_BLOC, AND the vote is genuinely contested (overall YES share
-# <= CONFIDENCE_MAX_YES_SHARE — this rejects near-unanimous procedural votes that
+# <= CONFIDENCE_MAX_YES_SHARE – this rejects near-unanimous procedural votes that
 # share the confidence agenda-item name). Otherwise the period is "unknown".
 CONFIDENCE_YES_BLOC: float = 0.6
 CONFIDENCE_NO_BLOC: float = 0.4
@@ -128,7 +128,7 @@ PSP_TISKT_URL_TEMPLATE = "https://www.psp.cz/sqw/text/tiskt.sqw?o={period}&ct={c
 PSP_HISTORIE_URL_TEMPLATE = "https://www.psp.cz/sqw/historie.sqw?o={period}&t={ct}"
 TISKY_HISTORIE_DIR = "tisky_historie"
 
-# Terminal tisk statuses — a bill in one of these states is finished and will
+# Terminal tisk statuses – a bill in one of these states is finished and will
 # not change again, so the daily refresh skips re-scraping it. Any other status
 # (e.g. "projednáváno", "schváleno sněmovnou", "podepsáno") is still "active":
 # it can advance another legislative step, so refresh re-scrapes it.
@@ -156,7 +156,7 @@ STENO_MAX_SUBPAGES_PER_BOD = 250
 # bridging unrelated segments (e.g. votes split across two sitting days).
 STENO_SUBPAGE_GAP_FILL = 3
 # Negative-cache TTL for steno pages that genuinely don't exist (HTTP 404),
-# in seconds. Only 404s are negative-cached — transient failures (timeouts,
+# in seconds. Only 404s are negative-cached – transient failures (timeouts,
 # 5xx) are retried on the next pipeline run. Markers expire after this TTL so
 # pages psp.cz publishes later are picked up by a future run.
 STENO_NEGATIVE_CACHE_TTL = int(os.environ.get("STENO_NEGATIVE_CACHE_TTL", str(7 * 24 * 3600)))
@@ -164,7 +164,7 @@ STENO_NEGATIVE_CACHE_TTL = int(os.environ.get("STENO_NEGATIVE_CACHE_TTL", str(7 
 # LLM provider selection: "ollama" (default) or "openai" (any OpenAI-compatible API)
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
 
-# Ollama (local LLM) integration — optional, falls back to keyword classification
+# Ollama (local LLM) integration – optional, falls back to keyword classification
 # For remote HTTPS Ollama, set OLLAMA_BASE_URL (e.g. "https://ollama.example.com")
 # and OLLAMA_API_KEY (Bearer token for Authorization header).
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -193,7 +193,7 @@ LLM_MAX_COMPARISON_CHARS = int(
     os.environ.get("LLM_MAX_COMPARISON_CHARS", "120000")
 )  # per-text limit for version comparisons (~40k tok each)
 
-# Version diff cost control — max pairs to compare per tisk (0 = all)
+# Version diff cost control – max pairs to compare per tisk (0 = all)
 VERSION_DIFF_MAX_PAIRS = int(os.environ.get("VERSION_DIFF_MAX_PAIRS", "2"))
 
 # OpenAI-compatible API integration (OpenAI, Azure OpenAI, Together, Groq, vLLM, etc.)
@@ -202,7 +202,7 @@ OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
-# Daily data refresh — re-downloads psp.cz data and reloads in-memory state
+# Daily data refresh – re-downloads psp.cz data and reloads in-memory state
 DAILY_REFRESH_ENABLED = os.environ.get("DAILY_REFRESH_ENABLED", "1") == "1"
 DAILY_REFRESH_HOUR = int(os.environ.get("DAILY_REFRESH_HOUR", "3"))
 
@@ -212,30 +212,30 @@ PORT = int(os.environ.get("PORT", "8000"))
 # Git commit the image was built from (Docker build arg; "unknown" outside Docker)
 GIT_SHA = os.environ.get("GIT_SHA") or "unknown"
 
-# Development mode — uvicorn hot reload ("1" local dev, "0" Docker/production)
+# Development mode – uvicorn hot reload ("1" local dev, "0" Docker/production)
 DEV = os.environ.get("PSPCZ_DEV", "1") == "1"
 
-# Amendment voting analysis — steno record parsing
+# Amendment voting analysis – steno record parsing
 AMENDMENTS_ENABLED = os.environ.get("AMENDMENTS_ENABLED", "1") == "1"
 AMENDMENT_CACHE_SUBDIR = "amendments"
 
-# Dev pipeline skip flags — skip expensive stages during development
+# Dev pipeline skip flags – skip expensive stages during development
 DEV_SKIP_CLASSIFY_AND_SUMMARIZE = os.environ.get("DEV_SKIP_CLASSIFY_AND_SUMMARIZE", "0") == "1"
 DEV_SKIP_VERSION_DIFFS = os.environ.get("DEV_SKIP_VERSION_DIFFS", "0") == "1"
 DEV_SKIP_AMENDMENTS = os.environ.get("DEV_SKIP_AMENDMENTS", "0") == "1"
 
-# GitHub feedback — user feedback creates GitHub issues
+# GitHub feedback – user feedback creates GitHub issues
 GITHUB_FEEDBACK_ENABLED = os.environ.get("GITHUB_FEEDBACK_ENABLED", "0") == "1"
 GITHUB_FEEDBACK_TOKEN = os.environ.get("GITHUB_FEEDBACK_TOKEN", "")
 GITHUB_FEEDBACK_REPO = os.environ.get("GITHUB_FEEDBACK_REPO", "tadeasf/pspcz_analyzer")
 GITHUB_FEEDBACK_LABELS = os.environ.get("GITHUB_FEEDBACK_LABELS", "user-feedback").split(",")
 
-# Admin dashboard — backend-only authentication and access control
+# Admin dashboard – backend-only authentication and access control
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
 # Loopback only by default. The old default included 172.16.0.0/12, which
 # admitted every Docker-bridge container and LAN host in that range to the
-# login page — add the needed CIDR back explicitly if your deployment needs it.
+# login page – add the needed CIDR back explicitly if your deployment needs it.
 ADMIN_ALLOWED_IPS = os.environ.get("ADMIN_ALLOWED_IPS", "127.0.0.1,::1")
 # Proxies whose X-Forwarded-For header may be trusted to identify the real
 # client IP. Requests from any other peer ignore X-Forwarded-For entirely
@@ -248,11 +248,11 @@ ADMIN_PORT = int(os.environ.get("ADMIN_PORT", "8001"))
 # Defaults off in dev mode (plain-HTTP localhost), on everywhere else.
 ADMIN_COOKIE_SECURE = os.environ.get("ADMIN_COOKIE_SECURE", "0" if DEV else "1") == "1"
 
-# Computation thread pool — size of the executor behind run_with_timeout
+# Computation thread pool – size of the executor behind run_with_timeout
 # (analysis + chart endpoints). 0 = Python's default min(32, cpu_count + 4).
 # The old hard-coded 2 meant two slow computations exhausted capacity and
 # every other analysis request queued behind them (timed-out work keeps
-# occupying its worker until it finishes — futures cannot be killed).
+# occupying its worker until it finishes – futures cannot be killed).
 COMPUTE_POOL_WORKERS = int(os.environ.get("COMPUTE_POOL_WORKERS", "0"))
 
 # Upper bound on entries in the in-memory analysis cache (LRU eviction).
@@ -260,9 +260,9 @@ COMPUTE_POOL_WORKERS = int(os.environ.get("COMPUTE_POOL_WORKERS", "0"))
 # without a cap the cache could grow without limit.
 ANALYSIS_CACHE_MAX_ENTRIES = int(os.environ.get("ANALYSIS_CACHE_MAX_ENTRIES", "512"))
 
-# Rate limiting — slowapi bucket keys (both processes share the key function)
+# Rate limiting – slowapi bucket keys (both processes share the key function)
 # Proxies whose X-Forwarded-For may identify the real client for rate-limit
 # bucketing. Empty by default: buckets key on the TCP peer, so limit keys can
-# never be spoofed. Behind a reverse proxy, set this to the proxy's IP/CIDR —
+# never be spoofed. Behind a reverse proxy, set this to the proxy's IP/CIDR –
 # otherwise every visitor shares one bucket and limits trip for all of them.
 RATE_LIMIT_TRUSTED_PROXIES = os.environ.get("RATE_LIMIT_TRUSTED_PROXIES", "")

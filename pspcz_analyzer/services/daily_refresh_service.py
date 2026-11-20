@@ -2,7 +2,7 @@
 
 Pauses the tisk AI pipeline, re-downloads fresh data from psp.cz,
 reloads all in-memory state, then restarts the pipeline.
-Uses pure asyncio — no external scheduler dependencies.
+Uses pure asyncio – no external scheduler dependencies.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ class DailyRefreshService:
         self._task: asyncio.Task | None = None
 
     def start(self) -> None:
-        """Start the scheduler loop. Idempotent — does nothing if already running."""
+        """Start the scheduler loop. Idempotent – does nothing if already running."""
         if not DAILY_REFRESH_ENABLED:
             logger.info("[daily-refresh] Scheduler disabled via DAILY_REFRESH_ENABLED=0")
             return

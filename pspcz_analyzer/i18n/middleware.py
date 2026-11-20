@@ -1,4 +1,4 @@
-"""Locale middleware — reads language from cookie and sets ContextVar per request."""
+"""Locale middleware – reads language from cookie and sets ContextVar per request."""
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request

@@ -1,4 +1,4 @@
-"""Admin dashboard routes — pipeline management, config editor, log viewer."""
+"""Admin dashboard routes – pipeline management, config editor, log viewer."""
 
 import asyncio
 import contextlib
@@ -90,7 +90,7 @@ PIPELINE_TYPE_LABELS: dict[str, str] = {
 def _format_eta(seconds: float | None) -> str:
     """Format ETA seconds as human-readable string."""
     if seconds is None:
-        return "—"
+        return "–"
     if seconds <= 0:
         return "< 1s"
     minutes, secs = divmod(int(seconds), 60)
@@ -232,7 +232,7 @@ async def pipelines_page(request: Request) -> HTMLResponse:
 
 @router.get("/partials/pipeline-status", response_class=HTMLResponse)
 async def pipeline_status_partial(request: Request) -> HTMLResponse:
-    """HTML partial for HTMX polling — renders pipeline status + progress bars."""
+    """HTML partial for HTMX polling – renders pipeline status + progress bars."""
     svc = request.app.state.data
     tisk_progress = svc.tisk_pipeline.progress
     amendment_progress = svc.amendment_pipeline.progress
@@ -285,7 +285,7 @@ async def _monitor_pipeline(
     """Background coroutine: await the real pipeline task, then release lock and record history."""
     try:
         await task
-        # For "full" mode, tisk's on_complete chains to amendment — wait for that too
+        # For "full" mode, tisk's on_complete chains to amendment – wait for that too
         if pipeline_type == "full":
             await asyncio.sleep(0.5)
             amendment_task = svc.amendment_pipeline.get_task(period)
@@ -357,7 +357,7 @@ async def start_pipeline(
             case "amendment_summarize":
                 started = svc.start_amendment_pipeline(period, mode=AmendmentMode.SUMMARIZE)
             case "full":
-                # Tisk on_complete callback chains to amendment — don't double-start
+                # Tisk on_complete callback chains to amendment – don't double-start
                 started = svc.start_tisk_pipeline(period, mode=TiskMode.FULL)
             case _:
                 pipeline_lock.release()
@@ -383,7 +383,7 @@ async def start_pipeline(
         history.finish_run(run_data, "error", "Task not found after start")
         return {"status": "error", "message": "Pipeline task not found after start"}
 
-    # Spawn monitor — it holds the lock until the pipeline finishes
+    # Spawn monitor – it holds the lock until the pipeline finishes
     asyncio.create_task(
         _monitor_pipeline(svc, pipeline_type, period, task, run_data, history, label),
         name=f"pipeline-monitor-{pipeline_type}-{period}",

@@ -1,4 +1,4 @@
-"""LLM integration package — re-exports public API for backward compatibility."""
+"""LLM integration package – re-exports public API for backward compatibility."""
 
 from pspcz_analyzer.services.llm.client import LLMClient
 from pspcz_analyzer.services.llm.helpers import (

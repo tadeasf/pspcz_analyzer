@@ -58,7 +58,7 @@ class DataService(DataReader):
             period: Electoral period number.
             mode: Pipeline execution mode.
             refresh_active: When True, re-process active (non-terminal) bills even
-                if cached — used by the daily refresh to pick up new legislative
+                if cached – used by the daily refresh to pick up new legislative
                 steps, amendments and version diffs.
 
         Returns:
@@ -195,7 +195,7 @@ class DataService(DataReader):
     def start_all_tisk_pipelines(self) -> None:
         """Kick off sequential background tisk processing for ALL periods (newest first).
 
-        Does not require periods to be loaded — uses the shared tisky table
+        Does not require periods to be loaded – uses the shared tisky table
         to get ct numbers. When a period completes, updates in-memory data
         if that period happens to be loaded.
         """
@@ -304,7 +304,7 @@ class DataService(DataReader):
         """Re-download all data from psp.cz and reload in-memory state.
 
         Pauses the tisk AI pipeline, refreshes data, then restarts the pipeline.
-        Safe for concurrent HTTP requests — old data stays valid until swapped.
+        Safe for concurrent HTTP requests – old data stays valid until swapped.
         """
         if self._refresh_lock.locked():
             logger.warning("[daily-refresh] Refresh already in progress, skipping")

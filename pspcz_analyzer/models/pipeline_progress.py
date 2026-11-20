@@ -8,17 +8,17 @@ from enum import StrEnum
 class TiskMode(StrEnum):
     """Execution modes for the tisk pipeline."""
 
-    DOWNLOAD = "download"  # Stages 1,2,5,6 — scrape/download only, no AI
-    CLASSIFY = "classify"  # Stages 3,4 — AI classify+summarize (needs cached text)
-    DIFFS = "diffs"  # Stage 7 — AI version diff analysis (needs cached versions)
+    DOWNLOAD = "download"  # Stages 1,2,5,6 – scrape/download only, no AI
+    CLASSIFY = "classify"  # Stages 3,4 – AI classify+summarize (needs cached text)
+    DIFFS = "diffs"  # Stage 7 – AI version diff analysis (needs cached versions)
     FULL = "full"  # All stages (current behavior)
 
 
 class AmendmentMode(StrEnum):
     """Execution modes for the amendment pipeline."""
 
-    PARSE = "parse"  # Stages 1-5 — identify, download steno, parse, resolve, PDF extract
-    SUMMARIZE = "summarize"  # Stage 6 — LLM summarization (needs cached parquet)
+    PARSE = "parse"  # Stages 1-5 – identify, download steno, parse, resolve, PDF extract
+    SUMMARIZE = "summarize"  # Stage 6 – LLM summarization (needs cached parquet)
     FULL = "full"  # All stages (current behavior)
 
 
@@ -186,7 +186,7 @@ class PipelineProgress:
                     break
             return (remaining_periods - 1) * avg_per_period + current_stage_eta
 
-        # No completed periods yet — use current stage ETA only
+        # No completed periods yet – use current stage ETA only
         for pp in self.periods.values():
             if pp.status == PeriodStatus.IN_PROGRESS and pp.current_stage:
                 return pp.current_stage.eta_seconds

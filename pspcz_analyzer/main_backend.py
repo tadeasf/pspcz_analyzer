@@ -1,4 +1,4 @@
-"""Backend entrypoint — admin dashboard with pipeline management."""
+"""Backend entrypoint – admin dashboard with pipeline management."""
 
 from contextlib import asynccontextmanager
 
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     """Initialize pipeline data service, log broadcaster, and daily refresh."""
     # Load and apply runtime config overrides
     if not ADMIN_PASSWORD_HASH:
-        logger.warning("ADMIN_PASSWORD_HASH not set — admin login will reject all passwords")
+        logger.warning("ADMIN_PASSWORD_HASH not set – admin login will reject all passwords")
 
     svc = DataService()
     runtime_config = load_runtime_config(svc.cache_dir)
@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="PSP.cz Analyzer — Admin Backend",
+    title="PSP.cz Analyzer – Admin Backend",
     description="Pipeline management and admin dashboard",
     version="0.1.0",
     lifespan=lifespan,

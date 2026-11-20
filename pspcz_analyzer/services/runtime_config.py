@@ -125,7 +125,7 @@ def load_runtime_config(cache_dir: Path = DEFAULT_CACHE_DIR) -> RuntimeConfig:
 
 
 def save_runtime_config(config: RuntimeConfig, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
-    """Persist runtime config to JSON file (atomic — never leaves a torn file)."""
+    """Persist runtime config to JSON file (atomic – never leaves a torn file)."""
     path = _config_path(cache_dir)
     write_json_atomic(config.to_dict(), path)
     logger.info("[runtime-config] Saved to {}", path)

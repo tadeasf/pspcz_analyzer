@@ -1,4 +1,4 @@
-"""LLM helper utilities — sanitization, truncation, and factory."""
+"""LLM helper utilities – sanitization, truncation, and factory."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def _sanitize_llm_input(text: str) -> str:
     return _INJECTION_PHRASES_RE.sub("[REDACTED]", text)
 
 
-# Strip <think>...</think> blocks from responses (defensive — models with chain-of-thought)
+# Strip <think>...</think> blocks from responses (defensive – models with chain-of-thought)
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
 # Pattern for heading lines in Czech legislative texts

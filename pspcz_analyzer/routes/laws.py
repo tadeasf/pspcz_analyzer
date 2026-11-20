@@ -1,4 +1,4 @@
-"""HTMX partial endpoints — laws/bills listing."""
+"""HTMX partial endpoints – laws/bills listing."""
 
 from pathlib import Path
 

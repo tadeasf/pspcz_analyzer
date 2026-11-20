@@ -1,4 +1,4 @@
-"""HTMX partial endpoints — user feedback submission."""
+"""HTMX partial endpoints – user feedback submission."""
 
 import asyncio
 from pathlib import Path

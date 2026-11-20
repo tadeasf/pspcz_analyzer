@@ -16,7 +16,7 @@ class AnalysisCache:
 
     Entries expire ``ttl`` seconds after insertion. Independently, once the
     cache holds more than ``max_entries`` items the least recently used one
-    is evicted — keys include user-controlled strings (free-text search on
+    is evicted – keys include user-controlled strings (free-text search on
     the votes endpoint), so without a cap the cache could grow without limit.
     """
 
@@ -30,7 +30,7 @@ class AnalysisCache:
         """Return the cached value for ``key``, computing and storing it on a miss.
 
         ``compute_fn`` runs outside the lock, so concurrent misses may compute
-        the same value in parallel — last write wins, which is fine for pure
+        the same value in parallel – last write wins, which is fine for pure
         analyses.
         """
         now = time.monotonic()

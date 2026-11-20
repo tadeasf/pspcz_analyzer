@@ -28,7 +28,7 @@
             {% for row in party_cohesion %}
             <tr>
                 <td><strong>{{ row.party }}</strong></td>
-                <td>{% if row.amend_cohesion %}{{ "{:.1f}%".format(row.amend_cohesion * 100) }}{% else %}—{% endif %}</td>
+                <td>{% if row.amend_cohesion %}{{ "{:.1f}%".format(row.amend_cohesion * 100) }}{% else %}–{% endif %}</td>
                 <td>{{ "{:.1f}%".format(row.overall_cohesion * 100) }}</td>
             </tr>
             {% endfor %}

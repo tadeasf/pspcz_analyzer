@@ -1,4 +1,4 @@
-"""Chart image endpoints — seaborn renders to PNG, served as StreamingResponse."""
+"""Chart image endpoints – seaborn renders to PNG, served as StreamingResponse."""
 
 import io
 
@@ -70,7 +70,7 @@ def _render_attendance_png(
 ) -> io.BytesIO:
     """Render the attendance bar chart to PNG, closing the figure no matter what."""
     # Fully-excused MPs have a null attendance rate (attendance_service) and
-    # barh cannot plot None — nulls_last already ranks them last anyway.
+    # barh cannot plot None – nulls_last already ranks them last anyway.
     plottable = [r for r in rows if r[field] is not None]
     fig, ax = plt.subplots(figsize=(12, max(6, len(plottable) * 0.35)))
     try:

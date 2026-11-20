@@ -14,7 +14,7 @@ from pspcz_analyzer.utils.text import normalize_czech
 
 # Minimum similarity ratio for a name match (handles instrumental case)
 _MATCH_THRESHOLD = 0.7
-# Ratio at which a name match is considered exact — short-circuits the scan
+# Ratio at which a name match is considered exact – short-circuits the scan
 # so ties between several MPs (same surname) can't misattribute the match.
 _EXACT_MATCH_RATIO = 0.99
 
