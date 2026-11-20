@@ -5,7 +5,7 @@ from typing import Any
 import polars as pl
 
 from pspcz_analyzer.services.speeches import speech_counts
-from pspcz_analyzer.services.vote_steno import _ask_once
+from pspcz_analyzer.services.vote_steno import _ask, _ask_once
 from pspcz_analyzer.services.vote_steno_text import (
     anchor_check,
     earlier_proposals,
@@ -170,6 +170,19 @@ def test_ask_rejects_result_formula_quote_and_invented_proposer() -> None:
     window2 = "Navrhuji omezit řečnickou dobu na 10 minut. Zahajuji hlasování."
     out = _ask_once(_FakeLLM(_REPLY), window2, [], 279, "")  # type: ignore[arg-type]
     assert out["status"] == "ok" and out["proposer"] == ""  # Okamura is not in the text
+
+
+def test_ask_quote_not_in_steno_is_unknown() -> None:
+    # #100: an invented quote (not in the window or any earlier context) must not
+    # yield a guessed subject, even after the second pass with more context
+    text = (
+        "Předseda PSP Tomio Okamura: Budeme hlasovat o návrhu na zamítnutí v prvém čtení. "
+        "Zahajuji hlasování. Kdo je pro?"
+    )
+    invented = {**_REPLY, "citace": "Navrhuji zrušit poplatky za Českou televizi úplně."}
+    out = _ask(_FakeLLM(invented), text, {"start": 0, "end": len(text)}, 287, "tisk 231")  # type: ignore[arg-type]
+    assert out["status"] == "unknown"
+    assert not out.get("question")
 
 
 INDEX = '<a name="b3" id="b3"></a><a href="31-2.html#q7">Projednávání</a><a name="b4" id="b4"></a>'

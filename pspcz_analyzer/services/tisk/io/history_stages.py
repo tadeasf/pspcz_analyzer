@@ -11,7 +11,7 @@ not inside any section: it is a p.status element after the last section.
 """
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
@@ -47,6 +47,7 @@ _PUBLISHED_RE = re.compile(
     r"Zákon\s+vyhlášen\s+(\d{1,2}\.\s*\d{1,2}\.\s*\d{4}).*?pod\s+číslem\s+(\d+/\d{4})\s*Sb\.",
     re.DOTALL,
 )
+_DELIVERED_RE = re.compile(r"\bdoručen prezidentovi\b")
 
 # (regex, outcome label) in priority order: the first pattern found in any
 # sentence of an entry is its outcome. Matched as whole words, so "schválen" does
@@ -63,7 +64,7 @@ _OUTCOME_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bnávrh schválil\b"), "schválil"),
     (re.compile(r"\bpostoupila\b"), "postoupeno Senátu"),
     (re.compile(r"\bodeslán k publikaci\b"), "odesláno k publikaci"),
-    (re.compile(r"\bdoručen prezidentovi\b"), "doručeno prezidentovi"),
+    (_DELIVERED_RE, "doručeno prezidentovi"),
     (re.compile(r"\bpřikázán[a]?\b"), "přikázán výborům"),
     (re.compile(r"\bnedoporučuje\b"), "nedoporučuje schválit"),
     (re.compile(r"\bdoporučuje schválit\b"), "doporučuje schválit"),
@@ -183,6 +184,37 @@ def _build_stage(section: str, mark_text: str, content_text: str) -> TiskHistory
     )
 
 
+def _split_president(stage: TiskHistoryStage, content_text: str) -> list[TiskHistoryStage]:
+    """Split a signed President entry into the delivery and the signature (#89).
+
+    "Zákon doručen prezidentovi k podepsání 13. 7. 2026. Prezident zákon podepsal
+    16. 7. 2026." is two events, each with its own date.
+
+    Args:
+        stage: The stage built from the entry (outcome of its highest-priority sentence).
+        content_text: Full text of the entry.
+
+    Returns:
+        [delivery, signature] for a signed President entry that states a dated
+        delivery; otherwise [stage].
+    """
+    if stage.stage_type != "prezident" or stage.outcome != "podepsal":
+        return [stage]
+    sentences = _SENTENCE_SPLIT_RE.split(content_text.strip())
+    for i, sentence in enumerate(sentences):
+        delivered_on = _extract_first_date(sentence)
+        if delivered_on and _DELIVERED_RE.search(sentence.lower()):
+            delivered = replace(
+                stage,
+                date=delivered_on,
+                outcome="doručeno prezidentovi",
+                details=" ".join(sentences[: i + 1])[:500],
+            )
+            rest = " ".join(sentences[i + 1 :]) or content_text.strip()
+            return [delivered, replace(stage, details=rest[:500])]
+    return [stage]
+
+
 def _parse_document_log_items(section: str, items: list[Tag]) -> list[TiskHistoryStage]:
     """Parse document-log-item elements of one section into legislative stages."""
     stages: list[TiskHistoryStage] = []
@@ -203,7 +235,7 @@ def _parse_document_log_items(section: str, items: list[Tag]) -> list[TiskHistor
 
             stage = _build_stage(section, mark_text, text)
             if stage:
-                stages.append(stage)
+                stages.extend(_split_president(stage, text))
         except Exception:
             logger.opt(exception=True).debug(
                 "Failed to parse document-log-item",

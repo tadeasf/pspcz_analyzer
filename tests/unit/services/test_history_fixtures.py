@@ -6,13 +6,18 @@ than the state described in the GitHub issues (e.g. tisk 246 has since been
 signed and sent for publication).
 """
 
+import re
 from pathlib import Path
 
 from pspcz_analyzer.config import TERMINAL_TISK_STATUSES
+from pspcz_analyzer.models.tisk_models import TiskInfo
+from pspcz_analyzer.services.step_text import president_deadline
 from pspcz_analyzer.services.tisk.io.history_scraper import TiskHistory, parse_tisk_history
 from pspcz_analyzer.services.tisk.io.history_stages import _stage_status
 
 _FIXTURES = Path(__file__).parents[2] / "fixtures" / "history"
+
+_SIGNED_RE = re.compile(r"podepsal\s+(\d{1,2}\. \d{1,2}\. \d{4})")
 
 _PS_CHAMBER = {"ps", "organizacni", "1_cteni", "vybor", "2_cteni", "garant", "3_cteni"}
 
@@ -96,13 +101,27 @@ class TestSentForPublication:
 class TestOutcomeDate:
     """#89: the stage date is the date of the sentence stating the outcome."""
 
-    def test_president_signature_date_82(self):
-        prezident = next(s for s in _parse(10, 82).stages if s.stage_type == "prezident")
-        assert prezident.outcome == "podepsal"
-        assert prezident.date == "16. 7. 2026"
-        # The delivery date stays in the entry text
-        details = prezident.details.replace("\xa0", " ")
-        assert "doručen prezidentovi k podepsání 13. 7. 2026" in details
+    def test_president_delivery_and_signature_are_two_events_82(self):
+        prezident = [s for s in _parse(10, 82).stages if s.stage_type == "prezident"]
+        assert [(s.outcome, s.date) for s in prezident] == [
+            ("doručeno prezidentovi", "13. 7. 2026"),
+            ("podepsal", "16. 7. 2026"),
+        ]
+        assert "doručen prezidentovi" in prezident[0].details
+        assert "podepsal 16. 7. 2026" in prezident[1].details.replace("\xa0", " ")
+
+    def test_signed_law_has_no_president_deadline_82(self):
+        tisk = TiskInfo(id_tisk=1, ct=82, nazev="", period=10, history=_parse(10, 82))
+        assert president_deadline(tisk) is None
+
+    def test_signed_dates_match_signature_sentence(self):
+        # #89 cross-check over all fixtures: "podepsal" stage date = date in that sentence
+        for f in _FIXTURES.glob("*.html"):
+            period, ct = f.stem[1:].split("_t")
+            for s in _parse(int(period), int(ct)).stages:
+                if s.outcome == "podepsal":
+                    m = _SIGNED_RE.search(s.details.replace("\xa0", " "))
+                    assert m and m.group(1) == s.date, f.name
 
     def test_reading_without_dated_outcome_sentence_keeps_entry_date_82(self):
         third = next(s for s in _parse(10, 82).stages if s.stage_type == "3_cteni")
@@ -136,6 +155,7 @@ class TestStatusLadder:
             "schváleno sněmovnou",
             "v Senátu",
             "schváleno Senátem",
+            "u prezidenta",
             "podepsáno",
             "odesláno k vyhlášení",
             "vyhlášeno",

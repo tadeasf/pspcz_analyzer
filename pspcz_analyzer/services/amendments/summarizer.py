@@ -164,25 +164,26 @@ def _summarize_per_amendment(
     if not text:
         return 0
 
-    # Build metadata list for non-final, non-withdrawn amendments
-    amendments_meta: list[dict[str, str]] = []
+    # Letters to summarize: non-final, non-withdrawn, with their own text. A letter
+    # without its own text gets no summary (#100): from the whole document the LLM
+    # would only guess what that letter says.
+    todo: list[AmendmentVote] = []
     for amend in bill.amendments:
-        if amend.is_final_vote or amend.is_withdrawn:
+        if amend.is_final_vote or amend.is_withdrawn or not amend.letter:
             continue
-        if not amend.letter:
-            continue
-        meta = _build_amendment_meta(amend)
-        if not meta["amendment_text"]:
+        if not amend.amendment_text:
             logger.warning(
-                "[amendment pipeline] amendment {} in '{}' has no per-amendment text",
+                "[amendment pipeline] amendment {} in '{}' has no per-amendment text, "
+                "not summarized",
                 amend.letter,
                 bill.tisk_nazev[:60],
             )
-        amendments_meta.append(meta)
+            continue
+        todo.append(amend)
 
-    if not amendments_meta:
+    if not todo:
         return 0
-    todo = [a for a in bill.amendments if a.letter and not a.is_final_vote and not a.is_withdrawn]
+    amendments_meta = [_build_amendment_meta(a) for a in todo]
     if all(a.summary for a in todo):
         return len(todo)  # all carried over from the previous run (carry_summaries)
 
@@ -231,9 +232,9 @@ def _summarize_per_amendment(
         ],
     )
 
-    # Assign summaries to amendment objects
+    # Assign summaries to the letters that were asked about
     count = 0
-    for amend in bill.amendments:
+    for amend in todo:
         key = amend.letter.strip().upper()
         cs_summary = cs_map.get(key, "")
         en_summary = en_map.get(key, "")
