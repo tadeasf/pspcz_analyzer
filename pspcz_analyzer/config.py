@@ -177,6 +177,8 @@ TISK_SHORTENER = os.environ.get("TISK_SHORTENER", "0") == "1"
 LLM_TIMEOUT = 300.0  # per-request (generous for CPU inference)
 LLM_HEALTH_TIMEOUT = 5.0  # connectivity check
 LLM_EMPTY_RETRIES = int(os.environ.get("LLM_EMPTY_RETRIES", "2"))
+# Parallel LLM requests per pipeline stage (briefs, classification, diffs, steno, amendments)
+LLM_CONCURRENCY = max(1, int(os.environ.get("LLM_CONCURRENCY", "4")))
 # Qwen3-style thinking switch sent as chat_template_kwargs (vLLM): "0" off, "1" on,
 # unset = not sent (plain OpenAI rejects the field). Qwen3 thinking can run away on long prompts.
 LLM_ENABLE_THINKING = os.environ.get("LLM_ENABLE_THINKING", "")

@@ -17,7 +17,6 @@ import hashlib
 import json
 import re
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +29,7 @@ from pspcz_analyzer.fileio import write_json_atomic
 # module import: speeches -> amendments -> tisk -> vote_steno is a cycle when speeches loads first
 from pspcz_analyzer.services import speeches
 from pspcz_analyzer.services.amendments.steno_scraper import PSP_STENO_BASE_TEMPLATE
-from pspcz_analyzer.services.llm import LLMClient, create_llm_client
+from pspcz_analyzer.services.llm import LLMClient, create_llm_client, llm_map
 from pspcz_analyzer.services.llm.helpers import _sanitize_llm_input
 from pspcz_analyzer.services.llm.prompts import (
     VOTE_KINDS,
@@ -67,7 +66,6 @@ CONTEXT_CHARS = 1800
 _PREV_LABEL = "Souvislost před předchozím hlasováním"
 _RECENT_LABEL = "Hlasování těsně předtím (už proběhla)"
 _RECENT_VOTES = 6
-_LLM_WORKERS = 4
 
 _UNKNOWN: dict[str, str] = {
     "question": "",
@@ -217,8 +215,7 @@ def _sitting_records(
         vid, rec = item
         rec.update(_ask(llm, text, spans[int(vid)], rec["cislo"], bods[int(vid)] or ""))
 
-    with ThreadPoolExecutor(_LLM_WORKERS) as pool:
-        list(pool.map(_fill, todo))
+    list(llm_map(_fill, todo))
     _second_pass(llm, text, spans, records, [vid for vid, _ in todo], bods)
     link_repeats(records, votes, text, spans)
     return records, set(spans)

@@ -26,7 +26,7 @@ from pspcz_analyzer.config import (
     TISKY_TEXT_DIR,
 )
 from pspcz_analyzer.fileio import write_json_atomic
-from pspcz_analyzer.services.llm import LLMClient, create_llm_client
+from pspcz_analyzer.services.llm import LLMClient, create_llm_client, llm_map
 from pspcz_analyzer.services.llm.helpers import _sanitize_llm_input
 
 BRIEFS_DIR = "briefs"
@@ -272,11 +272,16 @@ def generate_briefs_sync(
     if not llm.is_available():
         logger.warning("[briefs] LLM not available, skipping {} briefs", len(todo))
         return 0
-    written = 0
-    for i, (ct, title, text) in enumerate(todo, 1):
+
+    def _one(item: tuple[int, str, str]) -> dict[str, Any] | None:
         if cancel_check:
             cancel_check()
-        brief = generate_brief(llm, text, title)
+        return generate_brief(llm, item[2], item[1])
+
+    written = 0
+    for i, ((ct, _title, _text), brief) in enumerate(
+        zip(todo, llm_map(_one, todo), strict=True), 1
+    ):
         if brief is not None:
             write_json_atomic({"ct": ct, **brief}, _brief_path(cache_dir, period, ct))
             written += 1

@@ -12,6 +12,7 @@ from pspcz_analyzer.services.llm import (
     LLMClient,
     create_llm_client,
     deserialize_topics,
+    llm_map,
     serialize_topics,
 )
 
@@ -102,11 +103,13 @@ def classify_and_save(
         # Without LLM, return whatever we have cached
         return _build_topic_summary_maps(records, period)
 
-    new_since_save = 0
-    for i, (ct, text_path) in enumerate(sorted(remaining.items()), fully_done + 1):
+    numbered = list(enumerate(sorted(remaining.items()), fully_done + 1))
+
+    def _one(item: tuple[int, tuple[int, Path]]) -> dict:
+        i, (ct, text_path) = item
         if cancel_check:
             cancel_check()
-        record = _classify_single_tisk(
+        return _classify_single_tisk(
             ct,
             text_path,
             llm,
@@ -116,6 +119,9 @@ def classify_and_save(
             existing_record=incomplete.get(ct),
             cancel_check=cancel_check,
         )
+
+    new_since_save = 0
+    for (i, _item), record in zip(numbered, llm_map(_one, numbered), strict=True):
         records.append(record)
         new_since_save += 1
 

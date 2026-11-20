@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable, Iterator
+from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pspcz_analyzer.services.llm.client import LLMClient
 
 from pspcz_analyzer.config import (
+    LLM_CONCURRENCY,
     LLM_MAX_TEXT_CHARS,
     LLM_PROVIDER,
     LLM_STRUCTURED_OUTPUT,
@@ -132,3 +135,21 @@ def create_llm_client() -> LLMClient:
         case _:
             msg = f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Use 'ollama' or 'openai'."
             raise ValueError(msg)
+
+
+def llm_map[T, R](fn: Callable[[T], R], items: Iterable[T]) -> Iterator[R]:
+    """Results of ``fn`` over ``items`` in order, with ``LLM_CONCURRENCY`` calls at a time.
+
+    Args:
+        fn: Work for one item (thread-safe; LLMClient is, every request is its own POST).
+        items: Items to process.
+
+    Yields:
+        One result per item, in the order of ``items``. An exception in ``fn`` (also
+        PipelineCancelled) is raised here and the not yet started items are dropped.
+    """
+    pool = ThreadPoolExecutor(LLM_CONCURRENCY)
+    try:
+        yield from pool.map(fn, items)
+    finally:
+        pool.shutdown(cancel_futures=True)

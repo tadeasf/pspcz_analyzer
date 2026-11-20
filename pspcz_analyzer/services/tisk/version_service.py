@@ -16,7 +16,7 @@ from pspcz_analyzer.config import (
     TISKY_VERSION_DIFFS_DIR,
     VERSION_DIFF_MAX_PAIRS,
 )
-from pspcz_analyzer.services.llm import LLMClient, create_llm_client
+from pspcz_analyzer.services.llm import LLMClient, create_llm_client, llm_map
 from pspcz_analyzer.services.tisk.io import (
     SubTiskVersion,
     download_subtisk_pdf,
@@ -197,40 +197,39 @@ def analyze_version_diffs_sync(
     # Phase 2 – compare with per-pair progress tracking
     result: dict[str, str] = {}
     result_en: dict[str, str] = {}
-    pairs_done = 0
 
     if progress_callback:
         progress_callback(0, total_pairs)
 
-    for ct, versions in ct_versions:
-        for j in range(len(versions) - 1):
-            if cancel_check:
-                cancel_check()
-            ct1_old, path_old = versions[j]
-            ct1_new, path_new = versions[j + 1]
-            diff_key = f"{ct}_{ct1_new}"
-            diff_file = diff_dir / f"{diff_key}.txt"
-            diff_file_en = diff_dir / f"{diff_key}_en.txt"
+    pairs = [(ct, v[j], v[j + 1]) for ct, v in ct_versions for j in range(len(v) - 1)]
 
-            # Check cache – both CS and EN (forced cts always recompute)
-            if diff_file.exists() and ct not in force_cts:
-                result[diff_key] = diff_file.read_text(encoding="utf-8")
-                if diff_file_en.exists():
-                    result_en[diff_key] = diff_file_en.read_text(encoding="utf-8")
-            else:
-                summaries = _compare_version_pair_bilingual(
-                    llm, path_old, path_new, ct1_old, ct1_new, period, ct
-                )
-                if summaries["cs"]:
-                    diff_file.write_text(summaries["cs"], encoding="utf-8")
-                    result[diff_key] = summaries["cs"]
-                if summaries["en"]:
-                    diff_file_en.write_text(summaries["en"], encoding="utf-8")
-                    result_en[diff_key] = summaries["en"]
+    def _one(pair: tuple[int, tuple[int, Path], tuple[int, Path]]) -> tuple[str, str, str]:
+        ct, (ct1_old, path_old), (ct1_new, path_new) = pair
+        if cancel_check:
+            cancel_check()
+        diff_key = f"{ct}_{ct1_new}"
+        diff_file = diff_dir / f"{diff_key}.txt"
+        diff_file_en = diff_dir / f"{diff_key}_en.txt"
+        # Check cache – both CS and EN (forced cts always recompute)
+        if diff_file.exists() and ct not in force_cts:
+            en = diff_file_en.read_text(encoding="utf-8") if diff_file_en.exists() else ""
+            return diff_key, diff_file.read_text(encoding="utf-8"), en
+        summaries = _compare_version_pair_bilingual(
+            llm, path_old, path_new, ct1_old, ct1_new, period, ct
+        )
+        if summaries["cs"]:
+            diff_file.write_text(summaries["cs"], encoding="utf-8")
+        if summaries["en"]:
+            diff_file_en.write_text(summaries["en"], encoding="utf-8")
+        return diff_key, summaries["cs"], summaries["en"]
 
-            pairs_done += 1
-            if progress_callback:
-                progress_callback(pairs_done, total_pairs)
+    for pairs_done, (diff_key, cs, en) in enumerate(llm_map(_one, pairs), 1):
+        if cs:
+            result[diff_key] = cs
+        if en:
+            result_en[diff_key] = en
+        if progress_callback:
+            progress_callback(pairs_done, total_pairs)
 
     logger.info(
         "[tisk pipeline] Version diffs for period {}: {} comparisons",

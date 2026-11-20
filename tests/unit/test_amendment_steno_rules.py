@@ -6,7 +6,7 @@ from pspcz_analyzer.services.amendment_listing import law_name, split_core
 from pspcz_analyzer.services.amendments.merger import _assign_committee_letters
 from pspcz_analyzer.services.amendments.pdf_parser import PdfAmendment
 from pspcz_analyzer.services.amendments.steno_parser import parse_steno_amendments
-from pspcz_analyzer.services.amendments.summarizer import carry_summaries
+from pspcz_analyzer.services.amendments.summary_carry import carry_summaries
 
 # Shortened 3rd reading of tisk 246 (31st sitting, 23. 9. 2026)
 STENO_246 = (

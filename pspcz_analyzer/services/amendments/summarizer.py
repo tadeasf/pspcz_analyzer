@@ -13,10 +13,10 @@ from pathlib import Path
 from loguru import logger
 
 from pspcz_analyzer.models.amendment_models import AmendmentVote, BillAmendmentData
-from pspcz_analyzer.models.tisk_models import PeriodData
+from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.amendments.cache_manager import save_amendments
 from pspcz_analyzer.services.amendments.progress import AmendmentProgress
-from pspcz_analyzer.services.llm import LLMClient, create_llm_client
+from pspcz_analyzer.services.llm import LLMClient, create_llm_client, llm_map
 from pspcz_analyzer.services.tisk.brief import text_issues
 
 # How many summarized bills to accumulate before flushing the parquet +
@@ -103,36 +103,6 @@ def _build_amendment_meta(amend: AmendmentVote) -> dict[str, str]:
     if amend.grouped_with:
         meta["grouped_with"] = ", ".join(amend.grouped_with)
     return meta
-
-
-def carry_summaries(
-    bills: list[BillAmendmentData], previous: dict[tuple[int, int], BillAmendmentData]
-) -> int:
-    """Copy summaries from the previous run onto letters whose text did not change.
-
-    A rerun then only sends new or changed letters to the LLM.
-
-    Args:
-        bills: Freshly parsed bills (updated in place).
-        previous: Bills of the previous run keyed by ``(schuze, bod)``.
-
-    Returns:
-        Number of letters that kept their summary.
-    """
-    kept = 0
-    for bill in bills:
-        old = previous.get((bill.schuze, bill.bod))
-        if not old:
-            continue
-        by_letter = {(a.letter, a.amendment_text): a for a in old.amendments if a.summary}
-        for amend in bill.amendments:
-            prev = by_letter.get((amend.letter, amend.amendment_text))
-            if prev and amend.letter and amend.amendment_text:
-                amend.summary, amend.summary_en = prev.summary, prev.summary_en
-                amend.summary_warning = prev.summary_warning
-                kept += 1
-    logger.info("[amendment pipeline] kept {} letter summaries from the previous run", kept)
-    return kept
 
 
 def _summarize_per_amendment(
@@ -257,6 +227,63 @@ def _summarize_per_amendment(
     return count
 
 
+def _summarize_bill(
+    llm: LLMClient,
+    bill: BillAmendmentData,
+    i: int,
+    total: int,
+    tisk: TiskInfo | None,
+    text: str,
+) -> tuple[str, int]:
+    """Bill summary (brief or tisk summary reused, else LLM) and per-amendment summaries.
+
+    Args:
+        llm: LLM client.
+        bill: Bill to fill in place.
+        i: 0-based bill index for logging.
+        total: Number of bills for logging.
+        tisk: The bill's tisk, when known.
+        text: Amendment PDF text (or the first amendment text), "" when none.
+
+    Returns:
+        ``(source, amendments summarized)``; source is ``tisk``, ``llm``, ``llm_failed``
+        or ``skip`` (no summary to reuse and no text).
+    """
+    brief = (tisk.brief or {}) if tisk else {}
+    if brief.get("cs", {}).get("shrnuti"):
+        bill.bill_summary = brief["cs"]["shrnuti"]
+        bill.bill_summary_en = brief.get("en", {}).get("shrnuti", "")
+        source = "tisk"
+    elif tisk and tisk.summary:
+        bill.bill_summary = tisk.summary
+        bill.bill_summary_en = tisk.summary_en or ""
+        source = "tisk"
+        logger.info(
+            "[amendment pipeline] [{}/{}] bill ct={} '{}' reused tisk summary ({}chars+{}chars)",
+            i + 1,
+            total,
+            bill.ct,
+            bill.tisk_nazev[:60],
+            len(bill.bill_summary),
+            len(bill.bill_summary_en),
+        )
+    elif text:
+        cs, en = _summarize_bill_text(
+            llm, text, bill.tisk_nazev, bill_index=i + 1, total_bills=total
+        )
+        bill.bill_summary = cs
+        bill.bill_summary_en = en
+        source = "llm" if cs else "llm_failed"
+    else:
+        return "skip", 0
+    if not (bill.bill_summary and text):
+        return source, 0
+    count = _summarize_per_amendment(
+        llm, bill, i + 1, total, bill_context=bill.bill_summary, pdf_text=text
+    )
+    return source, count
+
+
 def _summarize_amendments(
     bills: list[BillAmendmentData],
     cache_dir: Path,
@@ -308,75 +335,34 @@ def _summarize_amendments(
     llm_generated = 0
     summarized_since_save = 0
 
-    for i, bill in enumerate(bills):
+    def _one(item: tuple[int, BillAmendmentData]) -> tuple[str, int]:
+        i, bill = item
         if cancel_check:
             cancel_check()
-        # Use transient PDF text dict or fall back to per-amendment text
         text = pdf_text_map.get(bill.ct, "") or next(
             (a.amendment_text for a in bill.amendments if a.amendment_text), ""
         )
-        has_text = bool(text)
-
-        # --- Bill summary: try tisk reuse first, then LLM fallback ---
         tisk = period_data.get_tisk(bill.schuze, bill.bod) if period_data else None
+        return _summarize_bill(llm, bill, i, len(bills), tisk, text)
 
-        brief = (tisk.brief or {}) if tisk else {}
-        if brief.get("cs", {}).get("shrnuti"):
-            bill.bill_summary = brief["cs"]["shrnuti"]
-            bill.bill_summary_en = brief.get("en", {}).get("shrnuti", "")
-            tisk_reused += 1
-        elif tisk and tisk.summary:
-            bill.bill_summary = tisk.summary
-            bill.bill_summary_en = tisk.summary_en or ""
-            tisk_reused += 1
-            logger.info(
-                "[amendment pipeline] [{}/{}] bill ct={} '{}' reused tisk summary "
-                "({}chars+{}chars)",
-                i + 1,
-                len(bills),
-                bill.ct,
-                bill.tisk_nazev[:60],
-                len(bill.bill_summary),
-                len(bill.bill_summary_en),
-            )
-        elif has_text:
-            cs, en = _summarize_bill_text(
-                llm,
-                text,
-                bill.tisk_nazev,
-                bill_index=i + 1,
-                total_bills=len(bills),
-            )
-            bill.bill_summary = cs
-            bill.bill_summary_en = en
-            if cs:
+    for (i, bill), (source, amend_count) in zip(
+        enumerate(bills), llm_map(_one, list(enumerate(bills))), strict=True
+    ):
+        progress.done_items = i + 1
+        match source:
+            case "skip":
+                continue
+            case "tisk":
+                tisk_reused += 1
+            case "llm":
                 llm_generated += 1
-            else:
+            case _:
                 progress.summaries_failed += 1
-        else:
-            # No tisk summary and no amendment text – skip
-            progress.done_items = i + 1
-            continue
-
-        # --- Per-amendment summaries (require amendment text) ---
-        if bill.bill_summary and has_text:
+        if bill.bill_summary:
             progress.summaries_completed += 1
-            amend_count = _summarize_per_amendment(
-                llm,
-                bill,
-                i + 1,
-                len(bills),
-                bill_context=bill.bill_summary,
-                pdf_text=text,
-            )
             progress.amendment_summaries_completed += amend_count
-        elif bill.bill_summary:
-            # Have bill summary (from tisk) but no amendment text for per-amendment
-            progress.summaries_completed += 1
         else:
             progress.summaries_failed += 1
-
-        progress.done_items = i + 1
 
         # Save + notify periodically so the UI updates incrementally without
         # rewriting the whole period parquet after every single bill

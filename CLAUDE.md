@@ -39,6 +39,7 @@ Environment variables are loaded from `.env` via `python-dotenv` (see `.env.exam
 - `OLLAMA_MODEL` — model name for Ollama (default: `qwen3:8b`)
 - `LLM_STRUCTURED_OUTPUT` — JSON schema structured output for all providers (`0` or `1`, default: `1`; backward-compat: reads `OLLAMA_STRUCTURED_OUTPUT` as fallback)
 - `LLM_EMPTY_RETRIES` — extra attempts when free-text LLM path returns empty/unparseable results (default: `2`, `0` = no retries)
+- `LLM_CONCURRENCY` - parallel LLM requests per pipeline stage (briefs, classification, version diffs, vote steno, amendment summaries) via `llm.llm_map` (default: `4`)
 - `LLM_ENABLE_THINKING` - Qwen3 thinking switch sent as `chat_template_kwargs` on the OpenAI-compatible path: `0` off, `1` on, unset = not sent (default: unset; set `0` for `qwen3_8_flash`, whose thinking runs away on tisk prompts)
 - `LLM_MAX_OUTPUT_TOKENS` - reply token cap sent with every OpenAI-compatible request (default: `8192`; without it the hlidacstatu proxy reserves 131072 reply tokens and halves the usable 262k context)
 - `OPENAI_BASE_URL` — OpenAI-compatible API endpoint (default: `https://api.openai.com/v1`)

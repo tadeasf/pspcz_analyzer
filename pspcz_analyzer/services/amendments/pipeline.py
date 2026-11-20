@@ -45,10 +45,8 @@ from pspcz_analyzer.services.amendments.steno_parser import (
 )
 from pspcz_analyzer.services.amendments.steno_scraper import StenoFailure, find_steno_for_bod
 from pspcz_analyzer.services.amendments.submitter_resolver import resolve_submitter_ids
-from pspcz_analyzer.services.amendments.summarizer import (
-    _summarize_amendments,
-    carry_summaries,
-)
+from pspcz_analyzer.services.amendments.summarizer import _summarize_amendments
+from pspcz_analyzer.services.amendments.summary_carry import carry_summaries
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
 
 
