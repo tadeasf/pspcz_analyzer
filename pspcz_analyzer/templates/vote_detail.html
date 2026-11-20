@@ -67,8 +67,10 @@
 </div>
 
 <div style="display:flex;flex-direction:column;gap:10px">
+    {% if not info.is_void %}
     <h2 class="h2s">{{ _("vd.why_passed") if passed else _("vd.why_failed") }}</h2>
     <p>{{ _("vd.quorum_text").format(kvorum=info.kvorum, prihlaseno=info.prihlaseno, pro=info.pro)|safe }}</p>
+    {% endif %}
     {% if n_total %}
     <div style="position:relative;padding-top:18px">
         <div class="bar5" role="img" aria-label="{{ _('vd.bar_aria').format(total=n_total, yes=n_yes, no=n_no, abst=n_abst, absent=n_absent, exc=n_exc, kvorum=info.kvorum) }}">

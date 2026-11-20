@@ -21,6 +21,10 @@ from pspcz_analyzer.services.amendments.steno_scraper import (
 VOTE_STENO_DIR = "vote_steno"
 
 SPEECHES_DIR = "speeches"
+_MERGED_RE = re.compile(
+    r"<b>\s*Sloučená rozprava k bodům\s+([\d,\sa]+?)\s*</b>(.*?)(?=<b>|</div>|$)", re.I | re.S
+)
+_DAY_LINK_RE = re.compile(r'href="(\d+-\d+\.html)#(q\d+)"')
 _SECTION_RE = re.compile(r'<a\s+name="(q\d+)"', re.I)
 _SPEAKER_RE = re.compile(r'<a href="s\d+\.htm#r\d+">([^<]+)</a>', re.I)
 _CHAIR_RE = re.compile(r"^(?:Místo)?předsed(?:a|kyně) PSP", re.I)
@@ -66,21 +70,36 @@ def speech_counts(index_html: str, day_pages: dict[str, str]) -> dict[int, dict[
         ``{bod: {iso date: speeches}}``.
     """
     out: dict[int, dict[str, int]] = {}
-    for bod in {int(m.group(1)) for m in _BOD_ANCHOR_RE.finditer(index_html)}:
-        for page, anchor in _find_bod_day_pages(index_html, bod):
-            day_html = day_pages.get(page, "")
-            starts = [(m.group(1), m.start()) for m in _SECTION_RE.finditer(day_html)]
-            for i, (q, pos) in enumerate(starts):
-                if q != anchor:
-                    continue
-                end = starts[i + 1][1] if i + 1 < len(starts) else len(day_html)
-                names = _SPEAKER_RE.findall(day_html[pos:end])
-                n = sum(not _CHAIR_RE.match(html.unescape(x).strip()) for x in names)
-                if n:
-                    day = out.setdefault(bod, {})
-                    key = _day_date(day_html)
-                    day[key] = day.get(key, 0) + n
+    merged = _MERGED_RE.search(index_html)
+    # the merged-debate blocks follow the last agenda item; keep them out of its section
+    items = index_html[: merged.start()] if merged else index_html
+    for bod in {int(m.group(1)) for m in _BOD_ANCHOR_RE.finditer(items)}:
+        for page, anchor in _find_bod_day_pages(items, bod):
+            _add_speeches(out, [bod], day_pages.get(page, ""), anchor)
+    # "Sloučená rozprava k bodům 2 a 3": its speeches count for every merged item (#108)
+    for m in _MERGED_RE.finditer(index_html):
+        bods = [int(x) for x in re.findall(r"\d+", m.group(1))]
+        for page, anchor in _DAY_LINK_RE.findall(m.group(2)):
+            _add_speeches(out, bods, day_pages.get(page, ""), anchor)
     return out
+
+
+def _add_speeches(
+    out: dict[int, dict[str, int]], bods: list[int], day_html: str, anchor: str | None
+) -> None:
+    """Add the non-chair speeches of one day-page section to each of ``bods``."""
+    starts = [(m.group(1), m.start()) for m in _SECTION_RE.finditer(day_html)]
+    for i, (q, pos) in enumerate(starts):
+        if q != anchor:
+            continue
+        end = starts[i + 1][1] if i + 1 < len(starts) else len(day_html)
+        names = _SPEAKER_RE.findall(day_html[pos:end])
+        n = sum(not _CHAIR_RE.match(html.unescape(x).strip()) for x in names)
+        if n:
+            key = _day_date(day_html)
+            for bod in bods:
+                day = out.setdefault(bod, {})
+                day[key] = day.get(key, 0) + n
 
 
 def sitting_speeches(period: int, schuze: int, cache_dir: Path) -> dict[int, dict[str, int]]:

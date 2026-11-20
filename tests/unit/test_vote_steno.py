@@ -196,3 +196,14 @@ DAY = (
 
 def test_speech_counts_skip_chair_and_stop_at_next_section() -> None:
     assert speech_counts(INDEX, {"31-2.html": DAY}) == {3: {"2026-09-23": 2}}
+
+
+def test_merged_debate_counts_for_every_item() -> None:
+    index = (
+        '<a name="b2" id="b2"></a><b>2. A</b><a href="31-2.html#q8">Projednávání</a>'
+        '<a name="b3" id="b3"></a><b>3. B</b>'
+        '<!--bz--><b>Sloučená rozprava k bodům 2 a 3</b><br><a href="31-2.html#q7">Projednávání</a></div>'
+    )
+    counts = speech_counts(index, {"31-2.html": DAY})
+    assert counts[2] == {"2026-09-23": 3}  # 1 own (q8) + 2 merged (q7)
+    assert counts[3] == {"2026-09-23": 2}
