@@ -123,7 +123,11 @@ def test_link_repeats_challenge_and_chair_repeat() -> None:
         ]
     )
     records: dict[str, dict] = {str(v): {"cislo": spans[v]["cislo"]} for v in spans}
+    records["12"].update(status="ok", question="Revokovat usnesení?", proposer="Karel Haas")
+    records["14"].update(status="uncertain", question="Schválit revokaci?")
     link_repeats(records, votes, text, spans)
+    assert records["14"]["question"] == "Revokovat usnesení?"
+    assert (records["14"]["status"], records["14"]["proposer"]) == ("ok", "Karel Haas")
     assert records["12"]["invalid_by"] == 13
     assert records["12"]["repeated_as"] == 14
     assert records["14"]["repeats"] == 12

@@ -376,6 +376,7 @@ def law_detail(
         "law_number": law_number,
         "history": history,
         "has_pdf": _tisk_pdf_exists(cache_dir, tisk.period, ct),
+        "has_text": tisk.has_text,
         "pdf_url": f"/api/tisk-pdf/{tisk.period}/{ct}",
         "amendments": law_tally(data, ct),
         "related_votes": related_votes,

@@ -30,7 +30,7 @@
         <div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("ld.ai_source").format(ct=detail.ct) }}{% if detail.history and detail.history.submitter_date %} ({{ detail.history.submitter_date|cz_date }}){% endif %}
             · {% if b.edited %}{{ _("ai.reviewed") }}{% elif b.status == "ok" %}{{ _("ai.check_ok") }}{% else %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}
             {% if detail.amendments and detail.amendments.tally.accepted %} {{ _("ld.amended_note") }}{% endif %}</span></div>
-        {% else %}<p>{{ _("empty.not_processed") }} <a href="{{ detail.url }}" rel="noopener">{{ _("empty.open_psp") }} ↗</a></p>{% endif %}
+        {% else %}<p>{{ _("empty.not_processed") if detail.has_text else _("lw.no_summary") }} <a href="{{ detail.url }}" rel="noopener">{{ _("empty.open_psp") }} ↗</a></p>{% endif %}
     </section>
 
     <section>

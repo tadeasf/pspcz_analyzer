@@ -274,6 +274,15 @@ def referenced_vote(window: str) -> int | None:
     return int(refs[-1]) if refs else None
 
 
+_SUBJECT_FIELDS = ("kind", "subkind", "question", "question_en", "pro", "pro_en", "proposer")
+
+
+def _inherit_subject(original: dict, repeat: dict) -> None:
+    """A repeat of a challenged vote is the same question: take a sure subject over (#102)."""
+    if original.get("status") == "ok" and repeat.get("status") != "ok":
+        repeat.update({k: original[k] for k in _SUBJECT_FIELDS if k in original}, status="ok")
+
+
 def link_repeats(records: dict[str, dict], votes: pl.DataFrame, text: str, spans: dict) -> None:
     """Mark challenged votes invalid and link them, and chair-repeated votes, to the repeat.
 
@@ -298,6 +307,7 @@ def link_repeats(records: dict[str, dict], votes: pl.DataFrame, text: str, spans
                 records[str(target)].update(invalid_by=int(vid), repeated_as=repeat)
                 if str(repeat) in records:
                     records[str(repeat)]["repeats"] = target
+                    _inherit_subject(records[str(target)], records[str(repeat)])
         elif chair_declared_void(window) and repeat:
             rec["chair_repeated_as"] = repeat
             if str(repeat) in records:
