@@ -303,6 +303,20 @@ Known differences from the mockup, kept on purpose: tisk 246 letters B1 and B2 w
 #101 last bullet: every computation that depends on the club now uses the club on the vote date (rebellion, gov × opposition, and since round 2 the cross-club pairs). The similarity map and the attendance chart place each MP once, so they colour and group by the MP's latest club; attendance itself does not depend on the club.
 Not done: RSS per tisk (pending confirmation).
 
+## Round 3: second verifier pass (2026-11-20)
+
+Closed:
+- #87 Senate bills and treaties: "předložil Senátu" is a submission (`předloženo Senátu`), not the Chamber's hand-over; the Senate's own steps before the Chamber say "návrh". Data test over all cached tisky (`tests/integration/test_period10_data.py`).
+- #86 statuses re-scraped (parser v3): 246, 83, 113, 187 now "vyhlášeno" like psp.cz.
+- #97 checks for English word forms, stray "×", unfinished sentences (the issue's sample fails it); amendment summaries keep their check flag (it was dropped from the parquet) and show source and review state.
+- #98 submitter falls back to the tisky.unl `predkladatel` (tisk 314).
+- #100 letters filled from the vote title record `match_source = vote_title`; `/admin/quality` lists single votes and letters to review.
+- #101 / #103 submitter club taken on the day of the letter's vote.
+- #102 vote 279 corrected (speaking time 10 min); proposers named by the chair (286, 287) and challengers (281); a repeat of a challenged vote takes its subject (282); 273 is no longer called "zmatečné"; old votes without a steno record say "nepodařilo se spolehlivě určit" and the heading is no agenda item name; regression test of 273-302.
+- #104 test with the issue's own example; #106 number format, Czech coalition sources; #109/#110 list summary cut at a word; #111 "Číst text" per version; #113 a bill kind on an item without a bill is procedural, deadline shortening is procedural; #114 "Navrhl Karel Haas (ODS)" with gendered verb; #120 map dots by keyboard, heading order.
+
+Kept as is: the empty search offers the previous period (searching all periods at once is not built); "Celé znění" of a letter links the consolidated amendment document, not each sněmovní dokument.
+
 ## Data migration checklist (VPS)
 
 - [x] ~~Delete `zmatecne_8.parquet`~~ Not needed: the cache key was renamed. The old `zmatecne_*.parquet` files are unused and can be deleted any time.
