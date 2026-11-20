@@ -1,0 +1,40 @@
+{# "About the data" (#118), English version of about_data_cs.html. #}
+<div class="ld-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px">
+<div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+<section class="gsec" id="zdroje"><h2 class="h2s">Where the data come from and how often they load</h2>
+<p>Everything comes from public sources of the Chamber of Deputies on psp.cz:</p>
+<ul>
+<li><b>psp.cz open data</b> (download files): votes and individual MPs' votes, void votes, excuses, MPs and their clubs, sittings and agendas, Chamber prints.</li>
+<li><b>Print histories</b> ("Historie tisku" pages): the steps of the legislative process, the bill's status, its sponsor and its number in the Collection of Laws.</li>
+<li><b>Print texts</b> (PDFs on psp.cz): the source of the summaries and, from the amendment document, of the amendment letters and their submitters.</li>
+<li><b>Stenographic records</b>: what each vote was about, third-reading amendment results and the number of speeches per item.</li>
+</ul>
+<p>The data refresh <b>every day at {{ refresh_hour }}:00</b> (Czech time). The refresh downloads the open data and the current term's votes again and reprocesses new prints and every bill that is not closed (not published, rejected or withdrawn). Closed bills no longer change. Steno records of sittings from the last 21 days are loaded again because psp.cz adds them gradually. The date of the latest vote and the latest history load is in every page footer.</p></section>
+
+<section class="gsec" id="ai"><h2 class="h2s">How AI summaries are made and checked</h2>
+<p>A language model writes the bill summary (what changes, plain title, who it concerns, how much, from when) from the text of the original bill (print /0). It must not add anything. Every summary shows its source and check status.</p>
+<p>Every summary goes through an automatic check for non-Latin script, English sentences in Czech text and numbers missing from the source. When the check finds something, the model writes again; if the problem stays, the summary is published with a warning. Summaries reviewed by a person are labelled as such. A summary is regenerated when the print's text changes.</p>
+<p>Amendment summaries are written only from the text of that letter. A letter without its own text gets no summary.</p></section>
+
+<section class="gsec" id="statistiky"><h2 class="h2s">How the statistics are computed</h2>
+<p>Void votes are never counted.</p>
+<ul>
+<li><b>Attendance</b> is the share of votes in which the MP was logged in (yes, no, abstained) out of all votes during their mandate. Excuses are counted separately. MPs with fewer than {{ att_min }} votes are not ranked.</li>
+<li><b>Rebellion rate</b> is the share of votes in which the MP voted against the majority of their club. Only yes and no count; the club is the one on the day of the vote.</li>
+<li><b>Pair agreement</b> is the share of shared votes in which both voted the same way. The rankings include only pairs with at least {{ sim_min }} shared votes.</li>
+<li><b>Government and opposition clubs</b> come from the confidence vote: government clubs are those whose MPs voted for confidence. When that vote is not clear, we do not assign sides.</li>
+<li><b>The similarity map</b> places MPs so that those who vote alike are close (principal component analysis).</li>
+</ul>
+<h3 style="font-size:16px">Hand-kept government composition (where the confidence vote is not enough)</h3>
+<div style="overflow-x:auto" tabindex="0"><table class="t"><thead><tr><th>Term</th><th>From</th><th>To</th><th>Government clubs</th><th>Source</th></tr></thead><tbody>
+{% for p, spans in coalition_table.items() %}{% for s in spans %}<tr><td>{{ p }}</td><td>{{ s.start|cz_date }}</td><td>{{ s.end|cz_date if s.end else "–" }}</td><td>{{ s.parties|sort|join(", ") }}</td><td class="lbl">{{ s.source|urlize(40, true) }}</td></tr>{% endfor %}{% endfor %}
+</tbody></table></div>
+<p class="lbl">Amendments are assigned a side by the submitter's club on the day of the third-reading vote; the bill's sponsor comes from the print history.</p></section>
+
+<section class="gsec" id="prirazovani"><h2 class="h2s">How votes are matched to bills</h2>
+<p>Each vote has a sitting and item number in the open data. We look the item up in the <b>approved</b> agenda of the sitting (not the proposed one) and take its print.</p>
+<p>What a vote was about comes from the steno record: every vote is announced there ("Hlasování číslo N, přihlášeno …") and the text before the announcement says what is being voted on. A language model writes the question, what Yes meant and who proposed it, and must quote a sentence of the record verbatim. Without such a quote the subject counts as unknown. A subject found only in an earlier part of the debate is marked uncertain.</p>
+<p>Third-reading amendments are matched by the letters the rapporteur reads before each vote and by the amendment document. Votes on the voting procedure are not amendments. When the rapporteur says an amendment became unvotable, we show "not voted on". When the matching is incomplete, the bill page says so.</p></section>
+</div>
+<aside><nav class="box" style="display:flex;flex-direction:column;gap:4px;font-size:14px"><b>On this page</b><a href="#zdroje">Data sources</a><a href="#ai">AI summaries</a><a href="#statistiky">Statistics</a><a href="#prirazovani">Matching votes</a><a href="/jak-se-v-tom-vyznat?period={{ period }}">← How it works</a></nav></aside>
+</div>

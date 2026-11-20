@@ -5,6 +5,7 @@ from datetime import date, datetime
 
 from jinja2 import Environment
 
+from pspcz_analyzer.i18n.glossary import GLOSSARY, GLOSSARY_ORDER, term_text
 from pspcz_analyzer.i18n.translations import TRANSLATIONS
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("cs", "en")
@@ -137,6 +138,17 @@ def format_count(n: int, base: str) -> str:
     return gettext(base + form).format(n=format_number(n))
 
 
+def gloss(slug: str) -> tuple[str, str]:
+    """``(term, plain explanation)`` of a glossary entry in the current language (#106, #118)."""
+    return term_text(slug, get_locale())
+
+
+def gloss_entry(slug: str) -> tuple[str, str]:
+    """``(term, explanation HTML)`` of a glossary entry for the guide page (#118)."""
+    entry = GLOSSARY.get(slug, {})
+    return entry.get(get_locale()) or entry.get("cs") or ("", "")
+
+
 def setup_jinja2_i18n(env: Environment) -> None:
     """Install gettext callables and locale-aware filters on a Jinja2 environment."""
     env.add_extension("jinja2.ext.i18n")
@@ -146,3 +158,6 @@ def setup_jinja2_i18n(env: Environment) -> None:
     env.filters["pct"] = format_percent  # type: ignore[attr-defined]
     env.filters["cz_date"] = format_date_cz  # type: ignore[attr-defined]
     env.filters["count"] = format_count  # type: ignore[attr-defined]
+    env.globals["gloss"] = gloss  # type: ignore[attr-defined]
+    env.globals["gloss_entry"] = gloss_entry  # type: ignore[attr-defined]
+    env.globals["gloss_order"] = GLOSSARY_ORDER  # type: ignore[attr-defined]

@@ -59,3 +59,9 @@
 {% if page < total_pages %}<button hx-get="{{ url }}{{ page + 1 }}" hx-target="{{ target }}">{{ _("pagination.next") }} &rsaquo;</button>{% endif %}
 </span>{% endif %}
 {%- endmacro %}
+
+{# Term with its glossary explanation (#106): hover shows it, the link opens the guide entry. #}
+{% macro term(slug, label="") -%}
+{%- set t = gloss(slug) -%}
+<a class="term" href="/jak-se-v-tom-vyznat#pojem-{{ slug }}" title="{{ t[1] }}">{{ label or t[0] }}</a>
+{%- endmacro %}

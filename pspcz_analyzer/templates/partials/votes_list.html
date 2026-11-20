@@ -1,4 +1,4 @@
-{% from "macros.html" import page_links %}
+{% from "macros.html" import page_links, term %}
 {% if not groups %}
 <p>{{ _("votes.no_data") }}</p>
 {% else %}
@@ -11,7 +11,7 @@
         <span style="font:700 18px Georgia,serif;color:#1A4677">
             {{ g.title or _("vl.no_item") }}
         </span>
-        {% if g.tisk_ct or g.reading %}<span class="lbl">{% if g.tisk_ct %}{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}{% endif %}{% if g.reading %} · {{ _("vl.reading_" ~ g.reading) }}{% endif %}</span>{% endif %}
+        {% if g.tisk_ct or g.reading %}<span class="lbl">{% if g.tisk_ct %}{{ _("vd.tisk_n").format(ct=g.tisk_ct) }}{% endif %}{% if g.reading %} · {{ term("cteni" ~ g.reading[0], _("vl.reading_" ~ g.reading)) }}{% endif %}</span>{% endif %}
         {% if g.result %}<span style="font-size:14px">{{ _("vl.group_result") }} {{ _(g.result) }}</span>{% endif %}
         <span class="lbl vg-more" aria-hidden="true">{{ _("vl.expand") }} ▾</span>
     </summary>
@@ -21,7 +21,7 @@
     {% if r.is_void %}
     <div class="vrow zm">
         <span class="lbl">{{ r.cas }}</span>
-        <span><span class="chip c-proc">{{ _("vd.void_label") }}</span> <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{{ _("vd.void_text") }}</a></span>
+        <span><span class="chip c-proc">{{ term("zmatecne", _("vd.void_label")) }}</span> <a href="/votes/{{ r.id_hlasovani }}?period={{ period }}">{{ _("vd.void_text") }}</a></span>
         <span></span><span></span>
     </div>
     {% else %}

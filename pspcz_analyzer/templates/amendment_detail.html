@@ -12,6 +12,7 @@
 </div>
 
 {{ side_table(detail.tally) }}
+<p class="lbl">{{ _("driver.note") }} <a href="/o-datech?period={{ period }}#statistiky">{{ _("about.title") }}</a></p>
 
 {% for x in detail.letters %}
 {{ letter_card(x, period, stances=true) }}
