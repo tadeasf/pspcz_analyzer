@@ -1,4 +1,4 @@
-{% from "macros.html" import page_links %}
+{% from "macros.html" import ai_label, page_links %}
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&phase=" ~ (phase|urlencode) ~ "&submitter=" ~ (submitter|urlencode) ~ "&sort=" ~ sort ~ "&tab=" ~ tab %}
 <div class="tabs-s" role="tablist">
     {% for t in ("navrhy", "smlouvy", "zpravy", "interpelace") %}
@@ -21,7 +21,7 @@
         {% if row.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(row.status|status_category, 'c-wait') }}">{{ _(row.phase_key) }}</span>{% endif %}
     </div>
     <h3 style="font-size:19px;margin:6px 0"><a href="/laws/{{ row.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ row.nazev }}</a></h3>
-    {% if row.has_summary %}<p>{{ row.summary_truncated }}</p><div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("lw.ai_from").format(ct=row.ct) }}{% if row.brief and row.brief.status != "ok" %} · <b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}</span></div>
+    {% if row.has_summary %}<p>{{ row.summary_truncated }}</p><div>{{ ai_label(row.brief, row.ct) }}</div>
     {% elif tab == "navrhy" %}<p class="lbl">{{ _("lw.no_summary") }}</p>{% endif %}
     {% if row.has_amendments %}<p class="last"><a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}">{{ _("lw.amendments_n").format(n=row.amendment_count) }}</a>{% for s in ("opposition", "government", "mixed", "committee") %}{% if row.amendment_tally.by_side[s].submitted %} · {{ _("pn.from_" ~ s) }} {{ row.amendment_tally.by_side[s].submitted|num }}, {{ _("pn.accepted_n") }} {{ row.amendment_tally.by_side[s].accepted|num }}{% endif %}{% endfor %}</p>{% endif %}
     {% if row.last_step %}<p class="last">{{ row.last_step.date|cz_date(short=True) }} · {{ row.last_step.text }}</p>{% endif %}

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import icon %}
+{% from "macros.html" import ai_label, icon %}
 {% block title %}{{ _("site.short_title") }}{% endblock %}
 {% block content %}
 {% macro law_row(r, text) %}
@@ -46,7 +46,7 @@
         <div class="top"><span class="chip c-st">{{ _("lw.kind_" ~ (t.kind or "unknown")) }}</span><span class="lbl">{{ _("vd.tisk_n").format(ct=t.ct) }}</span>
             {% if t.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(t.status|status_category, 'c-wait') }}">{{ _(t.phase_key) }}</span>{% endif %}</div>
         <h3 style="font-size:22px;margin:0"><a href="/laws/{{ t.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ t.nazev }}</a></h3>
-        {% if t.summary %}<p style="margin:0">{{ t.summary }}</p>{% endif %}
+        {% if t.summary %}<p style="margin:0">{{ t.summary }}</p>{{ ai_label(t.brief, t.ct) }}{% endif %}
         <ol class="phase">{% for s in t.steps %}<li class="{{ s.state }}"><b>{{ _(s.key) }}</b>{% if s.date %}<br>{{ s.date|cz_date(short=True) }}{% elif s.state == "now" %}<br>{{ _("ph.now") }}{% endif %}</li>{% endfor %}</ol>
         <p class="lbl" style="margin:0">{{ _("home.talked_picked") if t.picked else _("home.talked_why").format(n=t.speeches) }}</p>
     </div>
@@ -72,7 +72,7 @@
     {% for r in blocks.newest %}
     <div class="lrow">
         <span class="lbl">{{ r.submitted|cz_date(short=True) if r.submitted else "" }}</span>
-        <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ r.summary or _("lw.no_summary") }}</span>
+        <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ r.summary or _("lw.no_summary") }}{% if r.summary %}<br>{{ ai_label(r.brief, r.ct) }}{% endif %}</span>
         <span class="chip c-st">{{ _("lw.submitter_" ~ r.kind) if r.kind else _("lw.kind_unknown") }}</span>
     </div>
     {% else %}<p>{{ _("home.newest_empty") }}</p>{% endfor %}

@@ -222,6 +222,7 @@ def _assign_committee_letters(
             stems = [_committee_stem(n) for n in s.submitter_names if "výbor" in n.lower()]
             if s.vote_number and not s.is_procedure and any(st and st in names for st in stems):
                 s.letter = key
+                s.match_source = "committee_name"
                 loose.remove(s)
                 steno_by_letter[key] = [s]
                 break

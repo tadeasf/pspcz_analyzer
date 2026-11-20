@@ -1,5 +1,5 @@
 {% from "macros.html" import page_links %}
-{% from "partials/amendment_card.html" import letter_card, side_line %}
+{% from "partials/amendment_card.html" import fate_line, letter_card, side_line %}
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&side=" ~ side ~ "&club=" ~ (club|urlencode) ~ "&fate=" ~ fate ~ "&view=" ~ view ~ "&sort=" ~ sort %}
 {% if not law_count %}
 <div class="empty"><b>{{ _("pn.no_data") }}</b></div>
@@ -22,6 +22,7 @@
     <div class="vg-h"><span class="lbl">{% if g.date %}{{ _("pn.third_reading").format(d=g.date|cz_date) }} · {% endif %}{{ _("vd.tisk_n").format(ct=g.ct) }}</span>
         <h4 style="font-size:20px"><a href="/amendments/{{ g.schuze }}/{{ g.bod }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ g.title }}</a></h4>
         <p style="font-size:14px">{{ side_line(g.tally) }}{% if g.final_result in ("accepted", "rejected") %} · {{ _("pn.law_passed" if g.final_result == "accepted" else "pn.law_failed")|safe }}{% endif %}</p>
+        <p class="lbl">{{ fate_line(g.tally) }}</p>
         {% if g.unassigned %}<p class="lbl">{{ _("pn.incomplete_votes").format(n=g.unassigned) }}</p>{% endif %}</div>
     <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
         {% for x in g.shown[:preview] %}{{ letter_card(x, period) }}{% endfor %}

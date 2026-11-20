@@ -565,6 +565,7 @@ def _blocks_to_amendments(blocks: list[_ParseBlock]) -> list[AmendmentVote]:
             is_final_vote=block.is_final,
             is_leg_tech=block.is_leg_tech,
             is_procedure=block.is_procedure,
+            match_source="letter" if letter else "",
             is_revote=is_revote,
             original_vote_number=last_vote_number if is_revote else None,
             grouped_with=block.grouped_letters,

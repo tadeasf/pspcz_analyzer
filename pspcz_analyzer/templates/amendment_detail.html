@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/amendment_card.html" import letter_card, side_table %}
+{% from "partials/amendment_card.html" import fate_line, letter_card, side_table %}
 {% set heading = _("pn.detail_title_law").format(l=detail.law_name, t=detail.title) if detail.law_name else _("pn.detail_title").format(t=detail.title) %}
 {% block title %}{{ heading }} · {{ _("site.short_title") }}{% endblock %}
 
@@ -12,6 +12,7 @@
 </div>
 
 {{ side_table(detail.tally) }}
+<p class="lbl">{{ fate_line(detail.tally) }}</p>
 <p class="lbl">{{ _("driver.note") }} <a href="/o-datech?period={{ period }}#statistiky">{{ _("about.title") }}</a></p>
 
 {% for x in detail.letters %}

@@ -29,6 +29,8 @@ class AmendmentVote:
         is_leg_tech: True for §95 legislative-technical corrections.
         is_procedure: True for a vote on the voting procedure, not on an amendment.
         is_unvotable: True when the steno says the letter became unvotable.
+        match_source: How the vote was tied to the letter: "letter" (the steno names it),
+            "committee_name" (only the committee is named; uncertain), "" (no vote).
         amendment_text: Per-amendment text from PDF (or combined blob for legacy).
         summary: LLM-generated Czech summary.
         summary_en: LLM-generated English summary.
@@ -54,6 +56,7 @@ class AmendmentVote:
     is_leg_tech: bool = False
     is_procedure: bool = False
     is_unvotable: bool = False
+    match_source: str = ""
     amendment_text: str = ""
     summary: str = ""
     summary_en: str = ""

@@ -54,6 +54,7 @@ def _row(tisk: TiskInfo, lang: str) -> dict:
         "last_step": last_step(tisk, lang),
         "submitted": tisk.history.submitter_date if tisk.history else None,
         "summary": _first_sentence(brief["shrnuti"]) if brief else "",
+        "brief": brief,
     }
 
 

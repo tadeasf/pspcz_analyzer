@@ -50,6 +50,15 @@ def _fate(amend: AmendmentVote, bill_voted: bool, all_assigned: bool, pending: b
             return "unknown"
 
 
+def _certainty(amend: AmendmentVote, fate: str) -> str:
+    """How sure the fate is (#100): certain, uncertain (vote matched by committee name) or undetermined."""
+    if fate == "unknown":
+        return "undetermined"
+    if amend.vote_number and amend.match_source == "committee_name":
+        return "uncertain"
+    return "certain"
+
+
 def _side(amend: AmendmentVote, coalition: frozenset[str]) -> str:
     """Who submitted the amendment: one of SIDES."""
     if _is_committee(amend):
@@ -94,10 +103,12 @@ def bill_letters(bill: BillAmendmentData, coalition: frozenset[str]) -> list[dic
         for key in keys:
             if key in letters and not amend.is_revote:
                 continue
+            fate = _fate(amend, bill_voted, all_assigned, bill.is_pending)
             letters[key] = {
                 "letter": key,
                 "amend": amend,
-                "fate": _fate(amend, bill_voted, all_assigned, bill.is_pending),
+                "fate": fate,
+                "certainty": _certainty(amend, fate),
                 "side": _side(amend, coalition),
                 "voted_with": [k for k in keys if k != key],
             }

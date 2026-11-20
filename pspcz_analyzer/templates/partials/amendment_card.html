@@ -16,6 +16,7 @@
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border-top:1px solid #E3EAF2;padding-top:8px;font-size:14px">
         {{ fate_chip(x.fate) }}
+        {% if x.certainty == "uncertain" %}<span class="lbl">{{ _("pn.uncertain") }}{% if x.steno_url %} <a href="{{ x.steno_url }}" rel="noopener">{{ _("pn.steno") }}</a>{% endif %}</span>{% endif %}
         {% if x.voted_with %}<span class="lbl">{{ _("pn.voted_with").format(l=x.voted_with|join(", ")) }}</span>{% endif %}
         {% if stances and (x.committee_stance or x.proposer_stance) %}<span>
             {% if x.committee_stance %}{{ _("pn.committee_stance") }}: {{ _("amendments.stance." ~ x.committee_stance) }}{% endif %}
@@ -38,3 +39,8 @@
 <tr><td>{{ _("pn.agg_" ~ s) }}</td><td>{{ t.by_side[s].submitted|num }}</td><td>{{ t.by_side[s].accepted|num }}</td></tr>{% endif %}{% endfor %}
 <tr class="sum"><td>{{ _("pn.agg_total") }}</td><td>{{ t.total|num }}</td><td>{{ t.accepted|num }}</td></tr></tbody></table></div>
 {% endmacro %}
+
+{# Fates that add up to the total (#93): "přijato 1 · nepřijato 1 · nehlasovalo se 1" #}
+{% macro fate_line(t) -%}
+{% for f in ("accepted", "rejected", "not_voted", "withdrawn", "pending", "unknown") if t.by_fate[f] %}{% if not loop.first %} · {% endif %}{{ _("pn.fate_" ~ f) }} <b>{{ t.by_fate[f]|num }}</b>{% endfor %}
+{%- endmacro %}

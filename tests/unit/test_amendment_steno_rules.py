@@ -102,3 +102,12 @@ def test_split_core_and_law_name() -> None:
     assert core == "Kraje by dostaly 6 % z výnosu daně" and rest.startswith(", rozdělené")
     assert law_name("Novela z. o pozemních komunikacích") == "zákona o pozemních komunikacích"
     assert law_name("Státní rozpočet na rok 2027") == ""
+
+
+def test_certainty_of_letters() -> None:
+    a = AmendmentVote(letter="A", vote_number=8, result="accepted", match_source="committee_name")
+    b1 = AmendmentVote(letter="B1", vote_number=9, result="rejected", match_source="letter")
+    c = AmendmentVote(letter="C", vote_number=0)
+    bill = BillAmendmentData(period=10, schuze=31, bod=12, ct=246, amendments=[a, b1, c])
+    rows = {x["letter"]: x["certainty"] for x in bill_letters(bill, frozenset())}
+    assert rows == {"A": "uncertain", "B1": "certain", "C": "undetermined"}

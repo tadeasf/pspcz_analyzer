@@ -65,3 +65,8 @@
 {%- set t = gloss(slug) -%}
 <a class="term" href="/jak-se-v-tom-vyznat#pojem-{{ slug }}" title="{{ t[1] }}">{{ label or t[0] }}</a>
 {%- endmacro %}
+
+{# "Shrnutí AI · z tisku 246/0 · stav kontroly" next to every shown summary (#109, #97). #}
+{% macro ai_label(brief, ct) -%}
+<span class="ai-l lbl"><b>{{ _("detail.ai_generated") }}</b> · {{ _("lw.ai_from").format(ct=ct ~ "/0") }} · {% if brief and brief.edited %}{{ _("ai.reviewed") }}{% elif brief and brief.status == "ok" %}{{ _("ai.check_ok") }}{% else %}<b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}</span>
+{%- endmacro %}

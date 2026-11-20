@@ -74,6 +74,8 @@ def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
     return {
         "letter": row["letter"],
         "fate": row["fate"],
+        "certainty": row["certainty"],
+        "steno_url": bill.steno_url,
         "side": row["side"],
         "voted_with": row["voted_with"],
         "names": a.pdf_submitter_names or a.submitter_names,

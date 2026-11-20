@@ -30,7 +30,7 @@ from pspcz_analyzer.services.llm import LLMClient, create_llm_client
 from pspcz_analyzer.services.llm.helpers import _sanitize_llm_input
 
 BRIEFS_DIR = "briefs"
-BRIEF_VERSION = 1  # bump when the prompt or schema changes: all briefs regenerate
+BRIEF_VERSION = 2  # bump when the prompt or schema changes: all briefs regenerate
 BRIEF_DRUHY = (1, 2, 3)  # vládní návrh zákona, návrh zákona, státní rozpočet
 # ~3 chars per token for Czech: 480k chars stays well inside a 262k-token context
 BRIEF_MAX_CHARS = 480_000
@@ -49,7 +49,7 @@ _PROMPT = """Z textu sněmovního tisku vyplň pole:
 - nazev: věcný název o 2 až 6 slovech, co návrh dělá (např. "Zmrazení ceny dálniční známky"). Ne oficiální název.
 - shrnuti: jedna, nejvýš dvě věty (do 45 slov): co se má změnit.
 - koho: komu se změna týká, krátká fráze ve 2. pádě navazující na "Týká se ..." (např. "řidičů, kteří potřebují dálniční známku").
-- kolik: nejvýš 4 hlavní částky nebo sazby, které se čtenáře přímo týkají (ceny, poplatky, dávky, daně, pokuty), každá s tím, čeho se týká (např. "roční známka 2 570 Kč"), čísla přesně jak stojí v textu. Ne lhůty, počty členů ani délky funkčních období. Když žádné nejsou, prázdný řetězec.
+- kolik: hlavní částky nebo sazby, které se čtenáře přímo týkají (ceny, poplatky, dávky, daně, pokuty), nejvýš 8, každá s tím, čeho se týká, čísla přesně jak stojí v textu. Když návrh stanoví jednu sazbu ve více variantách (např. na rok, 30 dní, 10 dní a 1 den), uveď všechny varianty, např. "roční 2 570 Kč, 30denní 480 Kč, 10denní 300 Kč, jednodenní 230 Kč". Ne lhůty, počty členů ani délky funkčních období. Když žádné nejsou, prázdný řetězec.
 - od_kdy: navržená účinnost (např. "od 1. 1. 2027"). Když ji text neuvádí, prázdný řetězec.
 - nazev_en, shrnuti_en, koho_en, kolik_en, od_kdy_en: totéž anglicky.
 
