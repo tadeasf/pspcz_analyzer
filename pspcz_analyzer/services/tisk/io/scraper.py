@@ -70,8 +70,16 @@ def scrape_tisk_documents(period: int, ct: int) -> list[TiskDocument]:
 
 
 def get_best_pdf(period: int, ct: int) -> TiskDocument | None:
-    """Return the best PDF document for a tisk – prefer complete prints."""
-    docs = scrape_tisk_documents(period, ct)
+    """Return the best PDF document for a tisk – prefer complete prints.
+
+    A network or HTTP error returns None (logged), so one failed page does not stop
+    the whole period; the next run tries again.
+    """
+    try:
+        docs = scrape_tisk_documents(period, ct)
+    except httpx.HTTPError:
+        logger.opt(exception=True).warning("Failed to fetch documents of tisk {}/{}", period, ct)
+        return None
     if not docs:
         return None
 
