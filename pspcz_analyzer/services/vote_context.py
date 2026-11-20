@@ -122,6 +122,58 @@ _CONSEQUENCES: dict[str, tuple[str, str]] = {
 }
 
 
+def _verb(women: list[bool | None]) -> str:
+    """Translation key of "Navrhl / Navrhla / Navrhli / Navrhl(a)" (None = gender unknown)."""
+    if len(women) > 1:
+        return "vd.proposed_by_pl"
+    match women[0] if women else None:
+        case True:
+            return "vd.proposed_by_f"
+        case False:
+            return "vd.proposed_by_m"
+        case _:
+            return "vd.proposed_by"
+
+
+def proposer_view(data: PeriodData, names: str, vote_id: int | None) -> dict | None:
+    """Proposers with their club on the vote day and the verb form (#114).
+
+    Args:
+        data: Period data (mp_info with pohlavi, mp_votes with the club per vote).
+        names: Proposer names from the steno record, joined by ", " (may be surnames).
+        vote_id: The vote, for the club on that day.
+
+    Returns:
+        ``{"verb": key, "text": "Karel Haas (ODS)"}``, or None without names. A name
+        that matches no MP, or several, is shown as written, without a club.
+    """
+    if not names:
+        return None
+    info = data.mp_info
+    has_gender = "pohlavi" in info.columns
+    parts: list[str] = []
+    women: list[bool | None] = []
+    for name in names.split(", "):
+        words = name.split()
+        hits = info.filter(pl.col("prijmeni") == words[-1])
+        if len(words) > 1:
+            hits = hits.filter(pl.col("jmeno") == " ".join(words[:-1]))
+        if hits.height != 1:
+            parts.append(name)
+            women.append(True if name.endswith("ová") else None)
+            continue
+        mp = hits.row(0, named=True)
+        club = mp["party"]
+        if vote_id and "party" in data.mp_votes.columns:
+            row = data.mp_votes.filter(
+                (pl.col("id_hlasovani") == vote_id) & (pl.col("id_poslanec") == mp["id_poslanec"])
+            )
+            club = row["party"][0] if row.height else club
+        parts.append(f"{mp['jmeno']} {mp['prijmeni']}" + (f" ({club})" if club else ""))
+        women.append(mp["pohlavi"] != "M" if has_gender and mp["pohlavi"] else None)
+    return {"verb": _verb(women), "text": ", ".join(parts)}
+
+
 def _vote_brief(data: PeriodData, vote_id: int | None) -> dict | None:
     """Number, result and tally of another vote of the period (None if unknown)."""
     if not vote_id:
@@ -158,11 +210,13 @@ def vote_story(data: PeriodData, info: dict, lang: str = "cs") -> dict:
         "consequence": "" if st.get("invalid_by") else cons,
         "pro": st.get("pro", ""),
         "final_meaning": kind == "final",
-        "proposer": st.get("proposer", ""),
+        "proposer": proposer_view(data, st.get("proposer", ""), info.get("id_hlasovani")),
         "reading": reading_at(data, info.get("tisk_ct"), info.get("schuze") or 0),
         "tisk_title": (brief or {}).get("nazev") or info.get("tisk_nazev") or "",
         "invalid": bool(st.get("invalid_by")),
-        "challenger": challenge.get("proposer", ""),
+        "challenger": (
+            proposer_view(data, challenge.get("proposer", ""), st.get("invalid_by")) or {}
+        ).get("text", ""),
         "repeat": _vote_brief(data, st.get("repeated_as")),
         "chair_repeat": _vote_brief(data, st.get("chair_repeated_as")),
         "repeats": _vote_brief(data, st.get("repeats")),

@@ -58,13 +58,39 @@ def split_core(summary: str) -> tuple[str, str]:
     return (summary[: end + 1], summary[end + 1 :]) if 0 < end <= 160 else (summary, "")
 
 
-def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
+def _submitted_key(names: list[str], ids: list[int], side: str, women: dict[int, bool]) -> str:
+    """ "Navrhl / Navrhla / Navrhli / Navrhl(a)" key for the letter's submitters."""
+    if len(names) > 1:
+        return "pn.submitted_by_pl"
+    if side == "committee":
+        return "pn.submitted_by"  # "výbor" is masculine
+    match women.get(ids[0]) if ids else None:
+        case True:
+            return "pn.submitted_by_f"
+        case False:
+            return "pn.submitted_by"
+        case _:
+            return "pn.submitted_by_any"
+
+
+def _women(data: PeriodData) -> dict[int, bool]:
+    """``{id_poslanec: is a woman}`` when mp_info has the gender column."""
+    if "pohlavi" not in data.mp_info.columns:
+        return {}
+    rows = data.mp_info.select("id_poslanec", "pohlavi").drop_nulls().iter_rows()
+    return {mp: g != "M" for mp, g in rows}
+
+
+def _letter_row(
+    row: dict, bill: BillAmendmentData, lang: str, women: dict[int, bool] | None = None
+) -> dict:
     """Template-friendly dict for one letter.
 
     Args:
         row: Output row of bill_letters.
         bill: The bill the letter belongs to.
         lang: Language code for the summary.
+        women: ``_women`` of the period, for the verb form.
 
     Returns:
         Flat dict for the letter card.
@@ -79,6 +105,9 @@ def _letter_row(row: dict, bill: BillAmendmentData, lang: str) -> dict:
         "side": row["side"],
         "voted_with": row["voted_with"],
         "names": a.pdf_submitter_names or a.submitter_names,
+        "submitted_key": _submitted_key(
+            a.pdf_submitter_names or a.submitter_names, a.submitter_ids, row["side"], women or {}
+        ),
         "parties": sorted(set(a.submitter_parties)),
         "summary": summary,
         "summary_core": split_core(summary),
@@ -132,6 +161,7 @@ def law_groups(data: PeriodData, lang: str = "cs", include_empty: bool = False) 
         Groups with ct, title, date, final_result, link, letters, unassigned.
     """
     dates = _vote_dates(data)
+    women = _women(data)
     by_ct: dict[int, list[BillAmendmentData]] = {}
     for bill in sorted(data.amendment_data.values(), key=lambda b: (b.schuze, b.bod)):
         by_ct.setdefault(bill.ct, []).append(bill)
@@ -140,7 +170,7 @@ def law_groups(data: PeriodData, lang: str = "cs", include_empty: bool = False) 
     for ct, bills in by_ct.items():
         latest = bills[-1]
         letters = [
-            _letter_row(row, bill, lang)
+            _letter_row(row, bill, lang, women)
             for bill in bills
             for row in bill_letters(bill, data.coalition_for_bill(bill))
         ]

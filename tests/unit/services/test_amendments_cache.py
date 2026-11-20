@@ -183,3 +183,16 @@ def test_pdf_names_win_over_steno_names() -> None:
     )
     resolve_submitter_ids([_bill(amendments=[amend])], mp_info)
     assert amend.submitter_parties == ["KDU-ČSL"]
+
+
+def test_submitter_club_is_taken_on_the_vote_day() -> None:
+    """An MP who switched clubs counts for the club of the letter's vote day (#101/#103)."""
+    mp_info = pl.DataFrame(
+        {"id_poslanec": [1], "jmeno": ["Jan"], "prijmeni": ["Novák"], "party": ["Nezařazení"]}
+    )
+    mp_votes = pl.DataFrame({"id_hlasovani": [77], "id_poslanec": [1], "party": ["ANO"]})
+    amend = AmendmentVote(
+        letter="A", vote_number=3, id_hlasovani=77, pdf_submitter_names=["Jan Novák"]
+    )
+    resolve_submitter_ids([_bill(amendments=[amend])], mp_info, mp_votes)
+    assert amend.submitter_parties == ["ANO"]

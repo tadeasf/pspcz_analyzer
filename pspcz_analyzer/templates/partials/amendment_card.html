@@ -10,7 +10,7 @@
     {% elif x.description %}<p style="font-size:16px">{{ x.description }}</p><span class="lbl">{{ _("pn.from_steno") }}</span>
     {% else %}<p class="lbl">{{ _("pn.no_summary") }}</p>{% endif %}
     <div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;align-items:center">
-        {% if x.names %}<span>{{ _("pn.submitted_by") }}: {{ x.names|join(", ") }}{% if x.parties and x.side != "committee" %} ({{ x.parties|join(", ") }}){% endif %}</span>{% endif %}
+        {% if x.names %}<span>{{ _(x.submitted_key or "pn.submitted_by") }}: {{ x.names|join(", ") }}{% if x.parties and x.side != "committee" %} ({{ x.parties|join(", ") }}){% endif %}</span>{% endif %}
         <span class="chip c-proc">{{ _("pn.chip_" ~ x.side) }}</span>
         {% if x.sd %}<span class="lbl">{{ _("pn.sd").format(n=x.sd|join(", ")) }}</span>{% endif %}
     </div>

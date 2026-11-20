@@ -375,7 +375,7 @@ def _run_parse_stages(
     # Stage 6: Resolve submitter names to MP IDs
     progress.stage = AmendmentStage.RESOLVE_SUBMITTERS
     logger.info("[amendment pipeline] Resolving submitter names...")
-    resolve_submitter_ids(bills, period_data.mp_info)
+    resolve_submitter_ids(bills, period_data.mp_info, period_data.mp_votes)
     carry_summaries(bills, previous or {})
 
     # Intermediate save: results visible before LLM

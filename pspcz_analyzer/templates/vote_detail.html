@@ -45,7 +45,7 @@
     {% if story.chair_repeat %}<p class="lbl">{{ _("vd.chair_repeat").format(n=story.chair_repeat.cislo) }} <a href="/votes/{{ story.chair_repeat.id_hlasovani }}?period={{ period }}">{{ _("vd.number_n").format(n=story.chair_repeat.cislo) }} →</a></p>{% endif %}
     {% if story.repeats %}<p class="lbl">{{ _("vd.repeats").format(n=story.repeats.cislo) }} <a href="/votes/{{ story.repeats.id_hlasovani }}?period={{ period }}">{{ _("vd.number_n").format(n=story.repeats.cislo) }} →</a></p>{% endif %}
     {% if story.final_meaning %}<p>{{ _("vd.meant_final") }}</p>
-    {% elif story.pro %}<p>{{ _("vd.meant_pro").format(pro=story.pro) }}{% if story.proposer %} {{ _("vd.proposed_by").format(name=story.proposer) }}{% endif %}</p>{% endif %}
+    {% elif story.pro %}<p>{{ _("vd.meant_pro").format(pro=story.pro) }}{% if story.proposer %} {{ _(story.proposer.verb).format(name=story.proposer.text) }}{% endif %}</p>{% endif %}
     {% endif %}
     {% set st = info.steno %}
     {% if st and st.question %}

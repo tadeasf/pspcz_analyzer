@@ -1,7 +1,14 @@
 """Vote kinds, filters, item results and the vote detail story (#113, #114)."""
 
+import polars as pl
+
 from pspcz_analyzer.models.tisk_models import PeriodData
-from pspcz_analyzer.services.vote_context import filter_kind, group_result, vote_story
+from pspcz_analyzer.services.vote_context import (
+    filter_kind,
+    group_result,
+    proposer_view,
+    vote_story,
+)
 from tests.fixtures.sample_data import make_mp_info, make_mp_votes, make_void_votes, make_votes
 
 
@@ -58,3 +65,24 @@ def test_story_consequence_of_a_final_vote() -> None:
     story = vote_story(_data(), info)
     assert story["consequence"] == "vd.cons_final_pass"
     assert story["final_meaning"]
+
+
+def test_proposer_with_club_on_the_vote_day_and_verb() -> None:
+    data = _data()
+    data.mp_info = pl.DataFrame(
+        {
+            "id_poslanec": [1, 2],
+            "jmeno": ["Karel", "Lucie"],
+            "prijmeni": ["Haas", "Sedmihradská"],
+            "party": ["ODS", "ANO"],
+            "pohlavi": ["M", "Ž"],
+        }
+    )
+    data.mp_votes = pl.DataFrame({"id_hlasovani": [5], "id_poslanec": [1], "party": ["ODS"]})
+    assert proposer_view(data, "Haas", 5) == {
+        "verb": "vd.proposed_by_m",
+        "text": "Karel Haas (ODS)",
+    }
+    assert (proposer_view(data, "Lucie Sedmihradská", 5) or {})["verb"] == "vd.proposed_by_f"
+    assert (proposer_view(data, "Haas, Novák", 5) or {})["verb"] == "vd.proposed_by_pl"
+    assert (proposer_view(data, "Novák", 5) or {})["verb"] == "vd.proposed_by"

@@ -37,6 +37,39 @@ def _flagged_briefs(data: PeriodData) -> list[dict]:
     return sorted(seen.values(), key=lambda r: r["ct"])
 
 
+def _open_votes(data: PeriodData) -> list[dict]:
+    """Votes whose subject is uncertain or unknown, to review in /admin/corrections (#100)."""
+    nums = dict(
+        zip(data.votes["id_hlasovani"].to_list(), data.votes["schuze"].to_list(), strict=True)
+    )
+    rows = [
+        {
+            "id": vid,
+            "schuze": nums.get(vid),
+            "cislo": r.get("cislo"),
+            "status": r.get("status"),
+            "question": r.get("question", ""),
+            "url": r.get("url", ""),
+        }
+        for vid, r in data.vote_steno.items()
+        if r.get("status") in ("uncertain", "unknown") and not r.get("edited")
+    ]
+    return sorted(rows, key=lambda r: (r["schuze"] or 0, r["cislo"] or 0))
+
+
+def _open_letters(data: PeriodData) -> list[dict]:
+    """Amendment letters whose fate is uncertain or undetermined (#100)."""
+    out = []
+    for (schuze, bod), bill in sorted(data.amendment_data.items()):
+        for x in bill_letters(bill, data.coalition_for_bill(bill)):
+            if x["certainty"] != "certain":
+                out.append(
+                    {"schuze": schuze, "bod": bod, "ct": bill.ct, "letter": x["letter"]}
+                    | {"certainty": x["certainty"], "fate": x["fate"]}
+                )
+    return out
+
+
 def quality_report(data: PeriodData) -> dict:
     """Everything the admin needs to review a period's derived data.
 
@@ -46,7 +79,8 @@ def quality_report(data: PeriodData) -> dict:
     Returns:
         Dict with ``bills``, ``briefs`` (total, flagged list) and ``votes``
         (total, with steno record, with question, uncertain) plus ``anchor_checks``
-        (agenda items whose steno-anchored vote count is off).
+        (agenda items whose steno-anchored vote count is off), ``open_votes`` and
+        ``open_letters`` (single items to review and correct).
     """
     briefs = {t.ct for t in data.tisk_lookup.values() if t.brief}
     recs = data.vote_steno.values()
@@ -59,4 +93,6 @@ def quality_report(data: PeriodData) -> dict:
         "votes_question": sum(r.get("status") == "ok" for r in recs),
         "votes_uncertain": sum(r.get("status") == "uncertain" for r in recs),
         "anchor_checks": data.anchor_checks,
+        "open_votes": _open_votes(data),
+        "open_letters": _open_letters(data),
     }

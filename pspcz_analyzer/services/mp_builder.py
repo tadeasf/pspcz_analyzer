@@ -54,13 +54,15 @@ def build_mp_info(
         memberships: zarazeni table.
 
     Returns:
-        DataFrame with id_poslanec, id_osoba, jmeno, prijmeni, party.
+        DataFrame with id_poslanec, id_osoba, jmeno, prijmeni, party (and pohlavi
+        when the persons table has it).
     """
     organ_id = PERIOD_ORGAN_IDS[period]
     period_mps = mps.filter(pl.col("id_obdobi") == organ_id)
 
+    gender = [c for c in ("pohlavi",) if c in persons.columns]  # "M", else a woman
     mp_persons = period_mps.join(
-        persons.select("id_osoba", "jmeno", "prijmeni"),
+        persons.select("id_osoba", "jmeno", "prijmeni", *gender),
         on="id_osoba",
         how="left",
     )
@@ -71,7 +73,7 @@ def build_mp_info(
     )
     return mp_persons.join(
         latest_club.select("id_osoba", "party"), on="id_osoba", how="left"
-    ).select("id_poslanec", "id_osoba", "jmeno", "prijmeni", "party")
+    ).select("id_poslanec", "id_osoba", "jmeno", "prijmeni", "party", *gender)
 
 
 def add_vote_parties(

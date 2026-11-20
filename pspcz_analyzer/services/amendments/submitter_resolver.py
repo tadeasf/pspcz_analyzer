@@ -56,9 +56,22 @@ def _match_name_to_mp(
     return None
 
 
+def _clubs_at_votes(bills: list[BillAmendmentData], mp_votes: pl.DataFrame | None) -> dict:
+    """``{(id_hlasovani, id_poslanec): club that day}`` for the bills' amendment votes."""
+    if mp_votes is None or "party" not in mp_votes.columns:
+        return {}
+    ids = {a.id_hlasovani for b in bills for a in b.amendments if a.id_hlasovani}
+    rows = mp_votes.filter(pl.col("id_hlasovani").is_in(list(ids)))
+    return {
+        (r["id_hlasovani"], r["id_poslanec"]): r["party"]
+        for r in rows.select("id_hlasovani", "id_poslanec", "party").iter_rows(named=True)
+    }
+
+
 def resolve_submitter_ids(
     bills: list[BillAmendmentData],
     mp_info: pl.DataFrame,
+    mp_votes: pl.DataFrame | None = None,
 ) -> None:
     """Resolve submitter names to MP IDs and party affiliations.
 
@@ -72,8 +85,13 @@ def resolve_submitter_ids(
     Args:
         bills: List of bill amendment data with parsed submitter_names.
         mp_info: DataFrame with id_poslanec, prijmeni, party columns.
+        mp_votes: Per-vote MP rows with the club on the vote day (``add_vote_parties``);
+            the club is taken on the day of the letter's vote (#101/#103).
     """
     mp_rows = mp_info.to_dicts()
+    # shortcut: the club on the 3rd-reading vote day stands in for the filing day (days
+    # apart); use the filing date if a club switch in between ever matters
+    at_vote = _clubs_at_votes(bills, mp_votes)
     resolved_count = 0
 
     for bill in bills:
@@ -92,6 +110,7 @@ def resolve_submitter_ids(
                 result = _match_name_to_mp(name, mp_rows)
                 if result is not None:
                     mp_id, party = result
+                    party = at_vote.get((amend.id_hlasovani, mp_id)) or party
                     if mp_id not in amend.submitter_ids:  # deduplicate
                         amend.submitter_ids.append(mp_id)
                         amend.submitter_parties.append(party)

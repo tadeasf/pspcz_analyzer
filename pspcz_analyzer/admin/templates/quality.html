@@ -31,6 +31,33 @@
 </div>
 
 <div class="card mb-2">
+    <div class="card-header">Votes to review: subject uncertain or unknown ({{ r.open_votes|length }})</div>
+    <div class="card-body">
+        <p>Correct the question in <a href="/admin/corrections?period={{ period }}">Corrections</a> (kind vote_question, key = vote id). Corrected votes leave this list.</p>
+        <table>
+            <thead><tr><th>Vote id</th><th>Sitting / no.</th><th>Status</th><th>Model's question</th><th>Steno</th></tr></thead>
+            <tbody>
+            {% for v in r.open_votes %}<tr><td>{{ v.id }}</td><td>{{ v.schuze }}/{{ v.cislo }}</td><td>{{ v.status }}</td><td>{{ v.question }}</td><td>{% if v.url %}<a href="{{ v.url }}" rel="noopener">steno</a>{% endif %} · <a href="https://www.psp.cz/sqw/hlasy.sqw?g={{ v.id }}" rel="noopener">psp.cz</a></td></tr>
+            {% else %}<tr><td colspan="5">None.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header">Amendment letters to review: fate uncertain or undetermined ({{ r.open_letters|length }})</div>
+    <div class="card-body">
+        <table>
+            <thead><tr><th>Tisk</th><th>Sitting / item</th><th>Letter</th><th>Certainty</th><th>Fate</th></tr></thead>
+            <tbody>
+            {% for x in r.open_letters %}<tr><td>{{ x.ct }}</td><td>{{ x.schuze }}/{{ x.bod }}</td><td>{{ x.letter }}</td><td>{{ x.certainty }}</td><td>{{ x.fate }}</td></tr>
+            {% else %}<tr><td colspan="5">None.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-2">
     <div class="card-header">Amendment parsing</div>
     <div class="card-body">
         <table>

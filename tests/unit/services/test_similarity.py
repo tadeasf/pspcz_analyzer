@@ -90,6 +90,15 @@ class TestAgreement:
         pair = out["cross_party"][0]
         assert (pair["same"], pair["shared"]) == (100, 110)
 
+    def test_issue_104_example(self):
+        """X: 100x pro, 100x proti; Y: the same 100 pro, absent from the rest = 100 of 100."""
+        data = _two_mp_data(200, ["A"] * 100 + ["@"] * 100)
+        data.mp_votes = data.mp_votes.with_columns(
+            vysledek=pl.Series(["A"] * 100 + ["B"] * 100 + ["A"] * 100 + ["@"] * 100)
+        )
+        pair = compute_cross_party_similarity(data)["cross_party"][0]
+        assert (pair["same"], pair["shared"], pair["agreement"]) == (100, 100, 1.0)
+
     def test_minimum_shared_votes(self):
         out = compute_cross_party_similarity(_two_mp_data(99, ["A"] * 99))
         assert out == {"cross_party": [], "gov_opp": []}
