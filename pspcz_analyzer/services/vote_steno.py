@@ -28,7 +28,10 @@ from pspcz_analyzer.fileio import write_json_atomic
 
 # module import: speeches -> amendments -> tisk -> vote_steno is a cycle when speeches loads first
 from pspcz_analyzer.services import speeches
-from pspcz_analyzer.services.amendments.steno_scraper import PSP_STENO_BASE_TEMPLATE
+from pspcz_analyzer.services.amendments.steno_scraper import (
+    PSP_STENO_BASE_TEMPLATE,
+    _steno_cache_dir,
+)
 from pspcz_analyzer.services.llm import LLMClient, create_llm_client, llm_map
 from pspcz_analyzer.services.llm.helpers import _sanitize_llm_input
 from pspcz_analyzer.services.llm.prompts import (
@@ -39,7 +42,9 @@ from pspcz_analyzer.services.llm.prompts import (
     VOTE_STENO_STR_FIELDS,
     VOTE_STENO_SYSTEM,
 )
+from pspcz_analyzer.services.steno_page_state import page_states
 from pspcz_analyzer.services.tisk.brief import text_issues
+from pspcz_analyzer.services.vote_steno_changes import WindowCompare, quote_status
 from pspcz_analyzer.services.vote_steno_pages import is_recent, sitting_pages
 from pspcz_analyzer.services.vote_steno_text import (
     WINDOW_CHARS,
@@ -185,10 +190,14 @@ def _sitting_records(
     """
     old: dict[str, dict] = json.loads(out_path.read_text()) if out_path.exists() else {}
     refresh = any(is_recent(d) for d in votes["datum"].to_list())
-    text, spans = sitting_text(sitting_pages(period, schuze, cache_dir, refresh=refresh))
+    pages, previous = sitting_pages(period, schuze, cache_dir, refresh=refresh)
+    text, spans = sitting_text(pages)
     if spans and not refresh and not set(votes["id_hlasovani"].to_list()) <= set(spans):
         # a cached index from before the last days were published: fetch it again
-        text, spans = sitting_text(sitting_pages(period, schuze, cache_dir, refresh=True))
+        pages, again = sitting_pages(period, schuze, cache_dir, refresh=True)
+        previous = again | previous  # the first replaced copy is the one records came from
+        text, spans = sitting_text(pages)
+    compare = WindowCompare(pages, previous)
     bods = dict(zip(votes["id_hlasovani"].to_list(), votes["nazev_dlouhy"].to_list(), strict=True))
     base = PSP_STENO_BASE_TEMPLATE.format(year=PERIOD_YEARS[period], session=schuze)
     records: dict[str, dict] = {}
@@ -198,9 +207,10 @@ def _sitting_records(
             continue
         window = text[span["start"] : span["end"]]
         sha = hashlib.sha256(window[-WINDOW_CHARS:].encode()).hexdigest()[:16]
-        prev = old.get(str(vid))
-        if prev and prev.get("version") == VERSION and prev.get("sha") == sha:
-            records[str(vid)] = _unlinked(prev)
+        prev = old.get(str(vid)) or {}
+        same = prev.get("version") == VERSION
+        if same and (prev.get("sha") == sha or compare.unchanged(vid, prev)):
+            records[str(vid)] = _unlinked(prev) | {"sha": sha, "body_sha": compare.body_sha(vid)}
             continue
         kind, subkind = rule_kind(window[-WINDOW_CHARS:])
         rec = {
@@ -211,7 +221,12 @@ def _sitting_records(
             "subkind": subkind,
             "url": f"{base}{span['page']}#h{span['cislo']}",
             "model": llm.model,
+            "body_sha": compare.body_sha(vid),
         }
+        if same and (prev.get("quote") or prev.get("question")):
+            # the speech under an extracted vote changed: keep what the old record said
+            rec["previous"] = compare.snapshot(vid, prev)
+            logger.info("[vote steno] sitting {} vote {}: steno text changed", schuze, vid)
         todo.append((str(vid), rec))
         records[str(vid)] = rec
 
@@ -241,6 +256,11 @@ def _sitting_records(
             len(failed),
         )
     link_repeats(records, votes, text, spans)
+    states = page_states(_steno_cache_dir(cache_dir, period), schuze)
+    for vid, rec in records.items():
+        rec["steno_status"] = quote_status(
+            pages, spans[int(vid)]["page"], rec.get("quote", ""), states
+        )
     return records, set(spans)
 
 

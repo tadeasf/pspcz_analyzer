@@ -19,6 +19,7 @@ from pspcz_analyzer.admin.auth import (
 from pspcz_analyzer.admin.log_stream import log_broadcaster
 from pspcz_analyzer.admin.pipeline_history import PipelineHistory
 from pspcz_analyzer.admin.quality import quality_report
+from pspcz_analyzer.admin.steno_review import steno_report
 from pspcz_analyzer.config import (
     ADMIN_COOKIE_SECURE,
     ADMIN_USERNAME,
@@ -504,6 +505,9 @@ async def quality_page(request: Request, period: int = DEFAULT_PERIOD) -> HTMLRe
     if period not in svc.available_periods:
         period = DEFAULT_PERIOD
     report = await asyncio.to_thread(lambda: quality_report(svc.get_period(period)))
+    report["steno"] = await asyncio.to_thread(
+        lambda: steno_report(svc.get_period(period), svc.cache_dir)
+    )
     return templates.TemplateResponse(
         "quality.html",
         {

@@ -39,6 +39,12 @@ from pspcz_analyzer.services.amendments.progress import (
     AmendmentStage,
     AmendmentStatus,
 )
+from pspcz_analyzer.services.amendments.steno_changes import (
+    BillPages,
+    mark_read,
+    record_reviews,
+    stale_bills,
+)
 from pspcz_analyzer.services.amendments.steno_parser import (
     cross_validate_amendments,
     parse_steno_amendments,
@@ -49,6 +55,7 @@ from pspcz_analyzer.services.amendments.summarizer import _summarize_amendments
 from pspcz_analyzer.services.amendments.summary_carry import carry_summaries
 from pspcz_analyzer.services.cancellation import CancellationFlag, PipelineCancelled
 from pspcz_analyzer.services.llm import LLMUnavailable
+from pspcz_analyzer.services.overrides import load_overrides
 
 
 def _run_pipeline_sync(
@@ -236,6 +243,7 @@ def _run_parse_stages(
         len(candidates),
     )
     bills: list[BillAmendmentData] = []
+    used: BillPages = {}
     failure_counts: Counter[StenoFailure] = Counter()
     no_amendments_count = 0
 
@@ -252,7 +260,10 @@ def _run_parse_stages(
                     len(candidates),
                 )
 
-            html, steno_url, failure = find_steno_for_bod(period, schuze, bod, cache_dir)
+            read = used.setdefault((schuze, bod), [])
+            html, steno_url, failure = find_steno_for_bod(
+                period, schuze, bod, cache_dir, pages_out=read
+            )
             if html is None:
                 if failure is not None:
                     failure_counts[failure] += 1
@@ -375,14 +386,32 @@ def _run_parse_stages(
     progress.stage = AmendmentStage.RESOLVE_SUBMITTERS
     logger.info("[amendment pipeline] Resolving submitter names...")
     resolve_submitter_ids(bills, period_data.mp_info, period_data.mp_votes)
-    carry_summaries(bills, previous or {})
+    previous = _drop_changed(cache_dir, period, used, previous or {})
+    carry_summaries(bills, previous)
 
     # Intermediate save: results visible before LLM
     save_amendments(cache_dir, period, bills)
+    mark_read(cache_dir, period, used)
     if on_progress:
         on_progress(period, bills)
 
     return bills, ct_to_pdf_text
+
+
+def _drop_changed(
+    cache_dir: Path,
+    period: int,
+    used: BillPages,
+    previous: dict[tuple[int, int], BillAmendmentData],
+) -> dict[tuple[int, int], BillAmendmentData]:
+    """Previous bills minus those whose steno text changed (their summaries are redone)."""
+    stale = stale_bills(cache_dir, period, used)
+    if not stale:
+        return previous
+    logger.info("[amendment pipeline] steno changed for {} bills: summaries redone", len(stale))
+    corrected = set(load_overrides(cache_dir, period)["amendment_summary"])
+    record_reviews(cache_dir, period, stale, previous, corrected)
+    return {k: v for k, v in previous.items() if k not in stale}
 
 
 @dataclass

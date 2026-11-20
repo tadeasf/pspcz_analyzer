@@ -160,6 +160,12 @@ STENO_SUBPAGE_GAP_FILL = 3
 # 5xx) are retried on the next pipeline run. Markers expire after this TTL so
 # pages psp.cz publishes later are picked up by a future run.
 STENO_NEGATIVE_CACHE_TTL = int(os.environ.get("STENO_NEGATIVE_CACHE_TTL", str(7 * 24 * 3600)))
+# Re-check of a cached steno sub-page by its psp.cz state (services/steno_page_state.py),
+# in days. An unauthorized page is replaced by the authorized one 3-6 weeks later, and an
+# authorized page not yet proofread can still change. Final pages change rarely.
+STENO_RECHECK_UNAUTHORIZED_DAYS = int(os.environ.get("STENO_RECHECK_UNAUTHORIZED_DAYS", "1"))
+STENO_RECHECK_AUTHORIZED_DAYS = int(os.environ.get("STENO_RECHECK_AUTHORIZED_DAYS", "14"))
+STENO_RECHECK_FINAL_DAYS = int(os.environ.get("STENO_RECHECK_FINAL_DAYS", "90"))
 
 # LLM provider selection: "ollama" (default) or "openai" (any OpenAI-compatible API)
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")

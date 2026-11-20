@@ -71,6 +71,20 @@ def _write_json(data: Any, tmp: Path) -> None:
     tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def _write_text(text: str, tmp: Path) -> None:
+    tmp.write_text(text, encoding="utf-8")
+
+
+def write_text_atomic(text: str, path: Path) -> None:
+    """Write UTF-8 text atomically.
+
+    Args:
+        text: Content.
+        path: Destination path.
+    """
+    _atomic_write(path, lambda tmp: _write_text(text, tmp))
+
+
 def write_json_atomic(data: Any, path: Path) -> None:
     """Write a JSON-serializable object atomically (indented, trailing newline).
 

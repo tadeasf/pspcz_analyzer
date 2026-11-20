@@ -12,11 +12,13 @@ from pspcz_analyzer.services.amendments.steno_scraper import (
     PSP_STENO_BASE_TEMPLATE,
     _download_day_page,
     _download_index,
-    _download_subpage,
+    _download_subpage_tracked,
     _steno_cache_dir,
 )
 
-RECENT_DAYS = 21  # sittings this fresh get their index and day pages re-fetched
+# sittings this fresh get their index and day pages re-fetched (new days appear); sub-pages
+# are re-checked by their authorization state instead (services/steno_page_state.py)
+RECENT_DAYS = 21
 _EXTRA_DAYS = 2  # unlinked day pages probed after the last linked one
 
 
@@ -48,11 +50,12 @@ def _day_no(day: str) -> int:
 
 def sitting_pages(
     period: int, schuze: int, cache_dir: Path, refresh: bool = False
-) -> list[tuple[str, str]]:
+) -> tuple[list[tuple[str, str]], dict[str, str]]:
     """Download (or read cached) all steno sub-pages of a sitting, in order.
 
     Day-page TOCs skip pages without a speaker anchor, so the whole numeric range
-    between the first and last linked page is fetched.
+    between the first and last linked page is fetched. Cached sub-pages due for a
+    re-check (steno_page_state) are fetched again.
 
     Args:
         period: Electoral period.
@@ -61,7 +64,8 @@ def sitting_pages(
         refresh: Re-fetch the index and day pages (sitting may still grow).
 
     Returns:
-        ``(page name, html)`` list; empty when the steno is not published.
+        ``(pages, previous)``: ``(page name, html)`` in order (empty when the steno is
+        not published) and ``{page name: replaced html}`` of pages that changed now.
     """
     sdir = _steno_cache_dir(cache_dir, period)
     if refresh:
@@ -69,7 +73,7 @@ def sitting_pages(
             stale.unlink(missing_ok=True)
     index = _download_index(period, schuze, cache_dir)
     if not index:
-        return []
+        return [], {}
     base = PSP_STENO_BASE_TEMPLATE.format(year=PERIOD_YEARS[period], session=schuze)
     nums: set[int] = set()
     for day in _day_pages(index, schuze):
@@ -80,12 +84,15 @@ def sitting_pages(
             if m := _SUBPAGE_NUM_RE.match(link):
                 nums.add(int(m.group(1)))
     pages: list[tuple[str, str]] = []
+    previous: dict[str, str] = {}
     for n in range(min(nums), max(nums) + 1) if nums else ():
         name = f"s{n:06d}.htm"
         cached = (sdir / f"{schuze}_sub_{name.replace('.htm', '.html')}").exists()
-        page = _download_subpage(base, name, period, schuze, cache_dir)
+        page, old = _download_subpage_tracked(base, name, period, schuze, cache_dir)
         if not cached:
             time.sleep(PSP_REQUEST_DELAY)
         if page:
             pages.append((name, page))
-    return pages
+        if old is not None:
+            previous[name] = old
+    return pages, previous
