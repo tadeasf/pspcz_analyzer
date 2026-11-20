@@ -346,7 +346,13 @@ def _summarize_amendments(
         text = pdf_text_map.get(bill.ct, "") or next(
             (a.amendment_text for a in bill.amendments if a.amendment_text), ""
         )
-        tisk = period_data.get_tisk(bill.schuze, bill.bod) if period_data else None
+        tisk = (
+            # pending bills are keyed (0, ct), which no vote lookup holds: find them by ct
+            period_data.get_tisk(bill.schuze, bill.bod)
+            or next((t for t in period_data.tisk_lookup.values() if t.ct == bill.ct), None)
+            if period_data
+            else None
+        )
         return _summarize_bill(llm, bill, i, len(bills), tisk, text)
 
     for (i, bill), (source, amend_count) in zip(

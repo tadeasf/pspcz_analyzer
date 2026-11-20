@@ -1,10 +1,12 @@
 """Tests for bills whose amendments are not voted yet (#112)."""
 
-from pspcz_analyzer.models.amendment_models import BillAmendmentData
+from pspcz_analyzer.models.amendment_models import PENDING_SCHUZE, BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.amendment_letters import bill_letters, tally
+from pspcz_analyzer.services.amendments import summarizer
 from pspcz_analyzer.services.amendments.pdf_parser import PdfAmendment
 from pspcz_analyzer.services.amendments.pending import build_pending_bills, pending_cts
+from pspcz_analyzer.services.amendments.progress import AmendmentProgress
 from pspcz_analyzer.services.tisk.io.history_scraper import TiskHistory, TiskHistoryStage
 from tests.fixtures.sample_data import make_mp_info, make_mp_votes, make_void_votes, make_votes
 
@@ -56,3 +58,24 @@ def test_bill_without_parsed_letters_is_skipped() -> None:
 
 def test_voted_bill_is_not_pending() -> None:
     assert not BillAmendmentData(period=10, schuze=31, bod=3, ct=1).is_pending
+
+
+def test_pending_bill_summary_reuses_brief(tmp_path, monkeypatch) -> None:
+    """A pending bill (key (0, ct)) finds its tisk by ct and reuses the brief, no LLM."""
+    tisk = _tisk(7)
+    tisk.brief = {"cs": {"shrnuti": "Krátce."}, "en": {"shrnuti": "Briefly."}}
+    bill = BillAmendmentData(period=10, schuze=PENDING_SCHUZE, bod=7, ct=7, tisk_nazev="Zákon 7")
+
+    class _FakeLLM:
+        provider = "fake"
+        model = "fake"
+
+        def is_available(self) -> bool:
+            return True
+
+    monkeypatch.setattr(summarizer, "create_llm_client", lambda: _FakeLLM())
+    monkeypatch.setattr(summarizer, "save_amendments", lambda *a: None)
+    summarizer._summarize_amendments(
+        [bill], tmp_path, 10, AmendmentProgress(), period_data=_data(tisk)
+    )
+    assert (bill.bill_summary, bill.bill_summary_en) == ("Krátce.", "Briefly.")
