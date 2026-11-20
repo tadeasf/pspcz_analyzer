@@ -3107,6 +3107,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../llm/health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    health
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../llm/helpers/" class="md-nav__link">
         
   
@@ -5711,13 +5739,13 @@ the run stops cooperatively at its next checkpoint.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-582">582</a></span>
-<span class="normal"><a href="#__codelineno-0-583">583</a></span>
-<span class="normal"><a href="#__codelineno-0-584">584</a></span>
-<span class="normal"><a href="#__codelineno-0-585">585</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-582" name="__codelineno-0-582"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_running</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-583" name="__codelineno-0-583"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check whether the pipeline is running for a given period.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-584" name="__codelineno-0-584"></a>    <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-585" name="__codelineno-0-585"></a>    <span class="k">return</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-586">586</a></span>
+<span class="normal"><a href="#__codelineno-0-587">587</a></span>
+<span class="normal"><a href="#__codelineno-0-588">588</a></span>
+<span class="normal"><a href="#__codelineno-0-589">589</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-586" name="__codelineno-0-586"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_running</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-587" name="__codelineno-0-587"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check whether the pipeline is running for a given period.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-588" name="__codelineno-0-588"></a>    <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-589" name="__codelineno-0-589"></a>    <span class="k">return</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5740,17 +5768,17 @@ the run stops cooperatively at its next checkpoint.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-587">587</a></span>
-<span class="normal"><a href="#__codelineno-0-588">588</a></span>
-<span class="normal"><a href="#__codelineno-0-589">589</a></span>
-<span class="normal"><a href="#__codelineno-0-590">590</a></span>
-<span class="normal"><a href="#__codelineno-0-591">591</a></span>
-<span class="normal"><a href="#__codelineno-0-592">592</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-587" name="__codelineno-0-587"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-588" name="__codelineno-0-588"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the running asyncio.Task for a period, or None if not running.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-589" name="__codelineno-0-589"></a>    <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
-<a id="__codelineno-0-590" name="__codelineno-0-590"></a>    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
-<a id="__codelineno-0-591" name="__codelineno-0-591"></a>        <span class="k">return</span> <span class="n">task</span>
-<a id="__codelineno-0-592" name="__codelineno-0-592"></a>    <span class="k">return</span> <span class="kc">None</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-591">591</a></span>
+<span class="normal"><a href="#__codelineno-0-592">592</a></span>
+<span class="normal"><a href="#__codelineno-0-593">593</a></span>
+<span class="normal"><a href="#__codelineno-0-594">594</a></span>
+<span class="normal"><a href="#__codelineno-0-595">595</a></span>
+<span class="normal"><a href="#__codelineno-0-596">596</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-591" name="__codelineno-0-591"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-592" name="__codelineno-0-592"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the running asyncio.Task for a period, or None if not running.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-593" name="__codelineno-0-593"></a>    <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+<a id="__codelineno-0-594" name="__codelineno-0-594"></a>    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-595" name="__codelineno-0-595"></a>        <span class="k">return</span> <span class="n">task</span>
+<a id="__codelineno-0-596" name="__codelineno-0-596"></a>    <span class="k">return</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5777,29 +5805,29 @@ loop. Await wait_stopped() to let the tasks drain.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-594">594</a></span>
-<span class="normal"><a href="#__codelineno-0-595">595</a></span>
-<span class="normal"><a href="#__codelineno-0-596">596</a></span>
-<span class="normal"><a href="#__codelineno-0-597">597</a></span>
-<span class="normal"><a href="#__codelineno-0-598">598</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-598">598</a></span>
 <span class="normal"><a href="#__codelineno-0-599">599</a></span>
 <span class="normal"><a href="#__codelineno-0-600">600</a></span>
 <span class="normal"><a href="#__codelineno-0-601">601</a></span>
 <span class="normal"><a href="#__codelineno-0-602">602</a></span>
 <span class="normal"><a href="#__codelineno-0-603">603</a></span>
 <span class="normal"><a href="#__codelineno-0-604">604</a></span>
-<span class="normal"><a href="#__codelineno-0-605">605</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-594" name="__codelineno-0-594"></a><span class="k">def</span><span class="w"> </span><span class="nf">cancel_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-595" name="__codelineno-0-595"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Request cancellation of all running pipelines.</span>
-<a id="__codelineno-0-596" name="__codelineno-0-596"></a>
-<a id="__codelineno-0-597" name="__codelineno-0-597"></a><span class="sd">    Flips every period flag (and pre-cancels any flag created</span>
-<a id="__codelineno-0-598" name="__codelineno-0-598"></a><span class="sd">    afterwards) – running stages stop cooperatively at their next</span>
-<a id="__codelineno-0-599" name="__codelineno-0-599"></a><span class="sd">    checkpoint, and queued periods are skipped by the sequential</span>
-<a id="__codelineno-0-600" name="__codelineno-0-600"></a><span class="sd">    loop. Await wait_stopped() to let the tasks drain.</span>
-<a id="__codelineno-0-601" name="__codelineno-0-601"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-602" name="__codelineno-0-602"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_cancel_all_flag</span> <span class="o">=</span> <span class="kc">True</span>
-<a id="__codelineno-0-603" name="__codelineno-0-603"></a>    <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-<a id="__codelineno-0-604" name="__codelineno-0-604"></a>        <span class="n">flag</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
-<a id="__codelineno-0-605" name="__codelineno-0-605"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[tisk pipeline] Cancellation requested for all pipelines&quot;</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-605">605</a></span>
+<span class="normal"><a href="#__codelineno-0-606">606</a></span>
+<span class="normal"><a href="#__codelineno-0-607">607</a></span>
+<span class="normal"><a href="#__codelineno-0-608">608</a></span>
+<span class="normal"><a href="#__codelineno-0-609">609</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-598" name="__codelineno-0-598"></a><span class="k">def</span><span class="w"> </span><span class="nf">cancel_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-599" name="__codelineno-0-599"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Request cancellation of all running pipelines.</span>
+<a id="__codelineno-0-600" name="__codelineno-0-600"></a>
+<a id="__codelineno-0-601" name="__codelineno-0-601"></a><span class="sd">    Flips every period flag (and pre-cancels any flag created</span>
+<a id="__codelineno-0-602" name="__codelineno-0-602"></a><span class="sd">    afterwards) – running stages stop cooperatively at their next</span>
+<a id="__codelineno-0-603" name="__codelineno-0-603"></a><span class="sd">    checkpoint, and queued periods are skipped by the sequential</span>
+<a id="__codelineno-0-604" name="__codelineno-0-604"></a><span class="sd">    loop. Await wait_stopped() to let the tasks drain.</span>
+<a id="__codelineno-0-605" name="__codelineno-0-605"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-606" name="__codelineno-0-606"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_cancel_all_flag</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-0-607" name="__codelineno-0-607"></a>    <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+<a id="__codelineno-0-608" name="__codelineno-0-608"></a>        <span class="n">flag</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+<a id="__codelineno-0-609" name="__codelineno-0-609"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[tisk pipeline] Cancellation requested for all pipelines&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5830,11 +5858,7 @@ and marks the run as no longer running.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pspcz_analyzer/services/tisk/pipeline.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-607">607</a></span>
-<span class="normal"><a href="#__codelineno-0-608">608</a></span>
-<span class="normal"><a href="#__codelineno-0-609">609</a></span>
-<span class="normal"><a href="#__codelineno-0-610">610</a></span>
-<span class="normal"><a href="#__codelineno-0-611">611</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-611">611</a></span>
 <span class="normal"><a href="#__codelineno-0-612">612</a></span>
 <span class="normal"><a href="#__codelineno-0-613">613</a></span>
 <span class="normal"><a href="#__codelineno-0-614">614</a></span>
@@ -5859,36 +5883,40 @@ and marks the run as no longer running.</p>
 <span class="normal"><a href="#__codelineno-0-633">633</a></span>
 <span class="normal"><a href="#__codelineno-0-634">634</a></span>
 <span class="normal"><a href="#__codelineno-0-635">635</a></span>
-<span class="normal"><a href="#__codelineno-0-636">636</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-607" name="__codelineno-0-607"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait_stopped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-608" name="__codelineno-0-608"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wait for pipeline tasks to drain after cancel_all().</span>
-<a id="__codelineno-0-609" name="__codelineno-0-609"></a>
-<a id="__codelineno-0-610" name="__codelineno-0-610"></a><span class="sd">    Tasks still running after *timeout* are hard-cancelled – that</span>
-<a id="__codelineno-0-611" name="__codelineno-0-611"></a><span class="sd">    releases the event-loop side immediately; worker threads exit</span>
-<a id="__codelineno-0-612" name="__codelineno-0-612"></a><span class="sd">    at their next cancellation checkpoint. Clears task/flag state</span>
-<a id="__codelineno-0-613" name="__codelineno-0-613"></a><span class="sd">    and marks the run as no longer running.</span>
-<a id="__codelineno-0-614" name="__codelineno-0-614"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-615" name="__codelineno-0-615"></a>    <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">done</span><span class="p">()]</span>
-<a id="__codelineno-0-616" name="__codelineno-0-616"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
-<a id="__codelineno-0-617" name="__codelineno-0-617"></a>        <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="p">)</span>
-<a id="__codelineno-0-618" name="__codelineno-0-618"></a>    <span class="k">if</span> <span class="n">tasks</span><span class="p">:</span>
-<a id="__codelineno-0-619" name="__codelineno-0-619"></a>        <span class="n">_</span><span class="p">,</span> <span class="n">pending</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-<a id="__codelineno-0-620" name="__codelineno-0-620"></a>        <span class="k">if</span> <span class="n">pending</span><span class="p">:</span>
-<a id="__codelineno-0-621" name="__codelineno-0-621"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-<a id="__codelineno-0-622" name="__codelineno-0-622"></a>                <span class="s2">&quot;[tisk pipeline] </span><span class="si">{}</span><span class="s2"> tasks still draining after </span><span class="si">{}</span><span class="s2">s – forcing cancellation&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-623" name="__codelineno-0-623"></a>                <span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span>
-<a id="__codelineno-0-624" name="__codelineno-0-624"></a>                <span class="n">timeout</span><span class="p">,</span>
-<a id="__codelineno-0-625" name="__codelineno-0-625"></a>            <span class="p">)</span>
-<a id="__codelineno-0-626" name="__codelineno-0-626"></a>            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">pending</span><span class="p">:</span>
-<a id="__codelineno-0-627" name="__codelineno-0-627"></a>                <span class="n">t</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
-<a id="__codelineno-0-628" name="__codelineno-0-628"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">pending</span><span class="p">,</span> <span class="n">return_exceptions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-629" name="__codelineno-0-629"></a>
-<a id="__codelineno-0-630" name="__codelineno-0-630"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-<a id="__codelineno-0-631" name="__codelineno-0-631"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-<a id="__codelineno-0-632" name="__codelineno-0-632"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="o">=</span> <span class="kc">None</span>
-<a id="__codelineno-0-633" name="__codelineno-0-633"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_cancel_all_flag</span> <span class="o">=</span> <span class="kc">False</span>
-<a id="__codelineno-0-634" name="__codelineno-0-634"></a>
-<a id="__codelineno-0-635" name="__codelineno-0-635"></a>    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_progress_lock</span><span class="p">:</span>
-<a id="__codelineno-0-636" name="__codelineno-0-636"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="normal"><a href="#__codelineno-0-636">636</a></span>
+<span class="normal"><a href="#__codelineno-0-637">637</a></span>
+<span class="normal"><a href="#__codelineno-0-638">638</a></span>
+<span class="normal"><a href="#__codelineno-0-639">639</a></span>
+<span class="normal"><a href="#__codelineno-0-640">640</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-611" name="__codelineno-0-611"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait_stopped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-612" name="__codelineno-0-612"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wait for pipeline tasks to drain after cancel_all().</span>
+<a id="__codelineno-0-613" name="__codelineno-0-613"></a>
+<a id="__codelineno-0-614" name="__codelineno-0-614"></a><span class="sd">    Tasks still running after *timeout* are hard-cancelled – that</span>
+<a id="__codelineno-0-615" name="__codelineno-0-615"></a><span class="sd">    releases the event-loop side immediately; worker threads exit</span>
+<a id="__codelineno-0-616" name="__codelineno-0-616"></a><span class="sd">    at their next cancellation checkpoint. Clears task/flag state</span>
+<a id="__codelineno-0-617" name="__codelineno-0-617"></a><span class="sd">    and marks the run as no longer running.</span>
+<a id="__codelineno-0-618" name="__codelineno-0-618"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-619" name="__codelineno-0-619"></a>    <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">done</span><span class="p">()]</span>
+<a id="__codelineno-0-620" name="__codelineno-0-620"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+<a id="__codelineno-0-621" name="__codelineno-0-621"></a>        <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span><span class="p">)</span>
+<a id="__codelineno-0-622" name="__codelineno-0-622"></a>    <span class="k">if</span> <span class="n">tasks</span><span class="p">:</span>
+<a id="__codelineno-0-623" name="__codelineno-0-623"></a>        <span class="n">_</span><span class="p">,</span> <span class="n">pending</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+<a id="__codelineno-0-624" name="__codelineno-0-624"></a>        <span class="k">if</span> <span class="n">pending</span><span class="p">:</span>
+<a id="__codelineno-0-625" name="__codelineno-0-625"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+<a id="__codelineno-0-626" name="__codelineno-0-626"></a>                <span class="s2">&quot;[tisk pipeline] </span><span class="si">{}</span><span class="s2"> tasks still draining after </span><span class="si">{}</span><span class="s2">s – forcing cancellation&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-627" name="__codelineno-0-627"></a>                <span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span>
+<a id="__codelineno-0-628" name="__codelineno-0-628"></a>                <span class="n">timeout</span><span class="p">,</span>
+<a id="__codelineno-0-629" name="__codelineno-0-629"></a>            <span class="p">)</span>
+<a id="__codelineno-0-630" name="__codelineno-0-630"></a>            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">pending</span><span class="p">:</span>
+<a id="__codelineno-0-631" name="__codelineno-0-631"></a>                <span class="n">t</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+<a id="__codelineno-0-632" name="__codelineno-0-632"></a>            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">pending</span><span class="p">,</span> <span class="n">return_exceptions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-633" name="__codelineno-0-633"></a>
+<a id="__codelineno-0-634" name="__codelineno-0-634"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<a id="__codelineno-0-635" name="__codelineno-0-635"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<a id="__codelineno-0-636" name="__codelineno-0-636"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_all_task</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-637" name="__codelineno-0-637"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_cancel_all_flag</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-0-638" name="__codelineno-0-638"></a>
+<a id="__codelineno-0-639" name="__codelineno-0-639"></a>    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_progress_lock</span><span class="p">:</span>
+<a id="__codelineno-0-640" name="__codelineno-0-640"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
