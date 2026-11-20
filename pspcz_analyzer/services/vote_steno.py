@@ -27,6 +27,9 @@ from loguru import logger
 
 from pspcz_analyzer.config import PARQUET_DIR, PERIOD_YEARS, PSP_REQUEST_DELAY
 from pspcz_analyzer.fileio import write_json_atomic
+
+# module import: speeches -> amendments -> tisk -> vote_steno is a cycle when speeches loads first
+from pspcz_analyzer.services import speeches
 from pspcz_analyzer.services.amendments.steno_scraper import (
     _DAY_PAGE_LINK_RE,
     _SUBPAGE_LINK_RE,
@@ -47,7 +50,6 @@ from pspcz_analyzer.services.llm.prompts import (
     VOTE_STENO_STR_FIELDS,
     VOTE_STENO_SYSTEM,
 )
-from pspcz_analyzer.services.speeches import SPEECHES_DIR, VOTE_STENO_DIR, sitting_speeches
 from pspcz_analyzer.services.tisk.brief import text_issues
 from pspcz_analyzer.services.vote_steno_text import (
     WINDOW_CHARS,
@@ -348,7 +350,7 @@ def generate_vote_steno_sync(
     for i, schuze in enumerate(sittings, 1):
         if cancel_check:
             cancel_check()
-        out_dir = cache_dir / VOTE_STENO_DIR / str(period)
+        out_dir = cache_dir / speeches.VOTE_STENO_DIR / str(period)
         sitting_votes = votes.filter(pl.col("schuze") == schuze)
         records, anchored = _sitting_records(
             llm, period, schuze, sitting_votes, cache_dir, out_dir / f"{schuze}.json"
@@ -356,9 +358,9 @@ def generate_vote_steno_sync(
         if records:
             write_json_atomic(records, out_dir / f"{schuze}.json")
             _write_check(out_dir, schuze, anchor_check(sitting_votes, anchored), period)
-        speeches = sitting_speeches(period, schuze, cache_dir)
-        if speeches:
-            write_json_atomic(speeches, out_dir / SPEECHES_DIR / f"{schuze}.json")
+        counts = speeches.sitting_speeches(period, schuze, cache_dir)
+        if counts:
+            write_json_atomic(counts, out_dir / speeches.SPEECHES_DIR / f"{schuze}.json")
         known = sum(r.get("status") in ("ok", "uncertain") for r in records.values())
         total += len(records)
         logger.info(
@@ -391,7 +393,7 @@ def _write_check(out_dir: Path, schuze: int, check: dict[str, dict[str, int]], p
 def load_vote_steno(cache_dir: Path, period: int) -> dict[int, dict]:
     """All vote records of a period: ``{id_hlasovani: record}``."""
     out: dict[int, dict] = {}
-    for path in (cache_dir / VOTE_STENO_DIR / str(period)).glob("*.json"):
+    for path in (cache_dir / speeches.VOTE_STENO_DIR / str(period)).glob("*.json"):
         try:
             out.update({int(k): v for k, v in json.loads(path.read_text()).items()})
         except (ValueError, OSError):
@@ -402,7 +404,9 @@ def load_vote_steno(cache_dir: Path, period: int) -> dict[int, dict]:
 def load_anchor_checks(cache_dir: Path, period: int) -> list[dict[str, int]]:
     """Agenda items with an anchoring mismatch: ``[{schuze, bod, votes, anchored}]``."""
     out: list[dict[str, int]] = []
-    for path in sorted((cache_dir / VOTE_STENO_DIR / str(period) / CHECKS_DIR).glob("*.json")):
+    for path in sorted(
+        (cache_dir / speeches.VOTE_STENO_DIR / str(period) / CHECKS_DIR).glob("*.json")
+    ):
         try:
             for bod, c in json.loads(path.read_text()).items():
                 out.append({"schuze": int(path.stem), "bod": int(bod), **c})
