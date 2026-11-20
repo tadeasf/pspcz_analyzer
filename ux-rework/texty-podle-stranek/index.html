@@ -1,0 +1,5086 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Czech Parliamentary Voting Analyzer — OSINT tool for psp.cz open data">
+      
+      
+      
+        <link rel="canonical" href="https://tadeasf.github.io/pspcz_analyzer/ux-rework/texty-podle-stranek/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Zákony pod lupou – texty podle stránek - PSP.cz Analyzer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#zakony-pod-lupou-texty-podle-stranek" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="PSP.cz Analyzer" class="md-header__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PSP.cz Analyzer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Zákony pod lupou – texty podle stránek
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/tadeasf/pspcz_analyzer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    tadeasf/pspcz_analyzer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../data-model/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/pspcz_analyzer/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="PSP.cz Analyzer" class="md-nav__button md-logo" aria-label="PSP.cz Analyzer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PSP.cz Analyzer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/tadeasf/pspcz_analyzer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    tadeasf/pspcz_analyzer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../routes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Routes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../templates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing & CI/CD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pspcz_analyzer
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    pspcz_analyzer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/admin/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    admin
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_1" id="__nav_3_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    admin
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/admin/auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    auth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/admin/corrections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    corrections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/admin/log_stream/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    log_stream
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/admin/pipeline_history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipeline_history
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/admin/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/admin/routes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    routes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/data/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    data
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_3" id="__nav_3_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/data/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/data/downloader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    downloader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/data/parser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    parser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/fileio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fileio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/i18n/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    i18n
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_5" id="__nav_3_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    i18n
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/i18n/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/i18n/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/i18n/translations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    translations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/logging_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    logging_config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/main_backend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    main_backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/main_frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    main_frontend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/models/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    models
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_10" id="__nav_3_1_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/models/amendment_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    amendment_models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/models/enums/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    enums
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/models/pipeline_progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipeline_progress
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/models/schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/models/tisk_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk_models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/proxy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    proxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/rate_limit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rate_limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_13" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/routes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    routes
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_13" id="__nav_3_1_13_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    routes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/amendments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    amendments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/charts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    charts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    health
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/laws/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    laws
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/pages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/tisk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/routes/voting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    voting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/services/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    services
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_14" id="__nav_3_1_14_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    services
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/affiliation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    affiliation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendment_letters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    amendment_letters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendment_listing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    amendment_listing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendment_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    amendment_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/services/amendments/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    amendments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_14_5" id="__nav_3_1_14_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_14_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_14_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    amendments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/cache_manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cache_manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/coalition_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    coalition_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/identifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    identifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/merger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    merger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/pdf_parser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pdf_parser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/pending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pending
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    progress
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/steno_parser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    steno_parser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/steno_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    steno_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/submitter_resolver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    submitter_resolver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/summarizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    summarizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/amendments/summary_carry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    summary_carry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/analysis_cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    analysis_cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/attendance_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    attendance_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/cancellation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cancellation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/coalition_detector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    coalition_detector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/coalition_table/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    coalition_table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/daily_refresh_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    daily_refresh_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/data_reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    data_reader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/data_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    data_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/feedback_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    feedback_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/labels/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    labels
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/law_detail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    law_detail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/law_filters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    law_filters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/law_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    law_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/legislation_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    legislation_overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_20" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/services/llm/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    llm
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_14_20" id="__nav_3_1_14_20_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_14_20_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_14_20">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    llm
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/llm/client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/llm/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/llm/parsers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    parsers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/llm/prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    prompts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/loyalty_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    loyalty_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/mp_builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mp_builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/overrides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    overrides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/party_voting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    party_voting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/pipeline_lock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipeline_lock
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/runtime_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    runtime_config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/similarity_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    similarity_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/speeches/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    speeches
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/step_text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    step_text
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_30" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/services/tisk/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tisk
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_14_30" id="__nav_3_1_14_30_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_14_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_14_30">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    tisk
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/brief/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    brief
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/cache_manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cache_manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/classifier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    classifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/downloader_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    downloader_pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_14_30_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/services/tisk/io/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    io
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_14_30_5" id="__nav_3_1_14_30_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_1_14_30_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_14_30_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    io
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/io/downloader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    downloader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/io/extractor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    extractor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/io/history_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    history_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/io/history_stages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    history_stages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/io/law_changes_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    law_changes_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/io/scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/lookup_builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    lookup_builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/metadata_scraper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    metadata_scraper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/text_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    text_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/tisk/version_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    version_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/vote_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vote_codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/vote_context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vote_context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/vote_steno/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vote_steno
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/vote_steno_pages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vote_steno_pages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/vote_steno_text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vote_steno_text
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/services/votes_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    votes_service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pspcz_analyzer/utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1_15" id="__nav_3_1_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pspcz_analyzer/utils/text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    text
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#na-kazde-strance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Na každé stránce
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Na každé stránce">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hlavicka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hlavička
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Menu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upozorneni-pod-menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upozornění pod menu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#paticka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Patička
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prehled-prehled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Přehled (#/prehled)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zakony-zakony" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zákony (#/zakony)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zmrazeni-ceny-dalnicni-znamky-zakon-246" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zmrazení ceny dálniční známky (#/zakon-246)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pozmenovaci-navrhy-pozmenovaci-navrhy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pozměňovací návrhy (#/pozmenovaci-navrhy)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pozmenovaci-navrhy-k-zakonu-o-dalnicnich-znamkach-pn-246" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pozměňovací návrhy k zákonu o dálničních známkách (#/pn-246)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hlasovani-hlasovani" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hlasování (#/hlasovani)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hlasovani-o-zakonu-o-dalnicnich-znamkach-hlasovani-88540" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hlasování o zákonu o dálničních známkách (#/hlasovani-88540)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zpochybnene-hlasovani-hlasovani-280" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zpochybněné hlasování (#/hlasovani-280)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stranicka-neloajalita-loajalita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stranická (ne)loajalita (#/loajalita)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mira-rebelie-vsichni-poslanci-loajalita-poslanci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Míra rebelie: všichni poslanci (#/loajalita-poslanci)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ucast-poslancu-ucast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Účast poslanců (#/ucast)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jak-se-v-tom-vyznat-jak" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Jak se v tom vyznat (#/jak)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nahlasit-chybu-nahlasit-chybu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nahlásit chybu (#/nahlasit-chybu)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="zakony-pod-lupou-texty-podle-stranek">Zákony pod lupou – texty podle stránek<a class="headerlink" href="#zakony-pod-lupou-texty-podle-stranek" title="Permanent link">&para;</a></h1>
+<p>Vygenerováno z prototypu <code>zakony-pod-lupou.html</code>. Údaje v [hranatých závorkách] jsou zástupné, doplní je data. Čísla ve statistikách, grafech a v mapě jsou ilustrační. Rozhodující je vzhled a texty v prototypu; tento soubor slouží k vyhledávání a kopírování textů.</p>
+<h2 id="na-kazde-strance">Na každé stránce<a class="headerlink" href="#na-kazde-strance" title="Permanent link">&para;</a></h2>
+<h3 id="hlavicka">Hlavička<a class="headerlink" href="#hlavicka" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Zákony pod lupou autoři: OSINT vzdělávací projekt &amp; Hlídač státu
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Volební období 10. období (2025–dosud) 9. období (2021–2025)
+</code></pre></div>
+<h3 id="menu">Menu<a class="headerlink" href="#menu" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Přehled · Zákony · Pozměňovací návrhy · Hlasování · Stranická (ne)loajalita · Účast poslanců · Jak se v tom vyznat
+</code></pre></div>
+<h3 id="upozorneni-pod-menu">Upozornění pod menu<a class="headerlink" href="#upozorneni-pod-menu" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Data o hlasování přebíráme z psp.cz. Shrnutí návrhů a jejich přiřazení k hlasováním zpracovává AI a automatické nástroje, proto mohou obsahovat chyby. Pokud narazíte na nepřesnost, nahlaste nám ji prosím. Hlášení se zveřejní na GitHubu projektu.
+</code></pre></div>
+<h3 id="paticka">Patička<a class="headerlink" href="#paticka" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Odkud data jsou Hlasování z otevřených dat psp.cz, poslední zaznamenané hlasování 24. 10. 2026. Stavy návrhů z historie tisků na psp.cz, naposledy načteno 2. 11. 2026. Shrnutí návrhů vytváří AI z textu tisku. U každého uvádíme zdroj a stav kontroly.
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Zákony pod lupou Jak se v tom vyznat Nahlásit chybu Zdrojový kód a technická dokumentace Autoři: OSINT vzdělávací projekt &amp; Hlídač státu
+</code></pre></div>
+<h2 id="prehled-prehled">Přehled (<code>#/prehled</code>)<a class="headerlink" href="#prehled-prehled" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Poslanecká sněmovna · 10. volební období
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Co se (nejen) ve Sněmovně projednává a kdo jak hlasuje
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Najděte návrh zákona či související tisky, zjistěte, co mají změnit a v jaké je to fázi, a podívejte se, jak hlasovali poslanci.
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Hledat zákon, pozměňovací návrh, téma nebo číslo tisku Hledat
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Najít návrh zákona →
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>Co se má změnit, kdo návrh podal a kde se zrovna nachází.
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>Zjistit, kdo jak hlasoval →
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>U každého hlasování vysvětlíme, o čem se rozhodovalo.
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>Projít pozměňovací návrhy →
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>Kdo co navrhl změnit a jestli to prošlo.
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>Porovnat poslance a kluby →
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>(Ne)loajalita ke klubu, podobnost hlasování, účast.
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>Teď se o tom mluví
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>Vládní návrh zákona sněmovní tisk 324 ve výborech
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>Státní rozpočet na rok 2027
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>Příjmy 2 198,6 mld. Kč, výdaje 2 584,6 mld. Kč, schodek 386 mld. Kč.
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>Předložen 30. 9.
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>1. čtení 21.–22. 10.
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>Výbory teď
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>2. čtení
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>3. čtení
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>Senát
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>Prezident
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>Proč je to tady: nejvíc projevů ve Sněmovně za posledních 14 dní ( [N] projevů ).
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>Co se ve Sněmovně aktuálně projednává
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>22. 10. Státní rozpočet na rok 2027 Sněmovna dokončila 1. čtení a poslala rozpočet do výborů. ve výborech
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>16. 10. Pravidla pro práci přes digitální platformy Sněmovna návrh v 1. čtení poslala do výborů. ve výborech
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>15. 10. Ochrana obchodního tajemství Sněmovna návrh v 1. čtení poslala do výborů. ve výborech
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>[datum] [Věcný název návrhu] [poslední krok větou] [fáze]
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>Všechny projednávané tisky ([N]) →
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>Co Parlament nedávno schválil
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>Zákony, které Parlament schválil a které míří k prezidentovi nebo už platí.
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>30. 10. Zmrazení ceny dálniční známky Sněmovna zákon schválila 23. 9., Senát se k němu nevyjádřil. Prezident rozhodne do 14. 11. u prezidenta
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>[datum] [Věcný název zákona] [Prezident zákon podepsal / vrátil Sněmovně] [stav]
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>23. 7. Změna zákona o podpoře bydlení Zákon vyšel ve Sbírce zákonů pod číslem 129/2026 Sb. platný zákon
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>Všechny projednané tisky →
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>Nejnověji předložené návrhy zákonů
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>30. 9. Státní rozpočet na rok 2027 Příjmy 2 198,6 mld. Kč, výdaje 2 584,6 mld. Kč, schodek 386 mld. Kč. Vláda
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>[datum] [Věcný název návrhu] [Shrnutí AI v jedné větě] [Poslanci]
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>[datum] [Věcný název návrhu] [Shrnutí AI v jedné větě] [Senát / kraj]
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>Všechny návrhy od nejnověji předložených →
+</code></pre></div>
+<h2 id="zakony-zakony">Zákony (<code>#/zakony</code>)<a class="headerlink" href="#zakony-zakony" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Zákony
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Návrhy zákonů, které Sněmovna projednává, i ty už schválené: co mění, kdo je předložil a v jaké jsou fázi.
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>Návrhy zákonů [N] Mezinárodní smlouvy [N] Zprávy [N] Interpelace [N]
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Hledat
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>Kde návrh je Všechny fáze Ve Sněmovně V Senátu U prezidenta Platné zákony Neprošlo nebo vzato zpět
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>Kdo předložil Kdokoli Vláda Poslanci Senát Kraje
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>[N] návrhů zákonů v 10. období
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>Řazení Nejnovější posun Nejnověji předložené Nejstarší tisky
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>Vládní návrh tisk 246 u prezidenta
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>Zmrazení ceny dálniční známky
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>Stanovuje pevnou cenu dálniční známky (roční 2 570 Kč) a ruší její letošní úpravu podle inflace. Nižší ceny platí pro elektromobily.
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>Shrnutí AI z tisku 246/0 [stav kontroly]
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>Pozměňovací návrhy: [N] · od opozice [X], přijato [a] · od vládních stran [Y], přijato [b]
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>30. 10. · Zákon dostal k podpisu prezident. Rozhodnout musí do 14. 11.
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>Vládní návrh tisk 324 ve výborech
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>Státní rozpočet na rok 2027
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>Příjmy 2 198,6 mld. Kč, výdaje 2 584,6 mld. Kč, schodek 386 mld. Kč.
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>Shrnutí AI z tisku 324/0 [stav kontroly]
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>22. 10. · Sněmovna dokončila 1. čtení a poslala rozpočet do výborů.
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>Vládní návrh tisk 301 ve výborech
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>Pravidla pro práci přes digitální platformy
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>Usnadňuje určit, kdo je zaměstnancem digitální platformy, a stanoví pravidla pro algoritmické řízení práce: průhlednost, lidský dohled a možnost přezkumu. Zavádí evropskou směrnici.
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>Shrnutí AI z tisku 301/0 [stav kontroly]
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>16. 10. · Sněmovna návrh v 1. čtení poslala do výborů. Pokračovat se může od 16. 11.
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>Vládní návrh tisk 82 platný zákon
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>Změna zákona o podpoře bydlení
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>[Shrnutí AI: o čem návrh je a co mění, dvě až tři věty]
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>Shrnutí AI z tisku 82/0 [stav kontroly]
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>23. 7. · Zákon vyšel ve Sbírce zákonů pod číslem 129/2026 Sb.
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>[Druh návrhu] tisk 85 neprošlo
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>Změna zákona o životním a existenčním minimu
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>[Shrnutí AI]
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>24. 3. · Senát návrh zamítl a Sněmovna ho pak nepřijala. Projednávání skončilo.
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>Zobrazeno 1–20 z [N]
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>‹ Předchozí 1 2 3 … [12] Další ›
+<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>[N] položek v 10. období · řazení: nejnovější
+<a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>Mezinárodní smlouva tisk [č.] [v Senátu]
+<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>[Věcný název smlouvy]
+<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>[datum] · Sněmovna vyslovila souhlas s ratifikací. Dál rozhoduje Senát, smlouvu pak ratifikuje prezident.
+<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>[N] položek v 10. období · řazení: nejnovější
+<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a>Zpráva tisk [č.] vzata na vědomí
+<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a>Výroční zpráva České televize za rok [rok]
+<a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a>[datum] · Sněmovna zprávu vzala na vědomí. Jak kdo hlasoval
+<a id="__codelineno-5-44" name="__codelineno-5-44" href="#__codelineno-5-44"></a>[N] položek v 10. období · řazení: nejnovější
+<a id="__codelineno-5-45" name="__codelineno-5-45" href="#__codelineno-5-45"></a>Písemná interpelace tisk [č.] [čeká na odpověď]
+<a id="__codelineno-5-46" name="__codelineno-5-46" href="#__codelineno-5-46"></a>[Téma dotazu]
+<a id="__codelineno-5-47" name="__codelineno-5-47" href="#__codelineno-5-47"></a>Ptá se [poslanec] ([klub]) · odpovídá [člen vlády] · [datum]
+</code></pre></div>
+<h2 id="zmrazeni-ceny-dalnicni-znamky-zakon-246">Zmrazení ceny dálniční známky (<code>#/zakon-246</code>)<a class="headerlink" href="#zmrazeni-ceny-dalnicni-znamky-zakon-246" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Zákony › 10. období › sněmovní tisk 246
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Vládní návrh zákona sněmovní tisk 246 · předložen 30. 6. 2026
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Zmrazení ceny dálniční známky
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>Oficiální název: Vládní návrh zákona, kterým se mění zákon č. 13/1997 Sb., o pozemních komunikacích, ve znění pozdějších předpisů
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Co se má změnit
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>Cena dálniční známky by byla pevně daná zákonem a v roce 2026 by se neupravovala podle inflace.
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>Koho se to týká řidičů, kteří na dálnici potřebují dálniční známku
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>Kolik roční 2 570 Kč, 30denní 480 Kč, 10denní 300 Kč, jednodenní 230 Kč; elektromobily roční 640 Kč
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>Od kdy navrženo od 1. 1. 2027
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>Shrnutí AI z původního návrhu 246/0 (30. 6. 2026) [stav kontroly] Schválené znění se může lišit, Sněmovna ve 3. čtení přijala změny.
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>Kde návrh je
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>U prezidenta Zákon dostal k podpisu 30. 10. 2026. Prezident ho může podepsat, nebo vrátit Sněmovně do 14. 11. 2026 .
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>Poslanecká sněmovna
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>30. 6. Vláda předložila návrh.
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>14. 7. 1. čtení: návrh poslán do výborů. Poslanci posuzují základní smysl návrhu.
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>10. 9. 2. čtení: podrobná debata, podány pozměňovací návrhy.
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>23. 9. 3. čtení: Sněmovna zákon schválila (84 hlasů pro, potřeba 79). Jak kdo hlasoval
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>Senát
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>29. 9. Sněmovna poslala zákon Senátu.
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>14. 10. Senátní výbor pro hospodářství, zemědělství a dopravu navrhl změny.
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>21. 10. Senát o zákonu nerozhodl. Když se Senát do 30 dnů nevyjádří, platí, že zákon přijal.
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>Prezident
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>30. 10. Zákon doručen prezidentovi.
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>do 14. 11. Může následovat: podpis, nebo vrácení Sněmovně. Pak vyhlášení ve Sbírce zákonů.
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>Jak se hlasovalo
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>23. 9.
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>O celém zákonu Schválit zákon ve 3. čtení?
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>pro 84 · potřeba 79
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>Prošlo
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>23. 9. 4 další hlasování ve 3. čtení zobrazit
+<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>10. 9. 1 hlasování ve 2. čtení zobrazit
+<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>14. 7. 5 hlasování v 1. čtení zobrazit
+<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>Navržené změny
+<a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>| Pozměňovací návrhy | Podáno | Přijato |
+<a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a>| od poslanců opozice | [X] | [a] |
+<a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a>| od poslanců vládních stran | [Y] | [b] |
+<a id="__codelineno-6-37" name="__codelineno-6-37" href="#__codelineno-6-37"></a>| napříč (spolu opozice i vládní strany) | [Z] | [c] |
+<a id="__codelineno-6-38" name="__codelineno-6-38" href="#__codelineno-6-38"></a>| od výboru | [V] | [d] |
+<a id="__codelineno-6-39" name="__codelineno-6-39" href="#__codelineno-6-39"></a>| Celkem | [N] | [n] |
+<a id="__codelineno-6-40" name="__codelineno-6-40" href="#__codelineno-6-40"></a>Všechny pozměňovací návrhy k tomuto zákonu
+<a id="__codelineno-6-41" name="__codelineno-6-41" href="#__codelineno-6-41"></a>Co mění
+<a id="__codelineno-6-42" name="__codelineno-6-42" href="#__codelineno-6-42"></a>Kraje by dostaly 6 % z výnosu spotřební daně z minerálních olejů , rozdělené podle délky silnic II. a III. třídy.
+<a id="__codelineno-6-43" name="__codelineno-6-43" href="#__codelineno-6-43"></a>Navrhla Lucie Sedmihradská (STAN, opozice) · č. 1731 · [Přijat / Nepřijat] · Celé znění na psp.cz ↗
+<a id="__codelineno-6-44" name="__codelineno-6-44" href="#__codelineno-6-44"></a>Dokumenty
+<a id="__codelineno-6-45" name="__codelineno-6-45" href="#__codelineno-6-45"></a>Původní návrh zákona · tisk 246/0 · 30. 6. 2026 Číst text · PDF · na psp.cz ↗
+<a id="__codelineno-6-46" name="__codelineno-6-46" href="#__codelineno-6-46"></a>Znění postoupené Senátu · senátní tisk 294 na psp.cz ↗
+<a id="__codelineno-6-47" name="__codelineno-6-47" href="#__codelineno-6-47"></a>Text návrhu (PDF) Otevřít PDF v novém okně ↗
+<a id="__codelineno-6-48" name="__codelineno-6-48" href="#__codelineno-6-48"></a>⤓ ⎙ ⋮
+<a id="__codelineno-6-49" name="__codelineno-6-49" href="#__codelineno-6-49"></a>PARLAMENT ČESKÉ REPUBLIKY POSLANECKÁ SNĚMOVNA 10. volební období 246/0 Vládní návrh zákona, kterým se mění zákon č. 13/1997 Sb., o pozemních komunikacích, ve znění pozdějších předpisů
+<a id="__codelineno-6-50" name="__codelineno-6-50" href="#__codelineno-6-50"></a>Text dokumentu převádíme z PDF automaticky a může obsahovat chyby převodu.
+<a id="__codelineno-6-51" name="__codelineno-6-51" href="#__codelineno-6-51"></a>Sněmovní tisk 246 na psp.cz ↗ Měněný zákon č. 13/1997 Sb. v e-Sbírce ↗ Odkaz na vyhlášený zákon ve Sbírce zákonů přibude po vyhlášení.
+<a id="__codelineno-6-52" name="__codelineno-6-52" href="#__codelineno-6-52"></a>Předkladatel původního návrhu Vláda
+<a id="__codelineno-6-53" name="__codelineno-6-53" href="#__codelineno-6-53"></a>Číslo ve Sbírce zákonů Zatím nemá, zákon nebyl vyhlášen.
+<a id="__codelineno-6-54" name="__codelineno-6-54" href="#__codelineno-6-54"></a>Mění zákon č. 13/1997 Sb., o pozemních komunikacích ↗
+<a id="__codelineno-6-55" name="__codelineno-6-55" href="#__codelineno-6-55"></a>Sledovat tento návrh Kopírovat odkaz Historie tisku na psp.cz Nahlásit chybu v údajích Stav podle psp.cz k 2. 11. 2026
+</code></pre></div>
+<h2 id="pozmenovaci-navrhy-pozmenovaci-navrhy">Pozměňovací návrhy (<code>#/pozmenovaci-navrhy</code>)<a class="headerlink" href="#pozmenovaci-navrhy-pozmenovaci-navrhy" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Pozměňovací návrhy
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Změny, které poslanci a výbory navrhují k projednávaným zákonům. Kdo je podal, co mění a jestli prošly.
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Hledat
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Kdo podal Kdokoli Poslanci opozice Poslanci vládních stran Napříč Výbor
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Klub Všechny kluby
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>Výsledek Vše Přijat Nepřijat Nehlasovalo se o něm Zatím se nehlasovalo
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>V 10. období: [N] pozměňovacích návrhů k [L] zákonům od opozice [X] , přijato [a] · od vládních stran [Y] , přijato [b] · napříč [Z] , přijato [c] · od výboru [V] , přijato [d]
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>Podle zákonů Jednotlivé návrhy
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>Řazení Nejnovější Nejvíc pozměňovacích návrhů Nejstarší
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>3. čtení 23. 9. 2026 · tisk 246
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>Zmrazení ceny dálniční známky
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>[N] pozměňovacích návrhů · od opozice [X], přijato [a] · od vládních stran [Y], přijato [b] · zákon jako celek prošel
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>Co mění
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>Kraje by dostaly 6 % z výnosu spotřební daně z minerálních olejů , rozdělené podle délky silnic II. a III. třídy.
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>Lucie Sedmihradská (STAN) opozice pozměňovací návrh č. 1731
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>[Přijat / Nepřijat] Kdo jak hlasoval Celé znění na psp.cz ↗
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>Co mění
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>Dálniční známka na jednu dálnici
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>Jan Sviták (STAN) opozice pozměňovací návrh č. 1733
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>[Přijat / Nepřijat] Kdo jak hlasoval Celé znění na psp.cz ↗
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>Všechny pozměňovací návrhy k tomuto zákonu →
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>[čtení] [datum] · tisk [č.]
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>[Věcný název zákona]
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>[N] pozměňovacích návrhů · od opozice [X], přijato [a] · od vládních stran [Y], přijato [b]
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>Zobrazeno 1–10 zákonů z [L]
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>‹ Předchozí 1 2 3 … Další ›
+</code></pre></div>
+<h2 id="pozmenovaci-navrhy-k-zakonu-o-dalnicnich-znamkach-pn-246">Pozměňovací návrhy k zákonu o dálničních známkách (<code>#/pn-246</code>)<a class="headerlink" href="#pozmenovaci-navrhy-k-zakonu-o-dalnicnich-znamkach-pn-246" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Pozměňovací návrhy › 10. období › Zmrazení ceny dálniční známky
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Navržené změny zákona o dálničních známkách
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Pozměňovací návrhy podávají poslanci ve 2. čtení. Ve 3. čtení se o nich hlasuje a teprve potom o zákonu jako celku.
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>| Pozměňovací návrhy | Podáno | Přijato |
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>| od poslanců opozice | [X] | [a] |
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>| od poslanců vládních stran | [Y] | [b] |
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>| napříč (spolu opozice i vládní strany) | [Z] | [c] |
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>| od výboru | [V] | [d] |
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>| Celkem | [N] | [n] |
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>Co mění
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>Kraje by dostaly 6 % z výnosu spotřební daně z minerálních olejů , rozdělené podle délky silnic II. a III. třídy.
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>Navrhla Lucie Sedmihradská (STAN) pozměňovací návrh č. 1731
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>[Přijat / Nepřijat] Výbor: [doporučil / nedoporučil] · Vláda: [souhlasila / nesouhlasila] Kdo jak hlasoval Celé znění na psp.cz ↗
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>Co mění
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>Dálniční známka na jednu dálnici
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>Navrhl Jan Sviták (STAN) pozměňovací návrh č. 1733
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>[Přijat / Nepřijat] Výbor: [ ] · Vláda: [ ] Kdo jak hlasoval Celé znění na psp.cz ↗
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>Přiřazení není úplné U 2 hlasování ve 3. čtení zatím neznáme, o kterém návrhu se hlasovalo. Stenozáznam · Jak data přiřazujeme
+</code></pre></div>
+<h2 id="hlasovani-hlasovani">Hlasování (<code>#/hlasovani</code>)<a class="headerlink" href="#hlasovani-hlasovani" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Kdo jak hlasoval
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Hlasování seskupujeme podle projednávaného bodu. U každého uvádíme, o čem se rozhodovalo a kolik hlasů bylo potřeba.
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>Hledat
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>Druh hlasování Všechny druhy O celém zákonu Pozměňovací návrhy Zamítnutí nebo vrácení návrhu Přikázání výborům Procedurální
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>Výsledek Vše Prošlo Neprošlo
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>Zobrazit
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>23. 9. 2026 · 31. schůze · 5 hlasování
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>Zmrazení ceny dálniční známky tisk 246 · 3. čtení
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>Výsledek bodu: Sněmovna zákon schválila.
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>12:53
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>O celém zákonu Schválit zákon ve 3. čtení?
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>pro 84 · potřeba 79
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>Prošlo
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>12:52
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>[druh] [otázka podle stenozáznamu]
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>pro 33 · potřeba 78
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>Neprošlo
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>12:51
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>[druh] [otázka]
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>pro 128 · potřeba 78
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>Prošlo
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a>12:50
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a>[druh] [otázka]
+<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a>pro 106 · potřeba 78
+<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>Prošlo
+<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>12:50
+<a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>[druh] [otázka]
+<a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a>pro 72 · potřeba 77
+<a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a>Neprošlo
+<a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a>10. 9. 2026 · 30. schůze · 1 hlasování Zmrazení ceny dálniční známky tisk 246 · 2. čtení Rozbalit
+<a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a>6. 5. 2026 · 17. schůze · hlasování č. 1 Zmatečné hlasování [název bodu] Hlasování bylo prohlášeno za zmatečné. Nezapočítává se do výsledků ani do statistik.
+<a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a>Svislá čárka v pruhu ukazuje, kolik hlasů bylo k přijetí potřeba. Obvykle je to nadpoloviční většina přítomných poslanců. Pro některá rozhodnutí platí jiná většina, uvádíme ji podle záznamu psp.cz.
+</code></pre></div>
+<h2 id="hlasovani-o-zakonu-o-dalnicnich-znamkach-hlasovani-88540">Hlasování o zákonu o dálničních známkách (<code>#/hlasovani-88540</code>)<a class="headerlink" href="#hlasovani-o-zakonu-o-dalnicnich-znamkach-hlasovani-88540" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Hlasování › 31. schůze › hlasování č. 10 · 23. 9. 2026, 12:53
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>O celém návrhu zákona · 3. čtení Zmrazení ceny dálniční známky (tisk 246)
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>Schválit zákon o zmrazení ceny dálniční známky?
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>Prošlo Sněmovna zákon schválila a poslala ho Senátu.
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>Pro znamenalo zákon schválit. Proti znamenalo nesouhlasit se zákonem v podobě po 3. čtení.
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>Proč to prošlo
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>K přijetí byla potřeba nadpoloviční většina přítomných poslanců: 79 ze 157 . Pro hlasovalo 84 .
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>Pro 84 Proti 64 34
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>potřeba 79
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>Pro 84 Proti 64 Zdrželi se 9 Nepřihlášeni 9 Omluveni 34
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>Omluvy psp.cz někdy doplňuje se zpožděním. Stav k 2. 11. 2026.
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>Jak hlasovaly poslanecké kluby
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>| Klub | Pro | Proti | Zdrželi se | Nepřihlášeni | Omluveni | Celkem |
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>| ANO | 65 | 0 | 0 | 4 | 11 | 80 |
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>| ODS | 0 | 21 | 0 | 0 | 6 | 27 |
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>| STAN | 0 | 17 | 1 | 2 | 2 | 22 |
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>| Piráti | 0 | 8 | 7 | 0 | 3 | 18 |
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>| KDU-ČSL | 0 | 11 | 1 | 2 | 2 | 16 |
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>| SPD | 11 | 0 | 0 | 1 | 3 | 15 |
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>| Motoristé sobě | 8 | 0 | 0 | 0 | 5 | 13 |
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>| TOP 09 | 0 | 7 | 0 | 0 | 2 | 9 |
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>| Celkem | 84 | 64 | 9 | 9 | 34 | 200 |
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>Klub podle příslušnosti v den hlasování. Řádky se sčítají na počet poslanců klubu.
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>Jak hlasovali jednotliví poslanci
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>Hledat poslance
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>Hlas Všechny hlasy Pro Proti Zdržel se Nepřihlášen Omluven
+<a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>✓ Pro ✕ Proti – Zdržel se ∅ Nepřihlášen O Omluven
+<a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a>SPD (15) ✓ Pro 11 · ∅ Nepřihlášen 1 · O Omluven 3
+<a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a>[jména poslanců s ikonou hlasu]
+<a id="__codelineno-10-30" name="__codelineno-10-30" href="#__codelineno-10-30"></a>Piráti (18) ✕ Proti 8 · – Zdržel se 7 · O Omluven 3
+<a id="__codelineno-10-31" name="__codelineno-10-31" href="#__codelineno-10-31"></a>[jména poslanců s ikonou hlasu]
+<a id="__codelineno-10-32" name="__codelineno-10-32" href="#__codelineno-10-32"></a>ODS (27) ✕ Proti 21 · O Omluven 6
+<a id="__codelineno-10-33" name="__codelineno-10-33" href="#__codelineno-10-33"></a>[jména poslanců s ikonou hlasu]
+<a id="__codelineno-10-34" name="__codelineno-10-34" href="#__codelineno-10-34"></a>ANO (80) Pro 65 · Nepřihlášen 4 · Omluven 11 Rozbalit ▾
+<a id="__codelineno-10-35" name="__codelineno-10-35" href="#__codelineno-10-35"></a>STAN (22) Proti 17 · Zdržel se 1 · Nepřihlášen 2 · Omluven 2 Rozbalit ▾
+<a id="__codelineno-10-36" name="__codelineno-10-36" href="#__codelineno-10-36"></a>KDU-ČSL (16) Proti 11 · Zdržel se 1 · Nepřihlášen 2 · Omluven 2 Rozbalit ▾
+<a id="__codelineno-10-37" name="__codelineno-10-37" href="#__codelineno-10-37"></a>Motoristé sobě (13) Pro 8 · Omluven 5 Rozbalit ▾
+<a id="__codelineno-10-38" name="__codelineno-10-38" href="#__codelineno-10-38"></a>TOP 09 (9) Proti 7 · Omluven 2 Rozbalit ▾
+<a id="__codelineno-10-39" name="__codelineno-10-39" href="#__codelineno-10-39"></a>Oficiální záznam na psp.cz Stenozáznam této části Kopírovat odkaz Nahlásit chybu
+</code></pre></div>
+<h2 id="zpochybnene-hlasovani-hlasovani-280">Zpochybněné hlasování (<code>#/hlasovani-280</code>)<a class="headerlink" href="#zpochybnene-hlasovani-hlasovani-280" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Hlasování › 34. schůze › hlasování č. 280 · 23. 10. 2026, 23:27
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Procedurální hlasování · 1. čtení Zrušení poplatků za ČT a ČRo (tisk 231)
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>Zrušit usnesení, že se o zákonu hlasuje 24. 10. ve 4:36?
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>Výsledek neplatí Hlasování bylo zpochybněno a Sněmovna ho opakovala. Napoprvé návrh prošel (pro 80, potřeba 79). Matěj Gregor (Motoristé sobě) uvedl, že mu zařízení zaznamenalo opačný hlas, a hlasování zpochybnil. V opakovaném hlasování č. 282 návrh neprošel (pro 78, potřeba 81).
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>Pro znamenalo zrušit dohodnutý čas hlasování o zákonu. Navrhl Karel Haas (ODS).
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>Stav, když se předmět hlasování nepodaří spolehlivě určit:
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>O čem přesně se hlasovalo, se nám nepodařilo spolehlivě určit. Nehádáme. Podívejte se do stenozáznamu této části jednání nebo na záznam hlasování na psp.cz .
+</code></pre></div>
+<h2 id="stranicka-neloajalita-loajalita">Stranická (ne)loajalita (<code>#/loajalita</code>)<a class="headerlink" href="#stranicka-neloajalita-loajalita" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Stranická (ne)loajalita
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>Jak často poslanci hlasují jinak než většina jejich poslaneckého klubu a kdo s kým hlasuje podobně.
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>Hlasování proti klubu Podobnost hlasování
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>Co číslo znamená
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>Míra rebelie je podíl hlasování, ve kterých poslanec hlasoval opačně než většina jeho klubu. Porovnáváme jen hlasy pro a proti. Zdržení a hlasování, kde klub neměl jasnou většinu, nepočítáme.
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>Číslo neříká nic o důvodech. Odlišný hlas může znamenat nesouhlas s konkrétním návrhem, volné hlasování i procedurální otázku.
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>Hledat poslance
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>Poslanecký klub Všechny kluby
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>Která hlasování Všechna Jen o celých zákonech
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>Nejvyšší míra rebelie podíl hlasování proti většině vlastního klubu · počet takových hlasování z hlasování, kde poslanec hlasoval pro nebo proti
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>Poslanec A (klub 1) 6,5 % 89 z 1 377
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>Poslanec B (klub 2) 4,1 % 52 z 1 268
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>Poslanec C (klub 3) 3,8 % 47 z 1 240
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>Poslanec D (klub 1) 3,2 % 41 z 1 281
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>Poslanec E (klub 4) 2,9 % 33 z 1 139
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>Poslanec F (klub 2) 2,4 % 30 z 1 250
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>Poslanec G (klub 5) 2,0 % 24 z 1 199
+<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>Poslanec H (klub 3) 1,6 % 19 z 1 188
+<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>Kliknutím na jméno zobrazíte seznam hlasování, ve kterých poslanec hlasoval jinak než klub.
+<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>Všichni poslanci
+<a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>Seřadit Míra rebelie (nejvyšší) Příjmení Klub
+<a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>| Poslanec ↕ | Klub ↕ | Odlišné hlasy | Započítaná hlasování | Míra rebelie ▼ | Nejčastěji u bodu |
+<a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>| Poslanec A | klub 1 | [89] | [1 377] | [6,5 %] | [název bodu, počet] |
+<a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>| Poslanec B | klub 2 | [X] | [Y] | [Z %] | [ ] |
+<a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>| … |
+<a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a>Zobrazeno 1–10 z 200
+<a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>‹ Předchozí 1 2 3 … 20 Další ›
+<a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a>Všech 200 poslanců na jedné stránce →
+<a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>Opakovaná hlasování k jednomu bodu ukazujeme i seskupeně, aby třicet hlasování o jednom bodu nevypadalo jako třicet sporů.
+<a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a>Jak mapu číst
+<a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a>Každá tečka je jeden poslanec. Blízko sebe jsou ti, kdo hlasují podobně.
+<a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a>ANO SPD Motoristé sobě ODS STAN Piráti KDU-ČSL TOP 09
+<a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a>Každá tečka je jeden poslanec. Jméno zobrazíte najetím nebo dotykem.
+<a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a>Nejpodobnější dvojice z různých klubů
+<a id="__codelineno-12-35" name="__codelineno-12-35" href="#__codelineno-12-35"></a>Prvních 5 dvojic podle shody.
+<a id="__codelineno-12-36" name="__codelineno-12-36" href="#__codelineno-12-36"></a>| # | Poslanec | Klub | Poslanec | Klub | Shoda | Hlasovali stejně |
+<a id="__codelineno-12-37" name="__codelineno-12-37" href="#__codelineno-12-37"></a>| 1 | [jméno] | SPD | [jméno] | ANO | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-38" name="__codelineno-12-38" href="#__codelineno-12-38"></a>| 2 | [jméno] | SPD | [jméno] | ANO | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-39" name="__codelineno-12-39" href="#__codelineno-12-39"></a>| 3 | [jméno] | ANO | [jméno] | Motoristé sobě | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-40" name="__codelineno-12-40" href="#__codelineno-12-40"></a>| 4 | [jméno] | SPD | [jméno] | ANO | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-41" name="__codelineno-12-41" href="#__codelineno-12-41"></a>| 5 | [jméno] | Motoristé sobě | [jméno] | SPD | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-42" name="__codelineno-12-42" href="#__codelineno-12-42"></a>Zobrazit všechny dvojice ([N])
+<a id="__codelineno-12-43" name="__codelineno-12-43" href="#__codelineno-12-43"></a>| # | Poslanec | Klub | Poslanec | Klub | Shoda | Hlasovali stejně |
+<a id="__codelineno-12-44" name="__codelineno-12-44" href="#__codelineno-12-44"></a>| 6 | [jméno] | [klub] | [jméno] | [klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-45" name="__codelineno-12-45" href="#__codelineno-12-45"></a>| 7 | [jméno] | [klub] | [jméno] | [klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-46" name="__codelineno-12-46" href="#__codelineno-12-46"></a>| 8 | [jméno] | [klub] | [jméno] | [klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-47" name="__codelineno-12-47" href="#__codelineno-12-47"></a>| … další dvojice |
+<a id="__codelineno-12-48" name="__codelineno-12-48" href="#__codelineno-12-48"></a>Zobrazeno 6–50 z [N]
+<a id="__codelineno-12-49" name="__codelineno-12-49" href="#__codelineno-12-49"></a>‹ Předchozí 1 2 3 … Další ›
+<a id="__codelineno-12-50" name="__codelineno-12-50" href="#__codelineno-12-50"></a>Nejpodobnější dvojice vládní a opoziční poslanec
+<a id="__codelineno-12-51" name="__codelineno-12-51" href="#__codelineno-12-51"></a>Prvních 5 dvojic podle shody.
+<a id="__codelineno-12-52" name="__codelineno-12-52" href="#__codelineno-12-52"></a>| # | Poslanec | Klub | Poslanec | Klub | Shoda | Hlasovali stejně |
+<a id="__codelineno-12-53" name="__codelineno-12-53" href="#__codelineno-12-53"></a>| 1 | [jméno] | [vládní klub] | [jméno] | [opoziční klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-54" name="__codelineno-12-54" href="#__codelineno-12-54"></a>| 2 | [jméno] | [vládní klub] | [jméno] | [opoziční klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-55" name="__codelineno-12-55" href="#__codelineno-12-55"></a>| 3 | [jméno] | [vládní klub] | [jméno] | [opoziční klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-56" name="__codelineno-12-56" href="#__codelineno-12-56"></a>| 4 | [jméno] | [vládní klub] | [jméno] | [opoziční klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-57" name="__codelineno-12-57" href="#__codelineno-12-57"></a>| 5 | [jméno] | [vládní klub] | [jméno] | [opoziční klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-58" name="__codelineno-12-58" href="#__codelineno-12-58"></a>Zobrazit všechny dvojice ([N])
+<a id="__codelineno-12-59" name="__codelineno-12-59" href="#__codelineno-12-59"></a>| # | Poslanec | Klub | Poslanec | Klub | Shoda | Hlasovali stejně |
+<a id="__codelineno-12-60" name="__codelineno-12-60" href="#__codelineno-12-60"></a>| 6 | [jméno] | [klub] | [jméno] | [klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-61" name="__codelineno-12-61" href="#__codelineno-12-61"></a>| 7 | [jméno] | [klub] | [jméno] | [klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-62" name="__codelineno-12-62" href="#__codelineno-12-62"></a>| 8 | [jméno] | [klub] | [jméno] | [klub] | [XX] % | [X] z [Y] |
+<a id="__codelineno-12-63" name="__codelineno-12-63" href="#__codelineno-12-63"></a>| … další dvojice |
+<a id="__codelineno-12-64" name="__codelineno-12-64" href="#__codelineno-12-64"></a>Zobrazeno 6–50 z [N]
+<a id="__codelineno-12-65" name="__codelineno-12-65" href="#__codelineno-12-65"></a>‹ Předchozí 1 2 3 … Další ›
+<a id="__codelineno-12-66" name="__codelineno-12-66" href="#__codelineno-12-66"></a>Shoda = v kolika procentech společných hlasování hlasovali oba stejně: oba pro, oba proti, nebo oba přihlášení bez hlasu pro či proti. Dvojice z různých klubů vycházejí hlavně z vládní koalice (ANO, SPD), proto ukazujeme zvlášť i dvojice napříč vládou a opozicí. Do žebříčků zařazujeme jen dvojice s dostatečným počtem společných hlasování.
+</code></pre></div>
+<h2 id="mira-rebelie-vsichni-poslanci-loajalita-poslanci">Míra rebelie: všichni poslanci (<code>#/loajalita-poslanci</code>)<a class="headerlink" href="#mira-rebelie-vsichni-poslanci-loajalita-poslanci" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Stranická (ne)loajalita › Všichni poslanci
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>Míra rebelie: všichni poslanci
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>Kolikrát každý poslanec hlasoval opačně než většina jeho klubu. Řadit jde podle příjmení, klubu nebo míry rebelie.
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>Hledat poslance
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>Poslanecký klub Všechny kluby
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>Seřadit Příjmení (A–Z) Klub Míra rebelie (nejvyšší) Míra rebelie (nejnižší)
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>Na stránce 50 100 Všech 200
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>| Poslanec ▲ | Klub ↕ | Odlišné hlasy | Započítaná hlasování | Míra rebelie ↕ |
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>| Poslanec A | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>| Poslanec B | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>| Poslanec C | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>| Poslanec D | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>| Poslanec E | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>| Poslanec F | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>| Poslanec G | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>| Poslanec H | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>| Poslanec I | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>| Poslanec J | [klub] | [X] | [Y] | [Z %] |
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>| … |
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>Zobrazeno 1–50 z 200
+<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>‹ Předchozí 1 2 3 4 Další ›
+<a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>Míra rebelie je podíl hlasování, ve kterých poslanec hlasoval opačně než většina jeho klubu; počítají se jen hlasy pro a proti. Kliknutím na záhlaví sloupce změníte řazení.
+</code></pre></div>
+<h2 id="ucast-poslancu-ucast">Účast poslanců (<code>#/ucast</code>)<a class="headerlink" href="#ucast-poslancu-ucast" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Účast poslanců
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Jak často poslanci hlasovali a kolikrát byli omluvení. Každé číslo vede na seznam hlasování, ze kterého vzniklo.
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Co číslo znamená
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>Účast je podíl hlasování, při kterých byl poslanec přihlášený hlasovací kartou, ze všech hlasování během jeho mandátu. Počítají se všechna hlasování, i procedurální a o pozměňovacích návrzích, kromě zmatečných. Omluvené nepřítomnosti ukazujeme zvlášť.
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>Účast na hlasováních sama o sobě neříká, jak dobře poslanec plní svou práci, jak pracuje na zákonech, ve výborech či v regionu.
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>Hledat poslance
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>Seřadit Od nejnižší účasti Od nejvyšší účasti Nejvíc omluv
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>Poslanecký klub Všechny kluby
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>Počet zobrazených poslanců 10 30 Všichni
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>Zobrazit jako Tabulka Graf
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>| Poslanec | Klub | Přihlášen | Hlasování v mandátu | Účast | Omluven | Mandát |
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>| Poslanec A | klub 1 | 1 102 | 2 565 | 43,0 % | 612 | celé období |
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>| Poslanec B | klub 2 | 1 377 | 2 565 | 53,7 % | 208 | celé období |
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>| Poslanec C | klub 1 | 1 640 | 2 412 | 68,0 % | 0 | od [datum] |
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>| Poslanec D | klub 3 | 0 | 2 | malý vzorek | nezjištěno | [3 dny], mimo pořadí |
+<a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>Poslance s mandátem kratším než 50 hlasování neřadíme do pořadí.
+<a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>Zobrazeno 1–10 z 200
+<a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>‹ Předchozí 1 2 3 … Další ›
+<a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>Účast podle klubů Každá tečka je jeden poslanec, svislá čára je medián klubu. Osa začíná na 30 %. Najetím zobrazíte jméno, kliknutím detail.
+<a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>Z čeho se skládá nepřítomnost Poslanci s nejnižší účastí. Celý pruh jsou všechna hlasování během mandátu.
+<a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>Přihlášen Omluven Nepřihlášen bez omluvy
+<a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>Poslanec A 43,0 %
+<a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>Poslanec B 53,7 %
+<a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>Poslanec C 68,0 %
+<a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>Poslanec D 71,5 %
+<a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>Poslanec E 74,2 %
+<a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a>Poslanec F 77,9 %
+</code></pre></div>
+<h2 id="jak-se-v-tom-vyznat-jak">Jak se v tom vyznat (<code>#/jak</code>)<a class="headerlink" href="#jak-se-v-tom-vyznat-jak" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Jak se v tom vyznat
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>Jak vzniká zákon, kdo o čem rozhoduje a co znamenají slova, která na webu potkáte.
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>Jak vzniká zákon
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>1 Návrh Podá ho vláda, poslanec nebo skupina poslanců, Senát nebo zastupitelstvo kraje.
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>2 1. čtení Debata o smyslu návrhu. Sněmovna ho zamítne, vrátí k dopracování, nebo pošle do výborů. Výjimečně ho může rovnou schválit. nejdřív 10 dní po rozeslání
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>3 Výbory Garanční výbor návrh podrobně projedná a doporučí ho schválit, neschválit, nebo schválit se změnami. obvykle 60 dní
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>4 2. čtení Obecná a podrobná debata. V podrobné části poslanci podávají pozměňovací návrhy.
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>5 3. čtení Hlasuje se o případném zamítnutí, o pozměňovacích návrzích a nakonec o zákonu jako celku. nejdřív 14 dní po rozeslání změn
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>6 Senát Zákon schválí, zamítne, vrátí se změnami, nebo se jím odmítne zabývat. O státním rozpočtu Senát nerozhoduje. 30 dní
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>7 Prezident Zákon podepíše, nebo ho vrátí Sněmovně. 15 dní
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>8 Sbírka zákonů Vyhlášením zákon začne platit. Účinný bývá od 1. ledna nebo 1. července.
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>Kdy to jde jinak Schválení už v 1. čtení. Jen když to navrhovatel navrhl spolu s návrhem a do konce obecné rozpravy se neohradí dva kluby nebo 50 poslanců. Nejde u ústavních zákonů, státního rozpočtu a smluv, kterými stát přenáší pravomoci na mezinárodní organizaci. Pozměňovací návrhy podat nelze, opravit se smí jen chyby a datum účinnosti. Stav legislativní nouze. Vyhlásí ho předseda Sněmovny na návrh vlády, když jsou vážně ohrožena práva lidí nebo bezpečnost státu nebo hrozí velké hospodářské škody. Na žádost vlády pak předseda může rozhodnout o zkráceném jednání: vládní návrh projde bez 1. čtení, projevy lze zkrátit až na 5 minut (kromě řečníků za kluby a řečníků s přednostním právem) a 3. čtení může následovat hned po 2. čtení. Státní rozpočet má vlastní pravidla, viz níže.
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>Kdo může navrhnout zákon
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>Vláda Poslanec nebo skupina poslanců Senát Zastupitelstvo kraje
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>Návrh se vždy podává Poslanecké sněmovně. Státní rozpočet a státní závěrečný účet smí předložit jen vláda. K návrhům, které nepodala, má vláda 30 dní na stanovisko. Když se nevyjádří, platí, že s návrhem souhlasí. Její stanovisko ale Sněmovnu nezavazuje.
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>Za vládní návrh ve Sněmovně mluví pověřený člen vlády, za návrh skupiny poslanců jeden z nich. Na webu jim říkáme navrhovatel .
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>Výbory
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>Výbor je menší skupina poslanců, která návrh zkoumá podrobněji než celá Sněmovna. Sněmovna má výbory podle oblastí, například rozpočtový, zemědělský nebo výbor pro média a kulturu.
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>Garanční výbor určuje Sněmovna na konci 1. čtení a má návrh na starosti až do 3. čtení. Doporučí Sněmovně, jestli návrh schválit, a může navrhnout změny. Po 2. čtení se zpravidla vyjádří ke všem pozměňovacím návrhům a navrhne, v jakém pořadí se o nich bude hlasovat. K návrhu se mohou vyjádřit i další výbory.
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>Závěr výboru je usnesení , které v praxi vychází jako sněmovní tisk s číslem za lomítkem. Zpravodaj je poslanec, který Sněmovnu informuje o návrhu a o jednání výboru a ve 3. čtení oznamuje pořadí hlasování.
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>Pozměňovací návrhy
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>Pozměňovací návrh mění, doplňuje nebo škrtá část projednávaného zákona.
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>Kdo a kdy: poslanec ve výboru nebo v podrobné rozpravě 2. čtení. Návrh obvykle předem zveřejní elektronicky a v rozpravě se na něj odkáže. Výbor podává své změny v usnesení.
+<a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>Souhrn: všechny podané návrhy dostanou poslanci v jednom dokumentu. Jednotlivé body mají v praxi označení písmeny a čísly (A1, B2…).
+<a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>Hlasování ve 3. čtení: zpravodaj oznámí pořadí hlasování. Před jednotlivými hlasováními zpravidla zpravodaj a navrhovatel řeknou, jestli návrh doporučují. Když přijetí jednoho návrhu vylučuje jiný, o tom druhém se už nehlasuje.
+<a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>Na tomto webu počítáme pozměňovací návrhy po jednotlivých bodech, o kterých se hlasuje, a rozlišujeme, jestli je podali poslanci vládních stran, opozice, obou společně, nebo výbor.
+<a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>Senát a prezident
+<a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>| Senát zákon… | Co následuje |
+<a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a>| schválí, do 30 dní se nevyjádří, nebo se usnese, že se jím nebude zabývat | Zákon jde k podpisu prezidentovi. O ústavním zákonu musí Senát vždy hlasovat. |
+<a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>| zamítne | Sněmovna může zákon přesto schválit, potřebuje ale 101 hlasů . Ústavní zákon zamítnutím v Senátu padá. |
+<a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a>| vrátí se změnami | Sněmovna hlasuje o verzi Senátu, stačí většina přítomných. Když ji odmítne, může schválit svou původní verzi, ale potřebuje 101 hlasů . Nové změny už přidat nelze. |
+<a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a>Prezident má 15 dní . Zákon podepíše, nebo ho s odůvodněním vrátí Sněmovně. Vrácený zákon platí, jen když pro něj znovu hlasuje 101 poslanců . Ústavní zákon prezident vrátit nemůže. Když zákon ve lhůtě nevrátí, má ho podepsat; podle Ústavního soudu ale chybějící podpis vyhlášení zákona nebrání.
+<a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>Zákon podepisuje předseda Sněmovny, prezident a předseda vlády. Platí od vyhlášení v elektronické Sbírce zákonů (e-Sbírka). Účinný , tedy závazný, bývá od 1. ledna nebo 1. července. Jiný den je možný jen ve zvlášť výjimečných případech, když to vyžaduje naléhavý obecný zájem.
+<a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a>Kolik hlasů je potřeba
+<a id="__codelineno-15-35" name="__codelineno-15-35" href="#__codelineno-15-35"></a>| Rozhodnutí | Kolik hlasů pro |
+<a id="__codelineno-15-36" name="__codelineno-15-36" href="#__codelineno-15-36"></a>| Aby Sněmovna vůbec mohla hlasovat | přítomna aspoň třetina poslanců ( 67 ) |
+<a id="__codelineno-15-37" name="__codelineno-15-37" href="#__codelineno-15-37"></a>| Běžný zákon, většina usnesení | víc než polovina přítomných poslanců |
+<a id="__codelineno-15-38" name="__codelineno-15-38" href="#__codelineno-15-38"></a>| Ústavní zákon, smlouvy přenášející pravomoci na mezinárodní organizaci | 3/5 všech poslanců ( 120 ) |
+<a id="__codelineno-15-39" name="__codelineno-15-39" href="#__codelineno-15-39"></a>| Přehlasování Senátu nebo prezidenta, nedůvěra vládě | víc než polovina všech poslanců ( 101 ) |
+<a id="__codelineno-15-40" name="__codelineno-15-40" href="#__codelineno-15-40"></a>Rozhoduje počet hlasů pro. Za přítomného se počítá každý přihlášený poslanec. U většiny přítomných má proto zdržení nebo nehlasování stejný vliv na výsledek jako hlas proti. U většiny všech poslanců (101, 120) je to stejné jako nepřítomnost.
+<a id="__codelineno-15-41" name="__codelineno-15-41" href="#__codelineno-15-41"></a>Co dalšího Sněmovna projednává
+<a id="__codelineno-15-42" name="__codelineno-15-42" href="#__codelineno-15-42"></a>Státní rozpočet
+<a id="__codelineno-15-43" name="__codelineno-15-43" href="#__codelineno-15-43"></a>Předkládá ho jen vláda a schvaluje jen Sněmovna, Senát o něm nehlasuje. V 1. čtení se schvalují základní údaje: příjmy, výdaje, schodek a jak se uhradí, vztah k rozpočtům krajů a obcí a rozsah zmocnění. Ty už potom nejde měnit, poslanci mohou jen přesouvat peníze uvnitř rozpočtu.
+<a id="__codelineno-15-44" name="__codelineno-15-44" href="#__codelineno-15-44"></a>Mezinárodní smlouvy
+<a id="__codelineno-15-45" name="__codelineno-15-45" href="#__codelineno-15-45"></a>Důležité smlouvy, například o právech a povinnostech lidí, o členství v mezinárodních organizacích nebo smlouvy politické a hospodářské, potřebují souhlas Sněmovny i Senátu. Pak je ratifikuje prezident.
+<a id="__codelineno-15-46" name="__codelineno-15-46" href="#__codelineno-15-46"></a>Zprávy
+<a id="__codelineno-15-47" name="__codelineno-15-47" href="#__codelineno-15-47"></a>Sněmovna projednává zprávy institucí, například výroční zprávy České televize a Českého rozhlasu nebo zprávu Národní rozpočtové rady o dlouhodobé udržitelnosti veřejných financí. Bere je na vědomí, schvaluje je, nebo neschvaluje. Co z toho plyne, stanoví zákon o dané instituci.
+<a id="__codelineno-15-48" name="__codelineno-15-48" href="#__codelineno-15-48"></a>Interpelace
+<a id="__codelineno-15-49" name="__codelineno-15-49" href="#__codelineno-15-49"></a>Dotaz poslance na vládu nebo ministra. Na písemnou interpelaci musí odpověď přijít do 30 dní . Ústní interpelace jsou ve čtvrtek odpoledne. Když poslanec není spokojen s písemnou odpovědí, projedná ji Sněmovna a může s ní vyslovit nesouhlas. Ministr pak musí do 30 dní odpovědět znovu.
+<a id="__codelineno-15-50" name="__codelineno-15-50" href="#__codelineno-15-50"></a>Pojmy z hlasování
+<a id="__codelineno-15-51" name="__codelineno-15-51" href="#__codelineno-15-51"></a>Sněmovní tisk Číslovaný písemný podklad pro jednání Sněmovny v daném volebním období. Návrhem zákona je jen část tisků, další jsou například usnesení výborů, zprávy, mezinárodní smlouvy nebo písemné interpelace, které Sněmovna projednává.
+<a id="__codelineno-15-52" name="__codelineno-15-52" href="#__codelineno-15-52"></a>Navrhovatel Autor návrhu. U vládního návrhu ho ve Sněmovně hájí pověřený člen vlády.
+<a id="__codelineno-15-53" name="__codelineno-15-53" href="#__codelineno-15-53"></a>Zpravodaj Poslanec, který Sněmovnu provází projednáváním návrhu, shrnuje práci výboru a ve 3. čtení oznamuje pořadí hlasování.
+<a id="__codelineno-15-54" name="__codelineno-15-54" href="#__codelineno-15-54"></a>Procedurální hlasování Hlasování o průběhu jednání, ne o obsahu zákona. Například o pořadu schůze, délce projevů, přestávce nebo o námitce.
+<a id="__codelineno-15-55" name="__codelineno-15-55" href="#__codelineno-15-55"></a>Omluven, nepřihlášen, zdržel se Omluvený poslanec nahlásil nepřítomnost; omluvy psp.cz někdy doplňuje se zpožděním. Nepřihlášený nebyl při hlasování přihlášen kartou. Kdo se zdržel, byl přihlášen, ale nehlasoval pro ani proti.
+<a id="__codelineno-15-56" name="__codelineno-15-56" href="#__codelineno-15-56"></a>Zpochybnění hlasování Námitka proti průběhu nebo výsledku hlasování, například když zařízení poslanci zaznamenalo jiný hlas. Sněmovna o ní hlasuje bez debaty. Když jí vyhoví, hlasuje se znovu a platí nový výsledek.
+<a id="__codelineno-15-57" name="__codelineno-15-57" href="#__codelineno-15-57"></a>Zmatečné hlasování Hlasování, které bylo prohlášeno za zmatečné, obvykle kvůli technické chybě. K jeho výsledku se nepřihlíží a zpravidla se opakuje.
+<a id="__codelineno-15-58" name="__codelineno-15-58" href="#__codelineno-15-58"></a>Námitka proti postupu předsedajícího Poslanec nesouhlasí s tím, jak předsedající řídí jednání. Rozhodne o ní Sněmovna hlasováním.
+<a id="__codelineno-15-59" name="__codelineno-15-59" href="#__codelineno-15-59"></a>Revokace Zrušení dříve přijatého rozhodnutí. U pozměňovacích a některých dalších návrhů ji smí navrhnout jen poslanec, který pro ně hlasoval. Zamítnutí návrhu revokovat nelze.
+<a id="__codelineno-15-60" name="__codelineno-15-60" href="#__codelineno-15-60"></a>Pevný čas hlasování Sněmovna určí, kdy se o návrhu bude hlasovat. V tu chvíli debata skončí, i když jsou přihlášení další řečníci. Jen ve zcela výjimečných případech, a když poslanci měli dost času se s věcí seznámit a vyjádřit se.
+<a id="__codelineno-15-61" name="__codelineno-15-61" href="#__codelineno-15-61"></a>Omezení řečnické doby Sněmovna může zkrátit délku projevů, nejméně na 10 minut, a omezit počet vystoupení na dvě. Týká se i zpravodaje, řečníka za klub a řečníků s přednostním právem; jejich první projev v rozpravě může trvat nejvýš 30 minut.
+<a id="__codelineno-15-62" name="__codelineno-15-62" href="#__codelineno-15-62"></a>Přednostní právo Právo dostat slovo kdykoli. Má ho prezident, členové vlády, vedení Sněmovny, předsedové klubů a předsedové stran, které mají ve Sněmovně klub ustavený na začátku volebního období.
+<a id="__codelineno-15-63" name="__codelineno-15-63" href="#__codelineno-15-63"></a>Faktická poznámka Krátká reakce, nejvýš 2 minuty, na vystoupení jiného řečníka k projednávané věci.
+<a id="__codelineno-15-64" name="__codelineno-15-64" href="#__codelineno-15-64"></a>Poslanecký klub Poslanci zvolení za stejnou stranu, kteří ve Sněmovně vystupují společně. Na začátku volebního období potřebuje klub aspoň 3 členy, nový klub během období aspoň 10.
+<a id="__codelineno-15-65" name="__codelineno-15-65" href="#__codelineno-15-65"></a>Podle Ústavy ČR, zákona č. 90/1995 Sb., o jednacím řádu Poslanecké sněmovny (ve znění od 15. 9. 2026), zákona č. 222/2016 Sb., o Sbírce zákonů, a zákona č. 23/2017 Sb., o pravidlech rozpočtové odpovědnosti. Jde o zjednodušené vysvětlení, rozhodující je vždy znění předpisů.
+<a id="__codelineno-15-66" name="__codelineno-15-66" href="#__codelineno-15-66"></a>Na této stránce
+<a id="__codelineno-15-67" name="__codelineno-15-67" href="#__codelineno-15-67"></a>Jak vzniká zákon
+<a id="__codelineno-15-68" name="__codelineno-15-68" href="#__codelineno-15-68"></a>Kdo může navrhnout zákon
+<a id="__codelineno-15-69" name="__codelineno-15-69" href="#__codelineno-15-69"></a>Výbory
+<a id="__codelineno-15-70" name="__codelineno-15-70" href="#__codelineno-15-70"></a>Pozměňovací návrhy
+<a id="__codelineno-15-71" name="__codelineno-15-71" href="#__codelineno-15-71"></a>Senát a prezident
+<a id="__codelineno-15-72" name="__codelineno-15-72" href="#__codelineno-15-72"></a>Kolik hlasů je potřeba
+<a id="__codelineno-15-73" name="__codelineno-15-73" href="#__codelineno-15-73"></a>Co dalšího Sněmovna projednává
+<a id="__codelineno-15-74" name="__codelineno-15-74" href="#__codelineno-15-74"></a>Pojmy z hlasování
+<a id="__codelineno-15-75" name="__codelineno-15-75" href="#__codelineno-15-75"></a>O datech Odkud data jsou a jak často se načítají Jak vznikají AI shrnutí a jak je kontrolujeme Jak počítáme statistiky Jak přiřazujeme hlasování k návrhům
+<a id="__codelineno-15-76" name="__codelineno-15-76" href="#__codelineno-15-76"></a>Pro vývojáře Zdrojový kód Technická dokumentace (anglicky)
+</code></pre></div>
+<h2 id="nahlasit-chybu-nahlasit-chybu">Nahlásit chybu (<code>#/nahlasit-chybu</code>)<a class="headerlink" href="#nahlasit-chybu-nahlasit-chybu" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>Zákony pod lupou › Nahlásit chybu
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>Nahlásit chybu
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>Popište, co je špatně, a pokud můžete, přidejte odkaz na stránku. Hlášení se zveřejní jako veřejné issue na GitHubu projektu, nepište do něj osobní údaje. Pokud nechcete psát veřejně, napište nám na podpora@hlidacstatu.cz.
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>Nadpis
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>Popis
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>Odeslat hlášení
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.instant", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
