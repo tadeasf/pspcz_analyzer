@@ -3,19 +3,15 @@
 {% block title %}{{ detail.nazev }} · {{ _("site.short_title") }}{% endblock %}
 
 {% block content %}
-{% set sections = [
-    ("ld.sec_chamber", ["ps", "organizacni", "1_cteni", "vybor", "2_cteni", "garant", "3_cteni", "vlada"]),
-    ("ld.sec_senate", ["senat_postoupeno", "senat_organizacni", "senat_vybor", "senat"]),
-    ("ld.sec_president", ["prezident", "sbirka", "vyhlaseni"]),
-] %}
-{% set stages = detail.history.stages if detail.history else [] %}
+{% from "partials/amendment_card.html" import letter_card %}
+{% set is_bill = detail.tab == "navrhy" %}
 
-<div class="crumb"><a href="/laws?period={{ period }}">{{ _("nav.laws") }}</a> › {{ _("lw.in_period").format(p=period) }} › {{ _("ld.tisk_n").format(ct=detail.ct) }}</div>
+<div class="crumb"><a href="/laws?period={{ period }}">{{ _("nav.laws") }}</a> › {{ _("pn.period_crumb").format(p=period) }} › {{ _("ld.tisk_n").format(ct=detail.ct) }}</div>
 
 <div style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px" class="ld-grid">
 <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
     <div style="display:flex;flex-direction:column;gap:8px">
-        <div><span class="chip c-st">{% if detail.tab == "navrhy" %}{{ _("lw.kind_" ~ (detail.kind or "unknown")) }}{% else %}{{ _("lw.kind_tab_" ~ detail.tab) }}{% endif %}</span>
+        <div><span class="chip c-st">{% if is_bill %}{{ _("ld.kind_" ~ (detail.kind or "unknown")) }}{% else %}{{ _("lw.kind_tab_" ~ detail.tab) }}{% endif %}</span>
             <span class="lbl">{{ _("ld.tisk_n").format(ct=detail.ct) }}{% if detail.history and detail.history.submitter_date %} · {{ _("ld.submitted").format(d=detail.history.submitter_date|cz_date) }}{% endif %}</span></div>
         <h1 class="phead-h">{{ detail.nazev }}</h1>
         {% if detail.nazev_cely %}<p class="lbl">{{ _("ld.official_title") }}: {{ detail.nazev_cely }}</p>{% endif %}
@@ -39,28 +35,21 @@
 
     <section>
         <h2 class="h2s">{{ _("ld.where") }}</h2>
-        {% if detail.status_key %}<p><span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(detail.status|status_category, 'c-wait') }}">{{ _(detail.status_key) }}</span>
-            {% if detail.last_step %}{{ detail.last_step.date|cz_date }} · {{ detail.last_step.text }}{% endif %}</p>{% endif %}
-        {% if stages %}
-        {% for key, types in sections %}
-        {% set items = stages|selectattr("stage_type", "in", types)|list %}
-        <h3 style="font-size:16px;margin:14px 0 6px">{{ _(key) }}</h3>
-        {% if items %}
+        <p>{% if detail.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(detail.status|status_category, 'c-wait') }}">{{ _(detail.phase_key) }}</span> {% endif %}
+            {% if detail.status_sentence %}{{ _(detail.status_sentence.key).format(d=detail.status_sentence.delivered|cz_date, deadline=detail.status_sentence.deadline|cz_date) }}
+            {% elif detail.last_step %}{{ detail.last_step.date|cz_date }} · {{ detail.last_step.text }}{% endif %}</p>
+        {% for sec in detail.timeline %}
+        <h3 style="font-size:16px;margin:14px 0 6px">{{ _(sec.key) }}</h3>
+        {% if sec.steps %}
         <ol class="ld-timeline">
-            {% for s in items %}
-            <li><span class="lbl">{{ s.date|cz_date if s.date else "" }}</span>
-                <b>{{ s.label }}</b>{% if s.outcome %}: {{ s.outcome }}{% endif %}
-                {% if s.vote_number and s.session_number %}
-                {% set v = detail.related_votes|selectattr("schuze", "equalto", s.session_number)|selectattr("cislo", "equalto", s.vote_number)|first %}
-                {% if v %} · <a href="/votes/{{ v.id_hlasovani }}?period={{ period }}">{{ _("ld.how_voted") }}</a>{% endif %}
-                {% endif %}</li>
+            {% for s in sec.steps %}
+            <li><span class="lbl">{{ s.date|cz_date(short=True) if s.date else "" }}</span>
+                {% if s.vote %}{{ s.text.rstrip(".") }} ({{ _("ld.vote_tally").format(pro=s.vote.pro, kvorum=s.vote.kvorum) }}). <a href="/votes/{{ s.vote.id_hlasovani }}?period={{ period }}">{{ _("ld.how_voted") }}</a>{% else %}{{ s.text }}{% endif %}</li>
             {% endfor %}
         </ol>
-        {% elif key == "ld.sec_senate" and detail.status in ("u prezidenta", "podepsáno", "odesláno k vyhlášení", "vyhlášeno") %}
-        <p class="lbl">{{ _("ld.senate_silent") }}</p>
-        {% else %}<p class="lbl" style="border-left:2px dashed #AEBBCB;padding-left:8px">{{ _("ld.not_yet") }}</p>{% endif %}
-        {% endfor %}
-        {% else %}<p>{{ _("ld.no_history") }}</p>{% endif %}
+        {% elif not sec.future %}<p class="lbl" style="border-left:2px dashed #AEBBCB;padding-left:8px">{{ _("ld.not_yet") }}</p>{% endif %}
+        {% if sec.future %}<p class="lbl" style="border-left:2px dashed #AEBBCB;padding-left:8px">{% if sec.deadline %}{{ _("ld.until").format(d=sec.deadline|cz_date(short=True)) }} {% endif %}{{ _(sec.future) }}</p>{% endif %}
+        {% else %}<p>{{ _("ld.no_history") }}</p>{% endfor %}
     </section>
 
     <section>
@@ -75,12 +64,14 @@
             <span class="chip {{ 'c-ok' if dv.vysledek == 'A' else 'c-no' }}" style="justify-self:end">{{ _("vd.passed") if dv.vysledek == "A" else _("vd.failed") }}</span>
         </div>
         {% endif %}
-        {% if detail.related_votes %}
-        <details><summary style="cursor:pointer">{{ _("ld.all_votes").format(n=detail.related_votes|length) }}</summary>
-            <ul style="margin:8px 0 0 1em;padding:0">{% for v in detail.related_votes %}
-                <li><a href="/votes/{{ v.id_hlasovani }}?period={{ period }}">{{ v.datum|cz_date }} · {{ _("vd.session_n").format(n=v.schuze) }} · {{ _("vd.number_n").format(n=v.cislo) }}</a> · {{ _("vd.passed") if v.vysledek == "A" else _("vd.failed") }}</li>{% endfor %}</ul>
+        {% for g in detail.votes_by_reading %}
+        <details style="margin-top:8px"><summary style="cursor:pointer"><span class="lbl">{{ g.date|cz_date(short=True) }}</span> {{ g.votes|length|count("ld.votes_in_" ~ g.reading) }} · {{ _("ld.show") }}</summary>
+            <ul style="margin:8px 0 0 1em;padding:0">{% for v in g.votes %}
+                <li><a href="/votes/{{ v.id_hlasovani }}?period={{ period }}">{{ v.question or _("vd.number_n").format(n=v.cislo) }}</a> · {{ _("vd.passed") if v.vysledek == "A" else _("vd.failed") }}</li>{% endfor %}</ul>
+            <a href="/votes?period={{ period }}&search={{ ('tisk ' ~ detail.ct)|urlencode }}" style="font-size:14px">{{ _("ld.votes_filtered") }}</a>
         </details>
-        {% else %}<p>{{ _("ld.no_votes") }}</p>{% endif %}
+        {% endfor %}
+        {% if not detail.related_votes %}<p>{{ _("ld.no_votes") }}</p>{% endif %}
     </section>
 
     {% if detail.amendments %}
@@ -88,23 +79,30 @@
         <h2 class="h2s">{{ _("ld.amendments") }}</h2>
         {{ side_table(detail.amendments.tally) }}
         <p class="lbl"><a href="/amendments/{{ detail.amendments.schuze }}/{{ detail.amendments.bod }}?period={{ period }}">{{ _("ld.all_amendments") }}</a></p>
+        {% for x in detail.letters[:3] %}{{ letter_card(x, period) }}{% endfor %}
+        {% if detail.letters|length > 3 %}<p class="lbl"><a href="/amendments/{{ detail.amendments.schuze }}/{{ detail.amendments.bod }}?period={{ period }}">{{ _("pn.more_n").format(n=detail.letters|length - 3) }}</a></p>{% endif %}
     </section>
     {% endif %}
 
     <section>
         <h2 class="h2s">{{ _("ld.documents") }}</h2>
-        <p><a href="{{ detail.url }}" rel="noopener">{{ _("ld.tisk_on_psp").format(ct=detail.ct) }} ↗</a></p>
+        {% if detail.documents %}<ul style="margin:0 0 8px 1em;padding:0">{% for d in detail.documents %}
+            <li>{{ _("ld.doc_" ~ d.kind) }} · {{ _("ld.senate_tisk_n").format(n=d.number) if d.kind == "senate" else _("ld.tisk_n").format(ct=d.number) }}{% if d.date %} · {{ d.date|cz_date }}{% endif %} — <a href="{{ d.url }}" rel="noopener">{{ _("ld.on_psp") }} ↗</a>{% if d.kind == "original" and detail.has_pdf %} · <a href="{{ detail.pdf_url }}" target="_blank" rel="noopener">PDF</a>{% endif %}</li>{% endfor %}</ul>{% endif %}
         {% if detail.has_pdf %}
         <h3 style="font-size:16px;margin:10px 0 6px">{{ _("ld.pdf_title") }} <a href="{{ detail.pdf_url }}" target="_blank" rel="noopener" style="font-size:14px;font-weight:400">{{ _("ld.open_pdf") }} ↗</a></h3>
         <iframe class="pdf-viewer" src="{{ detail.pdf_url }}" loading="lazy" title="{{ _('ld.pdf_title') }}" style="width:100%;height:560px;border:1px solid #D0DCE8"></iframe>
         <p class="lbl">{{ _("ld.pdf_note") }}</p>
         {% endif %}
+        <p style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px"><a href="{{ detail.url }}" rel="noopener">{{ _("ld.tisk_on_psp").format(ct=detail.ct) }} ↗</a>
+            {% for l in detail.amended_laws %}<a href="{{ l.url }}" rel="noopener">{{ _("ld.amended_law_esb").format(l=l.label.split(",")[0]) }} ↗</a>{% endfor %}
+            {% if is_bill %}{% if detail.published_url %}<a href="{{ detail.published_url }}" rel="noopener">{{ _("ld.published_esb").format(n=detail.law_number) }} ↗</a>{% else %}<span class="lbl">{{ _("ld.published_later") }}</span>{% endif %}{% endif %}</p>
     </section>
 </div>
 
 <aside class="box" style="align-self:start;display:flex;flex-direction:column;gap:10px;font-size:14px">
     <div><b>{{ _("ld.submitter") }}</b><br>{{ detail.submitter or _("unknown_yet") }}</div>
-    <div><b>{{ _("ld.law_number") }}</b><br>{{ detail.law_number or _("ld.no_law_number") }}</div>
+    {% if is_bill %}<div><b>{{ _("ld.law_number") }}</b><br>{% if detail.published_url %}<a href="{{ detail.published_url }}" rel="noopener">{{ detail.law_number }} ↗</a>{% else %}{{ detail.law_number or _("ld.no_law_number") }}{% endif %}</div>
+    {% for l in detail.amended_laws %}<div><b>{{ _("ld.amends_law") }}</b><br><a href="{{ l.url }}" rel="noopener">{{ l.label }} ↗</a></div>{% endfor %}{% endif %}
     <a href="#" onclick="event.preventDefault();navigator.clipboard.writeText(location.href)">{{ _("vd.copy_link") }}</a>
     <a href="{{ detail.url }}" rel="noopener">{{ _("ld.history_psp") }} ↗</a>
     <a href="/nahlasit-chybu?period={{ period }}">{{ _("ld.report") }}</a>

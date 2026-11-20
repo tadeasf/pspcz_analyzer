@@ -1,3 +1,4 @@
+{% from "macros.html" import page_links %}
 {% set qs = "period=" ~ period ~ "&sort=" ~ sort ~ "&party=" ~ (party|urlencode) ~ "&search=" ~ (search|urlencode) ~ "&per_page=" ~ per_page ~ "&view=" ~ view %}
 {% if view == "chart" %}
 {# 1. attendance by club: one dot per MP, line = club median #}
@@ -51,9 +52,8 @@
     </tbody>
 </table></div>
 <p class="lbl">{{ _("loyalty.shown").format(first=first, last=last, total=total) }} {{ _("att.small_note").format(n=min_votes) }}</p>
-<nav class="pagination" style="display:flex;gap:12px">
-    {% if page > 1 %}<button hx-get="/api/attendance?{{ qs }}&page={{ page - 1 }}" hx-target="#results">&larr; {{ _("pagination.previous") }}</button>{% endif %}
-    {% if page < total_pages %}<button hx-get="/api/attendance?{{ qs }}&page={{ page + 1 }}" hx-target="#results">{{ _("pagination.next") }} &rarr;</button>{% endif %}
+<nav class="pagination" aria-label="{{ _('pagination.label') }}" style="display:flex;gap:12px">
+    {{ page_links("/api/attendance?" ~ qs ~ "&page=", page, total_pages) }}
 </nav>
 {% endif %}
 {% endif %}

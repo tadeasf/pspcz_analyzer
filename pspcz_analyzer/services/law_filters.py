@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.labels import vote_outcome_label
+from pspcz_analyzer.services.step_text import president_deadline, step_sentence
+from pspcz_analyzer.services.tisk.io.history_stages import TiskHistoryStage
 
 _CZ_DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})")
+_NUMBER_SUFFIX = (" pod číslem {n}.", " as No. {n}.")
+_DEADLINE_SUFFIX = (" Rozhodnout musí do {d}", " The deadline is {d}")
 
 # id_druh (druh_tisku.unl) -> tab
 _BILL_DRUH = {1, 2, 3}  # vládní návrh zákona, návrh zákona, státní rozpočet
@@ -96,21 +101,48 @@ def _parse_cz_date(value: str | None) -> tuple[int, int, int] | None:
     return (int(m.group(3)), int(m.group(2)), int(m.group(1))) if m else None
 
 
-def last_step(tisk: TiskInfo) -> dict | None:
+def _step_text(tisk: TiskInfo, stage: TiskHistoryStage, lang: str) -> str:
+    """Sentence for a stage, with the law number or the President's deadline (#106)."""
+    text = step_sentence(
+        stage.stage_type,
+        stage.outcome or "",
+        stage.details,
+        tab_of(tisk),
+        lang,
+        submitter_kind(tisk),
+    )
+    if not text:
+        return stage.outcome or stage.label
+    if stage.stage_type == "vyhlaseni" and tisk.history and tisk.history.law_number:
+        text = text[:-1] + _NUMBER_SUFFIX[lang == "en"].format(
+            n=tisk.history.law_number.rstrip(".")
+        )
+    is_last = bool(tisk.history and tisk.history.stages and stage is tisk.history.stages[-1])
+    deadline = president_deadline(tisk) if is_last else None
+    if deadline and deadline >= date.today():
+        text += _DEADLINE_SUFFIX[lang == "en"].format(d=f"{deadline.day}. {deadline.month}.")
+    return text
+
+
+def last_step(tisk: TiskInfo, lang: str = "cs") -> dict | None:
     """The most recent dated stage: sortable date, raw date and its sentence.
 
     Args:
         tisk: The tisk.
+        lang: Language of the sentence.
 
     Returns:
         {"sort": (y, m, d), "date": "d. m. yyyy", "text": str} or None.
     """
     best: dict | None = None
+    best_stage: TiskHistoryStage | None = None
     for stage in tisk.history.stages if tisk.history else []:
         parsed = _parse_cz_date(stage.date)
         if parsed is not None and (best is None or parsed >= best["sort"]):
-            text = stage.outcome or stage.label
-            best = {"sort": parsed, "date": stage.date or "", "text": text}
+            best = {"sort": parsed, "date": stage.date or "", "text": ""}
+            best_stage = stage
+    if best is not None and best_stage is not None:
+        best["text"] = _step_text(tisk, best_stage, lang)
     return best
 
 

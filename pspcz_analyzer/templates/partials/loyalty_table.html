@@ -1,3 +1,4 @@
+{% from "macros.html" import page_links %}
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&party=" ~ (party|urlencode) ~ "&per_page=" ~ per_page ~ ("&full=1" if full else "") %}
 {% if not full and chart %}
 <h2 class="h2s">{{ _("loyalty.chart_title") }}</h2>
@@ -39,8 +40,7 @@
 </table></div>
 <p class="lbl">{{ _("loyalty.shown").format(first=first, last=last, total=total) }} {{ _("loyalty.grouped_note") }}</p>
 <nav class="pagination" style="display:flex;gap:12px;align-items:center">
-    {% if page > 1 %}<button hx-get="/api/loyalty?{{ qs }}&sort={{ sort }}&page={{ page - 1 }}" hx-target="#results">&larr; {{ _("pagination.previous") }}</button>{% endif %}
-    {% if page < total_pages %}<button hx-get="/api/loyalty?{{ qs }}&sort={{ sort }}&page={{ page + 1 }}" hx-target="#results">{{ _("pagination.next") }} &rarr;</button>{% endif %}
+    {{ page_links("/api/loyalty?" ~ qs ~ "&sort=" ~ sort ~ "&page=", page, total_pages) }}
     {% if not full %}<a href="/loyalty/all?period={{ period }}">{{ _("loyalty.all_link").format(n=all_count) }}</a>{% endif %}
 </nav>
 {% endif %}

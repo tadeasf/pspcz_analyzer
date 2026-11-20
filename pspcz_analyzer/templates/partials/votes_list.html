@@ -1,3 +1,4 @@
+{% from "macros.html" import page_links %}
 {% if not groups %}
 <p>{{ _("votes.no_data") }}</p>
 {% else %}
@@ -44,9 +45,7 @@
 
 {% if total_pages > 1 %}
 <nav class="pagination" aria-label="{{ _('pagination.label') }}">
-    {% if page > 1 %}<button hx-get="/api/votes?{{ qs }}&page={{ page - 1 }}" hx-target="#results" hx-indicator="#loading">&larr; {{ _("pagination.previous") }}</button>{% endif %}
-    <span>{{ _("pagination.page_of").format(page=page, total_pages=total_pages) }}</span>
-    {% if page < total_pages %}<button hx-get="/api/votes?{{ qs }}&page={{ page + 1 }}" hx-target="#results" hx-indicator="#loading">{{ _("pagination.next") }} &rarr;</button>{% endif %}
+    {{ page_links("/api/votes?" ~ qs ~ "&page=", page, total_pages) }}
 </nav>
 {% endif %}
 {% endif %}

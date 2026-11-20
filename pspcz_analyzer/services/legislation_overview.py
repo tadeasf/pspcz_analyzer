@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from datetime import date, timedelta
 
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.law_filters import last_step, phase_of, submitter_kind, tab_of
 from pspcz_analyzer.services.law_service import STATUS_KEYS
-from pspcz_analyzer.services.overrides import homepage_pick
+from pspcz_analyzer.services.overrides import homepage_hidden, homepage_pick
+from pspcz_analyzer.services.step_text import phase_key
 from pspcz_analyzer.services.tisk.brief import brief_view
 
 
@@ -24,8 +26,17 @@ def _bills(data: PeriodData) -> list[TiskInfo]:
 def _first_sentence(text: str) -> str:
     """First sentence of a summary (plain text), for one-line rows."""
     text = " ".join((text or "").replace("#", "").replace("*", "").split())
-    cut = text.find(". ")
-    return text if cut < 0 else text[: cut + 1]
+    m = _SENTENCE_END_RE.search(text)
+    return text if not m else text[: m.start() + 1]
+
+
+MIN_SPEECHES = 10  # #108: below this the block stays hidden
+
+# a sentence ends at ". " before a capital letter, not after "mld.", "č.", "odst." …
+_SENTENCE_END_RE = re.compile(
+    r"(?<!\bmld)(?<!\bmil)(?<!\btis)(?<!\bč)(?<!\bodst)(?<!\bpísm)(?<!\bSb)(?<!\bzák)(?<!\btzv)"
+    r"\.\s+(?=[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ])"
+)
 
 
 def _row(tisk: TiskInfo, lang: str) -> dict:
@@ -39,7 +50,8 @@ def _row(tisk: TiskInfo, lang: str) -> dict:
         "status_key": STATUS_KEYS.get(status, ""),
         "phase": phase_of(status),
         "kind": submitter_kind(tisk),
-        "last_step": last_step(tisk),
+        "phase_key": phase_key(tisk),
+        "last_step": last_step(tisk, lang),
         "submitted": tisk.history.submitter_date if tisk.history else None,
         "summary": _first_sentence(brief["shrnuti"]) if brief else "",
     }
@@ -105,10 +117,11 @@ def talked_about(data: PeriodData, lang: str, days: int = 14) -> dict | None:
         the admin picked (services/overrides) wins over the speech count.
     """
     since = (date.today() - timedelta(days=days)).isoformat()
+    hidden = homepage_hidden(data.overrides) if data.overrides else frozenset()
     per_ct: dict[int, int] = {}
     for key, by_day in data.speeches.items():
         tisk = data.tisk_lookup.get(key)
-        if tisk is not None and tab_of(tisk) == "navrhy":
+        if tisk is not None and tab_of(tisk) == "navrhy" and tisk.ct not in hidden:
             n = sum(v for d, v in by_day.items() if d >= since)
             per_ct[tisk.ct] = per_ct.get(tisk.ct, 0) + n
     ct, n = max(per_ct.items(), key=lambda kv: kv[1], default=(0, 0))
@@ -116,9 +129,23 @@ def talked_about(data: PeriodData, lang: str, days: int = 14) -> dict | None:
     if pick:
         ct, n = pick, per_ct.get(pick, 0)
     tisk = next((t for t in _bills(data) if t.ct == ct), None)
-    if not tisk or not (n or pick):
+    if not tisk or not (n >= MIN_SPEECHES or pick):
         return None
     return {**_row(tisk, lang), "speeches": n, "steps": phase_steps(tisk), "picked": bool(pick)}
+
+
+def _latest_agenda(data: PeriodData, chamber_cts: set[int]) -> tuple[int, set[int]]:
+    """Latest sitting with a bill still in the Chamber on its agenda, and those bills (#108).
+
+    Returns:
+        ``(sitting, tisk numbers)``; ``(0, set())`` when no agenda has such a bill.
+    """
+    by_sitting: dict[int, set[int]] = {}
+    for (s, _), t in data.tisk_lookup.items():
+        if s > 0 and t.ct in chamber_cts:
+            by_sitting.setdefault(s, set()).add(t.ct)
+    latest = max(by_sitting, default=0)
+    return latest, by_sitting.get(latest, set())
 
 
 def homepage_blocks(data: PeriodData, lang: str = "cs") -> dict:
@@ -138,12 +165,17 @@ def homepage_blocks(data: PeriodData, lang: str = "cs") -> dict:
     for r in rows:
         r["dup"] = names[r["nazev"]] > 1
     in_chamber = _by_last_step([r for r in rows if r["phase"] == "chamber"])
+    sitting, agenda = _latest_agenda(data, {r["ct"] for r in in_chamber})
+    on_agenda = [r for r in in_chamber if r["ct"] in agenda] if agenda else in_chamber
     passed = _by_last_step([r for r in rows if r["phase"] in ("president", "valid")])
     newest = sorted(rows, key=lambda r: r["ct"], reverse=True)
     return {
-        "in_progress": in_chamber[:5],
+        "in_progress": on_agenda[:5],
         "in_progress_total": len(in_chamber),
         "recently_passed": passed[:3],
         "newest": newest[:3],
         "talked_about": talked_about(data, lang),
+        "agenda_sitting": sitting,
+        "void_votes": data.void_votes.height if data.void_votes is not None else 0,
+        "votes_total": data.votes.height,
     }

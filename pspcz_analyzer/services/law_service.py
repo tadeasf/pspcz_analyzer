@@ -6,7 +6,15 @@ from pspcz_analyzer.config import TISKY_PDF_DIR
 from pspcz_analyzer.models.amendment_models import BillAmendmentData
 from pspcz_analyzer.models.tisk_models import PeriodData, TiskInfo
 from pspcz_analyzer.services.affiliation import amendment_driver
-from pspcz_analyzer.services.amendment_listing import law_tally
+from pspcz_analyzer.services.amendment_listing import law_amendments, law_tally
+from pspcz_analyzer.services.law_detail import (
+    amended_laws,
+    documents,
+    published_law_url,
+    status_sentence,
+    timeline,
+    votes_by_reading,
+)
 from pspcz_analyzer.services.law_filters import (
     TABS,
     decisive_vote,
@@ -16,6 +24,7 @@ from pspcz_analyzer.services.law_filters import (
     submitter_kind,
     tab_of,
 )
+from pspcz_analyzer.services.step_text import phase_key
 from pspcz_analyzer.services.tisk.brief import brief_view
 from pspcz_analyzer.utils.text import matches_tokens, search_tokens, tisk_number_query
 
@@ -177,17 +186,26 @@ def _build_law_row(
         "status_key": STATUS_KEYS.get(status, ""),
         "tab": tab_of(tisk),
         "submitter_kind": submitter_kind(tisk),
-        "last_step": last_step(tisk),
+        "phase_key": phase_key(tisk) if tab_of(tisk) == "navrhy" else "",
+        "last_step": last_step(tisk, lang),
         "law_number": law_number,
         "url": tisk.url,
         "summary_truncated": summary_truncated,
         "has_summary": bool(summary),
         "final_result": final_result,
         "amendment_count": amendment_count,
+        "amendment_tally": amendments["tally"] if amendments else None,
         "has_amendments": amendment_link is not None,
         "amendment_link": amendment_link,
         "driver": driver,
     }
+
+
+def _law_letters(data: PeriodData, ct: int, lang: str) -> list[dict]:
+    """Amendment letter cards of a bill (empty when it has no amendment data)."""
+    t = law_tally(data, ct)
+    detail = law_amendments(data, t["schuze"], t["bod"], lang) if t else None
+    return detail["letters"] if detail else []
 
 
 def _deduplicate_tisky(data: PeriodData) -> list[TiskInfo]:
@@ -342,8 +360,13 @@ def law_detail(
     # Legislative history stages
     history = tisk.history
 
-    # Find related votes
+    # Find related votes, with the question from steno (#102)
     related_votes = find_votes_for_ct(data, ct)
+    for v in related_votes:
+        rec = data.vote_steno.get(v["id_hlasovani"]) or {}
+        v["question"] = rec.get("question_en" if lang == "en" else "question") or ""
+        v["kind"] = rec.get("kind") or ""
+    decisive = decisive_vote(history, related_votes)
 
     return {
         "ct": tisk.ct,
@@ -361,9 +384,17 @@ def law_detail(
         "pdf_url": f"/api/tisk-pdf/{tisk.period}/{ct}",
         "amendments": law_tally(data, ct),
         "related_votes": related_votes,
-        "decisive_vote": decisive_vote(history, related_votes),
+        "decisive_vote": decisive,
         "nazev_cely": tisk.nazev_cely,
         "kind": submitter_kind(tisk),
         "tab": tab_of(tisk),
-        "last_step": last_step(tisk),
+        "phase_key": phase_key(tisk) if tab_of(tisk) == "navrhy" else "",
+        "last_step": last_step(tisk, lang),
+        "status_sentence": status_sentence(tisk),
+        "timeline": timeline(tisk, related_votes, lang),
+        "votes_by_reading": votes_by_reading(tisk, related_votes, decisive),
+        "documents": documents(tisk),
+        "amended_laws": amended_laws(tisk.nazev_cely),
+        "published_url": published_law_url(law_number),
+        "letters": _law_letters(data, ct, lang),
     }

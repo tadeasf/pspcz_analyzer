@@ -6,7 +6,7 @@
 <div class="lrow">
     <span class="lbl">{{ r.last_step.date|cz_date(short=True) if r.last_step else "" }}</span>
     <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ text }}</span>
-    {% if r.status_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(r.status|status_category, 'c-wait') }}">{{ _(r.status_key) }}</span>{% endif %}
+    {% if r.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(r.status|status_category, 'c-wait') }}">{{ _(r.phase_key) }}</span>{% endif %}
 </div>
 {% endmacro %}
 
@@ -36,13 +36,15 @@
     {% endfor %}
 </div>
 
+{% if blocks.void_votes %}<p class="lbl">{{ _("home.void_note").format(p=period, n=blocks.votes_total|num, v=blocks.void_votes|num) }} <a href="/jak-se-v-tom-vyznat#g8">{{ _("home.void_what") }}</a></p>{% endif %}
+
 {% set t = blocks.talked_about %}
 {% if t %}
 <div class="hsec alt" style="display:flex;flex-direction:column;gap:12px">
     <h2 class="h2s">{{ icon("clock") }}{{ _("home.talked") }}</h2>
     <div class="box" style="display:flex;flex-direction:column;gap:10px">
         <div class="top"><span class="chip c-st">{{ _("lw.kind_" ~ (t.kind or "unknown")) }}</span><span class="lbl">{{ _("vd.tisk_n").format(ct=t.ct) }}</span>
-            {% if t.status_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(t.status|status_category, 'c-wait') }}">{{ _(t.status_key) }}</span>{% endif %}</div>
+            {% if t.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(t.status|status_category, 'c-wait') }}">{{ _(t.phase_key) }}</span>{% endif %}</div>
         <h3 style="font-size:22px;margin:0"><a href="/laws/{{ t.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ t.nazev }}</a></h3>
         {% if t.summary %}<p style="margin:0">{{ t.summary }}</p>{% endif %}
         <ol class="phase">{% for s in t.steps %}<li class="{{ s.state }}"><b>{{ _(s.key) }}</b>{% if s.date %}<br>{{ s.date|cz_date(short=True) }}{% elif s.state == "now" %}<br>{{ _("ph.now") }}{% endif %}</li>{% endfor %}</ol>
@@ -53,14 +55,15 @@
 
 <div class="hsec" style="display:flex;flex-direction:column;gap:2px">
     <h2 class="h2s">{{ icon("clock") }}{{ _("home.in_progress") }}</h2>
-    {% for r in blocks.in_progress %}{{ law_row(r, r.last_step.text if r.last_step else "") }}{% else %}<p>{{ _("no_data") }}</p>{% endfor %}
+    {% if blocks.agenda_sitting %}<p class="lbl" style="padding:4px 0 2px">{{ _("home.in_progress_sub").format(n=blocks.agenda_sitting) }}</p>{% endif %}
+    {% for r in blocks.in_progress %}{{ law_row(r, r.last_step.text if r.last_step else "") }}{% else %}<p>{{ _("home.in_progress_empty") }}</p>{% endfor %}
     <a href="/laws?period={{ period }}&phase=chamber" style="font-size:14px;font-weight:700;padding-top:8px">{{ _("home.in_progress_all").format(n=blocks.in_progress_total) }} →</a>
 </div>
 
 <div class="hsec alt" style="display:flex;flex-direction:column;gap:2px">
     <h2 class="h2s">{{ icon("check") }}{{ _("home.passed") }}</h2>
     <p class="lbl" style="padding:4px 0 2px">{{ _("home.passed_sub") }}</p>
-    {% for r in blocks.recently_passed %}{{ law_row(r, (r.last_step.text if r.last_step else "") ) }}{% else %}<p>{{ _("no_data") }}</p>{% endfor %}
+    {% for r in blocks.recently_passed %}{{ law_row(r, (r.last_step.text if r.last_step else "") ) }}{% else %}<p>{{ _("home.passed_empty") }}</p>{% endfor %}
     <a href="/laws?period={{ period }}&phase=valid" style="font-size:14px;font-weight:700;padding-top:8px">{{ _("home.passed_all") }} →</a>
 </div>
 
@@ -72,7 +75,7 @@
         <span><a href="/laws/{{ r.ct }}?period={{ period }}"><b>{{ r.nazev }}</b></a>{% if r.dup %} <span class="lbl">{{ _("vd.tisk_n").format(ct=r.ct) }}</span>{% endif %}<br>{{ r.summary or _("lw.no_summary") }}</span>
         <span class="chip c-st">{{ _("lw.submitter_" ~ r.kind) if r.kind else _("lw.kind_unknown") }}</span>
     </div>
-    {% else %}<p>{{ _("no_data") }}</p>{% endfor %}
+    {% else %}<p>{{ _("home.newest_empty") }}</p>{% endfor %}
     <a href="/laws?period={{ period }}&sort=newest" style="font-size:14px;font-weight:700;padding-top:8px">{{ _("home.newest_all") }} →</a>
 </div>
 {% endblock %}

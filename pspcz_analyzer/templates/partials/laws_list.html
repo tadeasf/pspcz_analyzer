@@ -1,3 +1,4 @@
+{% from "macros.html" import page_links %}
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&phase=" ~ (phase|urlencode) ~ "&submitter=" ~ (submitter|urlencode) ~ "&sort=" ~ sort ~ "&tab=" ~ tab %}
 <div class="tabs-s" role="tablist">
     {% for t in ("navrhy", "smlouvy", "zpravy", "interpelace") %}
@@ -9,26 +10,25 @@
 {% if not rows %}
 <p>{{ _("laws.no_data") }}</p>
 {% else %}
-<p style="font-size:14px"><b>{{ _("lw.count_" ~ tab).format(n=total|num) }}</b> {{ _("lw.in_period").format(p=period) }}</p>
+<p style="font-size:14px"><b>{{ total|count("lw.count_" ~ tab) }}</b> {{ _("lw.in_period").format(p=period) }}</p>
 {% for row in rows %}
 <div class="card">
     <div class="top">
         <span class="chip c-st">{% if tab == "navrhy" %}{{ _("lw.kind_" ~ (row.submitter_kind or "unknown")) }}{% else %}{{ _("lw.kind_tab_" ~ tab) }}{% endif %}</span>
         <span class="lbl">{{ _("vd.tisk_n").format(ct=row.ct) }}</span>
-        {% if row.status_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(row.status|status_category, 'c-wait') }}">{{ _(row.status_key) }}</span>{% endif %}
+        {% if row.phase_key %}<span class="chip {{ {'pass': 'c-done', 'fail': 'c-no'}.get(row.status|status_category, 'c-wait') }}">{{ _(row.phase_key) }}</span>{% endif %}
     </div>
     <h3 style="font-size:19px;margin:6px 0"><a href="/laws/{{ row.ct }}?period={{ period }}" style="color:#1A4677;text-decoration:none">{{ row.nazev }}</a></h3>
     {% if row.has_summary %}<p>{{ row.summary_truncated }}</p><div class="ai"><b>{{ _("detail.ai_generated") }}</b><span>{{ _("lw.ai_from").format(ct=row.ct) }}{% if row.brief and row.brief.status != "ok" %} · <b style="color:#A33">{{ _("ai.check_warn") }}</b>{% endif %}</span></div>
     {% elif tab == "navrhy" %}<p class="lbl">{{ _("lw.no_summary") }}</p>{% endif %}
-    {% if row.has_amendments %}<p class="last"><a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}">{{ _("lw.amendments_n").format(n=row.amendment_count) }}</a></p>{% endif %}
-    {% if row.last_step %}<p class="last">{{ row.last_step.date|cz_date(short=True) }} · {{ row.last_step.text }}{% if row.law_number %} · {{ row.law_number }}{% endif %}</p>{% endif %}
+    {% if row.has_amendments %}<p class="last"><a href="/amendments/{{ row.amendment_link.schuze }}/{{ row.amendment_link.bod }}?period={{ period }}">{{ _("lw.amendments_n").format(n=row.amendment_count) }}</a>{% for s in ("opposition", "government", "mixed", "committee") %}{% if row.amendment_tally.by_side[s].submitted %} · {{ _("pn.from_" ~ s) }} {{ row.amendment_tally.by_side[s].submitted|num }}, {{ _("pn.accepted_n") }} {{ row.amendment_tally.by_side[s].accepted|num }}{% endif %}{% endfor %}</p>{% endif %}
+    {% if row.last_step %}<p class="last">{{ row.last_step.date|cz_date(short=True) }} · {{ row.last_step.text }}</p>{% endif %}
 </div>
 {% endfor %}
 <nav class="pager" aria-label="{{ _('pagination.label') }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
     <span class="lbl">{{ _("loyalty.shown").format(first=(page - 1) * per_page + 1, last=[page * per_page, total]|min, total=total) }}</span>
     <span style="display:flex;gap:10px">
-    {% if page > 1 %}<button hx-get="/api/laws?{{ qs }}&page={{ page - 1 }}" hx-target="#results">&lsaquo; {{ _("pagination.previous") }}</button>{% endif %}
-    {% if page < total_pages %}<button hx-get="/api/laws?{{ qs }}&page={{ page + 1 }}" hx-target="#results">{{ _("pagination.next") }} &rsaquo;</button>{% endif %}
+    {{ page_links("/api/laws?" ~ qs ~ "&page=", page, total_pages) }}
     </span>
 </nav>
 {% endif %}

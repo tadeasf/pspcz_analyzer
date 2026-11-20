@@ -84,7 +84,9 @@
     <div class="card-body">
         <form method="post" action="/admin/api/corrections">
             <input type="hidden" name="period" value="{{ period }}"><input type="hidden" name="kind" value="homepage_pick">
-            <div class="form-group"><label for="hp-ct">Tisk number to show instead of the most debated bill</label><input id="hp-ct" name="ct" required inputmode="numeric"></div>
+            <div class="form-group"><label for="hp-ct">Tisk number to show instead of the most debated bill (optional)</label><input id="hp-ct" name="ct" inputmode="numeric"></div>
+            <div class="form-group"><label for="hp-hide">Tisk numbers to hide from the block (optional, comma separated)</label><input id="hp-hide" name="hidden"></div>
+            <div class="form-group"><label for="hp-until">Valid until (optional; the automatic choice returns after this date)</label><input id="hp-until" name="until" type="date"></div>
             <button class="btn btn-primary" type="submit">Save</button>
         </form>
     </div>

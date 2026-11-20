@@ -1,3 +1,4 @@
+{% from "macros.html" import page_links %}
 {% from "partials/amendment_card.html" import letter_card, side_line %}
 {% set qs = "period=" ~ period ~ "&search=" ~ (search|urlencode) ~ "&side=" ~ side ~ "&club=" ~ (club|urlencode) ~ "&fate=" ~ fate ~ "&view=" ~ view ~ "&sort=" ~ sort %}
 {% if not law_count %}
@@ -35,8 +36,7 @@
 <nav class="pager" aria-label="{{ _('pagination.label') }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
     <span class="lbl">{{ _("pn.shown_letters" if view == "letters" else "pn.shown_laws").format(first=(page - 1) * per_page + 1, last=[page * per_page, total]|min, total=total) }}</span>
     <span style="display:flex;gap:10px">
-    {% if page > 1 %}<button hx-get="/api/amendments?{{ qs }}&page={{ page - 1 }}" hx-target="#results">&lsaquo; {{ _("pagination.previous") }}</button>{% endif %}
-    {% if page < total_pages %}<button hx-get="/api/amendments?{{ qs }}&page={{ page + 1 }}" hx-target="#results">{{ _("pagination.next") }} &rsaquo;</button>{% endif %}
+    {{ page_links("/api/amendments?" ~ qs ~ "&page=", page, total_pages) }}
     </span>
 </nav>
 {% endif %}

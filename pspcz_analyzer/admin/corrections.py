@@ -93,10 +93,18 @@ def _amendment_summary(pd: PeriodData, form: dict[str, str]) -> tuple[str, dict]
 
 
 def _homepage_pick(pd: PeriodData, form: dict[str, str]) -> tuple[str, dict]:
-    ct = _int(form.get("ct", ""), "tisk")
-    if ct not in {t.ct for t in pd.tisk_lookup.values() if t.id_druh in (1, 2, 3)}:
-        raise CorrectionError(f"tisk {ct} is not a bill of this period")
-    return "talked_about", {"ct": ct}
+    bills = {t.ct for t in pd.tisk_lookup.values() if t.id_druh in (1, 2, 3)}
+    ct = _int(form["ct"], "tisk") if form.get("ct", "").strip() else None
+    hidden = [_int(x, "hidden tisk") for x in form.get("hidden", "").replace(",", " ").split()]
+    for c in ([ct] if ct else []) + hidden:
+        if c not in bills:
+            raise CorrectionError(f"tisk {c} is not a bill of this period")
+    until = form.get("until", "").strip()
+    if until and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", until):
+        raise CorrectionError("'until' must be a date (YYYY-MM-DD)")
+    if not ct and not hidden:
+        raise CorrectionError("give a tisk to show or tisky to hide")
+    return "talked_about", {"ct": ct, "hidden": hidden, "until": until}
 
 
 def _parse(pd: PeriodData, kind: str, form: dict[str, str]) -> tuple[str, dict]:

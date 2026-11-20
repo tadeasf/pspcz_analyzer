@@ -45,3 +45,17 @@
     </div>
 </div>
 {% endmacro %}
+
+{# Numbered pager (#110, #112, #113, #115, #117): ‹ Předchozí 1 2 3 … 9 Další ›. url ends right before the page number. #}
+{% macro page_links(url, page, total_pages, target="#results") -%}
+{% if total_pages > 1 %}<span class="pages" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+{% if page > 1 %}<button hx-get="{{ url }}{{ page - 1 }}" hx-target="{{ target }}">&lsaquo; {{ _("pagination.previous") }}</button>{% endif %}
+{% set ns = namespace(gap=false) %}
+{% for p in range(1, total_pages + 1) %}
+{% if p == 1 or p == total_pages or (p - page)|abs <= 2 %}{% set ns.gap = false %}
+{% if p == page %}<span aria-current="page" style="font-weight:700;padding:0 6px">{{ p }}</span>{% else %}<button hx-get="{{ url }}{{ p }}" hx-target="{{ target }}" aria-label="{{ _('pagination.page_n').format(n=p) }}">{{ p }}</button>{% endif %}
+{% elif not ns.gap %}{% set ns.gap = true %}<span aria-hidden="true">…</span>{% endif %}
+{% endfor %}
+{% if page < total_pages %}<button hx-get="{{ url }}{{ page + 1 }}" hx-target="{{ target }}">{{ _("pagination.next") }} &rsaquo;</button>{% endif %}
+</span>{% endif %}
+{%- endmacro %}

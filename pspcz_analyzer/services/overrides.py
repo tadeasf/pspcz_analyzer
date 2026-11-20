@@ -10,14 +10,14 @@ Kinds and keys:
 - ``brief`` / ``"<ct>"``: ``review`` (``ok`` | ``hidden`` | ``edited``) and, when
   edited, ``nazev``, ``shrnuti``
 - ``amendment_summary`` / ``"<ct>:<letter>"``: ``summary``, ``summary_en``
-- ``homepage_pick`` / ``"talked_about"``: ``ct``
+- ``homepage_pick`` / ``"talked_about"``: ``ct`` (pin), ``hidden`` (tisk numbers), ``until`` (ISO date)
 
 Only the admin writes this file; pipelines never touch it, so they cannot
 overwrite a correction. The readers apply it on every ``get_period``.
 """
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -137,7 +137,19 @@ def apply_amendment_summaries(
                     amend.summary_warning = False
 
 
+def _live_pick(ov: dict[str, dict[str, dict]]) -> dict:
+    """The homepage choice unless its "until" date has passed."""
+    rec = ov.get("homepage_pick", {}).get("talked_about", {})
+    until = rec.get("until") or ""
+    return {} if until and until < date.today().isoformat() else rec
+
+
 def homepage_pick(ov: dict[str, dict[str, dict]]) -> int | None:
-    """Tisk number the admin pinned to "Teď se o tom mluví", if any."""
-    ct = ov["homepage_pick"].get("talked_about", {}).get("ct")
+    """Tisk number the admin pinned to "Teď se o tom mluví", if any (and not expired)."""
+    ct = _live_pick(ov).get("ct")
     return int(ct) if ct else None
+
+
+def homepage_hidden(ov: dict[str, dict[str, dict]]) -> frozenset[int]:
+    """Tisk numbers the admin hid from "Teď se o tom mluví" (until the choice expires)."""
+    return frozenset(int(c) for c in _live_pick(ov).get("hidden", []))

@@ -58,9 +58,18 @@ def _make_data() -> PeriodData:
 
 class TestHomepageBlocks:
     def test_in_progress_only_chamber_bills_by_last_step(self):
-        blocks = homepage_blocks(_make_data())
+        data = _make_data()
+        data.tisk_lookup[(79, 2)] = data.tisk_lookup[(78, 2)]  # 300 also on sitting 79
+        blocks = homepage_blocks(data)
         assert [r["ct"] for r in blocks["in_progress"]] == [300, 400]
         assert blocks["in_progress_total"] == 2
+
+    def test_in_progress_is_the_latest_agenda(self):
+        """Only bills on the agenda of the latest sitting with Chamber bills (#108)."""
+        blocks = homepage_blocks(_make_data())
+        assert blocks["agenda_sitting"] == 79
+        assert [r["ct"] for r in blocks["in_progress"]] == [400]
+        assert blocks["in_progress_total"] == 2  # the link still counts every Chamber bill
 
     def test_recently_passed_contains_published_law(self):
         blocks = homepage_blocks(_make_data())

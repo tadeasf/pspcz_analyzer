@@ -34,7 +34,7 @@ def build_tisk_lookup(
     # Try primary path via schuze -> bod_schuze
     sessions = schuze.filter(pl.col("id_org") == organ_id)
     if sessions.height > 0:
-        return build_tisk_lookup_via_schuze(
+        lookup = build_tisk_lookup_via_schuze(
             period,
             sessions,
             bod_schuze,
@@ -44,6 +44,14 @@ def build_tisk_lookup(
             summary_cache,
             en_cache,
             en_topic_cache,
+        )
+        return add_unscheduled(
+            lookup,
+            period,
+            tisky.filter(pl.col("id_obdobi") == organ_id),
+            tisk_text,
+            (topic_cache.get(period, {}), en_topic_cache.get(period, {})),
+            (summary_cache.get(period, {}), en_cache.get(period, {})),
         )
 
     # Fallback: text matching for periods without schuze data
@@ -62,6 +70,57 @@ def build_tisk_lookup(
         en_cache,
         en_topic_cache,
     )
+
+
+# Key ``(UNSCHEDULED_SCHUZE, ct)``: a tisk on no approved agenda yet (#110); no vote
+# links to it, but the laws list, the law detail and the pipelines see it.
+UNSCHEDULED_SCHUZE = -1
+
+
+def add_unscheduled(
+    lookup: dict[tuple[int, int], TiskInfo],
+    period: int,
+    period_tisky: pl.DataFrame,
+    tisk_text: TiskTextService,
+    topics: tuple[dict[int, list[str]], dict[int, list[str]]],
+    summaries: tuple[dict[int, str], dict[int, str]],
+) -> dict[tuple[int, int], TiskInfo]:
+    """Add every tisk of the period that no approved agenda item links.
+
+    Args:
+        lookup: ``(schuze, bod) -> TiskInfo`` from the agenda (updated in place).
+        period: Electoral period.
+        period_tisky: The period's rows of the tisky table.
+        tisk_text: Text availability service.
+        topics: ``(cs, en)`` topic maps of the period, keyed by ct.
+        summaries: ``(cs, en)`` summary maps of the period, keyed by ct.
+
+    Returns:
+        The same lookup.
+    """
+    have = {t.ct for t in lookup.values()}
+    added = 0
+    for row in period_tisky.iter_rows(named=True):
+        ct = row.get("ct")
+        if not ct or ct in have:
+            continue
+        lookup[(UNSCHEDULED_SCHUZE, ct)] = TiskInfo(
+            id_tisk=row["id_tisk"],
+            ct=ct,
+            nazev=row.get("nazev_tisku") or "",
+            period=period,
+            id_druh=row.get("id_druh"),
+            nazev_cely=row.get("nazev_cely") or "",
+            topics=topics[0].get(ct, []),
+            topics_en=topics[1].get(ct, []),
+            has_text=tisk_text.has_text(period, ct),
+            summary=summaries[0].get(ct, ""),
+            summary_en=summaries[1].get(ct, ""),
+        )
+        have.add(ct)
+        added += 1
+    logger.info("Period {}: {} tisky on no approved agenda added to the lookup", period, added)
+    return lookup
 
 
 def build_tisk_lookup_via_schuze(
