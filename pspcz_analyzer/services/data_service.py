@@ -156,6 +156,8 @@ class DataService(DataReader):
                 )
                 return False
 
+        self._refresh_tisk_data(period)  # briefs reach the bill summaries even without get_period
+
         def _on_progress(p: int, _bills: list) -> None:
             """Callback: reload in-memory amendment data on incremental saves."""
             period_data = self._periods.get(p)
